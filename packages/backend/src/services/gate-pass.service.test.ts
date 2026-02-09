@@ -8,15 +8,15 @@ const { mockPrisma } = vi.hoisted(() => {
 vi.mock('../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
-vi.mock('@nit-scs/shared', async importOriginal => {
-  const actual = await importOriginal<typeof import('@nit-scs/shared')>();
+vi.mock('@nit-scs-v2/shared', async importOriginal => {
+  const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
 });
 
 import { createPrismaMock } from '../test-utils/prisma-mock.js';
 import { list, getById, create, update, submit, approve, release, returnPass, cancel } from './gate-pass.service.js';
 import { generateDocumentNumber } from './document-number.service.js';
-import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
 
 const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;

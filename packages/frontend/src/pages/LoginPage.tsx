@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Eye, EyeOff, LogIn, Loader2, ArrowLeft, Mail, KeyRound, CheckCircle2 } from 'lucide-react';
 import { NesmaLogo } from '@/components/NesmaLogo';
 import { IdaratechLogo } from '@/components/IdaratechLogo';
-import { UserRole } from '@nit-scs/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
 import { useLogin, useForgotPassword, useResetPassword } from '@/api/hooks';
 
 interface LoginPageProps {
@@ -41,7 +40,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     loginMutation.mutate(
       { email, password },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           const user = result.data.user;
           onLogin(user.role);
         },
@@ -129,10 +128,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-conic from-nesma-primary/5 via-transparent to-nesma-secondary/5 rounded-full blur-[100px]"></div>
 
         {/* Grid Pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px'
-        }}></div>
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        ></div>
 
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div>
@@ -149,7 +151,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </span>
               </h1>
               <p className="text-gray-400 text-lg leading-relaxed max-w-md">
-                Comprehensive management for warehouses, materials, transport and equipment across 30+ sites in Saudi Arabia
+                Comprehensive management for warehouses, materials, transport and equipment across 30+ sites in Saudi
+                Arabia
               </p>
             </div>
           </div>
@@ -181,7 +184,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                onChange={e => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
                 className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all"
                 placeholder="name@nit.com"
                 dir="ltr"
@@ -195,7 +201,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  onChange={e => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
                   className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all pr-12"
                   placeholder="••••••••"
                   dir="ltr"
@@ -223,17 +232,17 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
               disabled={loginMutation.isPending}
               className="w-full py-3.5 bg-gradient-to-r from-nesma-primary to-nesma-accent text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:shadow-[0_0_30px_rgba(46,49,146,0.5)] transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              {loginMutation.isPending ? (
-                <Loader2 size={20} className="animate-spin" />
-              ) : (
-                <LogIn size={20} />
-              )}
+              {loginMutation.isPending ? <Loader2 size={20} className="animate-spin" /> : <LogIn size={20} />}
               {t.login}
             </button>
 
             {/* Forgot Password */}
             <div className="text-center">
-              <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-gray-400 hover:text-nesma-secondary transition-colors">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-gray-400 hover:text-nesma-secondary transition-colors"
+              >
                 {t.forgot}
               </button>
             </div>
@@ -243,7 +252,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <div className="mt-10 pt-8 border-t border-white/10">
             <p className="text-xs text-gray-500 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
             <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map((account) => (
+              {demoAccounts.map(account => (
                 <button
                   key={account.email}
                   onClick={() => {
@@ -253,7 +262,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   }}
                   className="text-left px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-nesma-secondary/30 rounded-lg transition-all group"
                 >
-                  <span className="text-xs font-medium text-gray-300 group-hover:text-white block">{account.label}</span>
+                  <span className="text-xs font-medium text-gray-300 group-hover:text-white block">
+                    {account.label}
+                  </span>
                   <span className="text-[10px] text-gray-500">{account.email}</span>
                 </button>
               ))}
@@ -275,7 +286,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       {showForgotPassword && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={closeForgotPassword} />
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={closeForgotPassword}
+          />
 
           {/* Modal */}
           <div className="relative w-full max-w-md bg-gradient-to-br from-[#0d1f38] to-[#081425] border border-white/10 rounded-2xl shadow-2xl p-8 animate-fade-in">
@@ -303,7 +317,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <input
                     type="email"
                     value={resetEmail}
-                    onChange={(e) => { setResetEmail(e.target.value); setForgotError(''); }}
+                    onChange={e => {
+                      setResetEmail(e.target.value);
+                      setForgotError('');
+                    }}
                     className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all"
                     placeholder="name@nit.com"
                     dir="ltr"
@@ -353,7 +370,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <input
                     type="text"
                     value={resetCode}
-                    onChange={(e) => { setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setForgotError(''); }}
+                    onChange={e => {
+                      setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                      setForgotError('');
+                    }}
                     className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white text-center text-2xl tracking-[0.5em] font-mono placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all"
                     placeholder="000000"
                     dir="ltr"
@@ -367,7 +387,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <input
                     type="password"
                     value={newPassword}
-                    onChange={(e) => { setNewPassword(e.target.value); setForgotError(''); }}
+                    onChange={e => {
+                      setNewPassword(e.target.value);
+                      setForgotError('');
+                    }}
                     className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all"
                     placeholder="Min. 6 characters"
                     dir="ltr"
@@ -379,7 +402,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   <input
                     type="password"
                     value={confirmPassword}
-                    onChange={(e) => { setConfirmPassword(e.target.value); setForgotError(''); }}
+                    onChange={e => {
+                      setConfirmPassword(e.target.value);
+                      setForgotError('');
+                    }}
                     className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary/30 outline-none transition-all"
                     placeholder="Confirm new password"
                     dir="ltr"
@@ -404,7 +430,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
                 <button
                   type="button"
-                  onClick={() => { setForgotStep('email'); setForgotError(''); }}
+                  onClick={() => {
+                    setForgotStep('email');
+                    setForgotError('');
+                  }}
                   className="w-full flex items-center justify-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
                 >
                   <ArrowLeft size={16} />
@@ -420,7 +449,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <CheckCircle2 size={24} className="text-green-400" />
                   </div>
                   <h3 className="text-xl font-bold text-white">Password Reset!</h3>
-                  <p className="text-gray-400 text-sm mt-2">Your password has been successfully reset. You can now sign in with your new password.</p>
+                  <p className="text-gray-400 text-sm mt-2">
+                    Your password has been successfully reset. You can now sign in with your new password.
+                  </p>
                 </div>
 
                 <button

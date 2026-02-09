@@ -1,13 +1,13 @@
 import { Package, Truck, Shield, AlertTriangle, RefreshCw, FileText } from 'lucide-react';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import {
-  validateMRRV,
-  validateMIRV,
-  validateMRV,
+  validateGRN,
+  validateMI,
+  validateMRN,
   validateJO,
-  validateRFIM,
-  validateOSD,
-} from '@nit-scs/shared/validators';
+  validateQCI,
+  validateDR,
+} from '@nit-scs-v2/shared/validators';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -68,12 +68,12 @@ export const VALIDATOR_MAP: Record<
     warnings: { field: string; rule: string; message: string }[];
   }
 > = {
-  mrrv: validateMRRV,
-  mirv: validateMIRV,
-  mrv: validateMRV,
+  mrrv: validateGRN,
+  mirv: validateMI,
+  mrv: validateMRN,
   jo: validateJO,
-  rfim: validateRFIM,
-  osd: validateOSD,
+  rfim: validateQCI,
+  osd: validateDR,
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -478,8 +478,43 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'numberOfTrailers', label: 'Number of Trailers', type: 'number' },
             { key: 'materialPrice', label: 'Material Value (SAR)', type: 'number' },
             { key: 'insuranceRequired', label: 'Insurance Required?', type: 'checkbox' },
+            { key: 'insuranceValue', label: 'Material Value for Insurance (SAR)', type: 'number' },
             { key: 'entryPermit', label: 'Entry Permit Required?', type: 'checkbox' },
           ],
+        },
+        {
+          title: 'Driver & Vehicle Details',
+          fields: [
+            { key: 'driverName', label: 'Driver Name', type: 'text', placeholder: 'Full name' },
+            { key: 'driverNationality', label: 'Nationality', type: 'text' },
+            { key: 'driverIdNumber', label: 'ID/Iqama Number', type: 'text' },
+            { key: 'vehicleBrand', label: 'Vehicle Brand', type: 'text', placeholder: 'Toyota, Volvo...' },
+            { key: 'vehicleYear', label: 'Vehicle Year', type: 'number' },
+            { key: 'vehiclePlate', label: 'Plate Number', type: 'text', required: true },
+          ],
+        },
+        {
+          title: 'Logistics Details',
+          fields: [
+            {
+              key: 'googleMapsPickup',
+              label: 'Pickup Location (Maps URL)',
+              type: 'text',
+              placeholder: 'https://maps.google.com/...',
+            },
+            {
+              key: 'googleMapsDelivery',
+              label: 'Delivery Location (Maps URL)',
+              type: 'text',
+              placeholder: 'https://maps.google.com/...',
+            },
+            { key: 'cnNumber', label: 'CN Number', type: 'text', placeholder: 'Nesma CN#' },
+            { key: 'shiftStartTime', label: 'Shift Start Time', type: 'datetime-local' },
+          ],
+        },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
     case 'Equipment':
@@ -509,6 +544,10 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'withOperator', label: 'With Operator?', type: 'checkbox' },
           ],
         },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
+        },
       ];
     case 'Generator_Rental':
       return [
@@ -527,6 +566,10 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'siteLocation', label: 'Installation Site', type: 'text', required: true },
             { key: 'fuelIncluded', label: 'Fuel Included?', type: 'checkbox' },
           ],
+        },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
     case 'Generator_Maintenance':
@@ -552,6 +595,10 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'issueDescription', label: 'Issue Description', type: 'textarea', required: true },
           ],
         },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
+        },
       ];
     case 'Scrap':
       return [
@@ -570,6 +617,10 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'description', label: 'Description', type: 'textarea', required: true },
             { key: 'photos', label: 'Photos (min. 3)', type: 'file' },
           ],
+        },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
     case 'Rental_Daily':
@@ -590,6 +641,10 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'withOperator', label: 'With Operator?', type: 'checkbox' },
           ],
         },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
+        },
       ];
     case 'Rental_Monthly':
       return [
@@ -607,7 +662,12 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
             { key: 'startDate', label: 'Start Date', type: 'date', required: true },
             { key: 'durationMonths', label: 'Duration (Months)', type: 'number', required: true },
             { key: 'withOperator', label: 'With Operator?', type: 'checkbox' },
+            { key: 'coaApprovalRequired', label: 'COO Approval Required', type: 'checkbox' },
           ],
+        },
+        {
+          title: 'Budget & Approval',
+          fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
     default:

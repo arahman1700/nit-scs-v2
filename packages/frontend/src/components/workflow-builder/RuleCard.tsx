@@ -1,5 +1,5 @@
 import { ChevronRight, ToggleLeft, ToggleRight, Trash2, Edit3, Zap } from 'lucide-react';
-import { EVENT_DESCRIPTIONS, type SystemEventType } from '@nit-scs/shared';
+import { EVENT_DESCRIPTIONS, type SystemEventType } from '@nit-scs-v2/shared';
 
 interface Rule {
   id: string;

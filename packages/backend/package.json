@@ -1,5 +1,5 @@
 {
-  "name": "@nit-scs/backend",
+  "name": "@nit-scs-v2/backend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -18,7 +18,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@nit-scs/shared": "workspace:*",
+    "@nit-scs-v2/shared": "workspace:*",
     "@prisma/client": "^6.5.0",
     "@sentry/node": "^10.38.0",
     "bcryptjs": "^3.0.2",

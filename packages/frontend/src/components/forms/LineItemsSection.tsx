@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 
 interface LineItemsSectionProps {

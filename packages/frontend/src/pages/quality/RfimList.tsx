@@ -16,7 +16,7 @@ import {
 import { useRfimList } from '@/api/hooks/useRfim';
 import { DocumentActions } from '@/components/DocumentActions';
 import { ExportButton } from '@/components/ExportButton';
-import type { RFIM } from '@nit-scs/shared/types';
+import type { RFIM } from '@nit-scs-v2/shared/types';
 
 // Custom Badge for Inspection Status
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {

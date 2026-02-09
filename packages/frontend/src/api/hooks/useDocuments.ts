@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { CompanyDocument } from '@nit-scs/shared/types';
+import type { CompanyDocument } from '@nit-scs-v2/shared/types';
 import type { ApiResponse } from '../types';
 
 export interface DocumentListParams {

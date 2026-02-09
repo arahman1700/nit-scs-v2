@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { AuditLogEntry } from '@nit-scs/shared/types';
+import type { AuditLogEntry } from '@nit-scs-v2/shared/types';
 import type { ApiResponse } from '../types';
 
 export interface AuditLogParams {

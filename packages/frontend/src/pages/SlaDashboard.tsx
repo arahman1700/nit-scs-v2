@@ -1,10 +1,21 @@
-
 import React, { useState, useMemo } from 'react';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
 import { Download, Filter, Calendar, CheckCircle, Clock, AlertOctagon, TrendingUp } from 'lucide-react';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useProjects } from '@/api/hooks/useMasterData';
-import type { Project } from '@nit-scs/shared/types';
+import type { Project } from '@nit-scs-v2/shared/types';
 
 export const SlaDashboard: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('All');
@@ -53,7 +64,14 @@ export const SlaDashboard: React.FC = () => {
 
   const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#2E3192', '#80D1E9'];
 
-  if (isLoading) return <div className="space-y-4 animate-fade-in">{[1,2,3].map(i => <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full"></div>)}</div>;
+  if (isLoading)
+    return (
+      <div className="space-y-4 animate-fade-in">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full"></div>
+        ))}
+      </div>
+    );
   if (isError) return <div className="text-red-400 p-4">Failed to load data</div>;
 
   return (
@@ -65,26 +83,28 @@ export const SlaDashboard: React.FC = () => {
           <p className="text-gray-400 text-sm mt-1">Service Level Agreement Performance Monitor</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-           <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
-              <Filter size={16} className="text-nesma-secondary" />
-              <select 
-                className="bg-transparent border-none outline-none text-sm text-white focus:ring-0 cursor-pointer"
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-              >
-                <option value="All">All Projects</option>
-                {projects.map(p => (
-                  <option key={p.id as string} value={p.name as string}>{p.name as string}</option>
-                ))}
-              </select>
-           </div>
-           
-           <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
-              <Calendar size={16} className="text-nesma-secondary" />
-              <span className="text-sm text-white">{selectedMonth}</span>
-           </div>
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
+            <Filter size={16} className="text-nesma-secondary" />
+            <select
+              className="bg-transparent border-none outline-none text-sm text-white focus:ring-0 cursor-pointer"
+              value={selectedProject}
+              onChange={e => setSelectedProject(e.target.value)}
+            >
+              <option value="All">All Projects</option>
+              {projects.map(p => (
+                <option key={p.id as string} value={p.name as string}>
+                  {p.name as string}
+                </option>
+              ))}
+            </select>
+          </div>
 
-           <button className="px-4 py-2 bg-nesma-primary hover:bg-nesma-accent text-white rounded-lg flex items-center gap-2 shadow-lg shadow-nesma-primary/20 transition-all text-sm">
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
+            <Calendar size={16} className="text-nesma-secondary" />
+            <span className="text-sm text-white">{selectedMonth}</span>
+          </div>
+
+          <button className="px-4 py-2 bg-nesma-primary hover:bg-nesma-accent text-white rounded-lg flex items-center gap-2 shadow-lg shadow-nesma-primary/20 transition-all text-sm">
             <Download size={16} />
             <span>Export Report</span>
           </button>
@@ -104,9 +124,13 @@ export const SlaDashboard: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <span className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">Target: ≥95%</span>
+            <span className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">
+              Target: ≥95%
+            </span>
             <span className={`${parseFloat(onTimePercentage) >= 95 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {parseFloat(onTimePercentage) >= 95 ? 'Target Met' : `${(parseFloat(onTimePercentage) - 95).toFixed(1)}% gap`}
+              {parseFloat(onTimePercentage) >= 95
+                ? 'Target Met'
+                : `${(parseFloat(onTimePercentage) - 95).toFixed(1)}% gap`}
             </span>
           </div>
         </div>
@@ -136,7 +160,9 @@ export const SlaDashboard: React.FC = () => {
               <TrendingUp size={24} />
             </div>
           </div>
-          <p className="text-xs text-gray-400">NIT: {Math.floor((totalJobs + 150) * 0.7)} | NP: {Math.floor((totalJobs + 150) * 0.3)}</p>
+          <p className="text-xs text-gray-400">
+            NIT: {Math.floor((totalJobs + 150) * 0.7)} | NP: {Math.floor((totalJobs + 150) * 0.3)}
+          </p>
         </div>
 
         <div className="glass-card p-6 border-b-4 border-purple-500 rounded-xl hover:bg-white/5 transition-all">
@@ -155,7 +181,6 @@ export const SlaDashboard: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* Charts Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Charts Row */}
@@ -179,8 +204,18 @@ export const SlaDashboard: React.FC = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#0E2841', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} />
-                    <Legend iconType="circle" formatter={(value) => <span className="text-gray-400 text-xs ml-1">{value}</span>} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0E2841',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                      }}
+                    />
+                    <Legend
+                      iconType="circle"
+                      formatter={value => <span className="text-gray-400 text-xs ml-1">{value}</span>}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -192,10 +227,26 @@ export const SlaDashboard: React.FC = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={deliveryPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
-                    <XAxis dataKey="name" tick={{fontSize: 12, fill: '#9CA3AF'}} axisLine={false} tickLine={false} />
-                    <YAxis tick={{fontSize: 12, fill: '#9CA3AF'}} axisLine={false} tickLine={false} domain={[0, 100]} />
-                    <Tooltip contentStyle={{ backgroundColor: '#0E2841', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#fff' }} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
-                    <Legend iconType="circle" formatter={(value) => <span className="text-gray-400 text-xs ml-1">{value}</span>} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                      axisLine={false}
+                      tickLine={false}
+                      domain={[0, 100]}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0E2841',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: '#fff',
+                      }}
+                      cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    />
+                    <Legend
+                      iconType="circle"
+                      formatter={value => <span className="text-gray-400 text-xs ml-1">{value}</span>}
+                    />
                     <Bar dataKey="actual" name="Actual %" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
                     <Bar dataKey="target" name="Target %" fill="#2E3192" radius={[4, 4, 0, 0]} barSize={20} />
                   </BarChart>
@@ -208,7 +259,9 @@ export const SlaDashboard: React.FC = () => {
           <div className="glass-card p-6 rounded-xl overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white">Service Level Compliance Breakdown</h3>
-              <span className="text-xs bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/10">NIT-SCM-SLA-KSA-001</span>
+              <span className="text-xs bg-white/5 px-2 py-1 rounded text-gray-400 border border-white/10">
+                NIT-SCM-SLA-KSA-001
+              </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -227,28 +280,44 @@ export const SlaDashboard: React.FC = () => {
                     <td className="px-4 py-3">≤1 Day</td>
                     <td className="px-4 py-3">≥95%</td>
                     <td className="px-4 py-3 text-emerald-400 font-bold">98.5%</td>
-                    <td className="px-4 py-3 text-right"><span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">Excellent</span></td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
+                        Excellent
+                      </span>
+                    </td>
                   </tr>
                   <tr className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 font-medium text-white">Equipment Delivery</td>
                     <td className="px-4 py-3">2-3 Days</td>
                     <td className="px-4 py-3">≥95%</td>
                     <td className="px-4 py-3 text-amber-400 font-bold">88.0%</td>
-                    <td className="px-4 py-3 text-right"><span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs">Improve</span></td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs">
+                        Improve
+                      </span>
+                    </td>
                   </tr>
                   <tr className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 font-medium text-white">Scrap Removal</td>
                     <td className="px-4 py-3">≤3 Days</td>
                     <td className="px-4 py-3">≥95%</td>
                     <td className="px-4 py-3 text-emerald-400 font-bold">97.8%</td>
-                    <td className="px-4 py-3 text-right"><span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">Target Met</span></td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
+                        Target Met
+                      </span>
+                    </td>
                   </tr>
                   <tr className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 font-medium text-white">Material Movement</td>
                     <td className="px-4 py-3">≤2 Days</td>
                     <td className="px-4 py-3">≥95%</td>
                     <td className="px-4 py-3 text-emerald-400 font-bold">95.7%</td>
-                    <td className="px-4 py-3 text-right"><span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">Target Met</span></td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
+                        Target Met
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -262,14 +331,18 @@ export const SlaDashboard: React.FC = () => {
             <h3 className="text-lg font-bold text-white mb-4">Required Actions</h3>
             <div className="space-y-4">
               <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-                <h4 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2"><AlertOctagon size={14} /> Immediate (1 Week)</h4>
+                <h4 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
+                  <AlertOctagon size={14} /> Immediate (1 Week)
+                </h4>
                 <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-red-500">
                   <li>Process {overdue} overdue orders immediately</li>
                   <li>Improve equipment delivery time for Project Beta</li>
                 </ul>
               </div>
               <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
-                <h4 className="text-amber-400 font-bold text-sm mb-2 flex items-center gap-2"><Clock size={14} /> Near Term (1 Month)</h4>
+                <h4 className="text-amber-400 font-bold text-sm mb-2 flex items-center gap-2">
+                  <Clock size={14} /> Near Term (1 Month)
+                </h4>
                 <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-amber-500">
                   <li>Create Material Days in Custody report</li>
                   <li>Complete quarterly inventory for remaining 30%</li>

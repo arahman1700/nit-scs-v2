@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import type { OsdCreateDto, OsdUpdateDto, OsdLineDto, ListParams } from '../types/dto.js';
 
 const LIST_INCLUDE = {
@@ -83,7 +83,7 @@ export async function create(headerData: Omit<OsdCreateDto, 'lines'>, lines: Osd
     return tx.osdReport.create({
       data: {
         osdNumber,
-        mrrvId: headerData.mrrvId ?? null,
+        mrrvId: (headerData as any).grnId ?? (headerData as any).mrrvId ?? null,
         poNumber: headerData.poNumber ?? null,
         supplierId: headerData.supplierId ?? null,
         warehouseId: headerData.warehouseId ?? null,
@@ -97,7 +97,7 @@ export async function create(headerData: Omit<OsdCreateDto, 'lines'>, lines: Osd
           create: lines.map(line => ({
             itemId: line.itemId,
             uomId: line.uomId,
-            mrrvLineId: line.mrrvLineId ?? null,
+            mrrvLineId: (line as any).grnLineId ?? (line as any).mrrvLineId ?? null,
             qtyInvoice: line.qtyInvoice,
             qtyReceived: line.qtyReceived,
             qtyDamaged: line.qtyDamaged ?? 0,

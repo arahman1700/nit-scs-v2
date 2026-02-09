@@ -5,7 +5,7 @@ import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useCreateGatePass } from '@/api/hooks/useGatePasses';
 import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { Warehouse } from '@nit-scs/shared/types';
+import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 export const GatePassForm: React.FC = () => {

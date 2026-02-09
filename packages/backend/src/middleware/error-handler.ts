@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
-import { AppError, RequestValidationError } from '@nit-scs/shared';
+import { AppError, RequestValidationError } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
 
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {

@@ -1,14 +1,39 @@
-
 import React, { useMemo, useState } from 'react';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useSuppliers, useEmployees } from '@/api/hooks/useMasterData';
-import { JobStatus } from '@nit-scs/shared/types';
-import type { JobOrder, Supplier, Employee } from '@nit-scs/shared/types';
-import { Calendar, Truck, User, MoreHorizontal, Plus, Users, Settings, Search, MapPin, Phone, Star, CheckCircle, Clock, AlertTriangle, Filter, Eye, Wrench, Fuel, BarChart3, Package } from 'lucide-react';
+import { JobStatus } from '@nit-scs-v2/shared/types';
+import type { JobOrder, Supplier, Employee } from '@nit-scs-v2/shared/types';
+import {
+  Calendar,
+  Truck,
+  User,
+  MoreHorizontal,
+  Plus,
+  Users,
+  Settings,
+  Search,
+  MapPin,
+  Phone,
+  Star,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Filter,
+  Eye,
+  Wrench,
+  Fuel,
+  BarChart3,
+  Package,
+} from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // ============ KANBAN COLUMN ============
-const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; borderColor: string }> = ({ status, jobs, color, borderColor }) => (
+const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; borderColor: string }> = ({
+  status,
+  jobs,
+  color,
+  borderColor,
+}) => (
   <div className="flex-1 min-w-[300px] glass-card rounded-2xl p-4 flex flex-col h-[calc(100vh-180px)] bg-black/20">
     <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
       <h3 className="font-bold text-gray-200 flex items-center gap-2">
@@ -20,21 +45,34 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
 
     <div className="space-y-3 overflow-y-auto pr-2 custom-scrollbar flex-1 pb-4">
       {jobs.map(job => (
-        <div key={job.id} className="bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all group shadow-sm">
+        <div
+          key={job.id}
+          className="bg-white/5 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all group shadow-sm"
+        >
           <div className="flex justify-between items-start mb-3">
-            <span className="text-[10px] px-2 py-1 rounded bg-black/30 text-gray-400 font-mono tracking-wider border border-white/5">{job.id}</span>
+            <span className="text-[10px] px-2 py-1 rounded bg-black/30 text-gray-400 font-mono tracking-wider border border-white/5">
+              {job.id}
+            </span>
             <div className="flex gap-2">
-              <span className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                job.priority === 'High' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                job.priority === 'Medium' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              }`}>{job.priority}</span>
+              <span
+                className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
+                  job.priority === 'High'
+                    ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                    : job.priority === 'Medium'
+                      ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                      : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                }`}
+              >
+                {job.priority}
+              </span>
               <button className="text-gray-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreHorizontal size={16} />
               </button>
             </div>
           </div>
-          <h4 className="font-bold text-gray-100 mb-3 text-sm leading-snug group-hover:text-nesma-secondary transition-colors">{job.title}</h4>
+          <h4 className="font-bold text-gray-100 mb-3 text-sm leading-snug group-hover:text-nesma-secondary transition-colors">
+            {job.title}
+          </h4>
 
           <div className="space-y-2 border-t border-white/5 pt-3">
             <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -56,11 +94,17 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
               </div>
             )}
             {job.slaStatus && (
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-block mt-1 ${
-                job.slaStatus === 'On Track' ? 'bg-emerald-500/10 text-emerald-400' :
-                job.slaStatus === 'At Risk' ? 'bg-amber-500/10 text-amber-400' :
-                'bg-red-500/10 text-red-400'
-              }`}>{job.slaStatus}</span>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-block mt-1 ${
+                  job.slaStatus === 'On Track'
+                    ? 'bg-emerald-500/10 text-emerald-400'
+                    : job.slaStatus === 'At Risk'
+                      ? 'bg-amber-500/10 text-amber-400'
+                      : 'bg-red-500/10 text-red-400'
+                }`}
+              >
+                {job.slaStatus}
+              </span>
             )}
           </div>
         </div>
@@ -119,19 +163,24 @@ export const TransportDashboard: React.FC = () => {
       driver?: string;
     }> = [];
 
-    const equipmentJobs = JOBS.filter(j => j.type === 'Equipment' || j.type === 'Transport' || j.type === 'Generator_Maintenance');
+    const equipmentJobs = JOBS.filter(
+      j => j.type === 'Equipment' || j.type === 'Transport' || j.type === 'Generator_Maintenance',
+    );
 
     equipmentJobs.forEach(job => {
       vehicles.push({
         id: `FL-${job.id.split('-').pop()}`,
         name: job.title.split(' - ')[0] || job.title,
-        type: job.type === 'Transport' ? 'Truck' :
-              job.type === 'Generator_Maintenance' ? 'Generator' :
-              'Equipment',
+        type: job.type === 'Transport' ? 'Truck' : job.type === 'Generator_Maintenance' ? 'Generator' : 'Equipment',
         project: job.project || '-',
-        status: job.status === JobStatus.IN_PROGRESS ? 'Active' :
-                job.status === JobStatus.COMPLETED ? 'Available' :
-                job.status === JobStatus.NEW ? 'Requested' : 'Standby',
+        status:
+          job.status === JobStatus.IN_PROGRESS
+            ? 'Active'
+            : job.status === JobStatus.COMPLETED
+              ? 'Available'
+              : job.status === JobStatus.NEW
+                ? 'Requested'
+                : 'Standby',
         lastUsed: job.date,
         driver: job.driver,
       });
@@ -140,21 +189,26 @@ export const TransportDashboard: React.FC = () => {
     return vehicles;
   }, [JOBS]);
 
-  const fleetStats = useMemo(() => ({
-    total: fleetItems.length,
-    active: fleetItems.filter(f => f.status === 'Active').length,
-    available: fleetItems.filter(f => f.status === 'Available').length,
-    maintenance: fleetItems.filter(f => f.type === 'Generator').length,
-  }), [fleetItems]);
+  const fleetStats = useMemo(
+    () => ({
+      total: fleetItems.length,
+      active: fleetItems.filter(f => f.status === 'Active').length,
+      available: fleetItems.filter(f => f.status === 'Available').length,
+      maintenance: fleetItems.filter(f => f.type === 'Generator').length,
+    }),
+    [fleetItems],
+  );
 
   // Supplier data (used in suppliers view)
-  const filteredSuppliers = useMemo(() =>
-    suppliers.filter(s =>
-      searchTerm === '' ||
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.city ?? '').toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-    [searchTerm, suppliers]
+  const filteredSuppliers = useMemo(
+    () =>
+      suppliers.filter(
+        s =>
+          searchTerm === '' ||
+          s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (s.city ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [searchTerm, suppliers],
   );
 
   const suppliersByCity = useMemo(() => {
@@ -168,7 +222,6 @@ export const TransportDashboard: React.FC = () => {
 
   // ============ FLEET VIEW ============
   if (view === 'fleet') {
-
     return (
       <div className="animate-fade-in space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -182,28 +235,36 @@ export const TransportDashboard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-500/20 rounded-lg"><Truck size={18} className="text-blue-400" /></div>
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Truck size={18} className="text-blue-400" />
+              </div>
               <span className="text-xs text-gray-400">Total</span>
             </div>
             <p className="text-2xl font-bold text-white">{fleetStats.total}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-emerald-500/20 rounded-lg"><CheckCircle size={18} className="text-emerald-400" /></div>
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <CheckCircle size={18} className="text-emerald-400" />
+              </div>
               <span className="text-xs text-gray-400">Active</span>
             </div>
             <p className="text-2xl font-bold text-white">{fleetStats.active}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-nesma-secondary/20 rounded-lg"><Package size={18} className="text-nesma-secondary" /></div>
+              <div className="p-2 bg-nesma-secondary/20 rounded-lg">
+                <Package size={18} className="text-nesma-secondary" />
+              </div>
               <span className="text-xs text-gray-400">Available</span>
             </div>
             <p className="text-2xl font-bold text-white">{fleetStats.available}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-500/20 rounded-lg"><Wrench size={18} className="text-amber-400" /></div>
+              <div className="p-2 bg-amber-500/20 rounded-lg">
+                <Wrench size={18} className="text-amber-400" />
+              </div>
               <span className="text-xs text-gray-400">Maintenance</span>
             </div>
             <p className="text-2xl font-bold text-white">{fleetStats.maintenance}</p>
@@ -239,25 +300,40 @@ export const TransportDashboard: React.FC = () => {
                     <td className="py-3 px-4">
                       <div>
                         <span className="text-sm text-gray-200 font-medium">{item.name}</span>
-                        {item.driver && <span className="text-xs text-gray-500 block mt-0.5">Driver: {item.driver}</span>}
+                        {item.driver && (
+                          <span className="text-xs text-gray-500 block mt-0.5">Driver: {item.driver}</span>
+                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-                        item.type === 'Truck' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        item.type === 'Generator' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                      }`}>{item.type}</span>
+                      <span
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
+                          item.type === 'Truck'
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            : item.type === 'Generator'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                        }`}
+                      >
+                        {item.type}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-300">{item.project}</td>
                     <td className="py-3 px-4 text-sm text-gray-400">{item.lastUsed}</td>
                     <td className="py-3 px-4 text-center">
-                      <span className={`text-xs px-3 py-1 rounded-full font-medium border ${
-                        item.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                        item.status === 'Available' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        item.status === 'Requested' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                      }`}>{item.status}</span>
+                      <span
+                        className={`text-xs px-3 py-1 rounded-full font-medium border ${
+                          item.status === 'Active'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : item.status === 'Available'
+                              ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              : item.status === 'Requested'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -295,22 +371,33 @@ export const TransportDashboard: React.FC = () => {
               Drivers & Technicians
             </h3>
             <div className="space-y-3">
-              {employees.filter(e => (e.department as string) === 'Transport' || (e.title as string || '').includes('Driver') || (e.title as string || '').includes('Mechanic')).map(emp => (
-                <div key={emp.id as string} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-nesma-primary/30 flex items-center justify-center text-xs text-nesma-secondary font-bold">
-                      {(emp.name as string).split(' ').map(n => n[0]).join('').slice(0, 2)}
+              {employees
+                .filter(
+                  e =>
+                    (e.department as string) === 'Transport' ||
+                    ((e.title as string) || '').includes('Driver') ||
+                    ((e.title as string) || '').includes('Mechanic'),
+                )
+                .map(emp => (
+                  <div key={emp.id as string} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-nesma-primary/30 flex items-center justify-center text-xs text-nesma-secondary font-bold">
+                        {(emp.name as string)
+                          .split(' ')
+                          .map(n => n[0])
+                          .join('')
+                          .slice(0, 2)}
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-200">{emp.name as string}</span>
+                        <span className="text-xs text-gray-500 block">{emp.title as string}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-200">{emp.name as string}</span>
-                      <span className="text-xs text-gray-500 block">{emp.title as string}</span>
-                    </div>
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <MapPin size={12} /> {emp.site as string}
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
-                    <MapPin size={12} /> {emp.site as string}
-                  </span>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         </div>
@@ -333,28 +420,36 @@ export const TransportDashboard: React.FC = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-500/20 rounded-lg"><Users size={18} className="text-blue-400" /></div>
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Users size={18} className="text-blue-400" />
+              </div>
               <span className="text-xs text-gray-400">Total</span>
             </div>
             <p className="text-2xl font-bold text-white">{suppliers.length}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-emerald-500/20 rounded-lg"><CheckCircle size={18} className="text-emerald-400" /></div>
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <CheckCircle size={18} className="text-emerald-400" />
+              </div>
               <span className="text-xs text-gray-400">Active</span>
             </div>
             <p className="text-2xl font-bold text-white">{suppliers.filter(s => s.status === 'Active').length}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-nesma-secondary/20 rounded-lg"><MapPin size={18} className="text-nesma-secondary" /></div>
+              <div className="p-2 bg-nesma-secondary/20 rounded-lg">
+                <MapPin size={18} className="text-nesma-secondary" />
+              </div>
               <span className="text-xs text-gray-400">Cities</span>
             </div>
             <p className="text-2xl font-bold text-white">{Object.keys(suppliersByCity).length}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-amber-500/20 rounded-lg"><Star size={18} className="text-amber-400" /></div>
+              <div className="p-2 bg-amber-500/20 rounded-lg">
+                <Star size={18} className="text-amber-400" />
+              </div>
               <span className="text-xs text-gray-400">Local</span>
             </div>
             <p className="text-2xl font-bold text-white">{suppliers.filter(s => s.type === 'LOCAL SUPPLIER').length}</p>
@@ -368,7 +463,7 @@ export const TransportDashboard: React.FC = () => {
             type="text"
             placeholder="Search suppliers..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-black/30 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
           />
         </div>
@@ -376,14 +471,23 @@ export const TransportDashboard: React.FC = () => {
         {/* Suppliers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSuppliers.map(supplier => (
-            <div key={supplier.id as string} className="glass-card p-5 rounded-xl hover:bg-white/10 transition-all group border border-white/5 hover:border-nesma-secondary/20">
+            <div
+              key={supplier.id as string}
+              className="glass-card p-5 rounded-xl hover:bg-white/10 transition-all group border border-white/5 hover:border-nesma-secondary/20"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-nesma-primary/30 flex items-center justify-center text-sm text-nesma-secondary font-bold border border-nesma-primary/20">
-                    {(supplier.name as string).split(' ').map(n => n[0]).join('').slice(0, 2)}
+                    {(supplier.name as string)
+                      .split(' ')
+                      .map(n => n[0])
+                      .join('')
+                      .slice(0, 2)}
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">{supplier.name as string}</h4>
+                    <h4 className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">
+                      {supplier.name as string}
+                    </h4>
                     <span className="text-xs text-gray-500 font-mono">{supplier.id as string}</span>
                   </div>
                 </div>
@@ -395,10 +499,18 @@ export const TransportDashboard: React.FC = () => {
                   <span>{supplier.city as string}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-                    supplier.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
-                  }`}>{supplier.status === 'Active' ? 'Active' : supplier.status as string}</span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">{(supplier.type as string).replace('_', ' ')}</span>
+                  <span
+                    className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
+                      supplier.status === 'Active'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                    }`}
+                  >
+                    {supplier.status === 'Active' ? 'Active' : (supplier.status as string)}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                    {(supplier.type as string).replace('_', ' ')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -419,14 +531,16 @@ export const TransportDashboard: React.FC = () => {
             By City
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {Object.entries(suppliersByCity).sort((a, b) => b[1] - a[1]).map(([city, count]) => (
-              <div key={city} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span className="text-sm text-gray-300 flex items-center gap-2">
-                  <MapPin size={12} className="text-nesma-secondary" /> {city}
-                </span>
-                <span className="text-sm text-white font-bold">{count}</span>
-              </div>
-            ))}
+            {Object.entries(suppliersByCity)
+              .sort((a, b) => b[1] - a[1])
+              .map(([city, count]) => (
+                <div key={city} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <span className="text-sm text-gray-300 flex items-center gap-2">
+                    <MapPin size={12} className="text-nesma-secondary" /> {city}
+                  </span>
+                  <span className="text-sm text-white font-bold">{count}</span>
+                </div>
+              ))}
           </div>
         </div>
       </div>
@@ -434,7 +548,14 @@ export const TransportDashboard: React.FC = () => {
   }
 
   // ============ DEFAULT: KANBAN VIEW ============
-  if (isLoading) return <div className="space-y-4 animate-fade-in">{[1,2,3,4].map(i => <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full"></div>)}</div>;
+  if (isLoading)
+    return (
+      <div className="space-y-4 animate-fade-in">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full"></div>
+        ))}
+      </div>
+    );
   if (isError) return <div className="text-red-400 p-4">Failed to load data</div>;
 
   return (
@@ -446,7 +567,9 @@ export const TransportDashboard: React.FC = () => {
         </div>
         <div className="flex gap-3 w-full md:w-auto">
           <div className="hidden md:flex bg-white/5 border border-white/10 rounded-lg p-1">
-            <button className="px-4 py-1.5 text-sm bg-white/10 rounded-md font-medium text-white shadow-sm border border-white/10">Kanban</button>
+            <button className="px-4 py-1.5 text-sm bg-white/10 rounded-md font-medium text-white shadow-sm border border-white/10">
+              Kanban
+            </button>
             <button className="px-4 py-1.5 text-sm text-gray-400 hover:text-white transition-colors">List</button>
           </div>
           <button
@@ -484,10 +607,23 @@ export const TransportDashboard: React.FC = () => {
       </div>
 
       <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 flex-1 items-start snap-x snap-mandatory">
-        <div className="snap-center"><KanbanColumn status="New" jobs={newJobs} color="bg-gray-400" borderColor="gray-400" /></div>
-        <div className="snap-center"><KanbanColumn status="Assigning" jobs={assigningJobs} color="bg-amber-400" borderColor="amber-400" /></div>
-        <div className="snap-center"><KanbanColumn status="In Progress" jobs={progressJobs} color="bg-nesma-secondary" borderColor="nesma-secondary" /></div>
-        <div className="snap-center"><KanbanColumn status="Completed" jobs={completedJobs} color="bg-emerald-400" borderColor="emerald-400" /></div>
+        <div className="snap-center">
+          <KanbanColumn status="New" jobs={newJobs} color="bg-gray-400" borderColor="gray-400" />
+        </div>
+        <div className="snap-center">
+          <KanbanColumn status="Assigning" jobs={assigningJobs} color="bg-amber-400" borderColor="amber-400" />
+        </div>
+        <div className="snap-center">
+          <KanbanColumn
+            status="In Progress"
+            jobs={progressJobs}
+            color="bg-nesma-secondary"
+            borderColor="nesma-secondary"
+          />
+        </div>
+        <div className="snap-center">
+          <KanbanColumn status="Completed" jobs={completedJobs} color="bg-emerald-400" borderColor="emerald-400" />
+        </div>
       </div>
     </div>
   );

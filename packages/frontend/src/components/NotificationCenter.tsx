@@ -3,8 +3,8 @@ import { Bell, CheckCircle, AlertTriangle, Package, Clock, Info, X, Loader2 } fr
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNotifications, useUnreadCount, useMarkRead, useMarkAllRead } from '@/api/hooks';
-import { formatRelativeTime } from '@nit-scs/shared/formatters';
-import type { Notification } from '@nit-scs/shared/types';
+import { formatRelativeTime } from '@nit-scs-v2/shared/formatters';
+import type { Notification } from '@nit-scs-v2/shared/types';
 
 // ── Icon / color maps ──────────────────────────────────────────────────────
 

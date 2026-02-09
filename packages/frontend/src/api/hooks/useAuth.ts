@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { User } from '@nit-scs/shared/types';
+import type { User } from '@nit-scs-v2/shared/types';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ export function useLogin() {
       const { data } = await apiClient.post<LoginResponse>('/auth/login', payload);
       return data;
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       localStorage.setItem('nit_scs_token', result.data.accessToken);
       localStorage.setItem('nit_scs_refresh_token', result.data.refreshToken);
       qc.setQueryData(['auth', 'me'], { success: true, data: result.data.user });

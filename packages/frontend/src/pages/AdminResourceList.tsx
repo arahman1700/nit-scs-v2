@@ -40,7 +40,7 @@ const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 import { toast } from '@/components/Toaster';
 import { generateDocumentPdf, buildPdfOptions } from '@/utils/pdfExport';
 import { getResourceConfig } from '@/config/resourceColumns';
-import type { StatusHistoryEntry } from '@nit-scs/shared/types';
+import type { StatusHistoryEntry } from '@nit-scs-v2/shared/types';
 import type { ListParams } from '@/api/types';
 import {
   useMrrvList,

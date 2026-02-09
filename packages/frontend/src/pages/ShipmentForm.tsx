@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, Ship, CheckCircle, Plus, Trash2 } from 'lucide-react';
-import type { ShipmentLine, ShipmentDocument } from '@nit-scs/shared/types';
+import type { ShipmentLine, ShipmentDocument } from '@nit-scs-v2/shared/types';
 import { useCreateShipment } from '@/api/hooks/useShipments';
 import { useSuppliers } from '@/api/hooks/useMasterData';
-import type { Supplier } from '@nit-scs/shared/types';
+import type { Supplier } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 const PORTS = [

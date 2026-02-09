@@ -7,8 +7,8 @@ import { useMrfList } from '@/api/hooks/useMrf';
 import { useStockTransferList } from '@/api/hooks/useStockTransfers';
 import { useProjects } from '@/api/hooks/useMasterData';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { formatCurrency } from '@nit-scs/shared/formatters';
-import type { MIRV, JobOrder, Project } from '@nit-scs/shared/types';
+import { formatCurrency } from '@nit-scs-v2/shared/formatters';
+import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
 
 type ManagerTab = 'overview' | 'approvals' | 'documents' | 'projects';
 
@@ -16,7 +16,9 @@ export const ManagerDashboard: React.FC = () => {
   const { tab } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const activeTab: ManagerTab = (['overview', 'approvals', 'documents', 'projects'].includes(tab || '') ? tab : 'overview') as ManagerTab;
+  const activeTab: ManagerTab = (
+    ['overview', 'approvals', 'documents', 'projects'].includes(tab || '') ? tab : 'overview'
+  ) as ManagerTab;
   const [search, setSearch] = useState('');
 
   // API data
@@ -37,36 +39,74 @@ export const ManagerDashboard: React.FC = () => {
   // Pending approvals
   const pendingMirvs = useMemo(() => allMirvs.filter(m => m.status === 'Pending Approval'), [allMirvs]);
   const pendingJOs = useMemo(() => allJOs.filter(j => j.status === 'Pending Approval'), [allJOs]);
-  const pendingMrfs = useMemo(() => allMrfs.filter(m => m.status === 'Pending Approval' || m.status === 'submitted'), [allMrfs]);
+  const pendingMrfs = useMemo(
+    () => allMrfs.filter(m => m.status === 'Pending Approval' || m.status === 'submitted'),
+    [allMrfs],
+  );
   const pendingSTs = useMemo(() => allSTs.filter(s => s.status === 'pending'), [allSTs]);
 
   const totalPending = pendingMirvs.length + pendingJOs.length + pendingMrfs.length + pendingSTs.length;
-  const totalPendingValue = useMemo(() =>
-    pendingMirvs.reduce((s, m) => s + Number(m.value || 0), 0) +
-    pendingJOs.reduce((s, j) => s + Number(j.materialPriceSar || 0), 0),
-    [pendingMirvs, pendingJOs]
+  const totalPendingValue = useMemo(
+    () =>
+      pendingMirvs.reduce((s, m) => s + Number(m.value || 0), 0) +
+      pendingJOs.reduce((s, j) => s + Number(j.materialPriceSar || 0), 0),
+    [pendingMirvs, pendingJOs],
   );
 
   const approvedToday = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
-    return allMirvs.filter(m => m.status === 'Approved' && String(m.date || '').startsWith(today)).length +
-           allJOs.filter(j => j.status === 'Approved' && String(j.date || '').startsWith(today)).length;
+    return (
+      allMirvs.filter(m => m.status === 'Approved' && String(m.date || '').startsWith(today)).length +
+      allJOs.filter(j => j.status === 'Approved' && String(j.date || '').startsWith(today)).length
+    );
   }, [allMirvs, allJOs]);
 
   const rejectedThisWeek = useMemo(() => {
-    const week = new Date(); week.setDate(week.getDate() - 7);
-    return allMirvs.filter(m => m.status === 'Rejected').length +
-           allJOs.filter(j => j.status === 'Cancelled').length;
+    const week = new Date();
+    week.setDate(week.getDate() - 7);
+    return allMirvs.filter(m => m.status === 'Rejected').length + allJOs.filter(j => j.status === 'Cancelled').length;
   }, [allMirvs, allJOs]);
 
   const allPendingItems = useMemo(() => {
     const items = [
-      ...pendingMirvs.map(m => ({ id: m.id as string, type: 'MIRV', title: `MIRV - ${m.project as string}`, value: Number(m.value || 0), date: m.date as string, status: m.status as string })),
-      ...pendingJOs.map(j => ({ id: j.id as string, type: 'JO', title: j.title as string, value: Number(j.materialPriceSar || 0), date: j.date as string, status: j.status as string })),
-      ...pendingMrfs.map(m => ({ id: m.id as string, type: 'MRF', title: `MRF - ${m.project as string || ''}`, value: 0, date: m.date as string, status: m.status as string })),
-      ...pendingSTs.map(s => ({ id: s.id as string, type: 'ST', title: `Transfer - ${s.id as string}`, value: 0, date: s.date as string, status: s.status as string })),
+      ...pendingMirvs.map(m => ({
+        id: m.id as string,
+        type: 'MIRV',
+        title: `MIRV - ${m.project as string}`,
+        value: Number(m.value || 0),
+        date: m.date as string,
+        status: m.status as string,
+      })),
+      ...pendingJOs.map(j => ({
+        id: j.id as string,
+        type: 'JO',
+        title: j.title as string,
+        value: Number(j.materialPriceSar || 0),
+        date: j.date as string,
+        status: j.status as string,
+      })),
+      ...pendingMrfs.map(m => ({
+        id: m.id as string,
+        type: 'MRF',
+        title: `MRF - ${(m.project as string) || ''}`,
+        value: 0,
+        date: m.date as string,
+        status: m.status as string,
+      })),
+      ...pendingSTs.map(s => ({
+        id: s.id as string,
+        type: 'ST',
+        title: `Transfer - ${s.id as string}`,
+        value: 0,
+        date: s.date as string,
+        status: s.status as string,
+      })),
     ];
-    if (search) return items.filter(i => i.title.toLowerCase().includes(search.toLowerCase()) || i.type.toLowerCase().includes(search.toLowerCase()));
+    if (search)
+      return items.filter(
+        i =>
+          i.title.toLowerCase().includes(search.toLowerCase()) || i.type.toLowerCase().includes(search.toLowerCase()),
+      );
     return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   }, [pendingMirvs, pendingJOs, pendingMrfs, pendingSTs, search]);
 
@@ -88,17 +128,45 @@ export const ManagerDashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-white glow-text">Manager Dashboard</h1>
           <p className="text-sm text-gray-400 mt-1">Approvals, oversight, and project monitoring</p>
         </div>
-        <button onClick={() => navigate('/manager/forms/jo')} className="px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-colors">
+        <button
+          onClick={() => navigate('/manager/forms/jo')}
+          className="px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-colors"
+        >
           + Create Job Order
         </button>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Pending Approvals" value={totalPending} icon={Clock} color="bg-amber-500" loading={isLoading} alert={totalPending > 10} />
-        <KpiCard title="Approved Today" value={approvedToday} icon={CheckCircle} color="bg-emerald-500" loading={isLoading} />
-        <KpiCard title="Total Value Pending" value={formatCurrency(totalPendingValue)} icon={DollarSign} color="bg-nesma-primary" loading={isLoading} />
-        <KpiCard title="Rejected This Week" value={rejectedThisWeek} icon={XCircle} color="bg-red-500" loading={isLoading} />
+        <KpiCard
+          title="Pending Approvals"
+          value={totalPending}
+          icon={Clock}
+          color="bg-amber-500"
+          loading={isLoading}
+          alert={totalPending > 10}
+        />
+        <KpiCard
+          title="Approved Today"
+          value={approvedToday}
+          icon={CheckCircle}
+          color="bg-emerald-500"
+          loading={isLoading}
+        />
+        <KpiCard
+          title="Total Value Pending"
+          value={formatCurrency(totalPendingValue)}
+          icon={DollarSign}
+          color="bg-nesma-primary"
+          loading={isLoading}
+        />
+        <KpiCard
+          title="Rejected This Week"
+          value={rejectedThisWeek}
+          icon={XCircle}
+          color="bg-red-500"
+          loading={isLoading}
+        />
       </div>
 
       {/* Tab Bar */}
@@ -106,11 +174,17 @@ export const ManagerDashboard: React.FC = () => {
         {tabs.map(t => {
           const Icon = t.icon;
           return (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeTab === t.id ? 'bg-nesma-primary text-white shadow-lg shadow-nesma-primary/20 border border-nesma-primary/50' : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}>
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${activeTab === t.id ? 'bg-nesma-primary text-white shadow-lg shadow-nesma-primary/20 border border-nesma-primary/50' : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 hover:text-white'}`}
+            >
               <Icon size={16} />
               {t.label}
               {t.id === 'approvals' && totalPending > 0 && (
-                <span className="ml-1 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full">{totalPending}</span>
+                <span className="ml-1 text-[10px] bg-amber-500 text-white px-1.5 py-0.5 rounded-full">
+                  {totalPending}
+                </span>
               )}
             </button>
           );
@@ -141,9 +215,14 @@ export const ManagerDashboard: React.FC = () => {
             <h3 className="text-white font-bold mb-4">Recent Activity</h3>
             <div className="space-y-3">
               {allPendingItems.slice(0, 8).map(item => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition-colors">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 hover:border-white/10 transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300">{item.type}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300">
+                      {item.type}
+                    </span>
                     <span className="text-sm text-white">{item.title}</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -152,7 +231,9 @@ export const ManagerDashboard: React.FC = () => {
                   </div>
                 </div>
               ))}
-              {allPendingItems.length === 0 && <p className="text-gray-500 text-sm text-center py-8">No pending items</p>}
+              {allPendingItems.length === 0 && (
+                <p className="text-gray-500 text-sm text-center py-8">No pending items</p>
+              )}
             </div>
           </div>
         </div>
@@ -164,7 +245,12 @@ export const ManagerDashboard: React.FC = () => {
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search approvals..." className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50" />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search approvals..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
+              />
             </div>
           </div>
           <div className="glass-card rounded-2xl overflow-hidden border border-white/10">
@@ -181,15 +267,29 @@ export const ManagerDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5">
                 {allPendingItems.map(item => (
                   <tr key={item.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3"><span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300">{item.type}</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300">
+                        {item.type}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-sm text-white">{item.title}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{item.value > 0 ? formatCurrency(item.value) : '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">
+                      {item.value > 0 ? formatCurrency(item.value) : '-'}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-500">{item.date}</td>
-                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">{item.status}</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                        {item.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
                 {allPendingItems.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-500">No pending approvals</td></tr>
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                      No pending approvals
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -202,7 +302,10 @@ export const ManagerDashboard: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-white/10">
           <h3 className="text-white font-bold mb-4">Recent Documents</h3>
           <p className="text-gray-500 text-sm">View company documents from the Documents page in the sidebar.</p>
-          <button onClick={() => navigate('/manager/documents')} className="mt-4 px-4 py-2 bg-nesma-primary/20 text-nesma-secondary rounded-lg text-sm hover:bg-nesma-primary/30 transition-colors border border-nesma-primary/30">
+          <button
+            onClick={() => navigate('/manager/documents')}
+            className="mt-4 px-4 py-2 bg-nesma-primary/20 text-nesma-secondary rounded-lg text-sm hover:bg-nesma-primary/30 transition-colors border border-nesma-primary/30"
+          >
             Go to Documents
           </button>
         </div>
@@ -241,7 +344,11 @@ export const ManagerDashboard: React.FC = () => {
                     <td className="px-4 py-3 text-sm text-white font-medium">{p.name}</td>
                     <td className="px-4 py-3 text-sm text-gray-300">{p.client}</td>
                     <td className="px-4 py-3 text-sm text-gray-400">{p.manager}</td>
-                    <td className="px-4 py-3"><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">{p.status}</span></td>
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
+                        {p.status}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

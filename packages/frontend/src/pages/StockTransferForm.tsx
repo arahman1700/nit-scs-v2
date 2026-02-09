@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeftRight, CheckCircle } from 'lucide-react';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { useCreateStockTransfer } from '@/api/hooks/useStockTransfers';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
-import type { Warehouse, Project } from '@nit-scs/shared/types';
+import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 export const StockTransferForm: React.FC = () => {

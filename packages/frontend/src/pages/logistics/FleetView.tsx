@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useEmployees } from '@/api/hooks/useMasterData';
-import { JobStatus } from '@nit-scs/shared/types';
-import type { JobOrder, Employee } from '@nit-scs/shared/types';
+import { JobStatus } from '@nit-scs-v2/shared/types';
+import type { JobOrder, Employee } from '@nit-scs-v2/shared/types';
 import { Truck, CheckCircle, Package, Wrench, MapPin } from 'lucide-react';
 
 interface FleetItem {
@@ -38,12 +38,7 @@ export const FleetView: React.FC = () => {
       vehicles.push({
         id: `FL-${job.id.split('-').pop()}`,
         name: job.title.split(' - ')[0] || job.title,
-        type:
-          job.type === 'Transport'
-            ? 'Truck'
-            : job.type === 'Generator_Maintenance'
-              ? 'Generator'
-              : 'Equipment',
+        type: job.type === 'Transport' ? 'Truck' : job.type === 'Generator_Maintenance' ? 'Generator' : 'Equipment',
         project: job.project || '-',
         status:
           job.status === JobStatus.IN_PROGRESS
@@ -87,7 +82,12 @@ export const FleetView: React.FC = () => {
         {[
           { label: 'Total', value: fleetStats.total, icon: Truck, cls: 'bg-blue-500/20 text-blue-400' },
           { label: 'Active', value: fleetStats.active, icon: CheckCircle, cls: 'bg-emerald-500/20 text-emerald-400' },
-          { label: 'Available', value: fleetStats.available, icon: Package, cls: 'bg-nesma-secondary/20 text-nesma-secondary' },
+          {
+            label: 'Available',
+            value: fleetStats.available,
+            icon: Package,
+            cls: 'bg-nesma-secondary/20 text-nesma-secondary',
+          },
           { label: 'Maintenance', value: fleetStats.maintenance, icon: Wrench, cls: 'bg-amber-500/20 text-amber-400' },
         ].map(s => (
           <div key={s.label} className="glass-card p-5 rounded-xl">

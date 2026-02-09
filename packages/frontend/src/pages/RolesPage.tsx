@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Shield, Check, X, Eye, Edit, Lock, Save } from 'lucide-react';
-import { UserRole } from '@nit-scs/shared/types';
-import { getPermissionMatrix, getEffectivePermissions } from '@nit-scs/shared/permissions';
-import type { PermissionOverrides, Permission } from '@nit-scs/shared/permissions';
+import { UserRole } from '@nit-scs-v2/shared/types';
+import { getPermissionMatrix, getEffectivePermissions } from '@nit-scs-v2/shared/permissions';
+import type { PermissionOverrides, Permission } from '@nit-scs-v2/shared/permissions';
 import { usePermissions, useUpdatePermissions } from '@/api/hooks/usePermissions';
 
 // ── Constants ──────────────────────────────────────────────────────────────────

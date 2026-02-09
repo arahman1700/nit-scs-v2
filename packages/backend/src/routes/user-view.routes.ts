@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendCreated } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
-import { NotFoundError } from '@nit-scs/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 
 const router = Router();
 

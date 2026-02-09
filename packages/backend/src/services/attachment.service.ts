@@ -1,5 +1,5 @@
 import { prisma } from '../utils/prisma.js';
-import { NotFoundError } from '@nit-scs/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 
 const VALID_ENTITY_TYPES = new Set([
   'mrrv',

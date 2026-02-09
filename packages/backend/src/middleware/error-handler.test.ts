@@ -33,7 +33,7 @@ vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
 
 import { Prisma } from '@prisma/client';
 import { errorHandler } from './error-handler.js';
-import { AppError, RequestValidationError, NotFoundError } from '@nit-scs/shared';
+import { AppError, RequestValidationError, NotFoundError } from '@nit-scs-v2/shared';
 
 const mockReq = (overrides = {}) => ({ headers: {}, query: {}, body: {}, ...overrides }) as unknown as Request;
 

@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
-import type { ApprovalChain, ApprovalStep } from '@nit-scs/shared/types';
-import { formatRelativeTime } from '@nit-scs/shared/formatters';
+import type { ApprovalChain, ApprovalStep } from '@nit-scs-v2/shared/types';
+import { formatRelativeTime } from '@nit-scs-v2/shared/formatters';
 
 interface ApprovalWorkflowProps {
   chain: ApprovalChain;
@@ -33,17 +32,11 @@ const SLAIndicator: React.FC<{ step: ApprovalStep }> = ({ step }) => {
         : 'bg-emerald-500/10';
 
   return (
-    <div className={`flex items-center gap-1 text-[10px] font-medium ${slaColor} ${slaBg} px-1.5 py-0.5 rounded-full mt-1`}>
-      {step.slaStatus === 'overdue' ? (
-        <AlertTriangle size={10} />
-      ) : (
-        <Clock size={10} />
-      )}
-      <span>
-        {step.slaStatus === 'overdue'
-          ? 'Overdue'
-          : `${hoursRemaining}h ${minsRemaining}m`}
-      </span>
+    <div
+      className={`flex items-center gap-1 text-[10px] font-medium ${slaColor} ${slaBg} px-1.5 py-0.5 rounded-full mt-1`}
+    >
+      {step.slaStatus === 'overdue' ? <AlertTriangle size={10} /> : <Clock size={10} />}
+      <span>{step.slaStatus === 'overdue' ? 'Overdue' : `${hoursRemaining}h ${minsRemaining}m`}</span>
     </div>
   );
 };
@@ -54,7 +47,9 @@ const StepDot: React.FC<{ step: ApprovalStep; compact: boolean }> = ({ step, com
 
   if (step.status === 'approved') {
     return (
-      <div className={`${dotSize} rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]`}>
+      <div
+        className={`${dotSize} rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.3)]`}
+      >
         <CheckCircle size={iconSize} className="text-emerald-400" />
       </div>
     );
@@ -62,7 +57,9 @@ const StepDot: React.FC<{ step: ApprovalStep; compact: boolean }> = ({ step, com
 
   if (step.status === 'rejected') {
     return (
-      <div className={`${dotSize} rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)]`}>
+      <div
+        className={`${dotSize} rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center shadow-[0_0_12px_rgba(239,68,68,0.3)]`}
+      >
         <XCircle size={iconSize} className="text-red-400" />
       </div>
     );
@@ -70,7 +67,9 @@ const StepDot: React.FC<{ step: ApprovalStep; compact: boolean }> = ({ step, com
 
   if (step.status === 'current') {
     return (
-      <div className={`${dotSize} rounded-full bg-nesma-secondary/20 border-2 border-nesma-secondary flex items-center justify-center shadow-[0_0_16px_rgba(128,209,233,0.4)] animate-pulse`}>
+      <div
+        className={`${dotSize} rounded-full bg-nesma-secondary/20 border-2 border-nesma-secondary flex items-center justify-center shadow-[0_0_16px_rgba(128,209,233,0.4)] animate-pulse`}
+      >
         <Clock size={iconSize} className="text-nesma-secondary" />
       </div>
     );
@@ -92,17 +91,13 @@ const StepDot: React.FC<{ step: ApprovalStep; compact: boolean }> = ({ step, com
   );
 };
 
-const ConnectorLine: React.FC<{ prevStatus: ApprovalStep['status']; nextStatus: ApprovalStep['status'] }> = ({ prevStatus }) => {
+const ConnectorLine: React.FC<{ prevStatus: ApprovalStep['status']; nextStatus: ApprovalStep['status'] }> = ({
+  prevStatus,
+}) => {
   const lineColor =
-    prevStatus === 'approved'
-      ? 'bg-emerald-500/50'
-      : prevStatus === 'rejected'
-        ? 'bg-red-500/50'
-        : 'bg-white/10';
+    prevStatus === 'approved' ? 'bg-emerald-500/50' : prevStatus === 'rejected' ? 'bg-red-500/50' : 'bg-white/10';
 
-  return (
-    <div className={`flex-1 h-0.5 min-w-[24px] ${lineColor} mx-1`} />
-  );
+  return <div className={`flex-1 h-0.5 min-w-[24px] ${lineColor} mx-1`} />;
 };
 
 export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compact = false }) => {
@@ -113,22 +108,25 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
       <div className="flex items-center gap-1">
         {steps.map((step, idx) => (
           <React.Fragment key={step.id}>
-            <div className="flex flex-col items-center" title={`${step.label}: ${step.status}${step.approverName ? ` (${step.approverName})` : ''}`}>
+            <div
+              className="flex flex-col items-center"
+              title={`${step.label}: ${step.status}${step.approverName ? ` (${step.approverName})` : ''}`}
+            >
               <StepDot step={step} compact />
             </div>
-            {idx < steps.length - 1 && (
-              <ConnectorLine prevStatus={step.status} nextStatus={steps[idx + 1].status} />
-            )}
+            {idx < steps.length - 1 && <ConnectorLine prevStatus={step.status} nextStatus={steps[idx + 1].status} />}
           </React.Fragment>
         ))}
         {/* Overall status badge */}
-        <div className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-          chain.status === 'approved'
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-            : chain.status === 'rejected'
-              ? 'bg-red-500/10 border-red-500/30 text-red-400'
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-        }`}>
+        <div
+          className={`ml-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+            chain.status === 'approved'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : chain.status === 'rejected'
+                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}
+        >
           {chain.status}
         </div>
       </div>
@@ -146,13 +144,15 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
             Level {chain.currentLevel} of {chain.totalLevels}
           </span>
         </h3>
-        <div className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${
-          chain.status === 'approved'
-            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-            : chain.status === 'rejected'
-              ? 'bg-red-500/10 border-red-500/30 text-red-400'
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-        }`}>
+        <div
+          className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border ${
+            chain.status === 'approved'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : chain.status === 'rejected'
+                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+          }`}
+        >
           {chain.status}
         </div>
       </div>
@@ -165,15 +165,17 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
               <StepDot step={step} compact={false} />
 
               {/* Label */}
-              <span className={`mt-2 text-xs font-semibold text-center leading-tight ${
-                step.status === 'current'
-                  ? 'text-nesma-secondary'
-                  : step.status === 'approved'
-                    ? 'text-emerald-400'
-                    : step.status === 'rejected'
-                      ? 'text-red-400'
-                      : 'text-gray-500'
-              }`}>
+              <span
+                className={`mt-2 text-xs font-semibold text-center leading-tight ${
+                  step.status === 'current'
+                    ? 'text-nesma-secondary'
+                    : step.status === 'approved'
+                      ? 'text-emerald-400'
+                      : step.status === 'rejected'
+                        ? 'text-red-400'
+                        : 'text-gray-500'
+                }`}
+              >
                 {step.label}
               </span>
 
@@ -186,9 +188,7 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
 
               {/* Timestamp */}
               {step.timestamp && (
-                <span className="text-[10px] text-gray-600 mt-0.5">
-                  {formatRelativeTime(step.timestamp)}
-                </span>
+                <span className="text-[10px] text-gray-600 mt-0.5">{formatRelativeTime(step.timestamp)}</span>
               )}
 
               {/* SLA timer (only for current step) */}

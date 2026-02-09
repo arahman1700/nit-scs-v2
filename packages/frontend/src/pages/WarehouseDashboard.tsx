@@ -17,7 +17,7 @@ import {
   ScanLine,
 } from 'lucide-react';
 import { useInventory } from '@/api/hooks/useMasterData';
-import type { InventoryItem } from '@nit-scs/shared/types';
+import type { InventoryItem } from '@nit-scs-v2/shared/types';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrvList } from '@/api/hooks/useMrv';

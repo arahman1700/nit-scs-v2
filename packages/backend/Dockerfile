@@ -14,10 +14,10 @@ COPY tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
 COPY packages/backend/ packages/backend/
 COPY packages/frontend/ packages/frontend/
-RUN pnpm --filter @nit-scs/shared build
-RUN pnpm --filter @nit-scs/frontend build
+RUN pnpm --filter @nit-scs-v2/shared build
+RUN pnpm --filter @nit-scs-v2/frontend build
 RUN cd packages/backend && npx prisma generate
-RUN pnpm --filter @nit-scs/backend build
+RUN pnpm --filter @nit-scs-v2/backend build
 # Compile seed script separately (rootDir is src/ so seed.ts is excluded from normal build)
 RUN cd packages/backend && npx tsc --esModuleInterop --module nodenext --moduleResolution nodenext --outDir dist/seed --rootDir prisma prisma/seed.ts --skipLibCheck
 

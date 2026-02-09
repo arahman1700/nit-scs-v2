@@ -1,11 +1,25 @@
-
 import React, { useMemo, useState } from 'react';
-import { PlusCircle, Clock, CheckCircle, XCircle, ArrowRight, FileText, Truck, Search, Package, MapPin, BarChart3, AlertTriangle, Eye, Filter } from 'lucide-react';
+import {
+  PlusCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  ArrowRight,
+  FileText,
+  Truck,
+  Search,
+  Package,
+  MapPin,
+  BarChart3,
+  AlertTriangle,
+  Eye,
+  Filter,
+} from 'lucide-react';
 import { useProjects, useInventory } from '@/api/hooks/useMasterData';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
-import { JobStatus } from '@nit-scs/shared/types';
-import type { MIRV, JobOrder, InventoryItem, Project } from '@nit-scs/shared/types';
+import { JobStatus } from '@nit-scs-v2/shared/types';
+import type { MIRV, JobOrder, InventoryItem, Project } from '@nit-scs-v2/shared/types';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // The logged-in engineer (simulated)
@@ -30,24 +44,15 @@ export const EngineerDashboard: React.FC = () => {
   const allProjects = (projectsQuery.data?.data ?? []) as Project[];
   const inventoryItems = (inventoryQuery.data?.data ?? []) as InventoryItem[];
 
-  const project = useMemo(() =>
-    allProjects.find(p => p.id === CURRENT_ENGINEER.projectId),
-    [allProjects]
-  );
+  const project = useMemo(() => allProjects.find(p => p.id === CURRENT_ENGINEER.projectId), [allProjects]);
 
   // Engineer's material requests (MIRVs)
-  const myMirvs = useMemo(() =>
-    allMirvs.filter(m => m.requester === CURRENT_ENGINEER.shortName),
-    [allMirvs]
-  );
+  const myMirvs = useMemo(() => allMirvs.filter(m => m.requester === CURRENT_ENGINEER.shortName), [allMirvs]);
 
   // Engineer's job orders
-  const myJobs = useMemo(() =>
-    allJobs.filter(j =>
-      j.requester === CURRENT_ENGINEER.shortName ||
-      j.project === project?.name?.split(' ')[0]
-    ),
-    [allJobs, project]
+  const myJobs = useMemo(
+    () => allJobs.filter(j => j.requester === CURRENT_ENGINEER.shortName || j.project === project?.name?.split(' ')[0]),
+    [allJobs, project],
   );
 
   // Combined requests for "My Requests" view
@@ -95,9 +100,7 @@ export const EngineerDashboard: React.FC = () => {
   const projectInventory = useMemo(() => {
     if (!project) return [];
     const region = (project.region ?? '').toLowerCase();
-    return inventoryItems.filter(i =>
-      (i.warehouse ?? '').toLowerCase().includes(region)
-    );
+    return inventoryItems.filter(i => (i.warehouse ?? '').toLowerCase().includes(region));
   }, [project, inventoryItems]);
 
   const proj = project;
@@ -123,9 +126,14 @@ export const EngineerDashboard: React.FC = () => {
         {/* Filter Tabs */}
         <div className="flex gap-2">
           {['All', 'MIRV', 'JO'].map(f => (
-            <button key={f} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              f === 'All' ? 'bg-nesma-primary/20 text-nesma-secondary border border-nesma-primary/30' : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
-            }`}>
+            <button
+              key={f}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                f === 'All'
+                  ? 'bg-nesma-primary/20 text-nesma-secondary border border-nesma-primary/30'
+                  : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
+              }`}
+            >
               {f === 'All' ? 'All' : f === 'MIRV' ? 'Material' : 'Job Orders'}
             </button>
           ))}
@@ -152,9 +160,15 @@ export const EngineerDashboard: React.FC = () => {
                       <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded text-gray-300">{req.id}</span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-                        req.type === 'MIRV' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                      }`}>{req.type}</span>
+                      <span
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
+                          req.type === 'MIRV'
+                            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                            : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                        }`}
+                      >
+                        {req.type}
+                      </span>
                     </td>
                     <td className="py-3 px-4 text-sm text-gray-200 group-hover:text-white">{req.title}</td>
                     <td className="py-3 px-4 text-sm text-gray-400">{req.date}</td>
@@ -184,13 +198,21 @@ export const EngineerDashboard: React.FC = () => {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-xs font-mono bg-white/10 px-2 py-1 rounded text-gray-300">{proj?.id}</span>
-              <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Active
+              </span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">{proj?.name}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-gray-300 mt-4">
-              <span className="flex items-center gap-1"><MapPin size={14} className="text-nesma-secondary" /> {proj?.region}</span>
-              <span>Client: <strong className="text-white">{proj?.client}</strong></span>
-              <span>PM: <strong className="text-white">{proj?.manager}</strong></span>
+              <span className="flex items-center gap-1">
+                <MapPin size={14} className="text-nesma-secondary" /> {proj?.region}
+              </span>
+              <span>
+                Client: <strong className="text-white">{proj?.client}</strong>
+              </span>
+              <span>
+                PM: <strong className="text-white">{proj?.manager}</strong>
+              </span>
             </div>
           </div>
         </div>
@@ -198,31 +220,41 @@ export const EngineerDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-500/20 rounded-lg"><Package size={18} className="text-blue-400" /></div>
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Package size={18} className="text-blue-400" />
+              </div>
               <span className="text-sm text-gray-400">MIRVs</span>
             </div>
             <p className="text-2xl font-bold text-white">{myMirvs.length}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-orange-500/20 rounded-lg"><Truck size={18} className="text-orange-400" /></div>
+              <div className="p-2 bg-orange-500/20 rounded-lg">
+                <Truck size={18} className="text-orange-400" />
+              </div>
               <span className="text-sm text-gray-400">Job Orders</span>
             </div>
             <p className="text-2xl font-bold text-white">{myJobs.length}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-emerald-500/20 rounded-lg"><CheckCircle size={18} className="text-emerald-400" /></div>
+              <div className="p-2 bg-emerald-500/20 rounded-lg">
+                <CheckCircle size={18} className="text-emerald-400" />
+              </div>
               <span className="text-sm text-gray-400">Completed</span>
             </div>
             <p className="text-2xl font-bold text-white">{stats.completed}</p>
           </div>
           <div className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-nesma-secondary/20 rounded-lg"><BarChart3 size={18} className="text-nesma-secondary" /></div>
+              <div className="p-2 bg-nesma-secondary/20 rounded-lg">
+                <BarChart3 size={18} className="text-nesma-secondary" />
+              </div>
               <span className="text-sm text-gray-400">Total Value</span>
             </div>
-            <p className="text-2xl font-bold text-white">{stats.totalValue.toLocaleString()} <span className="text-sm text-gray-400">SAR</span></p>
+            <p className="text-2xl font-bold text-white">
+              {stats.totalValue.toLocaleString()} <span className="text-sm text-gray-400">SAR</span>
+            </p>
           </div>
         </div>
 
@@ -236,13 +268,15 @@ export const EngineerDashboard: React.FC = () => {
             <span className="text-sm text-gray-400">{projectInventory.length} items</span>
           </div>
           <div className="divide-y divide-white/5">
-            {projectInventory.map((item) => (
+            {projectInventory.map(item => (
               <div key={item.id} className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
                 <div className="flex items-center gap-4">
                   <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded text-gray-400">{item.code}</span>
                   <div>
                     <span className="text-sm text-gray-200">{item.name}</span>
-                    <span className="text-xs text-gray-500 block">{item.warehouse} • {item.location}</span>
+                    <span className="text-xs text-gray-500 block">
+                      {item.warehouse} • {item.location}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -250,11 +284,17 @@ export const EngineerDashboard: React.FC = () => {
                     <span className="text-sm font-medium text-white">{item.quantity?.toLocaleString()}</span>
                     <span className="text-xs text-gray-500 block">{item.category}</span>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full border ${
-                    item.stockStatus === 'In Stock' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                    item.stockStatus === 'Low Stock' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                    'bg-red-500/10 text-red-400 border-red-500/20'
-                  }`}>{item.stockStatus}</span>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full border ${
+                      item.stockStatus === 'In Stock'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : item.stockStatus === 'Low Stock'
+                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    }`}
+                  >
+                    {item.stockStatus}
+                  </span>
                 </div>
               </div>
             ))}
@@ -287,7 +327,9 @@ export const EngineerDashboard: React.FC = () => {
                 <Package size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">Material Issue Request</h3>
+                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
+                  Material Issue Request
+                </h3>
                 <p className="text-sm text-gray-400">MIRV</p>
               </div>
             </div>
@@ -306,7 +348,9 @@ export const EngineerDashboard: React.FC = () => {
                 <Truck size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">Job Order / Transport</h3>
+                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
+                  Job Order / Transport
+                </h3>
                 <p className="text-sm text-gray-400">JO</p>
               </div>
             </div>
@@ -325,7 +369,9 @@ export const EngineerDashboard: React.FC = () => {
                 <FileText size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">Material Return</h3>
+                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
+                  Material Return
+                </h3>
                 <p className="text-sm text-gray-400">MRV</p>
               </div>
             </div>
@@ -344,7 +390,9 @@ export const EngineerDashboard: React.FC = () => {
                 <AlertTriangle size={28} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">OSD Report</h3>
+                <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
+                  OSD Report
+                </h3>
                 <p className="text-sm text-gray-400">Over/Short/Damage</p>
               </div>
             </div>
@@ -401,7 +449,12 @@ export const EngineerDashboard: React.FC = () => {
         <StatCard icon={<CheckCircle size={18} />} label="Completed" value={stats.completed} color="emerald" />
         <StatCard icon={<Clock size={18} />} label="In Progress" value={stats.inProgress} color="blue" />
         <StatCard icon={<AlertTriangle size={18} />} label="Pending" value={stats.pending} color="amber" />
-        <StatCard icon={<BarChart3 size={18} />} label="Total Value" value={`${stats.totalValue.toLocaleString()} SAR`} color="nesma" />
+        <StatCard
+          icon={<BarChart3 size={18} />}
+          label="Total Value"
+          value={`${stats.totalValue.toLocaleString()} SAR`}
+          color="nesma"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -421,15 +474,24 @@ export const EngineerDashboard: React.FC = () => {
           </div>
           <div className="divide-y divide-white/5">
             {allRequests.slice(0, 5).map(req => (
-              <div key={req.id} className="flex items-center justify-between p-5 hover:bg-white/5 transition-colors group cursor-pointer">
+              <div
+                key={req.id}
+                className="flex items-center justify-between p-5 hover:bg-white/5 transition-colors group cursor-pointer"
+              >
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${req.type === 'JO' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                  <div
+                    className={`p-3 rounded-xl ${req.type === 'JO' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}`}
+                  >
                     {req.type === 'JO' ? <Truck size={20} /> : <Package size={20} />}
                   </div>
                   <div>
-                    <h4 className="font-bold text-gray-200 group-hover:text-white transition-colors text-sm">{req.title}</h4>
+                    <h4 className="font-bold text-gray-200 group-hover:text-white transition-colors text-sm">
+                      {req.title}
+                    </h4>
                     <p className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                      <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded text-gray-400 font-medium">{req.id}</span>
+                      <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded text-gray-400 font-medium">
+                        {req.id}
+                      </span>
                       <span className="text-gray-600">•</span>
                       <span>{req.date}</span>
                       {req.value > 0 && (
@@ -447,9 +509,7 @@ export const EngineerDashboard: React.FC = () => {
                 </div>
               </div>
             ))}
-            {allRequests.length === 0 && (
-              <div className="text-center py-8 text-gray-500 text-sm">No requests yet</div>
-            )}
+            {allRequests.length === 0 && <div className="text-center py-8 text-gray-500 text-sm">No requests yet</div>}
           </div>
         </div>
 
@@ -464,7 +524,9 @@ export const EngineerDashboard: React.FC = () => {
             <div className="space-y-4">
               <div className="p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-emerald-500/20 p-2 rounded-lg text-emerald-400"><CheckCircle size={18} /></div>
+                  <div className="bg-emerald-500/20 p-2 rounded-lg text-emerald-400">
+                    <CheckCircle size={18} />
+                  </div>
                   <span className="font-medium text-gray-300">Completed</span>
                 </div>
                 <span className="text-2xl font-bold text-white">{stats.completed}</span>
@@ -472,7 +534,9 @@ export const EngineerDashboard: React.FC = () => {
 
               <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-blue-500/20 p-2 rounded-lg text-blue-400"><Clock size={18} /></div>
+                  <div className="bg-blue-500/20 p-2 rounded-lg text-blue-400">
+                    <Clock size={18} />
+                  </div>
                   <span className="font-medium text-gray-300">In Progress</span>
                 </div>
                 <span className="text-2xl font-bold text-white">{stats.inProgress}</span>
@@ -480,7 +544,9 @@ export const EngineerDashboard: React.FC = () => {
 
               <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-amber-500/20 p-2 rounded-lg text-amber-400"><AlertTriangle size={18} /></div>
+                  <div className="bg-amber-500/20 p-2 rounded-lg text-amber-400">
+                    <AlertTriangle size={18} />
+                  </div>
                   <span className="font-medium text-gray-300">Pending</span>
                 </div>
                 <span className="text-2xl font-bold text-white">{stats.pending}</span>
@@ -490,7 +556,9 @@ export const EngineerDashboard: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-white/10">
               <div className="flex justify-between items-center mb-2">
                 <p className="text-sm text-gray-400 font-medium">Material Budget</p>
-                <p className="text-xs text-nesma-secondary font-bold">{Math.min(Math.round((stats.totalValue / 200000) * 100), 100)}%</p>
+                <p className="text-xs text-nesma-secondary font-bold">
+                  {Math.min(Math.round((stats.totalValue / 200000) * 100), 100)}%
+                </p>
               </div>
               <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                 <div
@@ -510,17 +578,28 @@ export const EngineerDashboard: React.FC = () => {
                 Stock Alerts
               </h3>
               <div className="space-y-3">
-                {projectInventory.filter(i => i.stockStatus !== 'In Stock').map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-amber-500/5 rounded-lg border border-amber-500/10">
-                    <div>
-                      <span className="text-sm text-gray-200">{item.name}</span>
-                      <span className="text-xs text-gray-500 block">{item.code}</span>
+                {projectInventory
+                  .filter(i => i.stockStatus !== 'In Stock')
+                  .map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 bg-amber-500/5 rounded-lg border border-amber-500/10"
+                    >
+                      <div>
+                        <span className="text-sm text-gray-200">{item.name}</span>
+                        <span className="text-xs text-gray-500 block">{item.code}</span>
+                      </div>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          item.stockStatus === 'Out of Stock'
+                            ? 'bg-red-500/10 text-red-400'
+                            : 'bg-amber-500/10 text-amber-400'
+                        }`}
+                      >
+                        {item.stockStatus === 'Out of Stock' ? 'Out of Stock' : 'Low Stock'}
+                      </span>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      item.stockStatus === 'Out of Stock' ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
-                    }`}>{item.stockStatus === 'Out of Stock' ? 'Out of Stock' : 'Low Stock'}</span>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -532,15 +611,27 @@ export const EngineerDashboard: React.FC = () => {
 
 // ============ Helper Components ============
 
-const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; color: string }> = ({ icon, label, value, color }) => (
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; color: string }> = ({
+  icon,
+  label,
+  value,
+  color,
+}) => (
   <div className="glass-card p-5 rounded-xl">
     <div className="flex items-center gap-3 mb-3">
-      <div className={`p-2 rounded-lg ${
-        color === 'emerald' ? 'bg-emerald-500/20 text-emerald-400' :
-        color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
-        color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
-        'bg-nesma-secondary/20 text-nesma-secondary'
-      }`}>{icon}</div>
+      <div
+        className={`p-2 rounded-lg ${
+          color === 'emerald'
+            ? 'bg-emerald-500/20 text-emerald-400'
+            : color === 'blue'
+              ? 'bg-blue-500/20 text-blue-400'
+              : color === 'amber'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'bg-nesma-secondary/20 text-nesma-secondary'
+        }`}
+      >
+        {icon}
+      </div>
       <span className="text-xs text-gray-400">{label}</span>
     </div>
     <p className="text-2xl font-bold text-white">{value}</p>
@@ -549,20 +640,22 @@ const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string |
 
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const styles: Record<string, string> = {
-    'Completed': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    'Issued': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    'Approved': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    Completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    Issued: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    Approved: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     'In Progress': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    'Assigning': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    Assigning: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     'Pending Approval': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    'Draft': 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-    'New': 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-    'Pending': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    'Rejected': 'bg-red-500/10 text-red-400 border-red-500/20',
-    'Cancelled': 'bg-red-500/10 text-red-400 border-red-500/20',
+    Draft: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+    New: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+    Pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    Rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
+    Cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
   };
   return (
-    <span className={`px-3 py-1 text-xs rounded-full font-medium border ${styles[status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}>
+    <span
+      className={`px-3 py-1 text-xs rounded-full font-medium border ${styles[status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}
+    >
       {status}
     </span>
   );

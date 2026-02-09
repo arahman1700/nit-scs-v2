@@ -1,7 +1,6 @@
-
 import React from 'react';
-import type { StatusHistoryEntry } from '@nit-scs/shared/types';
-import { formatRelativeTime, formatDate } from '@nit-scs/shared/formatters';
+import type { StatusHistoryEntry } from '@nit-scs-v2/shared/types';
+import { formatRelativeTime, formatDate } from '@nit-scs-v2/shared/formatters';
 
 interface StatusTimelineProps {
   history: StatusHistoryEntry[];
@@ -17,7 +16,18 @@ function getStatusDotColor(status: string): string {
   if (['Issued', 'Inspected', 'In Clearance', 'Booked'].includes(status)) {
     return 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]';
   }
-  if (['Pending', 'Pending Approval', 'In Progress', 'In Transit', 'At Risk', 'Under Review', 'Pending QC', 'Open'].includes(status)) {
+  if (
+    [
+      'Pending',
+      'Pending Approval',
+      'In Progress',
+      'In Transit',
+      'At Risk',
+      'Under Review',
+      'Pending QC',
+      'Open',
+    ].includes(status)
+  ) {
     return 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]';
   }
   return 'bg-gray-400 shadow-[0_0_8px_rgba(156,163,175,0.3)]';
@@ -33,16 +43,25 @@ function getStatusBadgeClasses(status: string): string {
   if (['Issued', 'Inspected', 'In Clearance', 'Booked'].includes(status)) {
     return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
   }
-  if (['Pending', 'Pending Approval', 'In Progress', 'In Transit', 'At Risk', 'Under Review', 'Pending QC', 'Open'].includes(status)) {
+  if (
+    [
+      'Pending',
+      'Pending Approval',
+      'In Progress',
+      'In Transit',
+      'At Risk',
+      'Under Review',
+      'Pending QC',
+      'Open',
+    ].includes(status)
+  ) {
     return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
   }
   return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
 }
 
 export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
-  const sorted = [...history].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  const sorted = [...history].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   if (sorted.length === 0) {
     return (
@@ -51,9 +70,7 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
           <span className="w-1 h-6 bg-nesma-secondary rounded-full shadow-[0_0_8px_rgba(128,209,233,0.6)]" />
           Status History
         </h3>
-        <div className="text-center py-8 text-gray-500 text-sm">
-          No status history available
-        </div>
+        <div className="text-center py-8 text-gray-500 text-sm">No status history available</div>
       </div>
     );
   }
@@ -80,9 +97,7 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
                     isFirst ? 'ring-4 ring-white/5' : ''
                   }`}
                 />
-                {!isLast && (
-                  <div className="w-px flex-1 bg-white/10 my-1" />
-                )}
+                {!isLast && <div className="w-px flex-1 bg-white/10 my-1" />}
               </div>
 
               {/* Content */}
@@ -94,11 +109,7 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
                     {entry.status}
                   </span>
 
-                  {entry.action && (
-                    <span className="text-xs text-gray-500 font-medium">
-                      {entry.action}
-                    </span>
-                  )}
+                  {entry.action && <span className="text-xs text-gray-500 font-medium">{entry.action}</span>}
                 </div>
 
                 <div className="flex items-center gap-2 mt-1.5">

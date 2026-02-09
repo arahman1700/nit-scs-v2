@@ -14,7 +14,7 @@ import type {
   EquipmentFleet,
   SupplierRate,
   InventoryItem,
-} from '@nit-scs/shared/types';
+} from '@nit-scs-v2/shared/types';
 import type { ListParams, ApiResponse } from '../types';
 
 export type { ListParams, ApiResponse };

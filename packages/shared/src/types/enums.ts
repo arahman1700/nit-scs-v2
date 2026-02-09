@@ -9,6 +9,8 @@ export enum UserRole {
   SITE_ENGINEER = 'site_engineer',
   QC_OFFICER = 'qc_officer',
   FREIGHT_FORWARDER = 'freight_forwarder',
+  TRANSPORT_SUPERVISOR = 'transport_supervisor',
+  SCRAP_COMMITTEE_MEMBER = 'scrap_committee_member',
 }
 
 export enum JobStatus {

@@ -1,11 +1,30 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  Package, Truck, Clock, DollarSign, Download, Printer, Filter,
-  BarChart3, Users, ArrowRightLeft,
+  Package,
+  Truck,
+  Clock,
+  DollarSign,
+  Download,
+  Printer,
+  Filter,
+  BarChart3,
+  Users,
+  ArrowRightLeft,
 } from 'lucide-react';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  CartesianGrid,
+  Legend,
 } from 'recharts';
 import {
   useInventoryReport,
@@ -18,7 +37,7 @@ import {
 import { useProjects, useWarehouses } from '@/api/hooks/useMasterData';
 import { generateReportPdf } from '@/utils/pdfExport';
 import type { ReportPdfOptions } from '@/utils/pdfExport';
-import { formatCurrency } from '@nit-scs/shared/formatters';
+import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -92,7 +111,7 @@ const DataTable: React.FC<{ columns: string[]; rows: Record<string, unknown>[] }
     <table className="w-full text-sm">
       <thead>
         <tr className="border-b border-white/10">
-          {columns.map((col) => (
+          {columns.map(col => (
             <th key={col} className="text-left text-xs text-gray-500 uppercase tracking-wider py-3 px-3">
               {col}
             </th>
@@ -109,7 +128,7 @@ const DataTable: React.FC<{ columns: string[]; rows: Record<string, unknown>[] }
         ) : (
           rows.map((row, idx) => (
             <tr key={idx} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-              {columns.map((col) => (
+              {columns.map(col => (
                 <td key={col} className="py-3 px-3 text-gray-300">
                   {String(safe(row[col], '-'))}
                 </td>
@@ -162,18 +181,14 @@ export const ReportsPage: React.FC = () => {
   const financialQ = useFinancialReport(filters, activeTab === 'financial');
 
   // Extract data helpers — hooks return ApiResponse<unknown> so we cast via unknown
-  const extract = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (q: { data?: { data?: unknown } }) => {
-      const d = (q.data?.data ?? {}) as Record<string, unknown>;
-      return {
-        summary: ((d.summary as Record<string, unknown>) ?? {}) as Record<string, unknown>,
-        rows: ((d.rows as unknown[]) ?? []) as Record<string, unknown>[],
-        chartData: ((d.chartData as unknown[]) ?? []) as Record<string, unknown>[],
-      };
-    },
-    [],
-  );
+  const extract = useCallback((q: { data?: { data?: unknown } }) => {
+    const d = (q.data?.data ?? {}) as Record<string, unknown>;
+    return {
+      summary: ((d.summary as Record<string, unknown>) ?? {}) as Record<string, unknown>,
+      rows: ((d.rows as unknown[]) ?? []) as Record<string, unknown>[],
+      chartData: ((d.chartData as unknown[]) ?? []) as Record<string, unknown>[],
+    };
+  }, []);
 
   // Generate / refetch handler
   const handleGenerate = useCallback(() => {
@@ -191,18 +206,38 @@ export const ReportsPage: React.FC = () => {
   // Export PDF handler
   const handleExportPdf = useCallback(() => {
     const tabConfig: Record<ReportTab, { title: string; columns: string[]; dataQ: typeof inventoryQ }> = {
-      inventory: { title: 'Inventory Summary', columns: ['Item', 'Category', 'Warehouse', 'Qty', 'Value'], dataQ: inventoryQ },
-      job_orders: { title: 'Job Order Status', columns: ['JO#', 'Type', 'Project', 'Status', 'Value'], dataQ: jobOrderQ },
+      inventory: {
+        title: 'Inventory Summary',
+        columns: ['Item', 'Category', 'Warehouse', 'Qty', 'Value'],
+        dataQ: inventoryQ,
+      },
+      job_orders: {
+        title: 'Job Order Status',
+        columns: ['JO#', 'Type', 'Project', 'Status', 'Value'],
+        dataQ: jobOrderQ,
+      },
       sla: { title: 'SLA Compliance', columns: ['JO#', 'SLA Target', 'Actual', 'Status'], dataQ: slaQ },
-      material: { title: 'Material Movement', columns: ['Date', 'MRRV Count', 'MIRV Count', 'MRV Count'], dataQ: materialQ },
-      supplier: { title: 'Supplier Performance', columns: ['Supplier', 'Deliveries', 'Avg Days', 'On-Time %'], dataQ: supplierQ },
-      financial: { title: 'Financial Summary', columns: ['Month', 'Receipts', 'Issues', 'JO Costs'], dataQ: financialQ },
+      material: {
+        title: 'Material Movement',
+        columns: ['Date', 'MRRV Count', 'MIRV Count', 'MRV Count'],
+        dataQ: materialQ,
+      },
+      supplier: {
+        title: 'Supplier Performance',
+        columns: ['Supplier', 'Deliveries', 'Avg Days', 'On-Time %'],
+        dataQ: supplierQ,
+      },
+      financial: {
+        title: 'Financial Summary',
+        columns: ['Month', 'Receipts', 'Issues', 'JO Costs'],
+        dataQ: financialQ,
+      },
     };
 
     const cfg = tabConfig[activeTab];
     const d = extract(cfg.dataQ);
     const summaryArr = Object.entries(d.summary).map(([k, v]) => ({
-      label: k.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()),
+      label: k.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase()),
       value: typeof v === 'number' ? v.toLocaleString() : String(v ?? ''),
     }));
 
@@ -210,11 +245,11 @@ export const ReportsPage: React.FC = () => {
     if (dateFrom) filterList.push({ label: 'From', value: dateFrom });
     if (dateTo) filterList.push({ label: 'To', value: dateTo });
     if (projectId) {
-      const p = projects.find((pr) => pr.id === projectId);
+      const p = projects.find(pr => pr.id === projectId);
       filterList.push({ label: 'Project', value: p?.name ?? projectId });
     }
     if (warehouseId) {
-      const w = warehouses.find((wh) => wh.id === warehouseId);
+      const w = warehouses.find(wh => wh.id === warehouseId);
       filterList.push({ label: 'Warehouse', value: w?.name ?? warehouseId });
     }
 
@@ -227,7 +262,22 @@ export const ReportsPage: React.FC = () => {
       filters: filterList,
     };
     generateReportPdf(pdfOptions);
-  }, [activeTab, inventoryQ, jobOrderQ, slaQ, materialQ, supplierQ, financialQ, extract, dateFrom, dateTo, projectId, warehouseId, projects, warehouses]);
+  }, [
+    activeTab,
+    inventoryQ,
+    jobOrderQ,
+    slaQ,
+    materialQ,
+    supplierQ,
+    financialQ,
+    extract,
+    dateFrom,
+    dateTo,
+    projectId,
+    warehouseId,
+    projects,
+    warehouses,
+  ]);
 
   // ── Render Tab Content ─────────────────────────────────────────────────────
 
@@ -267,15 +317,7 @@ export const ReportsPage: React.FC = () => {
         </div>
         <ChartWrapper title="Job Orders by Type">
           <PieChart>
-            <Pie
-              data={chartData}
-              cx="50%"
-              cy="50%"
-              innerRadius={70}
-              outerRadius={120}
-              dataKey="value"
-              label={PieLabel}
-            >
+            <Pie data={chartData} cx="50%" cy="50%" innerRadius={70} outerRadius={120} dataKey="value" label={PieLabel}>
               {chartData.map((_, i) => (
                 <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
@@ -294,13 +336,14 @@ export const ReportsPage: React.FC = () => {
     const onTrack = num(s.onTrack);
     const atRisk = num(s.atRisk);
     const overdue = num(s.overdue);
-    const pieData = chartData.length > 0
-      ? chartData
-      : [
-          { name: 'On Track', value: onTrack },
-          { name: 'At Risk', value: atRisk },
-          { name: 'Overdue', value: overdue },
-        ];
+    const pieData =
+      chartData.length > 0
+        ? chartData
+        : [
+            { name: 'On Track', value: onTrack },
+            { name: 'At Risk', value: atRisk },
+            { name: 'Overdue', value: overdue },
+          ];
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -459,7 +502,7 @@ export const ReportsPage: React.FC = () => {
 
       {/* Tab Bar */}
       <div className="flex gap-2 overflow-x-auto pb-2">
-        {TABS.map((tab) => {
+        {TABS.map(tab => {
           const Icon = tab.icon;
           return (
             <button
@@ -491,7 +534,7 @@ export const ReportsPage: React.FC = () => {
             <input
               type="date"
               value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
+              onChange={e => setDateFrom(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50"
             />
           </div>
@@ -501,7 +544,7 @@ export const ReportsPage: React.FC = () => {
             <input
               type="date"
               value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
+              onChange={e => setDateTo(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50"
             />
           </div>
@@ -510,11 +553,13 @@ export const ReportsPage: React.FC = () => {
             <label className="text-xs text-gray-500 uppercase tracking-wider">Project</label>
             <select
               value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
+              onChange={e => setProjectId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"
             >
-              <option value="" className="bg-[#0a1929]">All Projects</option>
-              {projects.map((p) => (
+              <option value="" className="bg-[#0a1929]">
+                All Projects
+              </option>
+              {projects.map(p => (
                 <option key={p.id} value={p.id} className="bg-[#0a1929]">
                   {p.name}
                 </option>
@@ -526,11 +571,13 @@ export const ReportsPage: React.FC = () => {
             <label className="text-xs text-gray-500 uppercase tracking-wider">Warehouse</label>
             <select
               value={warehouseId}
-              onChange={(e) => setWarehouseId(e.target.value)}
+              onChange={e => setWarehouseId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"
             >
-              <option value="" className="bg-[#0a1929]">All Warehouses</option>
-              {warehouses.map((w) => (
+              <option value="" className="bg-[#0a1929]">
+                All Warehouses
+              </option>
+              {warehouses.map(w => (
                 <option key={w.id} value={w.id} className="bg-[#0a1929]">
                   {w.name}
                 </option>

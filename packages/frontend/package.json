@@ -1,5 +1,5 @@
 {
-  "name": "@nit-scs/frontend",
+  "name": "@nit-scs-v2/frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.2.2",
-    "@nit-scs/shared": "workspace:*",
+    "@nit-scs-v2/shared": "workspace:*",
     "@sentry/react": "^10.38.0",
     "@tanstack/react-query": "^5.65.0",
     "ag-grid-community": "^35.0.1",

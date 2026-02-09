@@ -4,8 +4,8 @@
 // ============================================================================
 
 import { create } from 'zustand';
-import type { User, Notification } from '@nit-scs/shared/types';
-import { UserRole } from '@nit-scs/shared/types';
+import type { User, Notification } from '@nit-scs-v2/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
 
 interface AppState {
   // Auth (managed by login API response)
@@ -30,7 +30,7 @@ interface AppState {
   setTheme: (theme: 'dark' | 'light') => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>(set => ({
   // Auth
   user: null,
   token: null,
@@ -48,17 +48,15 @@ export const useAppStore = create<AppState>((set) => ({
   // Notifications (populated via WebSocket / API)
   notifications: [],
   unreadCount: 0,
-  addNotification: (notification) => {
+  addNotification: notification => {
     set(state => ({
       notifications: [notification, ...state.notifications],
       unreadCount: state.unreadCount + 1,
     }));
   },
-  markAsRead: (id) => {
+  markAsRead: id => {
     set(state => ({
-      notifications: state.notifications.map(n =>
-        n.id === id ? { ...n, read: true } : n
-      ),
+      notifications: state.notifications.map(n => (n.id === id ? { ...n, read: true } : n)),
       unreadCount: Math.max(0, state.unreadCount - (state.notifications.find(n => n.id === id && !n.read) ? 1 : 0)),
     }));
   },
@@ -72,7 +70,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   // UI
   sidebarOpen: typeof window !== 'undefined' ? window.innerWidth > 1024 : true,
-  setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setSidebarOpen: open => set({ sidebarOpen: open }),
   theme: 'dark',
-  setTheme: (theme) => set({ theme }),
+  setTheme: theme => set({ theme }),
 }));

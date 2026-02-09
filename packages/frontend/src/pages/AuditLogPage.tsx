@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FileText, Search, Download, ChevronRight } from 'lucide-react';
 import { useAuditLogs } from '@/api/hooks';
-import { formatRelativeTime } from '@nit-scs/shared/formatters';
+import { formatRelativeTime } from '@nit-scs-v2/shared/formatters';
 
 const ACTION_COLORS: Record<string, string> = {
   create: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -39,13 +39,16 @@ export const AuditLogPage: React.FC = () => {
   const [filterEntity, setFilterEntity] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  const params = useMemo(() => ({
-    page: currentPage,
-    pageSize: 50,
-    search: searchTerm || undefined,
-    action: filterAction || undefined,
-    tableName: filterEntity || undefined,
-  }), [currentPage, searchTerm, filterAction, filterEntity]);
+  const params = useMemo(
+    () => ({
+      page: currentPage,
+      pageSize: 50,
+      search: searchTerm || undefined,
+      action: filterAction || undefined,
+      tableName: filterEntity || undefined,
+    }),
+    [currentPage, searchTerm, filterAction, filterEntity],
+  );
 
   const { data: response, isLoading, isError } = useAuditLogs(params);
 
@@ -79,18 +82,46 @@ export const AuditLogPage: React.FC = () => {
       <div className="glass-card rounded-xl p-4 border border-white/10 flex flex-wrap gap-4">
         <div className="relative flex-1 min-w-[200px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input type="text" placeholder="Search by user, entity..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-10 pr-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-nesma-secondary outline-none" />
+          <input
+            type="text"
+            placeholder="Search by user, entity..."
+            value={searchTerm}
+            onChange={e => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:border-nesma-secondary outline-none"
+          />
         </div>
-        <select value={filterAction} onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
-          className="px-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none min-w-[140px]">
+        <select
+          value={filterAction}
+          onChange={e => {
+            setFilterAction(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none min-w-[140px]"
+        >
           <option value="">All Actions</option>
-          {actionTypes.map(a => <option key={a} value={a}>{a}</option>)}
+          {actionTypes.map(a => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
         </select>
-        <select value={filterEntity} onChange={(e) => { setFilterEntity(e.target.value); setCurrentPage(1); }}
-          className="px-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none min-w-[140px]">
+        <select
+          value={filterEntity}
+          onChange={e => {
+            setFilterEntity(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-4 py-2.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none min-w-[140px]"
+        >
           <option value="">All Entities</option>
-          {entityTypes.map(e => <option key={e} value={e}>{e}</option>)}
+          {entityTypes.map(e => (
+            <option key={e} value={e}>
+              {e}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -113,7 +144,9 @@ export const AuditLogPage: React.FC = () => {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start gap-4">
                     <div className="mt-1">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${ACTION_COLORS[log.action] || ACTION_COLORS.update}`}>
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${ACTION_COLORS[log.action] || ACTION_COLORS.update}`}
+                      >
                         {log.action}
                       </span>
                     </div>
@@ -161,10 +194,20 @@ export const AuditLogPage: React.FC = () => {
                 Page {meta.page} of {meta.totalPages} ({meta.total} entries)
               </span>
               <div className="flex gap-2">
-                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-                  className="px-3 py-1.5 border border-white/10 rounded-lg bg-black/20 text-gray-400 text-xs disabled:opacity-50 hover:bg-white/5 transition-all">Previous</button>
-                <button onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage >= meta.totalPages}
-                  className="px-3 py-1.5 border border-white/10 rounded-lg bg-black/20 text-gray-300 text-xs disabled:opacity-50 hover:bg-white/5 transition-all">Next</button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 border border-white/10 rounded-lg bg-black/20 text-gray-400 text-xs disabled:opacity-50 hover:bg-white/5 transition-all"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={currentPage >= meta.totalPages}
+                  className="px-3 py-1.5 border border-white/10 rounded-lg bg-black/20 text-gray-300 text-xs disabled:opacity-50 hover:bg-white/5 transition-all"
+                >
+                  Next
+                </button>
               </div>
             </div>
           )}

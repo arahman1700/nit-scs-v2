@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../types/dto.js';
 
 const LIST_INCLUDE = {

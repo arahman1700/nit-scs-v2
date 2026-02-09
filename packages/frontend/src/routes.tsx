@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { UserRole } from '@nit-scs/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
 
 // ── Lazy-loaded pages (code-split) ──────────────────────────────────────────
 const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -24,6 +24,16 @@ const StockTransferForm = React.lazy(() =>
 const MrfForm = React.lazy(() => import('@/pages/MrfForm').then(m => ({ default: m.MrfForm })));
 const ShipmentForm = React.lazy(() => import('@/pages/ShipmentForm').then(m => ({ default: m.ShipmentForm })));
 const CustomsForm = React.lazy(() => import('@/pages/CustomsForm').then(m => ({ default: m.CustomsForm })));
+
+// V2 Form imports
+const WtForm = React.lazy(() => import('@/pages/WtForm').then(m => ({ default: m.WtForm })));
+const ImsfForm = React.lazy(() => import('@/pages/ImsfForm').then(m => ({ default: m.ImsfForm })));
+const ScrapForm = React.lazy(() => import('@/pages/ScrapForm').then(m => ({ default: m.ScrapForm })));
+const SurplusForm = React.lazy(() => import('@/pages/SurplusForm').then(m => ({ default: m.SurplusForm })));
+const RentalContractForm = React.lazy(() =>
+  import('@/pages/RentalContractForm').then(m => ({ default: m.RentalContractForm })),
+);
+const ToolIssueForm = React.lazy(() => import('@/pages/ToolIssueForm').then(m => ({ default: m.ToolIssueForm })));
 
 // New role dashboards
 const ManagerDashboard = React.lazy(() =>
@@ -56,7 +66,7 @@ const WorkflowBuilderPage = React.lazy(() =>
   import('@/pages/WorkflowBuilderPage').then(m => ({ default: m.WorkflowBuilderPage })),
 );
 
-// Section Landing Pages
+// Section Landing Pages (V1)
 const InventorySectionPage = React.lazy(() =>
   import('@/pages/sections/InventorySectionPage').then(m => ({ default: m.InventorySectionPage })),
 );
@@ -79,6 +89,14 @@ const AdminSystemPage = React.lazy(() =>
   import('@/pages/sections/AdminSystemPage').then(m => ({ default: m.AdminSystemPage })),
 );
 
+// Section Landing Pages (V2 - NEW)
+const MaterialSectionPage = React.lazy(() =>
+  import('@/pages/sections/MaterialSectionPage').then(m => ({ default: m.MaterialSectionPage })),
+);
+const AssetSectionPage = React.lazy(() =>
+  import('@/pages/sections/AssetSectionPage').then(m => ({ default: m.AssetSectionPage })),
+);
+
 export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ currentRole }) => (
   <Routes>
     <Route
@@ -98,6 +116,10 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
           <Navigate to="/site-engineer" />
         ) : currentRole === UserRole.FREIGHT_FORWARDER ? (
           <Navigate to="/transport" />
+        ) : currentRole === UserRole.TRANSPORT_SUPERVISOR ? (
+          <Navigate to="/logistics" />
+        ) : currentRole === UserRole.SCRAP_COMMITTEE_MEMBER ? (
+          <Navigate to="/assets/scrap/ssc" />
         ) : (
           <Navigate to="/warehouse" />
         )
@@ -107,19 +129,63 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     {/* ADMIN SECTION ROUTES */}
     <Route path="/admin" element={<AdminDashboard />} />
 
-    {/* Section Landing Pages */}
+    {/* Section Landing Pages (V1 - kept for backward compatibility) */}
     <Route path="/admin/inventory" element={<InventorySectionPage />} />
-    <Route path="/admin/receiving" element={<ReceivingSectionPage />} />
-    <Route path="/admin/issuing" element={<IssuingSectionPage />} />
     <Route path="/admin/quality" element={<QualitySectionPage />} />
+
+    {/* Section Landing Pages (V2) */}
+    <Route path="/admin/material" element={<MaterialSectionPage />} />
+    <Route path="/admin/material/:tab" element={<MaterialSectionPage />} />
     <Route path="/admin/logistics" element={<LogisticsSectionPage />} />
+    <Route path="/admin/logistics/:tab" element={<LogisticsSectionPage />} />
+    <Route path="/admin/assets" element={<AssetSectionPage />} />
+    <Route path="/admin/assets/:tab" element={<AssetSectionPage />} />
     <Route path="/admin/master" element={<MasterDataSectionPage />} />
     <Route path="/admin/system" element={<AdminSystemPage />} />
     <Route path="/admin/system/workflows/:workflowId" element={<WorkflowBuilderPage />} />
     <Route path="/admin/system/dashboards" element={<DashboardBuilderPage />} />
     <Route path="/admin/system/reports" element={<ReportBuilderPage />} />
 
-    {/* LEGACY REDIRECTS */}
+    {/* V2 Form Routes */}
+    <Route path="/admin/forms/grn" element={<ResourceForm />} />
+    <Route path="/admin/forms/grn/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/qci/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/dr" element={<ResourceForm />} />
+    <Route path="/admin/forms/dr/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/mi" element={<ResourceForm />} />
+    <Route path="/admin/forms/mi/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/mrn" element={<ResourceForm />} />
+    <Route path="/admin/forms/mrn/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/mr" element={<MrfForm />} />
+    <Route path="/admin/forms/mr/:id" element={<MrfForm />} />
+    <Route path="/admin/forms/wt" element={<StockTransferForm />} />
+    <Route path="/admin/forms/wt/:id" element={<StockTransferForm />} />
+    <Route path="/admin/forms/imsf" element={<ImsfForm />} />
+    <Route path="/admin/forms/imsf/:id" element={<ImsfForm />} />
+    <Route path="/admin/forms/surplus" element={<SurplusForm />} />
+    <Route path="/admin/forms/surplus/:id" element={<SurplusForm />} />
+    <Route path="/admin/forms/scrap" element={<ScrapForm />} />
+    <Route path="/admin/forms/scrap/:id" element={<ScrapForm />} />
+    <Route path="/admin/forms/rental-contract" element={<RentalContractForm />} />
+    <Route path="/admin/forms/rental-contract/:id" element={<RentalContractForm />} />
+    <Route path="/admin/forms/tool-issue" element={<ToolIssueForm />} />
+    <Route path="/admin/forms/tool-issue/:id" element={<ToolIssueForm />} />
+
+    {/* V1 Form Routes (kept for backward compatibility) */}
+    <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
+    <Route path="/admin/forms/stock-transfer" element={<StockTransferForm />} />
+    <Route path="/admin/forms/mrf" element={<MrfForm />} />
+    <Route path="/admin/forms/shipment" element={<ShipmentForm />} />
+    <Route path="/admin/forms/customs" element={<CustomsForm />} />
+    <Route path="/admin/forms/:formType" element={<ResourceForm />} />
+    <Route path="/admin/forms/:formType/:id" element={<ResourceForm />} />
+
+    {/* V2 redirects from old V1 section structure */}
+    <Route path="/admin/receiving" element={<Navigate to="/admin/material?tab=grn" replace />} />
+    <Route path="/admin/issuing" element={<Navigate to="/admin/material?tab=mi" replace />} />
+    <Route path="/admin/quality" element={<Navigate to="/admin/material?tab=qci" replace />} />
+
+    {/* LEGACY REDIRECTS (V1) */}
     <Route path="/admin/warehouse/mrrv" element={<Navigate to="/admin/receiving?tab=mrrv" replace />} />
     <Route path="/admin/warehouse/mirv" element={<Navigate to="/admin/issuing?tab=mirv" replace />} />
     <Route path="/admin/warehouse/mrv" element={<Navigate to="/admin/quality?tab=mrv" replace />} />
@@ -163,15 +229,6 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
 
     <Route path="/admin/reports" element={<Navigate to="/admin/system?tab=reports" replace />} />
     <Route path="/admin/reports/:tab" element={<Navigate to="/admin/system?tab=reports" replace />} />
-
-    {/* FORM ROUTES */}
-    <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
-    <Route path="/admin/forms/stock-transfer" element={<StockTransferForm />} />
-    <Route path="/admin/forms/mrf" element={<MrfForm />} />
-    <Route path="/admin/forms/shipment" element={<ShipmentForm />} />
-    <Route path="/admin/forms/customs" element={<CustomsForm />} />
-    <Route path="/admin/forms/:formType" element={<ResourceForm />} />
-    <Route path="/admin/forms/:formType/:id" element={<ResourceForm />} />
 
     {/* Generic resource routes */}
     <Route path="/admin/:section/:resource" element={<AdminResourceList />} />

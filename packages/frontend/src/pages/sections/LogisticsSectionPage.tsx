@@ -1,13 +1,36 @@
 import React, { Suspense, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Target, Bus, AlertTriangle, FileText, ShieldCheck } from 'lucide-react';
+import {
+  Truck,
+  Target,
+  Bus,
+  AlertTriangle,
+  FileText,
+  ShieldCheck,
+  ArrowRightLeft,
+  FileSignature,
+  Zap,
+  Ship,
+} from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { StatusBadge } from '@/components/StatusBadge';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import { useDashboardStats, useSLACompliance, useJobOrders, useFleet } from '@/api/hooks';
+import { DocumentListPanel } from '@/components/DocumentListPanel';
+import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
+import {
+  useDashboardStats,
+  useSLACompliance,
+  useJobOrders,
+  useFleet,
+  useImsfList,
+  useWtList,
+  useGatePassList,
+  useRentalContractList,
+  useShipmentList,
+} from '@/api/hooks';
 
 const LazyKanban = React.lazy(() =>
   import('@/pages/transport/JobOrdersKanban').then(m => ({ default: m.JobOrdersKanban })),
@@ -33,6 +56,11 @@ export const LogisticsSectionPage: React.FC = () => {
   const slaQuery = useSLACompliance();
   const joQuery = useJobOrders({ pageSize: 50 });
   const fleetQuery = useFleet({ pageSize: 50 });
+  const imsfQuery = useImsfList({ pageSize: 50 });
+  const wtQuery = useWtList({ pageSize: 50 });
+  const gpQuery = useGatePassList({ pageSize: 50 });
+  const rcQuery = useRentalContractList({ pageSize: 50 });
+  const shipQuery = useShipmentList({ pageSize: 50 });
 
   const stats = statsQuery.data?.data;
   const sla = slaQuery.data?.data;
@@ -74,6 +102,12 @@ export const LogisticsSectionPage: React.FC = () => {
     { key: 'sla', label: 'SLA' },
     { key: 'payments', label: 'Payments' },
     { key: 'map', label: 'Map' },
+    { key: 'imsf', label: 'IMSF' },
+    { key: 'wt', label: 'WT' },
+    { key: 'gate-passes', label: 'Gate Passes' },
+    { key: 'rental-contracts', label: 'Rental Contracts' },
+    { key: 'generators', label: 'Generators' },
+    { key: 'shipments', label: 'Shipments' },
   ];
 
   // ── Overview data ─────────────────────────────────────────────────────────
@@ -106,6 +140,13 @@ export const LogisticsSectionPage: React.FC = () => {
       label: 'Gate Pass',
       icon: ShieldCheck,
       onClick: () => navigate('/admin/forms/gatepass'),
+      variant: 'secondary' as const,
+    },
+    { label: 'New IMSF', icon: Truck, onClick: () => navigate('/admin/forms/imsf'), variant: 'secondary' as const },
+    {
+      label: 'New WT',
+      icon: ArrowRightLeft,
+      onClick: () => navigate('/admin/forms/wt'),
       variant: 'secondary' as const,
     },
   ];
@@ -335,6 +376,74 @@ export const LogisticsSectionPage: React.FC = () => {
           <LazyMap />
         </Suspense>
       </RouteErrorBoundary>
+    ),
+
+    imsf: (
+      <DocumentListPanel
+        title="Internal Material Shifting"
+        icon={Truck}
+        columns={RESOURCE_COLUMNS.imsf.columns}
+        rows={(imsfQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={imsfQuery.isLoading}
+        createLabel="New IMSF"
+        createUrl="/admin/forms/imsf"
+      />
+    ),
+
+    wt: (
+      <DocumentListPanel
+        title="Warehouse Transfers"
+        icon={ArrowRightLeft}
+        columns={RESOURCE_COLUMNS.wt.columns}
+        rows={(wtQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={wtQuery.isLoading}
+        createLabel="New WT"
+        createUrl="/admin/forms/wt"
+      />
+    ),
+
+    'gate-passes': (
+      <DocumentListPanel
+        title="Gate Passes"
+        icon={ShieldCheck}
+        columns={RESOURCE_COLUMNS['gate-passes'].columns}
+        rows={(gpQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={gpQuery.isLoading}
+        createLabel="New Gate Pass"
+        createUrl="/admin/forms/gatepass"
+      />
+    ),
+
+    'rental-contracts': (
+      <DocumentListPanel
+        title="Rental Contracts"
+        icon={FileSignature}
+        columns={RESOURCE_COLUMNS['rental-contracts'].columns}
+        rows={(rcQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={rcQuery.isLoading}
+        createLabel="New Rental Contract"
+        createUrl="/admin/forms/rental-contract"
+      />
+    ),
+
+    generators: (
+      <DocumentListPanel
+        title="Generators"
+        icon={Zap}
+        columns={RESOURCE_COLUMNS.generators.columns}
+        rows={[]}
+        loading={false}
+      />
+    ),
+
+    shipments: (
+      <DocumentListPanel
+        title="Shipments"
+        icon={Ship}
+        columns={RESOURCE_COLUMNS.shipments.columns}
+        rows={(shipQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={shipQuery.isLoading}
+      />
     ),
   };
 

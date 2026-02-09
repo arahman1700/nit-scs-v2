@@ -1,8 +1,9 @@
 // ---------------------------------------------------------------------------
-// Route Aggregation
+// Route Aggregation — V2
 // ---------------------------------------------------------------------------
 // Single barrel file that composes all route modules under /api/v1.
-// This keeps the main index.ts clean and makes route organisation visible.
+// V2 mounts new route paths (grn, qci, dr, mi, mrn, mr, wt) alongside
+// V1 backward-compatible paths (mrrv, rfim, osd, mirv, mrv, mrf, stock-transfers).
 // ---------------------------------------------------------------------------
 
 import { Router } from 'express';
@@ -11,11 +12,36 @@ import { healthCheck } from './health.routes.js';
 
 import authRoutes from './auth.routes.js';
 import masterDataRoutes from './master-data.routes.js';
+
+// ── V2 Document Routes (primary) ───────────────────────────────────────
+import grnRoutes from './grn.routes.js';
+import qciRoutes from './qci.routes.js';
+import drRoutes from './dr.routes.js';
+import miRoutes from './mi.routes.js';
+import mrnRoutes from './mrn.routes.js';
+import mrRoutes from './mr.routes.js';
+import wtRoutes from './wt.routes.js';
+
+// ── V1 Backward-Compatible Routes (aliases) ────────────────────────────
 import mrrvRoutes from './mrrv.routes.js';
 import mirvRoutes from './mirv.routes.js';
 import mrvRoutes from './mrv.routes.js';
 import rfimRoutes from './rfim.routes.js';
 import osdRoutes from './osd.routes.js';
+
+// ── New V2 Module Routes ───────────────────────────────────────────────
+import imsfRoutes from './imsf.routes.js';
+import surplusRoutes from './surplus.routes.js';
+import scrapRoutes from './scrap.routes.js';
+import sscRoutes from './ssc.routes.js';
+import rentalContractRoutes from './rental-contract.routes.js';
+import toolRoutes from './tool.routes.js';
+import toolIssueRoutes from './tool-issue.routes.js';
+import generatorFuelRoutes from './generator-fuel.routes.js';
+import generatorMaintenanceRoutes from './generator-maintenance.routes.js';
+import warehouseZoneRoutes from './warehouse-zone.routes.js';
+
+// ── Existing Routes (unchanged) ────────────────────────────────────────
 import notificationRoutes from './notification.routes.js';
 import auditRoutes from './audit.routes.js';
 import dashboardRoutes from './dashboard.routes.js';
@@ -57,12 +83,33 @@ router.use('/auth', authRoutes);
 // ── Master Data (17 CRUD entities) ────────────────────────────────────────
 router.use('/', masterDataRoutes);
 
-// ── Material Management ───────────────────────────────────────────────────
+// ── Material Management — V2 Routes (primary) ─────────────────────────────
+router.use('/grn', grnRoutes);
+router.use('/qci', qciRoutes);
+router.use('/dr', drRoutes);
+router.use('/mi', miRoutes);
+router.use('/mrn', mrnRoutes);
+router.use('/mr', mrRoutes);
+router.use('/wt', wtRoutes);
+
+// ── Material Management — V1 Routes (backward compatibility) ──────────────
 router.use('/mrrv', mrrvRoutes);
 router.use('/mirv', mirvRoutes);
 router.use('/mrv', mrvRoutes);
 router.use('/rfim', rfimRoutes);
 router.use('/osd', osdRoutes);
+
+// ── New V2 Modules ────────────────────────────────────────────────────────
+router.use('/imsf', imsfRoutes);
+router.use('/surplus', surplusRoutes);
+router.use('/scrap', scrapRoutes);
+router.use('/ssc', sscRoutes);
+router.use('/rental-contracts', rentalContractRoutes);
+router.use('/tools', toolRoutes);
+router.use('/tool-issues', toolIssueRoutes);
+router.use('/generator-fuel', generatorFuelRoutes);
+router.use('/generator-maintenance', generatorMaintenanceRoutes);
+router.use('/warehouse-zones', warehouseZoneRoutes);
 
 // ── Logistics (job-orders, gate-passes, stock-transfers, mrf, shipments) ─
 router.use('/', logisticsRoutes);

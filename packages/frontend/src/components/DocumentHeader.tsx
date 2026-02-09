@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Printer } from 'lucide-react';
-import { getStatusBgColor } from '@nit-scs/shared/formatters';
+import { getStatusBgColor } from '@nit-scs-v2/shared/formatters';
 
 interface DocumentHeaderProps {
   documentNumber: string;
@@ -37,16 +36,12 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
         <div className="flex items-center gap-4">
           {/* Form code tag */}
           <div className="flex-shrink-0 px-3 py-2 bg-nesma-primary/20 border border-nesma-primary/30 rounded-xl">
-            <span className="text-xs font-bold text-nesma-secondary tracking-wider uppercase">
-              {code}
-            </span>
+            <span className="text-xs font-bold text-nesma-secondary tracking-wider uppercase">{code}</span>
           </div>
 
           <div>
             {/* Document number (large) */}
-            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-wide font-mono">
-              {documentNumber}
-            </h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-wide font-mono">{documentNumber}</h2>
 
             {/* Created by / date */}
             {(createdBy || formattedDate) && (
@@ -57,12 +52,8 @@ export const DocumentHeader: React.FC<DocumentHeaderProps> = ({
                     <span className="text-gray-200 font-medium">{createdBy}</span>
                   </>
                 )}
-                {createdBy && formattedDate && (
-                  <span className="text-gray-600">|</span>
-                )}
-                {formattedDate && (
-                  <span>{formattedDate}</span>
-                )}
+                {createdBy && formattedDate && <span className="text-gray-600">|</span>}
+                {formattedDate && <span>{formattedDate}</span>}
               </div>
             )}
           </div>

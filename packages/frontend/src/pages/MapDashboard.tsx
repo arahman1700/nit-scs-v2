@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useWarehouses, useProjects } from '@/api/hooks';
-import type { Warehouse, Project } from '@nit-scs/shared/types';
+import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { Filter, Layers, Maximize, Search, Navigation, Loader2 } from 'lucide-react';
 
 /** Minimal Leaflet type surface used by this component (full @types/leaflet not installed) */

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Menu, Search, Settings, Languages } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { User, UserRole } from '@nit-scs/shared/types';
+import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { useDirection } from '@/contexts/DirectionProvider';
 import { NotificationCenter } from '@/components/NotificationCenter';
 

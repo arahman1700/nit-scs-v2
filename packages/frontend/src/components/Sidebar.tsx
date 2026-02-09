@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import type { NavItem } from '@nit-scs/shared/types';
-import { UserRole } from '@nit-scs/shared/types';
+import type { NavItem } from '@nit-scs-v2/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
 import { NAVIGATION_LINKS } from '@/config/navigation';
 import {
   LogOut,

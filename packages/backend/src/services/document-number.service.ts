@@ -1,5 +1,5 @@
 import { prisma } from '../utils/prisma.js';
-import { DOC_PREFIXES } from '@nit-scs/shared/constants';
+import { DOC_PREFIXES } from '@nit-scs-v2/shared/constants';
 
 /**
  * Generate a sequential document number: PREFIX-YYYY-NNNN

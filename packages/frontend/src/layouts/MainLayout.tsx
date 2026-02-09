@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { UserRole } from '@nit-scs/shared/types';
-import type { User } from '@nit-scs/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
+import type { User } from '@nit-scs-v2/shared/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
@@ -41,6 +41,8 @@ export const MainLayout: React.FC<{
       [UserRole.SITE_ENGINEER]: 'site-engineer',
       [UserRole.QC_OFFICER]: 'qc',
       [UserRole.FREIGHT_FORWARDER]: 'transport',
+      [UserRole.TRANSPORT_SUPERVISOR]: 'logistics',
+      [UserRole.SCRAP_COMMITTEE_MEMBER]: 'admin',
     };
     const expectedPath = roleBasePaths[role] || 'admin';
 

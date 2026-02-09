@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useSuppliers } from '@/api/hooks/useMasterData';
-import type { Supplier } from '@nit-scs/shared/types';
+import type { Supplier } from '@nit-scs-v2/shared/types';
 import { Users, CheckCircle, MapPin, Star, Search } from 'lucide-react';
 
 export const SupplierView: React.FC = () => {
@@ -44,9 +44,24 @@ export const SupplierView: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Total', value: suppliers.length, icon: Users, cls: 'bg-blue-500/20 text-blue-400' },
-          { label: 'Active', value: suppliers.filter(s => s.status === 'Active').length, icon: CheckCircle, cls: 'bg-emerald-500/20 text-emerald-400' },
-          { label: 'Cities', value: Object.keys(suppliersByCity).length, icon: MapPin, cls: 'bg-nesma-secondary/20 text-nesma-secondary' },
-          { label: 'Local', value: suppliers.filter(s => s.type === 'LOCAL SUPPLIER').length, icon: Star, cls: 'bg-amber-500/20 text-amber-400' },
+          {
+            label: 'Active',
+            value: suppliers.filter(s => s.status === 'Active').length,
+            icon: CheckCircle,
+            cls: 'bg-emerald-500/20 text-emerald-400',
+          },
+          {
+            label: 'Cities',
+            value: Object.keys(suppliersByCity).length,
+            icon: MapPin,
+            cls: 'bg-nesma-secondary/20 text-nesma-secondary',
+          },
+          {
+            label: 'Local',
+            value: suppliers.filter(s => s.type === 'LOCAL SUPPLIER').length,
+            icon: Star,
+            cls: 'bg-amber-500/20 text-amber-400',
+          },
         ].map(s => (
           <div key={s.label} className="glass-card p-5 rounded-xl">
             <div className="flex items-center gap-3 mb-2">

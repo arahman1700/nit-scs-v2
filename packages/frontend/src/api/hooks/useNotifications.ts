@@ -5,7 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
-import type { Notification } from '@nit-scs/shared/types';
+import type { Notification } from '@nit-scs-v2/shared/types';
 import type { ApiResponse } from '../types';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAppStore } from '@/store/useAppStore';
-import type { User, Notification } from '@nit-scs/shared/types';
+import type { User, Notification } from '@nit-scs-v2/shared/types';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { useState, useCallback } from 'react';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 
 interface UseFormSubmitOptions {
   documentType: string;

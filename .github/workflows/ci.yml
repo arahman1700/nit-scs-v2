@@ -36,10 +36,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @nit-scs/shared run build
+        run: pnpm --filter @nit-scs-v2/shared run build
 
       - name: Generate Prisma client
-        run: pnpm --filter @nit-scs/backend prisma:generate
+        run: pnpm --filter @nit-scs-v2/backend prisma:generate
 
       - name: Lint
         run: pnpm run lint
@@ -72,13 +72,13 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @nit-scs/backend prisma:generate
+        run: pnpm --filter @nit-scs-v2/backend prisma:generate
 
       - name: Build shared
-        run: pnpm --filter @nit-scs/shared run build
+        run: pnpm --filter @nit-scs-v2/shared run build
 
       - name: TypeScript check backend
-        run: pnpm --filter @nit-scs/backend exec tsc --noEmit
+        run: pnpm --filter @nit-scs-v2/backend exec tsc --noEmit
 
       - name: TypeScript check & build frontend
-        run: pnpm --filter @nit-scs/frontend exec tsc -b --noEmit && pnpm --filter @nit-scs/frontend run build
+        run: pnpm --filter @nit-scs-v2/frontend exec tsc -b --noEmit && pnpm --filter @nit-scs-v2/frontend run build

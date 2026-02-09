@@ -15,8 +15,8 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useInventorySummary, useWarehouses, useInventory, useGatePasses, useStockTransfers } from '@/api/hooks';
-import type { InventoryItem } from '@nit-scs/shared/types';
-import type { Warehouse as WarehouseType } from '@nit-scs/shared/types';
+import type { InventoryItem } from '@nit-scs-v2/shared/types';
+import type { Warehouse as WarehouseType } from '@nit-scs-v2/shared/types';
 
 const InventoryDashboard = React.lazy(() =>
   import('@/pages/warehouse/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })),

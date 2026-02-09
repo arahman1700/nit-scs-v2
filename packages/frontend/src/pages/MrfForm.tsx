@@ -1,14 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ClipboardList, CheckCircle, AlertCircle } from 'lucide-react';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { useCreateMrf } from '@/api/hooks/useMrf';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { useCurrentUser } from '@/api/hooks/useAuth';
-import type { Warehouse, Project } from '@nit-scs/shared/types';
+import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
-import { getRequiredApprovalLevel } from '@nit-scs/shared/permissions';
+import { getRequiredApprovalLevel } from '@nit-scs-v2/shared/permissions';
 
 export const MrfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ export const MrfForm: React.FC = () => {
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('mrf'), []);
-  const approvalLevel = useMemo(() => getRequiredApprovalLevel('mirv', totalValue), [totalValue]);
+  const approvalLevel = useMemo(() => getRequiredApprovalLevel('mi', totalValue), [totalValue]);
 
   const [submitted, setSubmitted] = useState(false);
   const [documentNumber, setDocumentNumber] = useState<string | null>(null);

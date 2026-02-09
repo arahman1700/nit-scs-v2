@@ -3,8 +3,8 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { submitForApproval, processApproval } from './approval.service.js';
 import { reserveStockBatch, consumeReservationBatch, releaseReservation } from './inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs/shared';
-import { assertTransition } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
 import type { Server as SocketIOServer } from 'socket.io';
 import type { MirvCreateDto, MirvUpdateDto, MirvLineDto, ListParams } from '../types/dto.js';
 

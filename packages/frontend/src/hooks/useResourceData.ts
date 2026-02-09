@@ -3,7 +3,7 @@
 // ============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
-import type { TableFilters, PaginationMeta } from '@nit-scs/shared/types';
+import type { TableFilters, PaginationMeta } from '@nit-scs-v2/shared/types';
 
 interface UseResourceDataOptions<T> {
   service: {

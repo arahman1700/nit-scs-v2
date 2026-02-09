@@ -2,8 +2,8 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch } from './inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs/shared';
-import { assertTransition } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
 import type { MrvCreateDto, MrvUpdateDto, MrvLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'mrv';
@@ -74,7 +74,7 @@ export async function create(headerData: Omit<MrvCreateDto, 'lines'>, lines: Mrv
         returnedById: userId,
         returnDate: new Date(headerData.returnDate),
         reason: headerData.reason ?? null,
-        originalMirvId: headerData.originalMirvId ?? null,
+        originalMirvId: (headerData as any).originalMiId ?? (headerData as any).originalMirvId ?? null,
         status: 'draft',
         notes: headerData.notes ?? null,
         mrvLines: {

@@ -16,15 +16,19 @@ export {
 // ── Document Prefixes ────────────────────────────────────────────────────
 
 export const DOC_PREFIXES: Record<string, string> = {
-  mrrv: 'MRRV',
-  mirv: 'MIRV',
-  mrv: 'MRV',
-  rfim: 'RFIM',
-  osd: 'OSD',
+  grn: 'GRN', // was mrrv: 'MRRV'
+  qci: 'QCI', // was rfim: 'RFIM'
+  dr: 'DR', // was osd: 'OSD'
+  mi: 'MI', // was mirv: 'MIRV'
+  mrn: 'MRN', // was mrv: 'MRV'
+  mr: 'MR', // was mrf: 'MRF'
+  wt: 'WT', // was stock_transfer: 'ST'
+  imsf: 'IMSF', // NEW
   jo: 'JO',
   gatepass: 'GP',
-  mrf: 'MRF',
-  stock_transfer: 'ST',
+  rc: 'RC', // NEW: Rental Contract
+  scrap: 'SCR', // NEW
+  surplus: 'SUR', // NEW
   shipment: 'SH',
   lot: 'LOT',
   leftover: 'LO',
@@ -32,7 +36,7 @@ export const DOC_PREFIXES: Record<string, string> = {
 
 // ── Approval Levels ──────────────────────────────────────────────────────
 
-export const MIRV_APPROVAL_LEVELS: ApprovalLevel[] = [
+export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
     label: 'Level 1 - Storekeeper',
@@ -99,11 +103,27 @@ export const JO_APPROVAL_LEVELS: ApprovalLevel[] = [
 // ── Status Flows ─────────────────────────────────────────────────────────
 
 export const STATUS_FLOWS: Record<string, string[]> = {
-  mrrv: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
-  mirv: ['draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled'],
-  mrv: ['draft', 'pending', 'received', 'completed', 'rejected'],
-  rfim: ['pending', 'in_progress', 'completed'],
-  osd: ['draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed'],
+  grn: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
+  qci: ['pending', 'in_progress', 'completed'],
+  dr: ['draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed'],
+  mi: ['draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled'],
+  mrn: ['draft', 'pending', 'received', 'completed', 'rejected'],
+  mr: [
+    'draft',
+    'submitted',
+    'under_review',
+    'approved',
+    'checking_stock',
+    'from_stock',
+    'needs_purchase',
+    'not_available_locally',
+    'partially_fulfilled',
+    'fulfilled',
+    'rejected',
+    'cancelled',
+  ],
+  wt: ['draft', 'pending', 'approved', 'shipped', 'received', 'completed', 'cancelled'],
+  imsf: ['created', 'sent', 'confirmed', 'in_transit', 'delivered', 'completed', 'rejected'],
   jo: [
     'draft',
     'pending_approval',
@@ -118,20 +138,6 @@ export const STATUS_FLOWS: Record<string, string[]> = {
     'cancelled',
   ],
   gate_pass: ['draft', 'pending', 'approved', 'released', 'returned', 'expired', 'cancelled'],
-  stock_transfer: ['draft', 'pending', 'approved', 'shipped', 'received', 'completed', 'cancelled'],
-  mrf: [
-    'draft',
-    'submitted',
-    'under_review',
-    'approved',
-    'checking_stock',
-    'from_stock',
-    'needs_purchase',
-    'partially_fulfilled',
-    'fulfilled',
-    'rejected',
-    'cancelled',
-  ],
   shipment: [
     'draft',
     'po_issued',
@@ -145,7 +151,71 @@ export const STATUS_FLOWS: Record<string, string[]> = {
     'delivered',
     'cancelled',
   ],
+  surplus: ['identified', 'evaluated', 'approved', 'actioned', 'closed', 'rejected'],
+  scrap: ['identified', 'reported', 'approved', 'in_ssc', 'sold', 'disposed', 'closed', 'rejected'],
+  rental_contract: ['draft', 'pending_approval', 'active', 'extended', 'terminated', 'rejected'],
+  tool_issue: ['issued', 'overdue', 'returned'],
+
+  // V1 backward-compatibility aliases
+  mrrv: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
+  rfim: ['pending', 'in_progress', 'completed'],
+  osd: ['draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed'],
+  mirv: ['draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled'],
+  mrv: ['draft', 'pending', 'received', 'completed', 'rejected'],
+  mrf: [
+    'draft',
+    'submitted',
+    'under_review',
+    'approved',
+    'checking_stock',
+    'from_stock',
+    'needs_purchase',
+    'not_available_locally',
+    'partially_fulfilled',
+    'fulfilled',
+    'rejected',
+    'cancelled',
+  ],
+  stock_transfer: ['draft', 'pending', 'approved', 'shipped', 'received', 'completed', 'cancelled'],
 };
+
+// ── SLA Configuration ────────────────────────────────────────────────────
+
+export const SLA_HOURS: Record<string, number> = {
+  stock_verification: 4, // MR → warehouse response
+  jo_execution: 48, // After quotation
+  qc_inspection: 336, // 14 days
+  gate_pass: 24,
+  post_install_check: 48,
+  scrap_buyer_pickup: 240, // 10 days
+  surplus_timeout: 336, // 14 days (2 weeks)
+};
+
+// ── Insurance Threshold ──────────────────────────────────────────────────
+
+export const INSURANCE_THRESHOLD_SAR = 7_000_000;
+
+// ── Warehouse Zones ──────────────────────────────────────────────────────
+
+export const WAREHOUSE_ZONES = ['A', 'B', 'C', 'D', 'CONTAINER', 'OPEN_YARD', 'HAZARDOUS'] as const;
+
+// ── Scrap Material Types ─────────────────────────────────────────────────
+
+export const SCRAP_MATERIAL_TYPES = [
+  'cable',
+  'mv_cable',
+  'hv_cable',
+  'aluminum',
+  'copper',
+  'steel',
+  'cable_tray',
+  'wood',
+  'other',
+] as const;
+
+// ── Item Main Categories ─────────────────────────────────────────────────
+
+export const ITEM_MAIN_CATEGORIES = ['MECHANICAL', 'ELECTRICAL', 'CIVIL', 'INSTRUMENTATION', 'PMV'] as const;
 
 // ── Item Categories ──────────────────────────────────────────────────────
 
@@ -174,6 +244,8 @@ export const SYSTEM_ROLES = [
   'site_engineer',
   'qc_officer',
   'freight_forwarder',
+  'transport_supervisor', // NEW
+  'scrap_committee_member', // NEW
 ] as const;
 
 // ── JO Types ─────────────────────────────────────────────────────────────

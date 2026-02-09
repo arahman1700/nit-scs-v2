@@ -1,20 +1,20 @@
 import { UserRole } from './types/enums.js';
-import { MIRV_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from './constants/index.js';
+import { MI_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from './constants/index.js';
 
 export type Permission = 'create' | 'read' | 'update' | 'delete' | 'approve' | 'export';
 export type ResourcePermissions = Record<string, Permission[]>;
 
 const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
   [UserRole.ADMIN]: {
-    mrrv: ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    mirv: ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    mrv: ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    rfim: ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    osd: ['create', 'read', 'update', 'delete', 'export'],
+    grn: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    mi: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    mrn: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    qci: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    dr: ['create', 'read', 'update', 'delete', 'export'],
     jo: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     gatepass: ['create', 'read', 'update', 'delete', 'export'],
-    'stock-transfer': ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    mrf: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    wt: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    mr: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     shipment: ['create', 'read', 'update', 'delete', 'export'],
     customs: ['create', 'read', 'update', 'delete', 'export'],
     inventory: ['read', 'update', 'export'],
@@ -29,17 +29,28 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     'audit-log': ['read', 'export'],
     settings: ['read', 'update'],
     roles: ['read'],
+    imsf: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    surplus: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    scrap: ['create', 'read', 'update', 'delete', 'approve', 'export'],
+    ssc: ['create', 'read', 'update', 'approve'],
+    rental_contract: ['create', 'read', 'update', 'delete', 'approve'],
+    tool: ['create', 'read', 'update', 'delete'],
+    tool_issue: ['create', 'read', 'update'],
+    bin_card: ['read', 'update'],
+    generator_fuel: ['create', 'read'],
+    generator_maintenance: ['create', 'read', 'update'],
+    warehouse_zone: ['create', 'read', 'update', 'delete'],
   },
   [UserRole.MANAGER]: {
-    mrrv: ['read', 'approve', 'export'],
-    mirv: ['read', 'approve', 'export'],
-    mrv: ['read', 'approve', 'export'],
-    rfim: ['read', 'approve', 'export'],
-    osd: ['read', 'export'],
+    grn: ['read', 'approve', 'export'],
+    mi: ['read', 'approve', 'export'],
+    mrn: ['read', 'approve', 'export'],
+    qci: ['read', 'approve', 'export'],
+    dr: ['read', 'export'],
     jo: ['create', 'read', 'approve', 'export'],
     gatepass: ['read', 'export'],
-    'stock-transfer': ['read', 'approve', 'export'],
-    mrf: ['read', 'approve', 'export'],
+    wt: ['read', 'approve', 'export'],
+    mr: ['read', 'approve', 'export'],
     shipment: ['read', 'export'],
     customs: ['read', 'export'],
     inventory: ['read', 'export'],
@@ -51,59 +62,69 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     reports: ['read', 'export'],
   },
   [UserRole.WAREHOUSE_SUPERVISOR]: {
-    mrrv: ['create', 'read', 'update', 'approve'],
-    mirv: ['read', 'update', 'approve'],
-    mrv: ['create', 'read', 'update'],
-    rfim: ['create', 'read'],
-    osd: ['create', 'read', 'update'],
+    grn: ['create', 'read', 'update', 'approve'],
+    mi: ['read', 'update', 'approve'],
+    mrn: ['create', 'read', 'update'],
+    qci: ['create', 'read'],
+    dr: ['create', 'read', 'update'],
     gatepass: ['create', 'read', 'update'],
-    'stock-transfer': ['create', 'read', 'update'],
+    wt: ['create', 'read', 'update'],
     inventory: ['read', 'update', 'export'],
     items: ['read', 'update'],
     projects: ['read'],
     warehouses: ['read'],
   },
   [UserRole.WAREHOUSE_STAFF]: {
-    mrrv: ['create', 'read', 'update'],
-    mirv: ['read', 'update'],
-    mrv: ['create', 'read', 'update'],
-    rfim: ['create', 'read'],
-    osd: ['create', 'read'],
+    grn: ['create', 'read', 'update'],
+    mi: ['read', 'update'],
+    mrn: ['create', 'read', 'update'],
+    qci: ['create', 'read'],
+    dr: ['create', 'read'],
     gatepass: ['create', 'read', 'update'],
-    'stock-transfer': ['create', 'read'],
+    wt: ['create', 'read'],
     inventory: ['read', 'update'],
     items: ['read'],
     projects: ['read'],
   },
   [UserRole.LOGISTICS_COORDINATOR]: {
-    mrrv: ['create', 'read', 'update'],
-    mirv: ['create', 'read', 'update', 'approve'],
-    mrv: ['create', 'read', 'update'],
+    grn: ['create', 'read', 'update'],
+    mi: ['create', 'read', 'update', 'approve'],
+    mrn: ['create', 'read', 'update'],
     jo: ['create', 'read', 'update', 'approve'],
     shipment: ['create', 'read', 'update'],
     customs: ['create', 'read', 'update'],
     gatepass: ['create', 'read', 'update'],
-    'stock-transfer': ['create', 'read', 'update'],
+    wt: ['create', 'read', 'update'],
     inventory: ['read', 'export'],
     suppliers: ['read'],
   },
   [UserRole.SITE_ENGINEER]: {
-    mirv: ['create', 'read'],
-    mrf: ['create', 'read'],
+    mi: ['create', 'read'],
+    mr: ['create', 'read'],
     jo: ['create', 'read'],
     inventory: ['read'],
     projects: ['read'],
   },
   [UserRole.QC_OFFICER]: {
-    rfim: ['create', 'read', 'update', 'approve'],
-    osd: ['create', 'read', 'update'],
-    mrrv: ['read'],
+    qci: ['create', 'read', 'update', 'approve'],
+    dr: ['create', 'read', 'update'],
+    grn: ['read'],
     inventory: ['read'],
   },
   [UserRole.FREIGHT_FORWARDER]: {
     shipment: ['read', 'update'],
     customs: ['read'],
     gatepass: ['read'],
+  },
+  [UserRole.TRANSPORT_SUPERVISOR]: {
+    jo: ['create', 'read', 'update', 'approve'],
+    wt: ['create', 'read', 'update'],
+    gatepass: ['create', 'read', 'update'],
+    fleet: ['read', 'update'],
+  },
+  [UserRole.SCRAP_COMMITTEE_MEMBER]: {
+    scrap: ['read', 'update', 'approve'],
+    ssc: ['create', 'read', 'update', 'approve'],
   },
 };
 
@@ -158,8 +179,8 @@ export function getMaxApprovalLevel(role: UserRole | string): number {
   }
 }
 
-export function getRequiredApprovalLevel(documentType: 'mirv' | 'jo' | 'mrf', amount: number) {
-  const levels = documentType === 'jo' ? JO_APPROVAL_LEVELS : MIRV_APPROVAL_LEVELS;
+export function getRequiredApprovalLevel(documentType: 'mi' | 'jo' | 'mr', amount: number) {
+  const levels = documentType === 'jo' ? JO_APPROVAL_LEVELS : MI_APPROVAL_LEVELS;
   return levels.find(l => amount >= l.minAmount && amount < l.maxAmount) || levels[levels.length - 1];
 }
 

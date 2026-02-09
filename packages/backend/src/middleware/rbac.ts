@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { hasPermission, type Permission } from '@nit-scs/shared';
+import { hasPermission, type Permission } from '@nit-scs-v2/shared';
 import { sendError } from '../utils/response.js';
 
 /**

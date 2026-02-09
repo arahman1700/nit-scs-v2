@@ -1,6 +1,6 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { UserRole } from '@nit-scs/shared/types';
+import { UserRole } from '@nit-scs-v2/shared/types';
 import { useCurrentUser } from '@/api/hooks/useAuth';
 import { connectSocket, disconnectSocket } from '@/socket/client';
 import { MainLayout } from '@/layouts/MainLayout';

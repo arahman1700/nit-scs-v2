@@ -25,7 +25,7 @@ import {
   useUpdateOsd,
 } from '@/api/hooks';
 import { useMrrv, useMirv, useMrv, useJobOrder, useRfim, useOsd } from '@/api/hooks';
-import type { VoucherLineItem } from '@nit-scs/shared/types';
+import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { previewNextNumber } from '@/utils/autoNumber';
 import {

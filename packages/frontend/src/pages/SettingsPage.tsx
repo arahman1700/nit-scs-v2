@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Save, RefreshCw, Shield, Clock, DollarSign, Hash, Globe, Loader2 } from 'lucide-react';
-import { MIRV_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from '@nit-scs/shared/constants';
+import { MI_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from '@nit-scs-v2/shared/constants';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { useSettings, useUpdateSettings } from '@/api/hooks/useSettings';
 import { toast } from '@/components/Toaster';
@@ -25,7 +25,19 @@ export const SettingsPage: React.FC = () => {
     }
   }, [savedSettings]);
 
-  const docTypes = ['mrrv', 'mirv', 'mrv', 'rfim', 'osd', 'jo', 'gatepass', 'stock-transfer', 'mrf', 'shipment', 'customs'];
+  const docTypes = [
+    'mrrv',
+    'mirv',
+    'mrv',
+    'rfim',
+    'osd',
+    'jo',
+    'gatepass',
+    'stock-transfer',
+    'mrf',
+    'shipment',
+    'customs',
+  ];
 
   if (isLoading) {
     return (
@@ -51,21 +63,38 @@ export const SettingsPage: React.FC = () => {
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">VAT Rate (%)</label>
-            <input type="number" value={settings.vatRate} onChange={(e) => setSettings(s => ({ ...s, vatRate: Number(e.target.value) }))}
-              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none" />
+            <input
+              type="number"
+              value={settings.vatRate}
+              onChange={e => setSettings(s => ({ ...s, vatRate: Number(e.target.value) }))}
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">Currency</label>
-            <input type="text" value={settings.currency} readOnly className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 outline-none cursor-not-allowed" />
+            <input
+              type="text"
+              value={settings.currency}
+              readOnly
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 outline-none cursor-not-allowed"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">Timezone</label>
-            <input type="text" value={settings.timezone} readOnly className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 outline-none cursor-not-allowed" />
+            <input
+              type="text"
+              value={settings.timezone}
+              readOnly
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-400 outline-none cursor-not-allowed"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">Date Format</label>
-            <select value={settings.dateFormat} onChange={(e) => setSettings(s => ({ ...s, dateFormat: e.target.value }))}
-              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none">
+            <select
+              value={settings.dateFormat}
+              onChange={e => setSettings(s => ({ ...s, dateFormat: e.target.value }))}
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
+            >
               <option value="DD/MM/YYYY">DD/MM/YYYY</option>
               <option value="YYYY-MM-DD">YYYY-MM-DD</option>
               <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -73,13 +102,21 @@ export const SettingsPage: React.FC = () => {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">Over-Delivery Tolerance (%)</label>
-            <input type="number" value={settings.overDeliveryTolerance} onChange={(e) => setSettings(s => ({ ...s, overDeliveryTolerance: Number(e.target.value) }))}
-              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none" />
+            <input
+              type="number"
+              value={settings.overDeliveryTolerance}
+              onChange={e => setSettings(s => ({ ...s, overDeliveryTolerance: Number(e.target.value) }))}
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-300">Backdate Limit (days)</label>
-            <input type="number" value={settings.backdateLimit} onChange={(e) => setSettings(s => ({ ...s, backdateLimit: Number(e.target.value) }))}
-              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none" />
+            <input
+              type="number"
+              value={settings.backdateLimit}
+              onChange={e => setSettings(s => ({ ...s, backdateLimit: Number(e.target.value) }))}
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
+            />
           </div>
         </div>
       </div>
@@ -94,15 +131,25 @@ export const SettingsPage: React.FC = () => {
           <div>
             <h4 className="text-sm font-bold text-gray-300 mb-3">MIRV / MRF Approval (5 Levels)</h4>
             <div className="space-y-2">
-              {MIRV_APPROVAL_LEVELS.map(level => (
-                <div key={level.level} className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl">
+              {MI_APPROVAL_LEVELS.map(level => (
+                <div
+                  key={level.level}
+                  className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl"
+                >
                   <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-lg bg-nesma-primary/20 flex items-center justify-center text-xs font-bold text-nesma-secondary border border-nesma-primary/30">L{level.level}</span>
+                    <span className="w-8 h-8 rounded-lg bg-nesma-primary/20 flex items-center justify-center text-xs font-bold text-nesma-secondary border border-nesma-primary/30">
+                      L{level.level}
+                    </span>
                     <span className="text-sm text-gray-300">{level.label}</span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{level.minAmount.toLocaleString()} - {level.maxAmount === Infinity ? '500K+' : level.maxAmount.toLocaleString()} SAR</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {level.slaHours}h SLA</span>
+                    <span>
+                      {level.minAmount.toLocaleString()} -{' '}
+                      {level.maxAmount === Infinity ? '500K+' : level.maxAmount.toLocaleString()} SAR
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} /> {level.slaHours}h SLA
+                    </span>
                   </div>
                 </div>
               ))}
@@ -112,14 +159,24 @@ export const SettingsPage: React.FC = () => {
             <h4 className="text-sm font-bold text-gray-300 mb-3">Job Order Approval (4 Levels)</h4>
             <div className="space-y-2">
               {JO_APPROVAL_LEVELS.map(level => (
-                <div key={level.level} className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl">
+                <div
+                  key={level.level}
+                  className="flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl"
+                >
                   <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-lg bg-nesma-primary/20 flex items-center justify-center text-xs font-bold text-nesma-secondary border border-nesma-primary/30">L{level.level}</span>
+                    <span className="w-8 h-8 rounded-lg bg-nesma-primary/20 flex items-center justify-center text-xs font-bold text-nesma-secondary border border-nesma-primary/30">
+                      L{level.level}
+                    </span>
                     <span className="text-sm text-gray-300">{level.label}</span>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>{level.minAmount.toLocaleString()} - {level.maxAmount === Infinity ? '100K+' : level.maxAmount.toLocaleString()} SAR</span>
-                    <span className="flex items-center gap-1"><Clock size={12} /> {level.slaHours}h SLA</span>
+                    <span>
+                      {level.minAmount.toLocaleString()} -{' '}
+                      {level.maxAmount === Infinity ? '100K+' : level.maxAmount.toLocaleString()} SAR
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={12} /> {level.slaHours}h SLA
+                    </span>
                   </div>
                 </div>
               ))}
@@ -153,7 +210,7 @@ export const SettingsPage: React.FC = () => {
           onClick={() => {
             updateSettings.mutate(settings, {
               onSuccess: () => toast.success('Settings saved', 'Configuration updated successfully'),
-              onError: (err) => toast.error('Save failed', err instanceof Error ? err.message : 'Unknown error'),
+              onError: err => toast.error('Save failed', err instanceof Error ? err.message : 'Unknown error'),
             });
           }}
           className="px-8 py-3 bg-nesma-primary hover:bg-nesma-accent text-white rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all disabled:opacity-50"

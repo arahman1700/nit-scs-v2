@@ -2,8 +2,8 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch } from './inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs/shared';
-import { assertTransition } from '@nit-scs/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
 import type { MrrvCreateDto, MrrvUpdateDto, MrrvLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'mrrv';
@@ -93,7 +93,7 @@ export async function create(headerData: Omit<MrrvCreateDto, 'lines'>, lines: Mr
         receiveDate: new Date(headerData.receiveDate),
         invoiceNumber: headerData.invoiceNumber ?? null,
         deliveryNote: headerData.deliveryNote ?? null,
-        rfimRequired: headerData.rfimRequired ?? false,
+        rfimRequired: (headerData as any).qciRequired ?? (headerData as any).rfimRequired ?? false,
         hasOsd,
         totalValue,
         status: 'draft',

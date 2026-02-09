@@ -4,7 +4,7 @@ const { mockPrisma } = vi.hoisted(() => {
   return { mockPrisma: {} as PrismaMock };
 });
 
-vi.mock('@nit-scs/shared/constants', () => ({
+vi.mock('@nit-scs-v2/shared/constants', () => ({
   DOC_PREFIXES: {
     mrrv: 'MRRV',
     mirv: 'MIRV',

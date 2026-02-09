@@ -44,7 +44,7 @@ import { comparePassword, hashPassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, decodeToken } from '../utils/jwt.js';
 import { sendTemplatedEmail } from './email.service.js';
 import { getRedis } from '../config/redis.js';
-import { AuthenticationError, NotFoundError, RateLimitError, BusinessRuleError } from '@nit-scs/shared';
+import { AuthenticationError, NotFoundError, RateLimitError, BusinessRuleError } from '@nit-scs-v2/shared';
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 

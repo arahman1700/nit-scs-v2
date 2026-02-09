@@ -1,4 +1,4 @@
-import { ALL_EVENTS, EVENT_DESCRIPTIONS, type SystemEventType } from '@nit-scs/shared';
+import { ALL_EVENTS, EVENT_DESCRIPTIONS, type SystemEventType } from '@nit-scs-v2/shared';
 
 interface TriggerSelectorProps {
   value: string;

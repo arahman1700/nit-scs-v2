@@ -243,6 +243,180 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
+
+  // ── V2 Resource Columns ──────────────────────────────────────────────
+
+  grn: {
+    title: 'Goods Receipt Notes',
+    code: 'GRN',
+    columns: [
+      { key: 'documentNumber', label: 'GRN #' },
+      { key: 'supplierName', label: 'Supplier' },
+      { key: 'warehouseName', label: 'Warehouse' },
+      { key: 'receivedDate', label: 'Date' },
+      { key: 'totalValue', label: 'Value', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  qci: {
+    title: 'Quality Control Inspections',
+    code: 'QCI',
+    columns: [
+      { key: 'documentNumber', label: 'QCI #' },
+      { key: 'grnNumber', label: 'GRN Ref' },
+      { key: 'inspectorName', label: 'Inspector' },
+      { key: 'inspectionDate', label: 'Date' },
+      { key: 'result', label: 'Result' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  dr: {
+    title: 'Discrepancy Reports',
+    code: 'DR',
+    columns: [
+      { key: 'documentNumber', label: 'DR #' },
+      { key: 'grnNumber', label: 'GRN Ref' },
+      { key: 'discrepancyType', label: 'Type' },
+      { key: 'description', label: 'Description' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  mi: {
+    title: 'Material Issuance',
+    code: 'MI',
+    columns: [
+      { key: 'documentNumber', label: 'MI #' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'requesterName', label: 'Requester' },
+      { key: 'issuedDate', label: 'Date' },
+      { key: 'warehouseName', label: 'Warehouse' },
+      { key: 'totalValue', label: 'Value', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  mrn: {
+    title: 'Material Return Notes',
+    code: 'MRN',
+    columns: [
+      { key: 'documentNumber', label: 'MRN #' },
+      { key: 'returnType', label: 'Return Type' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'warehouseName', label: 'Warehouse' },
+      { key: 'returnDate', label: 'Date' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  mr: {
+    title: 'Material Requests',
+    code: 'MR',
+    columns: [
+      { key: 'documentNumber', label: 'MR #' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'requesterName', label: 'Requester' },
+      { key: 'requestDate', label: 'Date' },
+      { key: 'totalValue', label: 'Value', format: sarFormat },
+      { key: 'slaStatus', label: 'SLA', component: slaCol },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  imsf: {
+    title: 'Internal Material Shifting',
+    code: 'IMSF',
+    columns: [
+      { key: 'documentNumber', label: 'IMSF #' },
+      { key: 'senderProjectName', label: 'From Project' },
+      { key: 'receiverProjectName', label: 'To Project' },
+      { key: 'materialType', label: 'Type' },
+      { key: 'requiredDate', label: 'Required' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  wt: {
+    title: 'Warehouse Transfers',
+    code: 'WT',
+    columns: [
+      { key: 'documentNumber', label: 'WT #' },
+      { key: 'fromWarehouse', label: 'From' },
+      { key: 'toWarehouse', label: 'To' },
+      { key: 'transferDate', label: 'Date' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  surplus: {
+    title: 'Surplus Items',
+    code: 'SUR',
+    columns: [
+      { key: 'surplusNumber', label: 'Surplus #' },
+      { key: 'itemName', label: 'Item' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'qty', label: 'Qty' },
+      { key: 'disposition', label: 'Disposition' },
+      { key: 'estimatedValue', label: 'Value', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  scrap: {
+    title: 'Scrap Items',
+    code: 'SCR',
+    columns: [
+      { key: 'scrapNumber', label: 'Scrap #' },
+      { key: 'materialType', label: 'Material' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'qty', label: 'Qty' },
+      { key: 'estimatedValue', label: 'Est. Value', format: sarFormat },
+      { key: 'actualSaleValue', label: 'Sale Value', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  tools: {
+    title: 'Tool Registry',
+    code: 'TOOL',
+    columns: [
+      { key: 'toolCode', label: 'Code' },
+      { key: 'toolName', label: 'Name' },
+      { key: 'category', label: 'Category' },
+      { key: 'serialNumber', label: 'Serial #' },
+      { key: 'condition', label: 'Condition', component: statusCol },
+      { key: 'warehouseName', label: 'Warehouse' },
+    ],
+  },
+  'tool-issues': {
+    title: 'Tool Issues',
+    code: 'TI',
+    columns: [
+      { key: 'toolName', label: 'Tool' },
+      { key: 'issuedToName', label: 'Issued To' },
+      { key: 'issuedDate', label: 'Issued' },
+      { key: 'expectedReturnDate', label: 'Expected Return' },
+      { key: 'actualReturnDate', label: 'Returned' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  'rental-contracts': {
+    title: 'Rental Contracts',
+    code: 'RC',
+    columns: [
+      { key: 'contractNumber', label: 'Contract #' },
+      { key: 'supplierName', label: 'Supplier' },
+      { key: 'equipmentType', label: 'Equipment' },
+      { key: 'startDate', label: 'Start' },
+      { key: 'endDate', label: 'End' },
+      { key: 'monthlyRate', label: 'Rate/Month', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  'gate-passes': {
+    title: 'Gate Passes',
+    code: 'GP',
+    columns: [
+      { key: 'documentNumber', label: 'GP #' },
+      { key: 'driverName', label: 'Driver' },
+      { key: 'vehiclePlateNo', label: 'Plate' },
+      { key: 'vehicleType', label: 'Vehicle' },
+      { key: 'createdAt', label: 'Date' },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
 };
 
 const DEFAULT_CONFIG: ResourceConfig = {
@@ -250,6 +424,8 @@ const DEFAULT_CONFIG: ResourceConfig = {
   code: 'LIST',
   columns: [],
 };
+
+export { RESOURCE_COLUMNS };
 
 export function getResourceConfig(resource: string | undefined): ResourceConfig {
   return RESOURCE_COLUMNS[resource || ''] || DEFAULT_CONFIG;
