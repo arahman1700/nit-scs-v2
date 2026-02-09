@@ -1,0 +1,2047 @@
+// ============================================================================
+// NIT Supply Chain System
+// Prisma Schema (53 models)
+// ============================================================================
+// Company:   Nesma Infrastructure & Technology (NIT) - Saudi Arabia
+// Version:   1.0
+// Date:      2026-02-08
+// Database:  PostgreSQL (Xano - Saudi Region)
+// Reference: schema.sql v1.0, ERD_DESIGN.md v1.0
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ############################################################################
+// SECTION 1: REFERENCE / LOOKUP TABLES (8 models)
+// ############################################################################
+
+/// Administrative regions (Saudi Arabia)
+model Region {
+  id           String  @id @default(uuid()) @db.Uuid
+  regionName   String  @unique @map("region_name") @db.VarChar(100)
+  regionNameAr String? @map("region_name_ar") @db.VarChar(100)
+
+  // Relations
+  cities     City[]
+  projects   Project[]
+  warehouses Warehouse[]
+
+  @@map("regions")
+}
+
+/// Cities within regions
+model City {
+  id         String  @id @default(uuid()) @db.Uuid
+  cityName   String  @map("city_name") @db.VarChar(100)
+  cityNameAr String? @map("city_name_ar") @db.VarChar(100)
+  regionId   String  @map("region_id") @db.Uuid
+
+  // Relations
+  region     Region      @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  ports      Port[]
+  projects   Project[]
+  suppliers  Supplier[]
+  warehouses Warehouse[]
+
+  @@index([regionId], map: "idx_cities_region")
+  @@map("cities")
+}
+
+/// Ports of entry (sea, air, land)
+model Port {
+  id       String  @id @default(uuid()) @db.Uuid
+  portName String  @map("port_name") @db.VarChar(200)
+  portCode String? @unique @map("port_code") @db.VarChar(20)
+  cityId   String? @map("city_id") @db.Uuid
+  /// CHECK: port_type IN ('sea', 'air', 'land')
+  portType String? @map("port_type") @db.VarChar(20)
+
+  // Relations
+  city      City?      @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  shipments Shipment[]
+
+  @@map("ports")
+}
+
+/// Units of measure (EA, KG, M, etc.)
+model UnitOfMeasure {
+  id        String  @id @default(uuid()) @db.Uuid
+  uomCode   String  @unique @map("uom_code") @db.VarChar(20)
+  uomName   String  @map("uom_name") @db.VarChar(50)
+  uomNameAr String? @map("uom_name_ar") @db.VarChar(50)
+  category  String? @db.VarChar(30)
+
+  // Relations
+  items              Item[]
+  mrrvLines          MrrvLine[]
+  osdLines           OsdLine[]
+  mrvLines           MrvLine[]
+  gatePassItems      GatePassItem[]
+  mrfLines           MrfLine[]
+  stockTransferLines StockTransferLine[]
+  leftoverMaterials  LeftoverMaterial[]
+  shipmentLines      ShipmentLine[]
+
+  @@map("units_of_measure")
+}
+
+/// Warehouse type classifications
+model WarehouseType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  typeNameAr  String? @map("type_name_ar") @db.VarChar(50)
+  description String?
+
+  // Relations
+  warehouses Warehouse[]
+
+  @@map("warehouse_types")
+}
+
+/// Equipment category groupings
+model EquipmentCategory {
+  id             String  @id @default(uuid()) @db.Uuid
+  categoryName   String  @unique @map("category_name") @db.VarChar(100)
+  categoryNameAr String? @map("category_name_ar") @db.VarChar(100)
+
+  // Relations
+  equipmentTypes EquipmentType[]
+
+  @@map("equipment_categories")
+}
+
+/// Equipment type definitions
+model EquipmentType {
+  id         String  @id @default(uuid()) @db.Uuid
+  typeName   String  @unique @map("type_name") @db.VarChar(100)
+  typeNameAr String? @map("type_name_ar") @db.VarChar(100)
+  categoryId String? @map("category_id") @db.Uuid
+
+  // Relations
+  category               EquipmentCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  generators             Generator[]
+  equipmentFleet         EquipmentFleet[]
+  joEquipmentLines       JoEquipmentLine[]
+  supplierEquipmentRates SupplierEquipmentRate[]
+
+  @@map("equipment_types")
+}
+
+/// Approval workflow rules per document type and amount threshold
+model ApprovalWorkflow {
+  id           String   @id @default(uuid()) @db.Uuid
+  /// Document type code
+  documentType String   @map("document_type") @db.VarChar(30)
+  minAmount    Decimal  @map("min_amount") @db.Decimal(15, 2)
+  maxAmount    Decimal? @map("max_amount") @db.Decimal(15, 2)
+  approverRole String   @map("approver_role") @db.VarChar(50)
+  /// Maximum hours for approval SLA
+  slaHours     Int      @map("sla_hours")
+
+  @@map("approval_workflows")
+}
+
+// ############################################################################
+// SECTION 2: CORE MASTER TABLES (8 models)
+// ############################################################################
+
+/// Legal entities within Nesma group
+model Entity {
+  id             String   @id @default(uuid()) @db.Uuid
+  entityCode     String   @unique @map("entity_code") @db.VarChar(20)
+  entityName     String   @map("entity_name") @db.VarChar(200)
+  entityNameAr   String?  @map("entity_name_ar") @db.VarChar(200)
+  parentEntityId String?  @map("parent_entity_id") @db.Uuid
+  /// CHECK: status IN ('active', 'inactive')
+  status         String   @default("active") @map("status") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations - self-referencing
+  parentEntity  Entity?  @relation("EntityHierarchy", fields: [parentEntityId], references: [id], onDelete: Restrict)
+  childEntities Entity[] @relation("EntityHierarchy")
+
+  // Relations - other tables
+  projects  Project[]
+  jobOrders JobOrder[]
+
+  @@map("entities")
+}
+
+/// Construction projects and sites
+model Project {
+  id               String    @id @default(uuid()) @db.Uuid
+  projectCode      String    @unique @map("project_code") @db.VarChar(50)
+  projectName      String    @map("project_name") @db.VarChar(300)
+  projectNameAr    String?   @map("project_name_ar") @db.VarChar(300)
+  client           String    @db.VarChar(200)
+  entityId         String?   @map("entity_id") @db.Uuid
+  regionId         String?   @map("region_id") @db.Uuid
+  cityId           String?   @map("city_id") @db.Uuid
+  projectManagerId String?   @map("project_manager_id") @db.Uuid
+  /// CHECK: status IN ('active', 'on_hold', 'completed', 'cancelled')
+  status           String    @default("active") @map("status") @db.VarChar(20)
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  budget           Decimal?  @db.Decimal(15, 2)
+  description      String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  entity         Entity?   @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  region         Region?   @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  city           City?     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  projectManager Employee? @relation("ProjectManager", fields: [projectManagerId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  assignedEmployees    Employee[]            @relation("EmployeeProject")
+  warehouses           Warehouse[]
+  mrrv                 Mrrv[]
+  mirv                 Mirv[]
+  mrv                  Mrv[]
+  gatePasses           GatePass[]
+  materialRequisitions MaterialRequisition[]
+  stockTransfersFrom   StockTransfer[]       @relation("StockTransferFromProject")
+  stockTransfersTo     StockTransfer[]       @relation("StockTransferToProject")
+  jobOrders            JobOrder[]
+  generators           Generator[]
+  leftoverMaterials    LeftoverMaterial[]
+  shipments            Shipment[]
+  tasks                Task[]
+
+  @@index([projectCode], map: "idx_projects_code")
+  @@map("projects")
+}
+
+/// System users and employees
+model Employee {
+  id                  String    @id @default(uuid()) @db.Uuid
+  /// HR employee ID
+  employeeIdNumber    String    @unique @map("employee_id_number") @db.VarChar(20)
+  fullName            String    @map("full_name") @db.VarChar(200)
+  fullNameAr          String?   @map("full_name_ar") @db.VarChar(200)
+  email               String    @unique @db.VarChar(200)
+  phone               String?   @db.VarChar(20)
+  /// CHECK: department IN ('logistics', 'warehouse', 'transport', 'projects', 'quality', 'finance', 'admin')
+  department          String    @db.VarChar(50)
+  role                String    @db.VarChar(50)
+  /// CHECK: system_role IN ('admin', 'manager', 'warehouse_supervisor', 'warehouse_staff', 'logistics_coordinator', 'site_engineer', 'qc_officer', 'freight_forwarder')
+  systemRole          String    @map("system_role") @db.VarChar(50)
+  assignedProjectId   String?   @map("assigned_project_id") @db.Uuid
+  assignedWarehouseId String?   @map("assigned_warehouse_id") @db.Uuid
+  managerId           String?   @map("manager_id") @db.Uuid
+  isActive            Boolean   @default(true) @map("is_active")
+  hireDate            DateTime? @map("hire_date") @db.Date
+  /// Hashed password (never store plain text)
+  passwordHash        String?   @map("password_hash") @db.VarChar(500)
+  lastLogin           DateTime? @map("last_login") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  assignedProject   Project?   @relation("EmployeeProject", fields: [assignedProjectId], references: [id], onDelete: SetNull)
+  assignedWarehouse Warehouse? @relation("EmployeeWarehouse", fields: [assignedWarehouseId], references: [id], onDelete: SetNull)
+  manager           Employee?  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports     Employee[] @relation("EmployeeManager")
+
+  // Reverse relations - Project Manager
+  managedProjects Project[] @relation("ProjectManager")
+
+  // Reverse relations - Warehouses
+  managedWarehouses Warehouse[] @relation("WarehouseManager")
+
+  // Reverse relations - MRRV
+  mrrvReceivedBy  Mrrv[] @relation("MrrvReceivedBy")
+  mrrvQcInspector Mrrv[] @relation("MrrvQcInspector")
+
+  // Reverse relations - RFIM
+  rfimInspector Rfim[] @relation("RfimInspector")
+
+  // Reverse relations - OSD
+  osdResolvedBy OsdReport[] @relation("OsdResolvedBy")
+
+  // Reverse relations - MIRV
+  mirvRequestedBy Mirv[] @relation("MirvRequestedBy")
+  mirvApprovedBy  Mirv[] @relation("MirvApprovedBy")
+  mirvIssuedBy    Mirv[] @relation("MirvIssuedBy")
+
+  // Reverse relations - MRV
+  mrvReturnedBy Mrv[] @relation("MrvReturnedBy")
+  mrvReceivedBy Mrv[] @relation("MrvReceivedBy")
+
+  // Reverse relations - Gate Passes
+  gatePassIssuedBy GatePass[] @relation("GatePassIssuedBy")
+
+  // Reverse relations - MRF
+  mrfRequestedBy MaterialRequisition[] @relation("MrfRequestedBy")
+  mrfReviewedBy  MaterialRequisition[] @relation("MrfReviewedBy")
+  mrfApprovedBy  MaterialRequisition[] @relation("MrfApprovedBy")
+
+  // Reverse relations - Stock Transfers
+  stockTransfersRequested StockTransfer[] @relation("StockTransferRequestedBy")
+
+  // Reverse relations - Job Orders
+  joRequestedBy JobOrder[]   @relation("JoRequestedBy")
+  joCompletedBy JobOrder[]   @relation("JoCompletedBy")
+  joApprovals   JoApproval[]
+
+  // Reverse relations - Equipment Fleet
+  driverOfVehicles EquipmentFleet[] @relation("FleetDriver")
+
+  // Reverse relations - Leftover Materials
+  leftoverCreatedBy  LeftoverMaterial[] @relation("LeftoverCreatedBy")
+  leftoverApprovedBy LeftoverMaterial[] @relation("LeftoverApprovedBy")
+
+  // Reverse relations - Audit Log
+  auditLogs AuditLog[]
+
+  // Reverse relations - Notifications
+  notifications Notification[]
+
+  // Reverse relations - Tasks
+  tasksAssigned    Task[]        @relation("TaskAssignee")
+  tasksCreated     Task[]        @relation("TaskCreator")
+  taskComments     TaskComment[]
+
+  // Reverse relations - Company Documents
+  uploadedDocuments CompanyDocument[]
+
+  // Reverse relations - Workflow & Dashboard
+  ownedDashboards  Dashboard[]
+  savedReports     SavedReport[]
+  systemSettings   SystemSetting[]
+
+  // Reverse relations — v2 additions
+  refreshTokens    RefreshToken[]     @relation("EmployeeRefreshTokens")
+  docComments      DocumentComment[]  @relation("EmployeeDocComments")
+  approvalSteps    ApprovalStep[]     @relation("EmployeeApprovalSteps")
+  delegationsOut   DelegationRule[]   @relation("EmployeeDelegationsOut")
+  delegationsIn    DelegationRule[]   @relation("EmployeeDelegationsIn")
+
+  // Reverse relations — v3 additions
+  attachments      Attachment[]       @relation("AttachmentUploadedBy")
+  userViews        UserView[]         @relation("UserViewOwner")
+
+  @@index([systemRole], map: "idx_employees_system_role")
+  @@index([isActive], map: "idx_employees_active")
+  @@index([assignedProjectId], map: "idx_employees_project")
+  @@index([assignedWarehouseId], map: "idx_employees_warehouse")
+  @@index([department], map: "idx_employees_department")
+  @@map("employees")
+}
+
+/// Suppliers, vendors, and freight forwarders
+model Supplier {
+  id             String   @id @default(uuid()) @db.Uuid
+  supplierCode   String   @unique @map("supplier_code") @db.VarChar(50)
+  supplierName   String   @map("supplier_name") @db.VarChar(300)
+  supplierNameAr String?  @map("supplier_name_ar") @db.VarChar(300)
+  /// Supplier type tags (array)
+  types          String[] @db.VarChar(200)
+  contactPerson  String?  @map("contact_person") @db.VarChar(200)
+  phone          String?  @db.VarChar(20)
+  email          String?  @db.VarChar(200)
+  address        String?
+  cityId         String?  @map("city_id") @db.Uuid
+  /// Commercial registration number
+  crNumber       String?  @map("cr_number") @db.VarChar(50)
+  /// VAT registration number
+  vatNumber      String?  @map("vat_number") @db.VarChar(50)
+  /// CHECK: rating BETWEEN 1 AND 5
+  rating         Int?     @db.SmallInt
+  /// CHECK: status IN ('active', 'inactive', 'blocked')
+  status         String   @default("active") @map("status") @db.VarChar(20)
+  paymentTerms   String?  @map("payment_terms") @db.VarChar(50)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  city City? @relation(fields: [cityId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrrv                   Mrrv[]
+  osdReports             OsdReport[]
+  jobOrders              JobOrder[]
+  inventoryLots          InventoryLot[]
+  supplierEquipmentRates SupplierEquipmentRate[]
+  shipmentsAsSupplier    Shipment[]              @relation("ShipmentSupplier")
+  shipmentsAsForwarder   Shipment[]              @relation("ShipmentForwarder")
+
+  @@map("suppliers")
+}
+
+/// Warehouse and storage locations
+model Warehouse {
+  id              String   @id @default(uuid()) @db.Uuid
+  warehouseCode   String   @unique @map("warehouse_code") @db.VarChar(50)
+  warehouseName   String   @map("warehouse_name") @db.VarChar(200)
+  warehouseNameAr String?  @map("warehouse_name_ar") @db.VarChar(200)
+  warehouseTypeId String   @map("warehouse_type_id") @db.Uuid
+  projectId       String?  @map("project_id") @db.Uuid
+  regionId        String   @map("region_id") @db.Uuid
+  cityId          String?  @map("city_id") @db.Uuid
+  address         String?
+  managerId       String?  @map("manager_id") @db.Uuid
+  contactPhone    String?  @map("contact_phone") @db.VarChar(20)
+  /// CHECK: status IN ('active', 'inactive', 'closed')
+  status          String   @default("active") @map("status") @db.VarChar(20)
+  latitude        Decimal? @db.Decimal(10, 7)
+  longitude       Decimal? @db.Decimal(10, 7)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouseType WarehouseType @relation(fields: [warehouseTypeId], references: [id], onDelete: Restrict)
+  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  region        Region        @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  city          City?         @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  manager       Employee?     @relation("WarehouseManager", fields: [managerId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  assignedEmployees    Employee[]         @relation("EmployeeWarehouse")
+  generators           Generator[]
+  mrrv                 Mrrv[]
+  osdReports           OsdReport[]
+  mirv                 Mirv[]
+  mrvFrom              Mrv[]              @relation("MrvFromWarehouse")
+  mrvTo                Mrv[]              @relation("MrvToWarehouse")
+  gatePasses           GatePass[]
+  stockTransfersFrom   StockTransfer[]    @relation("StockTransferFromWarehouse")
+  stockTransfersTo     StockTransfer[]    @relation("StockTransferToWarehouse")
+  inventoryLevels      InventoryLevel[]
+  inventoryLots        InventoryLot[]
+  leftoverMaterials    LeftoverMaterial[]
+  shipmentsDestination Shipment[]
+
+  @@map("warehouses")
+}
+
+/// Material and item master catalog
+model Item {
+  id                String   @id @default(uuid()) @db.Uuid
+  itemCode          String   @unique @map("item_code") @db.VarChar(50)
+  itemDescription   String   @map("item_description") @db.VarChar(500)
+  itemDescriptionAr String?  @map("item_description_ar") @db.VarChar(500)
+  /// CHECK: category IN ('construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts')
+  category          String   @db.VarChar(50)
+  subCategory       String?  @map("sub_category") @db.VarChar(100)
+  uomId             String   @map("uom_id") @db.Uuid
+  minStock          Decimal? @default(0) @map("min_stock") @db.Decimal(12, 3)
+  reorderPoint      Decimal? @map("reorder_point") @db.Decimal(12, 3)
+  standardCost      Decimal? @map("standard_cost") @db.Decimal(15, 2)
+  barcode           String?  @unique @db.VarChar(100)
+  isSerialized      Boolean? @default(false) @map("is_serialized")
+  isExpirable       Boolean? @default(false) @map("is_expirable")
+  /// CHECK: status IN ('active', 'inactive', 'discontinued')
+  status            String   @default("active") @map("status") @db.VarChar(20)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  uom UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  mrrvLines          MrrvLine[]
+  osdLines           OsdLine[]
+  mirvLines          MirvLine[]
+  mrvLines           MrvLine[]
+  gatePassItems      GatePassItem[]
+  mrfLines           MrfLine[]
+  stockTransferLines StockTransferLine[]
+  inventoryLevels    InventoryLevel[]
+  inventoryLots      InventoryLot[]
+  leftoverMaterials  LeftoverMaterial[]
+  shipmentLines      ShipmentLine[]
+
+  @@index([itemCode], map: "idx_items_code")
+  @@map("items")
+}
+
+/// Generator asset register
+model Generator {
+  id                   String    @id @default(uuid()) @db.Uuid
+  generatorCode        String    @unique @map("generator_code") @db.VarChar(50)
+  generatorName        String    @map("generator_name") @db.VarChar(200)
+  capacityKva          Int       @map("capacity_kva")
+  equipmentTypeId      String?   @map("equipment_type_id") @db.Uuid
+  currentProjectId     String?   @map("current_project_id") @db.Uuid
+  currentWarehouseId   String?   @map("current_warehouse_id") @db.Uuid
+  /// CHECK: status IN ('available', 'assigned', 'maintenance', 'decommissioned')
+  status               String    @default("available") @map("status") @db.VarChar(30)
+  purchaseDate         DateTime? @map("purchase_date") @db.Date
+  purchaseValue        Decimal?  @map("purchase_value") @db.Decimal(15, 2)
+  salvageValue         Decimal?  @map("salvage_value") @db.Decimal(15, 2)
+  usefulLifeMonths     Int?      @map("useful_life_months")
+  /// CHECK: depreciation_method IN ('straight_line', 'usage_based')
+  depreciationMethod   String?   @map("depreciation_method") @db.VarChar(20)
+  inServiceDate        DateTime? @map("in_service_date") @db.Date
+  hoursTotal           Decimal?  @default(0) @map("hours_total") @db.Decimal(10, 1)
+  lastDepreciationDate DateTime? @map("last_depreciation_date") @db.Date
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  equipmentType    EquipmentType? @relation(fields: [equipmentTypeId], references: [id], onDelete: SetNull)
+  currentProject   Project?       @relation(fields: [currentProjectId], references: [id], onDelete: SetNull)
+  currentWarehouse Warehouse?     @relation(fields: [currentWarehouseId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  joGeneratorDetails  JoGeneratorDetail[]
+  depreciationEntries DepreciationEntry[]
+
+  @@map("generators")
+}
+
+/// Vehicle and heavy equipment fleet
+model EquipmentFleet {
+  id                  String    @id @default(uuid()) @db.Uuid
+  vehicleCode         String    @unique @map("vehicle_code") @db.VarChar(50)
+  vehicleType         String    @map("vehicle_type") @db.VarChar(100)
+  plateNumber         String?   @unique @map("plate_number") @db.VarChar(30)
+  equipmentTypeId     String?   @map("equipment_type_id") @db.Uuid
+  driverId            String?   @map("driver_id") @db.Uuid
+  status              String    @default("available") @map("status") @db.VarChar(30)
+  mileageKm           Int?      @default(0) @map("mileage_km")
+  nextMaintenanceDate DateTime? @map("next_maintenance_date") @db.Date
+  insuranceExpiry     DateTime? @map("insurance_expiry") @db.Date
+  registrationExpiry  DateTime? @map("registration_expiry") @db.Date
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  equipmentType EquipmentType? @relation(fields: [equipmentTypeId], references: [id], onDelete: SetNull)
+  driver        Employee?      @relation("FleetDriver", fields: [driverId], references: [id], onDelete: SetNull)
+
+  @@map("equipment_fleet")
+}
+
+// ############################################################################
+// SECTION 3: MATERIAL MANAGEMENT TABLES (15 models)
+// ############################################################################
+
+/// Material Receiving Report Voucher (MRRV)
+model Mrrv {
+  id             String    @id @default(uuid()) @db.Uuid
+  mrrvNumber     String    @unique @map("mrrv_number") @db.VarChar(20)
+  supplierId     String    @map("supplier_id") @db.Uuid
+  poNumber       String?   @map("po_number") @db.VarChar(50)
+  warehouseId    String    @map("warehouse_id") @db.Uuid
+  projectId      String?   @map("project_id") @db.Uuid
+  receivedById   String    @map("received_by_id") @db.Uuid
+  receiveDate    DateTime  @map("receive_date") @db.Timestamptz
+  invoiceNumber  String?   @map("invoice_number") @db.VarChar(50)
+  deliveryNote   String?   @map("delivery_note") @db.VarChar(100)
+  totalValue     Decimal?  @default(0) @map("total_value") @db.Decimal(15, 2)
+  rfimRequired   Boolean?  @default(false) @map("rfim_required")
+  hasOsd         Boolean?  @default(false) @map("has_osd")
+  /// CHECK: status IN ('draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected')
+  status         String    @default("draft") @map("status") @db.VarChar(20)
+  qcInspectorId  String?   @map("qc_inspector_id") @db.Uuid
+  qcApprovedDate DateTime? @map("qc_approved_date") @db.Timestamptz
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier    Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  receivedBy  Employee  @relation("MrrvReceivedBy", fields: [receivedById], references: [id], onDelete: Restrict)
+  qcInspector Employee? @relation("MrrvQcInspector", fields: [qcInspectorId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrrvLines  MrrvLine[]
+  rfims      Rfim[]
+  osdReports OsdReport[]
+  shipments  Shipment[]
+
+  @@index([status], map: "idx_mrrv_status")
+  @@index([supplierId], map: "idx_mrrv_supplier")
+  @@index([mrrvNumber], map: "idx_mrrv_number")
+  @@index([warehouseId], map: "idx_mrrv_warehouse")
+  @@index([createdAt], map: "idx_mrrv_created")
+  @@map("mrrv")
+}
+
+/// MRRV line items
+model MrrvLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  mrrvId          String    @map("mrrv_id") @db.Uuid
+  itemId          String    @map("item_id") @db.Uuid
+  qtyOrdered      Decimal?  @map("qty_ordered") @db.Decimal(12, 3)
+  /// CHECK: qty_received > 0
+  qtyReceived     Decimal   @map("qty_received") @db.Decimal(12, 3)
+  qtyDamaged      Decimal?  @default(0) @map("qty_damaged") @db.Decimal(12, 3)
+  uomId           String    @map("uom_id") @db.Uuid
+  unitCost        Decimal?  @map("unit_cost") @db.Decimal(15, 2)
+  /// CHECK: condition IN ('good', 'damaged', 'mixed')
+  condition       String    @default("good") @map("condition") @db.VarChar(20)
+  storageLocation String?   @map("storage_location") @db.VarChar(100)
+  expiryDate      DateTime? @map("expiry_date") @db.Date
+  notes           String?
+
+  // Relations
+  mrrv Mrrv          @relation(fields: [mrrvId], references: [id], onDelete: Cascade)
+  item Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom  UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  osdLines      OsdLine[]
+  inventoryLots InventoryLot[]
+
+  @@map("mrrv_lines")
+}
+
+/// Request for Inspection of Materials (RFIM)
+model Rfim {
+  id             String    @id @default(uuid()) @db.Uuid
+  rfimNumber     String    @unique @map("rfim_number") @db.VarChar(20)
+  mrrvId         String    @map("mrrv_id") @db.Uuid
+  inspectorId    String?   @map("inspector_id") @db.Uuid
+  requestDate    DateTime  @default(now()) @map("request_date") @db.Timestamptz
+  inspectionDate DateTime? @map("inspection_date") @db.Timestamptz
+  /// CHECK: result IN ('pass', 'fail', 'conditional')
+  result         String?   @db.VarChar(20)
+  comments       String?
+  /// CHECK: status IN ('pending', 'in_progress', 'completed')
+  status         String    @default("pending") @map("status") @db.VarChar(20)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mrrv      Mrrv      @relation(fields: [mrrvId], references: [id], onDelete: Restrict)
+  inspector Employee? @relation("RfimInspector", fields: [inspectorId], references: [id], onDelete: SetNull)
+
+  @@index([mrrvId], map: "idx_rfim_mrrv")
+  @@index([status], map: "idx_rfim_status")
+  @@map("rfim")
+}
+
+/// Over/Short/Damage reports linked to MRRVs
+model OsdReport {
+  id               String    @id @default(uuid()) @db.Uuid
+  osdNumber        String    @unique @map("osd_number") @db.VarChar(20)
+  mrrvId           String    @map("mrrv_id") @db.Uuid
+  poNumber         String?   @map("po_number") @db.VarChar(50)
+  supplierId       String?   @map("supplier_id") @db.Uuid
+  warehouseId      String?   @map("warehouse_id") @db.Uuid
+  reportDate       DateTime  @map("report_date") @db.Date
+  /// OSD type flags (over/short/damage) as VARCHAR(50)[] array
+  reportTypes      String[]  @map("report_types") @db.VarChar(50)
+  /// CHECK: status IN ('draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed')
+  status           String    @default("draft") @map("status") @db.VarChar(30)
+  totalOverValue   Decimal?  @default(0) @map("total_over_value") @db.Decimal(15, 2)
+  totalShortValue  Decimal?  @default(0) @map("total_short_value") @db.Decimal(15, 2)
+  totalDamageValue Decimal?  @default(0) @map("total_damage_value") @db.Decimal(15, 2)
+  claimSentDate    DateTime? @map("claim_sent_date") @db.Date
+  claimReference   String?   @map("claim_reference") @db.VarChar(100)
+  supplierResponse String?   @map("supplier_response")
+  responseDate     DateTime? @map("response_date") @db.Date
+  /// CHECK: resolution_type IN ('credit_note', 'replacement', 'price_adjustment', 'insurance_claim', 'write_off', 'returned')
+  resolutionType   String?   @map("resolution_type") @db.VarChar(30)
+  resolutionAmount Decimal?  @map("resolution_amount") @db.Decimal(15, 2)
+  resolutionDate   DateTime? @map("resolution_date") @db.Date
+  resolvedById     String?   @map("resolved_by_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mrrv       Mrrv       @relation(fields: [mrrvId], references: [id], onDelete: Restrict)
+  supplier   Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  warehouse  Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  resolvedBy Employee?  @relation("OsdResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  osdLines OsdLine[]
+
+  @@index([mrrvId], map: "idx_osd_mrrv")
+  @@index([status], map: "idx_osd_status")
+  @@map("osd_reports")
+}
+
+/// OSD report line items
+model OsdLine {
+  id          String   @id @default(uuid()) @db.Uuid
+  osdId       String   @map("osd_id") @db.Uuid
+  itemId      String   @map("item_id") @db.Uuid
+  uomId       String   @map("uom_id") @db.Uuid
+  mrrvLineId  String?  @map("mrrv_line_id") @db.Uuid
+  qtyInvoice  Decimal  @map("qty_invoice") @db.Decimal(12, 3)
+  qtyReceived Decimal  @map("qty_received") @db.Decimal(12, 3)
+  qtyDamaged  Decimal? @default(0) @map("qty_damaged") @db.Decimal(12, 3)
+  /// CHECK: damage_type IN ('physical', 'water', 'missing_parts', 'wrong_item', 'expired', 'other')
+  damageType  String?  @map("damage_type") @db.VarChar(30)
+  unitCost    Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  notes       String?
+
+  // Relations
+  osd      OsdReport     @relation(fields: [osdId], references: [id], onDelete: Cascade)
+  item     Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom      UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  mrrvLine MrrvLine?     @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
+
+  @@map("osd_lines")
+}
+
+/// Material Issue Report Voucher (MIRV)
+model Mirv {
+  id                String    @id @default(uuid()) @db.Uuid
+  mirvNumber        String    @unique @map("mirv_number") @db.VarChar(20)
+  projectId         String    @map("project_id") @db.Uuid
+  warehouseId       String    @map("warehouse_id") @db.Uuid
+  locationOfWork    String?   @map("location_of_work") @db.VarChar(200)
+  requestedById     String    @map("requested_by_id") @db.Uuid
+  requestDate       DateTime  @map("request_date") @db.Timestamptz
+  requiredDate      DateTime? @map("required_date") @db.Date
+  /// CHECK: priority IN ('normal', 'urgent', 'emergency')
+  priority          String?   @default("normal") @map("priority") @db.VarChar(20)
+  estimatedValue    Decimal?  @default(0) @map("estimated_value") @db.Decimal(15, 2)
+  /// CHECK: status IN ('draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled')
+  status            String    @default("draft") @map("status") @db.VarChar(30)
+  approvedById      String?   @map("approved_by_id") @db.Uuid
+  approvedDate      DateTime? @map("approved_date") @db.Timestamptz
+  issuedById        String?   @map("issued_by_id") @db.Uuid
+  issuedDate        DateTime? @map("issued_date") @db.Timestamptz
+  rejectionReason   String?   @map("rejection_reason")
+  /// CHECK: reservation_status IN ('none', 'reserved', 'released')
+  reservationStatus String?   @default("none") @map("reservation_status") @db.VarChar(20)
+  mrfId             String?   @map("mrf_id") @db.Uuid
+  slaDueDate        DateTime? @map("sla_due_date") @db.Timestamptz
+  notes             String?
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  project     Project              @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  warehouse   Warehouse            @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  requestedBy Employee             @relation("MirvRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  approvedBy  Employee?            @relation("MirvApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  issuedBy    Employee?            @relation("MirvIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  mrf         MaterialRequisition? @relation(fields: [mrfId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mirvLines            MirvLine[]
+  mrv                  Mrv[]
+  gatePasses           GatePass[]
+  materialRequisitions MaterialRequisition[] @relation("MrfMirv")
+  stockTransfersDest   StockTransfer[]       @relation("StockTransferDestMirv")
+  leftoverMaterials    LeftoverMaterial[]
+
+  @@index([status], map: "idx_mirv_status")
+  @@index([projectId], map: "idx_mirv_project")
+  @@index([warehouseId], map: "idx_mirv_warehouse")
+  @@index([mirvNumber], map: "idx_mirv_number")
+  @@index([requestedById], map: "idx_mirv_requested_by")
+  @@index([createdAt], map: "idx_mirv_created")
+  @@map("mirv")
+}
+
+/// MIRV line items
+model MirvLine {
+  id              String   @id @default(uuid()) @db.Uuid
+  mirvId          String   @map("mirv_id") @db.Uuid
+  itemId          String   @map("item_id") @db.Uuid
+  /// CHECK: qty_requested > 0
+  qtyRequested    Decimal  @map("qty_requested") @db.Decimal(12, 3)
+  qtyApproved     Decimal? @map("qty_approved") @db.Decimal(12, 3)
+  qtyIssued       Decimal? @map("qty_issued") @db.Decimal(12, 3)
+  unitCost        Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  storageLocation String?  @map("storage_location") @db.VarChar(100)
+  notes           String?
+
+  // Relations
+  mirv Mirv @relation(fields: [mirvId], references: [id], onDelete: Cascade)
+  item Item @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  mrfLines        MrfLine[]
+  lotConsumptions LotConsumption[]
+
+  @@map("mirv_lines")
+}
+
+/// Material Return Voucher (MRV)
+model Mrv {
+  id              String    @id @default(uuid()) @db.Uuid
+  mrvNumber       String    @unique @map("mrv_number") @db.VarChar(20)
+  /// CHECK: return_type IN ('return_to_warehouse', 'return_to_supplier', 'scrap', 'transfer_to_project')
+  returnType      String    @map("return_type") @db.VarChar(30)
+  projectId       String    @map("project_id") @db.Uuid
+  fromWarehouseId String?   @map("from_warehouse_id") @db.Uuid
+  toWarehouseId   String    @map("to_warehouse_id") @db.Uuid
+  returnedById    String    @map("returned_by_id") @db.Uuid
+  returnDate      DateTime  @map("return_date") @db.Timestamptz
+  reason          String
+  /// CHECK: status IN ('draft', 'pending', 'received', 'completed', 'rejected')
+  status          String    @default("draft") @map("status") @db.VarChar(20)
+  receivedById    String?   @map("received_by_id") @db.Uuid
+  receivedDate    DateTime? @map("received_date") @db.Timestamptz
+  originalMirvId  String?   @map("original_mirv_id") @db.Uuid
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  fromWarehouse Warehouse? @relation("MrvFromWarehouse", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
+  toWarehouse   Warehouse  @relation("MrvToWarehouse", fields: [toWarehouseId], references: [id], onDelete: Restrict)
+  returnedBy    Employee   @relation("MrvReturnedBy", fields: [returnedById], references: [id], onDelete: Restrict)
+  receivedBy    Employee?  @relation("MrvReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
+  originalMirv  Mirv?      @relation(fields: [originalMirvId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrvLines       MrvLine[]
+  stockTransfers StockTransfer[] @relation("StockTransferSourceMrv")
+
+  @@index([mrvNumber], map: "idx_mrv_number")
+  @@index([status], map: "idx_mrv_status")
+  @@index([projectId], map: "idx_mrv_project")
+  @@map("mrv")
+}
+
+/// MRV line items
+model MrvLine {
+  id          String  @id @default(uuid()) @db.Uuid
+  mrvId       String  @map("mrv_id") @db.Uuid
+  itemId      String  @map("item_id") @db.Uuid
+  /// CHECK: qty_returned > 0
+  qtyReturned Decimal @map("qty_returned") @db.Decimal(12, 3)
+  uomId       String  @map("uom_id") @db.Uuid
+  /// CHECK: condition IN ('good', 'used', 'damaged')
+  condition   String  @db.VarChar(20)
+  notes       String?
+
+  // Relations
+  mrv  Mrv           @relation(fields: [mrvId], references: [id], onDelete: Cascade)
+  item Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom  UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  @@map("mrv_lines")
+}
+
+/// Gate pass for material entry/exit
+model GatePass {
+  id              String    @id @default(uuid()) @db.Uuid
+  gatePassNumber  String    @unique @map("gate_pass_number") @db.VarChar(20)
+  /// CHECK: pass_type IN ('inbound', 'outbound', 'transfer')
+  passType        String    @map("pass_type") @db.VarChar(20)
+  mirvId          String?   @map("mirv_id") @db.Uuid
+  projectId       String?   @map("project_id") @db.Uuid
+  warehouseId     String    @map("warehouse_id") @db.Uuid
+  vehicleNumber   String    @map("vehicle_number") @db.VarChar(30)
+  driverName      String    @map("driver_name") @db.VarChar(200)
+  driverIdNumber  String?   @map("driver_id_number") @db.VarChar(30)
+  destination     String    @db.VarChar(300)
+  purpose         String?
+  issueDate       DateTime  @map("issue_date") @db.Timestamptz
+  validUntil      DateTime? @map("valid_until") @db.Timestamptz
+  /// CHECK: status IN ('draft', 'pending', 'approved', 'released', 'returned', 'expired', 'cancelled')
+  status          String    @default("draft") @map("status") @db.VarChar(20)
+  issuedById      String?   @map("issued_by_id") @db.Uuid
+  securityOfficer String?   @map("security_officer") @db.VarChar(200)
+  exitTime        DateTime? @map("exit_time") @db.Timestamptz
+  returnTime      DateTime? @map("return_time") @db.Timestamptz
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mirv      Mirv?     @relation(fields: [mirvId], references: [id], onDelete: SetNull)
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  issuedBy  Employee? @relation("GatePassIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  gatePassItems  GatePassItem[]
+  stockTransfers StockTransfer[]
+
+  @@index([status], map: "idx_gate_passes_status")
+  @@index([warehouseId], map: "idx_gate_passes_warehouse")
+  @@index([createdAt], map: "idx_gate_passes_created")
+  @@map("gate_passes")
+}
+
+/// Gate pass line items
+model GatePassItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  gatePassId  String  @map("gate_pass_id") @db.Uuid
+  itemId      String  @map("item_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity    Decimal @db.Decimal(12, 3)
+  uomId       String  @map("uom_id") @db.Uuid
+  description String? @db.VarChar(300)
+
+  // Relations
+  gatePass GatePass      @relation(fields: [gatePassId], references: [id], onDelete: Cascade)
+  item     Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom      UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  @@map("gate_pass_items")
+}
+
+/// Material Requisition Form (MRF)
+model MaterialRequisition {
+  id                  String    @id @default(uuid()) @db.Uuid
+  mrfNumber           String    @unique @map("mrf_number") @db.VarChar(20)
+  requestDate         DateTime  @map("request_date") @db.Timestamptz
+  requiredDate        DateTime? @map("required_date") @db.Date
+  projectId           String    @map("project_id") @db.Uuid
+  /// CHECK: department IN ('electrical', 'mechanical', 'civil', 'safety', 'general')
+  department          String?   @db.VarChar(30)
+  requestedById       String    @map("requested_by_id") @db.Uuid
+  deliveryPoint       String?   @map("delivery_point") @db.VarChar(200)
+  workOrder           String?   @map("work_order") @db.VarChar(50)
+  drawingReference    String?   @map("drawing_reference") @db.VarChar(100)
+  /// CHECK: priority IN ('urgent', 'high', 'medium', 'low')
+  priority            String?   @default("medium") @map("priority") @db.VarChar(20)
+  /// CHECK: status IN ('draft', 'submitted', 'under_review', 'approved', 'checking_stock', 'from_stock', 'needs_purchase', 'partially_fulfilled', 'fulfilled', 'rejected', 'cancelled')
+  status              String    @default("draft") @map("status") @db.VarChar(30)
+  totalEstimatedValue Decimal?  @default(0) @map("total_estimated_value") @db.Decimal(15, 2)
+  mirvId              String?   @map("mirv_id") @db.Uuid
+  reviewedById        String?   @map("reviewed_by_id") @db.Uuid
+  reviewDate          DateTime? @map("review_date") @db.Timestamptz
+  approvedById        String?   @map("approved_by_id") @db.Uuid
+  approvalDate        DateTime? @map("approval_date") @db.Timestamptz
+  fulfillmentDate     DateTime? @map("fulfillment_date") @db.Timestamptz
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  requestedBy Employee  @relation("MrfRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  mirv        Mirv?     @relation("MrfMirv", fields: [mirvId], references: [id], onDelete: SetNull)
+  reviewedBy  Employee? @relation("MrfReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  approvedBy  Employee? @relation("MrfApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrfLines MrfLine[]
+  mirvs    Mirv[]
+
+  @@index([projectId], map: "idx_mrf_project")
+  @@index([status], map: "idx_mrf_status")
+  @@index([requestedById], map: "idx_mrf_requested_by")
+  @@map("material_requisitions")
+}
+
+/// MRF line items
+model MrfLine {
+  id              String   @id @default(uuid()) @db.Uuid
+  mrfId           String   @map("mrf_id") @db.Uuid
+  itemId          String?  @map("item_id") @db.Uuid
+  itemDescription String?  @map("item_description") @db.VarChar(500)
+  category        String?  @db.VarChar(30)
+  /// CHECK: qty_requested > 0
+  qtyRequested    Decimal  @map("qty_requested") @db.Decimal(12, 3)
+  uomId           String?  @map("uom_id") @db.Uuid
+  /// CHECK: source IN ('from_stock', 'purchase_required', 'both', 'tbd')
+  source          String?  @default("tbd") @db.VarChar(20)
+  qtyFromStock    Decimal? @default(0) @map("qty_from_stock") @db.Decimal(12, 3)
+  qtyFromPurchase Decimal? @default(0) @map("qty_from_purchase") @db.Decimal(12, 3)
+  qtyIssued       Decimal? @default(0) @map("qty_issued") @db.Decimal(12, 3)
+  unitCost        Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  mirvLineId      String?  @map("mirv_line_id") @db.Uuid
+  notes           String?
+
+  // Relations
+  mrf      MaterialRequisition @relation(fields: [mrfId], references: [id], onDelete: Cascade)
+  item     Item?               @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom      UnitOfMeasure?      @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  mirvLine MirvLine?           @relation(fields: [mirvLineId], references: [id], onDelete: SetNull)
+
+  @@map("mrf_lines")
+}
+
+/// Inter-warehouse and inter-project stock transfers
+model StockTransfer {
+  id                String    @id @default(uuid()) @db.Uuid
+  transferNumber    String    @unique @map("transfer_number") @db.VarChar(20)
+  /// CHECK: transfer_type IN ('warehouse_to_warehouse', 'project_to_project', 'warehouse_to_project', 'project_to_warehouse')
+  transferType      String    @map("transfer_type") @db.VarChar(30)
+  fromWarehouseId   String    @map("from_warehouse_id") @db.Uuid
+  toWarehouseId     String    @map("to_warehouse_id") @db.Uuid
+  fromProjectId     String?   @map("from_project_id") @db.Uuid
+  toProjectId       String?   @map("to_project_id") @db.Uuid
+  requestedById     String    @map("requested_by_id") @db.Uuid
+  transferDate      DateTime  @map("transfer_date") @db.Timestamptz
+  /// CHECK: status IN ('draft', 'pending', 'approved', 'shipped', 'received', 'completed', 'cancelled')
+  status            String    @default("draft") @map("status") @db.VarChar(20)
+  shippedDate       DateTime? @map("shipped_date") @db.Timestamptz
+  receivedDate      DateTime? @map("received_date") @db.Timestamptz
+  sourceMrvId       String?   @map("source_mrv_id") @db.Uuid
+  destinationMirvId String?   @map("destination_mirv_id") @db.Uuid
+  transportJoId     String?   @map("transport_jo_id") @db.Uuid
+  gatePassId        String?   @map("gate_pass_id") @db.Uuid
+  notes             String?
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  fromWarehouse   Warehouse @relation("StockTransferFromWarehouse", fields: [fromWarehouseId], references: [id], onDelete: Restrict)
+  toWarehouse     Warehouse @relation("StockTransferToWarehouse", fields: [toWarehouseId], references: [id], onDelete: Restrict)
+  fromProject     Project?  @relation("StockTransferFromProject", fields: [fromProjectId], references: [id], onDelete: SetNull)
+  toProject       Project?  @relation("StockTransferToProject", fields: [toProjectId], references: [id], onDelete: SetNull)
+  requestedBy     Employee  @relation("StockTransferRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  sourceMrv       Mrv?      @relation("StockTransferSourceMrv", fields: [sourceMrvId], references: [id], onDelete: SetNull)
+  destinationMirv Mirv?     @relation("StockTransferDestMirv", fields: [destinationMirvId], references: [id], onDelete: SetNull)
+  transportJo     JobOrder? @relation(fields: [transportJoId], references: [id], onDelete: SetNull)
+  gatePass        GatePass? @relation(fields: [gatePassId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  stockTransferLines StockTransferLine[]
+
+  @@index([status], map: "idx_stock_transfers_status")
+  @@index([fromWarehouseId], map: "idx_stock_transfers_from_wh")
+  @@index([toWarehouseId], map: "idx_stock_transfers_to_wh")
+  @@index([createdAt], map: "idx_stock_transfers_created")
+  @@map("stock_transfers")
+}
+
+/// Stock transfer line items
+model StockTransferLine {
+  id         String  @id @default(uuid()) @db.Uuid
+  transferId String  @map("transfer_id") @db.Uuid
+  itemId     String  @map("item_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity   Decimal @db.Decimal(12, 3)
+  uomId      String  @map("uom_id") @db.Uuid
+  condition  String? @default("good") @db.VarChar(20)
+
+  // Relations
+  transfer StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  item     Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom      UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  @@map("stock_transfer_lines")
+}
+
+// ############################################################################
+// SECTION 4: JOB ORDER TABLES (9 models)
+// ############################################################################
+
+/// Job Orders base table - supports 7 types via subtype tables
+model JobOrder {
+  id             String    @id @default(uuid()) @db.Uuid
+  joNumber       String    @unique @map("jo_number") @db.VarChar(20)
+  /// CHECK: jo_type IN ('transport', 'equipment', 'rental_monthly', 'rental_daily', 'scrap', 'generator_rental', 'generator_maintenance')
+  joType         String    @map("jo_type") @db.VarChar(30)
+  entityId       String?   @map("entity_id") @db.Uuid
+  projectId      String    @map("project_id") @db.Uuid
+  supplierId     String?   @map("supplier_id") @db.Uuid
+  requestedById  String    @map("requested_by_id") @db.Uuid
+  requestDate    DateTime  @map("request_date") @db.Timestamptz
+  requiredDate   DateTime? @map("required_date") @db.Date
+  /// CHECK: status IN ('draft', 'pending_approval', 'quoted', 'approved', 'assigned', 'in_progress', 'on_hold', 'completed', 'invoiced', 'rejected', 'cancelled')
+  status         String    @default("draft") @map("status") @db.VarChar(20)
+  /// CHECK: priority IN ('low', 'normal', 'high', 'urgent')
+  priority       String?   @default("normal") @map("priority") @db.VarChar(20)
+  description    String
+  notes          String?
+  totalAmount    Decimal?  @default(0) @map("total_amount") @db.Decimal(15, 2)
+  startDate      DateTime? @map("start_date") @db.Timestamptz
+  completionDate DateTime? @map("completion_date") @db.Timestamptz
+  completedById  String?   @map("completed_by_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  entity      Entity?   @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  requestedBy Employee  @relation("JoRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  completedBy Employee? @relation("JoCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations - subtype details (1:1)
+  transportDetails JoTransportDetail?
+  rentalDetails    JoRentalDetail?
+  generatorDetails JoGeneratorDetail?
+  scrapDetails     JoScrapDetail?
+
+  // Reverse relations - child collections
+  equipmentLines JoEquipmentLine[]
+  slaTracking    JoSlaTracking?
+  approvals      JoApproval[]
+  payments       JoPayment[]
+  stockTransfers StockTransfer[]
+  shipments      Shipment[]
+
+  @@index([joType, status], map: "idx_job_orders_type_status")
+  @@index([projectId], map: "idx_job_orders_project")
+  @@index([requestDate(sort: Desc)], map: "idx_job_orders_date")
+  @@index([joNumber], map: "idx_jo_number")
+  @@index([supplierId], map: "idx_job_orders_supplier")
+  @@index([requestedById], map: "idx_job_orders_requested_by")
+  @@index([status], map: "idx_job_orders_status")
+  @@index([createdAt], map: "idx_job_orders_created")
+  @@map("job_orders")
+}
+
+/// Transport-type job order details
+model JoTransportDetail {
+  id                      String   @id @default(uuid()) @db.Uuid
+  jobOrderId              String   @unique @map("job_order_id") @db.Uuid
+  pickupLocation          String   @map("pickup_location") @db.VarChar(300)
+  pickupLocationUrl       String?  @map("pickup_location_url") @db.VarChar(500)
+  pickupContactName       String?  @map("pickup_contact_name") @db.VarChar(200)
+  pickupContactPhone      String?  @map("pickup_contact_phone") @db.VarChar(20)
+  deliveryLocation        String   @map("delivery_location") @db.VarChar(300)
+  deliveryLocationUrl     String?  @map("delivery_location_url") @db.VarChar(500)
+  deliveryContactName     String?  @map("delivery_contact_name") @db.VarChar(200)
+  deliveryContactPhone    String?  @map("delivery_contact_phone") @db.VarChar(20)
+  cargoType               String   @map("cargo_type") @db.VarChar(50)
+  cargoWeightTons         Decimal? @map("cargo_weight_tons") @db.Decimal(10, 2)
+  numberOfTrailers        Int?     @map("number_of_trailers") @db.SmallInt
+  numberOfTrips           Int?     @map("number_of_trips") @db.SmallInt
+  includeLoadingEquipment Boolean? @default(false) @map("include_loading_equipment")
+  loadingEquipmentType    String?  @map("loading_equipment_type") @db.VarChar(100)
+  insuranceRequired       Boolean? @default(false) @map("insurance_required")
+  materialPriceSar        Decimal? @map("material_price_sar") @db.Decimal(15, 2)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_transport_details")
+}
+
+/// Rental-type job order details (monthly and daily)
+model JoRentalDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  jobOrderId       String   @unique @map("job_order_id") @db.Uuid
+  rentalStartDate  DateTime @map("rental_start_date") @db.Date
+  rentalEndDate    DateTime @map("rental_end_date") @db.Date
+  monthlyRate      Decimal? @map("monthly_rate") @db.Decimal(15, 2)
+  dailyRate        Decimal? @map("daily_rate") @db.Decimal(15, 2)
+  withOperator     Boolean? @default(false) @map("with_operator")
+  overtimeHours    Decimal? @default(0) @map("overtime_hours") @db.Decimal(8, 2)
+  overtimeApproved Boolean? @default(false) @map("overtime_approved")
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_rental_details")
+}
+
+/// Generator rental and maintenance job order details
+model JoGeneratorDetail {
+  id               String    @id @default(uuid()) @db.Uuid
+  jobOrderId       String    @unique @map("job_order_id") @db.Uuid
+  generatorId      String?   @map("generator_id") @db.Uuid
+  capacityKva      Int?      @map("capacity_kva")
+  /// CHECK: maintenance_type IN ('preventive', 'corrective', 'emergency')
+  maintenanceType  String?   @map("maintenance_type") @db.VarChar(30)
+  issueDescription String?   @map("issue_description")
+  shiftStartTime   DateTime? @map("shift_start_time") @db.Time(6)
+
+  // Relations
+  jobOrder  JobOrder   @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  generator Generator? @relation(fields: [generatorId], references: [id], onDelete: SetNull)
+
+  @@map("jo_generator_details")
+}
+
+/// Scrap disposal job order details
+model JoScrapDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  jobOrderId       String   @unique @map("job_order_id") @db.Uuid
+  scrapType        String   @map("scrap_type") @db.VarChar(50)
+  scrapWeightTons  Decimal  @map("scrap_weight_tons") @db.Decimal(10, 2)
+  scrapDescription String?  @map("scrap_description")
+  scrapDestination String?  @map("scrap_destination") @db.VarChar(300)
+  materialPriceSar Decimal? @map("material_price_sar") @db.Decimal(15, 2)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_scrap_details")
+}
+
+/// Equipment request line items for job orders
+model JoEquipmentLine {
+  id              String   @id @default(uuid()) @db.Uuid
+  jobOrderId      String   @map("job_order_id") @db.Uuid
+  equipmentTypeId String   @map("equipment_type_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity        Int      @db.SmallInt
+  withOperator    Boolean? @default(false) @map("with_operator")
+  siteLocation    String?  @map("site_location") @db.VarChar(200)
+  dailyRate       Decimal? @map("daily_rate") @db.Decimal(10, 2)
+  durationDays    Int?     @map("duration_days") @db.SmallInt
+
+  // Relations
+  jobOrder      JobOrder      @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  equipmentType EquipmentType @relation(fields: [equipmentTypeId], references: [id], onDelete: Restrict)
+
+  @@map("jo_equipment_lines")
+}
+
+/// Service Level Agreement tracking for job orders
+model JoSlaTracking {
+  id               String    @id @default(uuid()) @db.Uuid
+  jobOrderId       String    @unique @map("job_order_id") @db.Uuid
+  slaDueDate       DateTime? @map("sla_due_date") @db.Timestamptz
+  slaResponseHours Int?      @map("sla_response_hours")
+  slaBusinessDays  Int?      @map("sla_business_days")
+  stopClockStart   DateTime? @map("stop_clock_start") @db.Timestamptz
+  stopClockEnd     DateTime? @map("stop_clock_end") @db.Timestamptz
+  stopClockReason  String?   @map("stop_clock_reason")
+  slaMet           Boolean?  @map("sla_met")
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_sla_tracking")
+}
+
+/// Job order approval records
+model JoApproval {
+  id           String    @id @default(uuid()) @db.Uuid
+  jobOrderId   String    @map("job_order_id") @db.Uuid
+  approvalType String    @map("approval_type") @db.VarChar(30)
+  approverId   String    @map("approver_id") @db.Uuid
+  approvedDate DateTime? @map("approved_date") @db.Timestamptz
+  approved     Boolean?
+  quoteAmount  Decimal?  @map("quote_amount") @db.Decimal(15, 2)
+  comments     String?
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  approver Employee @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@map("jo_approvals")
+}
+
+/// Job order invoice and payment tracking
+model JoPayment {
+  id                  String    @id @default(uuid()) @db.Uuid
+  jobOrderId          String    @map("job_order_id") @db.Uuid
+  invoiceNumber       String?   @map("invoice_number") @db.VarChar(50)
+  invoiceReceiptDate  DateTime? @map("invoice_receipt_date") @db.Date
+  costExclVat         Decimal?  @map("cost_excl_vat") @db.Decimal(15, 2)
+  vatAmount           Decimal?  @map("vat_amount") @db.Decimal(15, 2)
+  grandTotal          Decimal?  @map("grand_total") @db.Decimal(15, 2)
+  /// CHECK: payment_status IN ('pending', 'approved', 'paid', 'disputed')
+  paymentStatus       String?   @default("pending") @map("payment_status") @db.VarChar(20)
+  paymentApprovedDate DateTime? @map("payment_approved_date") @db.Date
+  actualPaymentDate   DateTime? @map("actual_payment_date") @db.Date
+  oracleVoucher       String?   @map("oracle_voucher") @db.VarChar(50)
+  attachmentUrl       String?   @map("attachment_url") @db.VarChar(500)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_payments")
+}
+
+// ############################################################################
+// SECTION 5: INVENTORY TABLES (4 models)
+// ############################################################################
+
+/// Real-time inventory quantities per item per warehouse
+model InventoryLevel {
+  id               String    @id @default(uuid()) @db.Uuid
+  itemId           String    @map("item_id") @db.Uuid
+  warehouseId      String    @map("warehouse_id") @db.Uuid
+  /// CHECK: qty_on_hand >= 0
+  qtyOnHand        Decimal   @default(0) @map("qty_on_hand") @db.Decimal(12, 3)
+  /// CHECK: qty_reserved >= 0
+  qtyReserved      Decimal   @default(0) @map("qty_reserved") @db.Decimal(12, 3)
+  minLevel         Decimal?  @map("min_level") @db.Decimal(12, 3)
+  reorderPoint     Decimal?  @map("reorder_point") @db.Decimal(12, 3)
+  lastMovementDate DateTime? @map("last_movement_date") @db.Timestamptz
+  alertSent        Boolean?  @default(false) @map("alert_sent")
+  /// Optimistic locking version counter
+  version          Int       @default(0)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, warehouseId], map: "uq_inventory_item_wh")
+  @@index([itemId, warehouseId], map: "idx_inventory_item_wh")
+  @@map("inventory_levels")
+}
+
+/// Inventory lot tracking for FIFO costing and expiry management
+model InventoryLot {
+  id           String    @id @default(uuid()) @db.Uuid
+  lotNumber    String    @unique @map("lot_number") @db.VarChar(20)
+  itemId       String    @map("item_id") @db.Uuid
+  warehouseId  String    @map("warehouse_id") @db.Uuid
+  mrrvLineId   String?   @map("mrrv_line_id") @db.Uuid
+  receiptDate  DateTime  @map("receipt_date") @db.Timestamptz
+  expiryDate   DateTime? @map("expiry_date") @db.Date
+  initialQty   Decimal   @map("initial_qty") @db.Decimal(12, 3)
+  /// CHECK: available_qty >= 0
+  availableQty Decimal   @map("available_qty") @db.Decimal(12, 3)
+  /// CHECK: reserved_qty >= 0
+  reservedQty  Decimal?  @default(0) @map("reserved_qty") @db.Decimal(12, 3)
+  unitCost     Decimal?  @map("unit_cost") @db.Decimal(15, 2)
+  supplierId   String?   @map("supplier_id") @db.Uuid
+  binLocation  String?   @map("bin_location") @db.VarChar(50)
+  /// CHECK: status IN ('active', 'depleted', 'expired', 'blocked')
+  status       String    @default("active") @map("status") @db.VarChar(20)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  mrrvLine  MrrvLine? @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
+  supplier  Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  lotConsumptions LotConsumption[]
+
+  @@index([itemId, warehouseId, status], map: "idx_inventory_lots_item")
+  @@index([itemId, warehouseId, receiptDate], map: "idx_inventory_lots_fifo")
+  @@index([status], map: "idx_inventory_lots_status")
+  @@map("inventory_lots")
+}
+
+/// Lot consumption log for FIFO tracking
+model LotConsumption {
+  id              String   @id @default(uuid()) @db.Uuid
+  lotId           String   @map("lot_id") @db.Uuid
+  mirvLineId      String?  @map("mirv_line_id") @db.Uuid
+  /// Generic reference for non-MIRV consumptions (e.g. stock_transfer_line)
+  referenceType   String?  @map("reference_type") @db.VarChar(50)
+  referenceId     String?  @map("reference_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity        Decimal  @db.Decimal(12, 3)
+  unitCost        Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  consumptionDate DateTime @default(now()) @map("consumption_date") @db.Timestamptz
+
+  // Relations
+  lot      InventoryLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  mirvLine MirvLine?    @relation(fields: [mirvLineId], references: [id], onDelete: Restrict)
+
+  @@index([referenceType, referenceId], map: "idx_lot_consumption_ref")
+  @@map("lot_consumptions")
+}
+
+/// Leftover materials from projects requiring disposition
+model LeftoverMaterial {
+  id             String   @id @default(uuid()) @db.Uuid
+  leftoverNumber String   @unique @map("leftover_number") @db.VarChar(20)
+  itemId         String   @map("item_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  warehouseId    String?  @map("warehouse_id") @db.Uuid
+  originalMirvId String?  @map("original_mirv_id") @db.Uuid
+  quantity       Decimal  @db.Decimal(12, 3)
+  uomId          String   @map("uom_id") @db.Uuid
+  /// CHECK: condition IN ('new', 'used', 'damaged')
+  condition      String   @db.VarChar(20)
+  /// CHECK: ownership IN ('nit', 'client', 'third_party')
+  ownership      String   @default("nit") @db.VarChar(20)
+  ownershipBasis String?  @map("ownership_basis") @db.VarChar(30)
+  unitCost       Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  /// CHECK: disposition IN ('return_to_warehouse', 'reuse', 'transfer_to_client', 'sell', 'scrap')
+  disposition    String?  @db.VarChar(30)
+  /// CHECK: status IN ('identified', 'under_review', 'approved', 'in_progress', 'completed')
+  status         String   @default("identified") @map("status") @db.VarChar(20)
+  createdById    String?  @map("created_by_id") @db.Uuid
+  approvedById   String?  @map("approved_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  item         Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse?    @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  originalMirv Mirv?         @relation(fields: [originalMirvId], references: [id], onDelete: SetNull)
+  uom          UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  createdBy    Employee?     @relation("LeftoverCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   Employee?     @relation("LeftoverApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@map("leftover_materials")
+}
+
+// ############################################################################
+// SECTION 6: SHIPPING & CUSTOMS TABLES (3 models)
+// ############################################################################
+
+/// International and domestic shipment tracking
+model Shipment {
+  id                     String    @id @default(uuid()) @db.Uuid
+  shipmentNumber         String    @unique @map("shipment_number") @db.VarChar(20)
+  poNumber               String?   @map("po_number") @db.VarChar(50)
+  supplierId             String    @map("supplier_id") @db.Uuid
+  freightForwarderId     String?   @map("freight_forwarder_id") @db.Uuid
+  projectId              String?   @map("project_id") @db.Uuid
+  originCountry          String?   @map("origin_country") @db.VarChar(100)
+  /// CHECK: mode_of_shipment IN ('sea_fcl', 'sea_lcl', 'air', 'land', 'courier')
+  modeOfShipment         String    @map("mode_of_shipment") @db.VarChar(30)
+  portOfLoading          String?   @map("port_of_loading") @db.VarChar(200)
+  portOfEntryId          String?   @map("port_of_entry_id") @db.Uuid
+  destinationWarehouseId String?   @map("destination_warehouse_id") @db.Uuid
+  orderDate              DateTime? @map("order_date") @db.Date
+  expectedShipDate       DateTime? @map("expected_ship_date") @db.Date
+  actualShipDate         DateTime? @map("actual_ship_date") @db.Date
+  etaPort                DateTime? @map("eta_port") @db.Date
+  actualArrivalDate      DateTime? @map("actual_arrival_date") @db.Date
+  deliveryDate           DateTime? @map("delivery_date") @db.Date
+  /// CHECK: status IN ('draft', 'po_issued', 'in_production', 'ready_to_ship', 'in_transit', 'at_port', 'customs_clearing', 'cleared', 'in_delivery', 'delivered', 'cancelled')
+  status                 String    @default("draft") @map("status") @db.VarChar(30)
+  awbBlNumber            String?   @map("awb_bl_number") @db.VarChar(100)
+  containerNumber        String?   @map("container_number") @db.VarChar(50)
+  vesselFlight           String?   @map("vessel_flight") @db.VarChar(100)
+  trackingUrl            String?   @map("tracking_url") @db.VarChar(500)
+  commercialValue        Decimal?  @map("commercial_value") @db.Decimal(15, 2)
+  freightCost            Decimal?  @map("freight_cost") @db.Decimal(15, 2)
+  insuranceCost          Decimal?  @map("insurance_cost") @db.Decimal(15, 2)
+  dutiesEstimated        Decimal?  @map("duties_estimated") @db.Decimal(15, 2)
+  description            String?
+  mrrvId                 String?   @map("mrrv_id") @db.Uuid
+  transportJoId          String?   @map("transport_jo_id") @db.Uuid
+  notes                  String?
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier             Supplier   @relation("ShipmentSupplier", fields: [supplierId], references: [id], onDelete: Restrict)
+  freightForwarder     Supplier?  @relation("ShipmentForwarder", fields: [freightForwarderId], references: [id], onDelete: SetNull)
+  project              Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  portOfEntry          Port?      @relation(fields: [portOfEntryId], references: [id], onDelete: SetNull)
+  destinationWarehouse Warehouse? @relation(fields: [destinationWarehouseId], references: [id], onDelete: SetNull)
+  mrrv                 Mrrv?      @relation(fields: [mrrvId], references: [id], onDelete: SetNull)
+  transportJo          JobOrder?  @relation(fields: [transportJoId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  customsTracking CustomsTracking[]
+  shipmentLines   ShipmentLine[]
+
+  @@index([status], map: "idx_shipments_status")
+  @@index([supplierId], map: "idx_shipments_supplier")
+  @@index([projectId], map: "idx_shipments_project")
+  @@index([createdAt], map: "idx_shipments_created")
+  @@map("shipments")
+}
+
+/// Customs clearance stage tracking per shipment
+model CustomsTracking {
+  id                 String    @id @default(uuid()) @db.Uuid
+  shipmentId         String    @map("shipment_id") @db.Uuid
+  /// CHECK: stage IN ('docs_submitted', 'declaration_filed', 'under_inspection', 'awaiting_payment', 'duties_paid', 'ready_for_release', 'released', 'on_hold', 'rejected')
+  stage              String    @db.VarChar(30)
+  stageDate          DateTime  @map("stage_date") @db.Timestamptz
+  stageEndDate       DateTime? @map("stage_end_date") @db.Timestamptz
+  customsDeclaration String?   @map("customs_declaration") @db.VarChar(50)
+  customsRef         String?   @map("customs_ref") @db.VarChar(50)
+  inspectorName      String?   @map("inspector_name") @db.VarChar(200)
+  /// CHECK: inspection_type IN ('document_review', 'xray_scan', 'physical_inspection', 'lab_testing', 'green_channel')
+  inspectionType     String?   @map("inspection_type") @db.VarChar(30)
+  dutiesAmount       Decimal?  @map("duties_amount") @db.Decimal(15, 2)
+  vatAmount          Decimal?  @map("vat_amount") @db.Decimal(15, 2)
+  otherFees          Decimal?  @map("other_fees") @db.Decimal(15, 2)
+  /// CHECK: payment_status IN ('pending_calculation', 'awaiting_payment', 'paid', 'refund_pending')
+  paymentStatus      String?   @map("payment_status") @db.VarChar(20)
+  paymentDate        DateTime? @map("payment_date") @db.Date
+  paymentReference   String?   @map("payment_reference") @db.VarChar(100)
+  issues             String?
+  resolution         String?
+
+  // Relations
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@map("customs_tracking")
+}
+
+/// Shipment line items (packing list)
+model ShipmentLine {
+  id          String   @id @default(uuid()) @db.Uuid
+  shipmentId  String   @map("shipment_id") @db.Uuid
+  itemId      String?  @map("item_id") @db.Uuid
+  description String   @db.VarChar(500)
+  quantity    Decimal  @db.Decimal(12, 3)
+  uomId       String?  @map("uom_id") @db.Uuid
+  unitValue   Decimal? @map("unit_value") @db.Decimal(15, 2)
+  /// Harmonized System tariff code
+  hsCode      String?  @map("hs_code") @db.VarChar(20)
+
+  // Relations
+  shipment Shipment       @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  item     Item?          @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  uom      UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
+
+  @@map("shipment_lines")
+}
+
+// ############################################################################
+// SECTION 7: FINANCE TABLES (2 models)
+// ############################################################################
+
+/// Supplier rate cards for equipment rental
+model SupplierEquipmentRate {
+  id                    String    @id @default(uuid()) @db.Uuid
+  supplierId            String    @map("supplier_id") @db.Uuid
+  equipmentTypeId       String    @map("equipment_type_id") @db.Uuid
+  dailyRate             Decimal?  @map("daily_rate") @db.Decimal(10, 2)
+  monthlyRate           Decimal?  @map("monthly_rate") @db.Decimal(10, 2)
+  withOperatorSurcharge Decimal?  @default(0) @map("with_operator_surcharge") @db.Decimal(10, 2)
+  validFrom             DateTime  @map("valid_from") @db.Date
+  validUntil            DateTime? @map("valid_until") @db.Date
+  notes                 String?
+
+  // Relations
+  supplier      Supplier      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  equipmentType EquipmentType @relation(fields: [equipmentTypeId], references: [id], onDelete: Cascade)
+
+  @@map("supplier_equipment_rates")
+}
+
+/// Generator depreciation journal entries
+model DepreciationEntry {
+  id           String   @id @default(uuid()) @db.Uuid
+  generatorId  String   @map("generator_id") @db.Uuid
+  period       DateTime @db.Date
+  amount       Decimal  @db.Decimal(15, 2)
+  method       String   @db.VarChar(20)
+  hoursUsed    Decimal? @map("hours_used") @db.Decimal(10, 1)
+  runningTotal Decimal? @map("running_total") @db.Decimal(15, 2)
+  postedToGl   Boolean? @default(false) @map("posted_to_gl")
+  glReference  String?  @map("gl_reference") @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  generator Generator @relation(fields: [generatorId], references: [id], onDelete: Restrict)
+
+  @@unique([generatorId, period], map: "uq_depreciation_gen_period")
+  @@map("depreciation_entries")
+}
+
+// ############################################################################
+// SECTION 8: SYSTEM TABLES (3 models)
+// ############################################################################
+
+/// Sequential document number generators per type per year
+model DocumentCounter {
+  id           String @id @default(uuid()) @db.Uuid
+  documentType String @map("document_type") @db.VarChar(30)
+  prefix       String @db.VarChar(10)
+  year         Int
+  lastNumber   Int    @default(0) @map("last_number")
+
+  @@unique([documentType, year], map: "uq_doc_counter_type_year")
+  @@map("document_counters")
+}
+
+/// Comprehensive audit trail for all data changes
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  tableName     String   @map("table_name") @db.VarChar(50)
+  recordId      String   @map("record_id") @db.Uuid
+  /// CHECK: action IN ('create', 'update', 'delete')
+  action        String   @db.VarChar(20)
+  changedFields Json?    @map("changed_fields") @db.JsonB
+  oldValues     Json?    @map("old_values") @db.JsonB
+  newValues     Json?    @map("new_values") @db.JsonB
+  performedById String?  @map("performed_by_id") @db.Uuid
+  performedAt   DateTime @default(now()) @map("performed_at") @db.Timestamptz
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+
+  // Relations
+  performedBy Employee? @relation(fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([tableName, recordId], map: "idx_audit_log_table")
+  @@index([performedAt(sort: Desc)], map: "idx_audit_log_date")
+  @@index([performedById], map: "idx_audit_log_user")
+  @@map("audit_log")
+}
+
+/// User notification messages
+model Notification {
+  id               String   @id @default(uuid()) @db.Uuid
+  recipientId      String   @map("recipient_id") @db.Uuid
+  title            String   @db.VarChar(200)
+  titleAr          String?  @map("title_ar") @db.VarChar(200)
+  body             String?
+  notificationType String   @map("notification_type") @db.VarChar(30)
+  referenceTable   String?  @map("reference_table") @db.VarChar(50)
+  referenceId      String?  @map("reference_id") @db.Uuid
+  isRead           Boolean? @default(false) @map("is_read")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  recipient Employee @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, isRead], map: "idx_notifications_recipient")
+  @@index([createdAt(sort: Desc)], map: "idx_notifications_date")
+  @@map("notifications")
+}
+
+// ############################################################################
+// SECTION 9: TASK & DOCUMENT MANAGEMENT (3 models)
+// ############################################################################
+
+/// Internal team tasks with assignment and tracking
+model Task {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(300)
+  description String?
+  /// CHECK: status IN ('open', 'in_progress', 'completed', 'cancelled')
+  status      String    @default("open") @map("status") @db.VarChar(20)
+  /// CHECK: priority IN ('high', 'medium', 'low')
+  priority    String    @default("medium") @map("priority") @db.VarChar(10)
+  dueDate     DateTime? @map("due_date") @db.Date
+  assigneeId  String?   @map("assignee_id") @db.Uuid
+  creatorId   String    @map("creator_id") @db.Uuid
+  projectId   String?   @map("project_id") @db.Uuid
+  tags        String[]  @db.VarChar(50)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  assignee Employee? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  creator  Employee  @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  comments TaskComment[]
+
+  @@index([status], map: "idx_tasks_status")
+  @@index([assigneeId], map: "idx_tasks_assignee")
+  @@map("tasks")
+}
+
+/// Comments on tasks
+model TaskComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  body      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author Employee @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@map("task_comments")
+}
+
+/// Password reset codes (database-backed, replaces in-memory Map)
+model PasswordResetCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(255)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email, code], map: "idx_password_reset_email_code")
+  @@map("password_reset_codes")
+}
+
+/// Company-level documents (policies, SOPs, templates)
+model CompanyDocument {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(300)
+  titleAr     String?  @map("title_ar") @db.VarChar(300)
+  description String?
+  /// CHECK: category IN ('policy', 'procedure', 'contract', 'certificate', 'template', 'sop', 'other')
+  category    String   @db.VarChar(20)
+  filePath    String   @map("file_path") @db.VarChar(500)
+  fileName    String   @map("file_name") @db.VarChar(300)
+  fileSize    Int      @map("file_size")
+  mimeType    String   @map("mime_type") @db.VarChar(100)
+  version     Int      @default(1)
+  tags        String[] @db.VarChar(50)
+  uploadedById String  @map("uploaded_by_id") @db.Uuid
+  /// CHECK: visibility IN ('all', 'admin_only', 'management')
+  visibility  String   @default("all") @db.VarChar(20)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  uploadedBy Employee @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([category], map: "idx_company_docs_category")
+  @@map("company_documents")
+}
+
+// ############################################################################
+// SECTION 10: WORKFLOW ENGINE & AUTOMATION (4 models)
+// ############################################################################
+
+/// System settings (replaces file-based JSON config)
+model SystemSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @db.VarChar(100)
+  value     String
+  /// NULL = global setting, non-NULL = per-user override
+  userId    String?  @map("user_id") @db.Uuid
+  category  String   @default("general") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user Employee? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId], map: "uq_setting_key_user")
+  @@index([category], map: "idx_settings_category")
+  @@map("system_settings")
+}
+
+/// Named workflow definition
+model Workflow {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(200)
+  description String?
+  /// Entity type this workflow applies to (e.g. 'mirv', 'jo', 'mrrv', or '*' for all)
+  entityType  String   @map("entity_type") @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  /// Higher priority workflows are evaluated first
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  rules WorkflowRule[]
+
+  @@index([entityType, isActive], map: "idx_workflows_entity_active")
+  @@map("workflows")
+}
+
+/// IF-THEN rule within a workflow
+model WorkflowRule {
+  id            String   @id @default(uuid()) @db.Uuid
+  workflowId    String   @map("workflow_id") @db.Uuid
+  name          String   @db.VarChar(200)
+  /// Event that triggers this rule (e.g. 'document:status_changed')
+  triggerEvent  String   @map("trigger_event") @db.VarChar(100)
+  /// JSON condition tree: { operator: 'AND'|'OR', conditions: [...] }
+  conditions    Json     @default("{}")
+  /// JSON array of actions: [{ type: 'send_email', params: {...} }]
+  actions       Json     @default("[]")
+  isActive      Boolean  @default(true) @map("is_active")
+  /// Stop evaluating further rules if this one matches
+  stopOnMatch   Boolean  @default(false) @map("stop_on_match")
+  /// Order within workflow
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  workflow      Workflow              @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executionLogs WorkflowExecutionLog[]
+
+  @@index([workflowId, isActive], map: "idx_rules_workflow_active")
+  @@index([triggerEvent], map: "idx_rules_trigger")
+  @@map("workflow_rules")
+}
+
+/// Audit trail of every rule execution
+model WorkflowExecutionLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  ruleId      String   @map("rule_id") @db.Uuid
+  /// The event that triggered execution
+  eventType   String   @map("event_type") @db.VarChar(100)
+  entityType  String   @map("entity_type") @db.VarChar(50)
+  entityId    String   @map("entity_id") @db.Uuid
+  /// Whether conditions were met
+  matched     Boolean  @default(false)
+  /// Whether actions executed successfully
+  success     Boolean  @default(false)
+  error       String?
+  /// Snapshot of the event payload
+  eventData   Json?    @map("event_data")
+  /// Actions that were executed
+  actionsRun  Json?    @map("actions_run")
+  executedAt  DateTime @default(now()) @map("executed_at") @db.Timestamptz
+
+  // Relations
+  rule WorkflowRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId], map: "idx_exec_log_rule")
+  @@index([entityType, entityId], map: "idx_exec_log_entity")
+  @@index([executedAt], map: "idx_exec_log_date")
+  @@map("workflow_execution_logs")
+}
+
+// ############################################################################
+// SECTION 11: EMAIL SYSTEM (2 models)
+// ############################################################################
+
+/// Handlebars email templates
+model EmailTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique @db.VarChar(100)
+  name      String   @db.VarChar(200)
+  subject   String   @db.VarChar(500)
+  bodyHtml  String   @map("body_html")
+  /// JSON array of variable names available in this template
+  variables Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  emailLogs EmailLog[]
+
+  @@map("email_templates")
+}
+
+/// Email delivery tracking
+model EmailLog {
+  id             String    @id @default(uuid()) @db.Uuid
+  templateId     String?   @map("template_id") @db.Uuid
+  toEmail        String    @map("to_email") @db.VarChar(255)
+  subject        String    @db.VarChar(500)
+  /// Rendered HTML body (stored for reliable retries)
+  bodyHtml       String?   @map("body_html")
+  /// CHECK: status IN ('queued', 'sent', 'delivered', 'bounced', 'failed')
+  status         String    @default("queued") @db.VarChar(20)
+  /// Number of delivery attempts
+  retryCount     Int       @default(0) @map("retry_count")
+  /// Resend message ID for tracking
+  externalId     String?   @map("external_id") @db.VarChar(200)
+  error          String?
+  referenceTable String?   @map("reference_table") @db.VarChar(50)
+  referenceId    String?   @map("reference_id") @db.Uuid
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  deliveredAt    DateTime? @map("delivered_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "idx_email_log_status")
+  @@index([templateId], map: "idx_email_log_template")
+  @@index([createdAt], map: "idx_email_log_date")
+  @@map("email_logs")
+}
+
+// ############################################################################
+// SECTION 12: DASHBOARD BUILDER (3 models)
+// ############################################################################
+
+/// User-customizable dashboard layout
+model Dashboard {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String   @db.VarChar(200)
+  description    String?
+  ownerId        String   @map("owner_id") @db.Uuid
+  /// If set, this dashboard is the default for users with this role
+  defaultForRole String?  @map("default_for_role") @db.VarChar(50)
+  isPublic       Boolean  @default(false) @map("is_public")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  owner   Employee          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@index([ownerId], map: "idx_dashboards_owner")
+  @@index([defaultForRole], map: "idx_dashboards_role")
+  @@map("dashboards")
+}
+
+/// Single widget on a dashboard
+model DashboardWidget {
+  id            String   @id @default(uuid()) @db.Uuid
+  dashboardId   String   @map("dashboard_id") @db.Uuid
+  /// Widget display type: 'kpi', 'chart', 'table', 'list', 'activity', 'status_count'
+  widgetType    String   @map("widget_type") @db.VarChar(50)
+  title         String   @db.VarChar(200)
+  /// Data source key (e.g. 'stats/projects', 'grouped/jo_by_status')
+  dataSource    String   @map("data_source") @db.VarChar(100)
+  /// JSON config for query filters, date range, groupBy, limit
+  queryConfig   Json     @default("{}") @map("query_config")
+  /// JSON config for display options (colors, chart type, columns)
+  displayConfig Json     @default("{}") @map("display_config")
+  /// CSS Grid position: { col, row, colSpan, rowSpan }
+  gridPosition  Json     @default("{}") @map("grid_position")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId], map: "idx_widgets_dashboard")
+  @@map("dashboard_widgets")
+}
+
+/// User-built report configurations
+model SavedReport {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(200)
+  description   String?
+  ownerId       String   @map("owner_id") @db.Uuid
+  /// Data source / entity type (e.g. 'mrrv', 'jo', 'inventory')
+  dataSource    String   @map("data_source") @db.VarChar(100)
+  /// JSON array of column definitions
+  columns       Json     @default("[]")
+  /// JSON filter configuration
+  filters       Json     @default("{}")
+  /// Visualization type: 'table', 'bar', 'line', 'pie'
+  visualization String   @default("table") @db.VarChar(20)
+  isPublic      Boolean  @default(false) @map("is_public")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  owner Employee @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId], map: "idx_reports_owner")
+  @@map("saved_reports")
+}
+
+// ############################################################################
+// SECTION 13: TOKEN MANAGEMENT (1 model) — Added in v2
+// ############################################################################
+
+/// Server-side refresh-token store for revocation support
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user Employee @relation("EmployeeRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_refresh_tokens_user")
+  @@index([expiresAt], map: "idx_refresh_tokens_expiry")
+  @@map("refresh_tokens")
+}
+
+// ############################################################################
+// SECTION 14: DOCUMENT COMMENTS (1 model) — Added in v2
+// ############################################################################
+
+/// Comments on any document (MRRV, MIRV, JO, etc.)
+model DocumentComment {
+  id           String   @id @default(uuid()) @db.Uuid
+  /// Document type key (e.g. 'mrrv', 'mirv', 'jo', 'osd')
+  documentType String   @map("document_type") @db.VarChar(50)
+  documentId   String   @map("document_id") @db.Uuid
+  authorId     String   @map("author_id") @db.Uuid
+  content      String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  author Employee @relation("EmployeeDocComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([documentType, documentId], map: "idx_doc_comments_doc")
+  @@index([authorId], map: "idx_doc_comments_author")
+  @@map("document_comments")
+}
+
+// ############################################################################
+// SECTION 15: MULTI-LEVEL APPROVAL (1 model) — Added in v2
+// ############################################################################
+
+/// Tracks each step in a multi-level approval chain
+model ApprovalStep {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Document type key (e.g. 'mirv', 'jo', 'mrf')
+  documentType String    @map("document_type") @db.VarChar(50)
+  documentId   String    @map("document_id") @db.Uuid
+  /// Sequential approval level (1, 2, 3, ...)
+  level        Int
+  approverRole String    @map("approver_role") @db.VarChar(50)
+  approverId   String?   @map("approver_id") @db.Uuid
+  /// 'pending' | 'approved' | 'rejected' | 'skipped'
+  status       String    @default("pending") @db.VarChar(20)
+  notes        String?
+  decidedAt    DateTime? @map("decided_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  approver Employee? @relation("EmployeeApprovalSteps", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@index([documentType, documentId], map: "idx_approval_steps_doc")
+  @@index([approverId], map: "idx_approval_steps_approver")
+  @@index([status], map: "idx_approval_steps_status")
+  @@map("approval_steps")
+}
+
+// ############################################################################
+// SECTION 16: DELEGATION RULES (1 model) — Added in v2
+// ############################################################################
+
+/// Approval delegation rules (out-of-office coverage)
+model DelegationRule {
+  id          String    @id @default(uuid()) @db.Uuid
+  /// The employee delegating authority
+  delegatorId String    @map("delegator_id") @db.Uuid
+  /// The employee receiving delegated authority
+  delegateId  String    @map("delegate_id") @db.Uuid
+  startDate   DateTime  @map("start_date") @db.Date
+  endDate     DateTime  @map("end_date") @db.Date
+  /// Scope: 'all' | 'mirv' | 'jo' | 'mrf' etc.
+  scope       String    @default("all") @db.VarChar(50)
+  isActive    Boolean   @default(true) @map("is_active")
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  delegator Employee @relation("EmployeeDelegationsOut", fields: [delegatorId], references: [id], onDelete: Cascade)
+  delegate  Employee @relation("EmployeeDelegationsIn", fields: [delegateId], references: [id], onDelete: Cascade)
+
+  @@index([delegatorId], map: "idx_delegation_delegator")
+  @@index([delegateId], map: "idx_delegation_delegate")
+  @@index([startDate, endDate], map: "idx_delegation_dates")
+  @@map("delegation_rules")
+}
+
+// ############################################################################
+// SECTION: FILE ATTACHMENTS
+// ############################################################################
+
+/// Polymorphic file attachments for any entity (entityType + recordId)
+model Attachment {
+  id           String    @id @default(uuid()) @db.Uuid
+  entityType   String    @map("entity_type") @db.VarChar(50)
+  recordId     String    @map("record_id") @db.Uuid
+  fileName     String    @map("file_name") @db.VarChar(500)
+  originalName String    @map("original_name") @db.VarChar(500)
+  fileSize     Int       @map("file_size")
+  mimeType     String    @map("mime_type") @db.VarChar(100)
+  storagePath  String    @map("storage_path") @db.VarChar(1000)
+  uploadedById String    @map("uploaded_by_id") @db.Uuid
+  uploadedAt   DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  uploadedBy Employee @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([entityType, recordId], map: "idx_attachment_entity")
+  @@index([uploadedById], map: "idx_attachment_uploader")
+  @@map("attachments")
+}
+
+// ############################################################################
+// SECTION: USER VIEW PREFERENCES
+// ############################################################################
+
+/// Saved grid/list view configurations per user per entity
+model UserView {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(50)
+  name       String   @default("Default") @db.VarChar(100)
+  viewType   String   @default("grid") @map("view_type") @db.VarChar(20)
+  config     Json     @db.JsonB
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user Employee @relation("UserViewOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, entityType], map: "idx_user_view_user_entity")
+  @@map("user_views")
+}

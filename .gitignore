@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+packages/backend/prisma/*.db
+packages/frontend/dist/
+
+# Build artifacts
+packages/backend/prisma/seed.js
+packages/backend/prisma/seed.js.map
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep

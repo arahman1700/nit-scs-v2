@@ -1,0 +1,10 @@
+{
+  "warehouse_staff": {
+    "mrrv": [
+      "create",
+      "read",
+      "update",
+      "delete"
+    ]
+  }
+}

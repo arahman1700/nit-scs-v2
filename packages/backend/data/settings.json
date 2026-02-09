@@ -1,0 +1,14 @@
+{
+  "companyName": "Nesma Infrastructure & Technology",
+  "companyNameAr": "نسما للبنية التحتية والتكنولوجيا",
+  "timezone": "Asia/Riyadh",
+  "currency": "SAR",
+  "vatRate": 15,
+  "fiscalYearStart": "January",
+  "dateFormat": "DD/MM/YYYY",
+  "overDeliveryTolerance": 10,
+  "slaAtRiskHours": 4,
+  "slaTargetPercent": 95,
+  "lowStockAlertEnabled": true,
+  "autoNumberingEnabled": true
+}

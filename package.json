@@ -1,0 +1,58 @@
+{
+  "name": "nit-scs",
+  "private": true,
+  "version": "1.0.0",
+  "description": "NIT Logistics - Supply Chain Management System - Full Stack Monorepo",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:backend": "pnpm --filter @nit-scs/backend dev",
+    "dev:frontend": "pnpm --filter @nit-scs/frontend dev",
+    "build": "pnpm -r run build",
+    "build:shared": "pnpm --filter @nit-scs/shared build",
+    "build:backend": "pnpm --filter @nit-scs/backend build",
+    "build:frontend": "pnpm --filter @nit-scs/frontend build",
+    "db:migrate": "pnpm --filter @nit-scs/backend prisma:migrate",
+    "db:push": "pnpm --filter @nit-scs/backend prisma:push",
+    "db:seed": "pnpm --filter @nit-scs/backend prisma:seed",
+    "db:studio": "pnpm --filter @nit-scs/backend prisma:studio",
+    "lint": "pnpm -r run lint",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx}\"",
+    "test": "pnpm -r run test",
+    "clean": "pnpm -r run clean && rm -rf node_modules",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma"
+    ]
+  },
+  "lint-staged": {
+    "packages/*/src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
+    "@eslint/js": "^10.0.1",
+    "@faker-js/faker": "^10.3.0",
+    "@types/supertest": "^6.0.3",
+    "eslint": "^10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.8.1",
+    "supertest": "^7.2.2",
+    "typescript-eslint": "^8.54.0",
+    "vitest": "^4.0.18"
+  }
+}
