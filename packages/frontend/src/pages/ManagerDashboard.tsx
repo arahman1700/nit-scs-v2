@@ -37,10 +37,10 @@ export const ManagerDashboard: React.FC = () => {
   const isLoading = mirvQuery.isLoading || joQuery.isLoading;
 
   // Pending approvals
-  const pendingMirvs = useMemo(() => allMirvs.filter(m => m.status === 'Pending Approval'), [allMirvs]);
-  const pendingJOs = useMemo(() => allJOs.filter(j => j.status === 'Pending Approval'), [allJOs]);
+  const pendingMirvs = useMemo(() => allMirvs.filter(m => m.status === 'pending_approval'), [allMirvs]);
+  const pendingJOs = useMemo(() => allJOs.filter(j => j.status === 'pending_approval'), [allJOs]);
   const pendingMrfs = useMemo(
-    () => allMrfs.filter(m => m.status === 'Pending Approval' || m.status === 'submitted'),
+    () => allMrfs.filter(m => m.status === 'pending_approval' || m.status === 'submitted'),
     [allMrfs],
   );
   const pendingSTs = useMemo(() => allSTs.filter(s => s.status === 'pending'), [allSTs]);
@@ -56,23 +56,23 @@ export const ManagerDashboard: React.FC = () => {
   const approvedToday = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     return (
-      allMirvs.filter(m => m.status === 'Approved' && String(m.date || '').startsWith(today)).length +
-      allJOs.filter(j => j.status === 'Approved' && String(j.date || '').startsWith(today)).length
+      allMirvs.filter(m => m.status === 'approved' && String(m.date || '').startsWith(today)).length +
+      allJOs.filter(j => j.status === 'approved' && String(j.date || '').startsWith(today)).length
     );
   }, [allMirvs, allJOs]);
 
   const rejectedThisWeek = useMemo(() => {
     const week = new Date();
     week.setDate(week.getDate() - 7);
-    return allMirvs.filter(m => m.status === 'Rejected').length + allJOs.filter(j => j.status === 'Cancelled').length;
+    return allMirvs.filter(m => m.status === 'rejected').length + allJOs.filter(j => j.status === 'cancelled').length;
   }, [allMirvs, allJOs]);
 
   const allPendingItems = useMemo(() => {
     const items = [
       ...pendingMirvs.map(m => ({
         id: m.id as string,
-        type: 'MIRV',
-        title: `MIRV - ${m.project as string}`,
+        type: 'MI',
+        title: `MI - ${m.project as string}`,
         value: Number(m.value || 0),
         date: m.date as string,
         status: m.status as string,
@@ -87,8 +87,8 @@ export const ManagerDashboard: React.FC = () => {
       })),
       ...pendingMrfs.map(m => ({
         id: m.id as string,
-        type: 'MRF',
-        title: `MRF - ${(m.project as string) || ''}`,
+        type: 'MR',
+        title: `MR - ${(m.project as string) || ''}`,
         value: 0,
         date: m.date as string,
         status: m.status as string,
@@ -198,9 +198,9 @@ export const ManagerDashboard: React.FC = () => {
             <h3 className="text-white font-bold mb-4">Approval Summary</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: 'MIRV', count: pendingMirvs.length, color: 'text-blue-400' },
+                { label: 'MI', count: pendingMirvs.length, color: 'text-blue-400' },
                 { label: 'Job Orders', count: pendingJOs.length, color: 'text-amber-400' },
-                { label: 'MRF', count: pendingMrfs.length, color: 'text-emerald-400' },
+                { label: 'MR', count: pendingMrfs.length, color: 'text-emerald-400' },
                 { label: 'Stock Transfers', count: pendingSTs.length, color: 'text-purple-400' },
               ].map(item => (
                 <div key={item.label} className="text-center p-4 bg-white/5 rounded-xl border border-white/10">

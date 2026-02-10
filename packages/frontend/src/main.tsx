@@ -10,6 +10,12 @@ import { Toaster } from './components/Toaster';
 import App from './App';
 import './i18n/i18n';
 import './styles/globals.css';
+import { setupSyncHandlers } from './lib/offlineSyncHandlers';
+import { initAutoSync } from './lib/offlineQueue';
+
+// Register offline sync handlers and start auto-sync
+setupSyncHandlers();
+initAutoSync();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

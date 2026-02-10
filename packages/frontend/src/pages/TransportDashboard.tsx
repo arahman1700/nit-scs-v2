@@ -146,8 +146,8 @@ export const TransportDashboard: React.FC = () => {
     return { byType, byStatus, total: JOBS.length };
   }, [JOBS]);
 
-  const newJobs = JOBS.filter(j => j.status === JobStatus.NEW);
-  const assigningJobs = JOBS.filter(j => j.status === JobStatus.ASSIGNING);
+  const newJobs = JOBS.filter(j => j.status === JobStatus.DRAFT);
+  const assigningJobs = JOBS.filter(j => j.status === JobStatus.ASSIGNED);
   const progressJobs = JOBS.filter(j => j.status === JobStatus.IN_PROGRESS);
   const completedJobs = JOBS.filter(j => j.status === JobStatus.COMPLETED);
 
@@ -178,7 +178,7 @@ export const TransportDashboard: React.FC = () => {
             ? 'Active'
             : job.status === JobStatus.COMPLETED
               ? 'Available'
-              : job.status === JobStatus.NEW
+              : job.status === JobStatus.DRAFT
                 ? 'Requested'
                 : 'Standby',
         lastUsed: job.date,

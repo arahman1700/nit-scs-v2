@@ -59,3 +59,15 @@ export function useDeleteTool() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tools'] }),
   });
 }
+
+// ── Workflow: Decommission ───────────────────────────────────────────────
+export function useDecommissionTool() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<ApiResponse<unknown>>(`/tools/${id}/decommission`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['tools'] }),
+  });
+}

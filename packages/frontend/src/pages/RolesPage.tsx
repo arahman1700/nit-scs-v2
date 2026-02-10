@@ -31,15 +31,15 @@ const ALL_RESOURCES = [
 ];
 
 const RESOURCE_LABELS: Record<string, string> = {
-  mrrv: 'MRRV',
-  mirv: 'MIRV',
-  mrv: 'MRV',
-  rfim: 'RFIM',
-  osd: 'OSD',
+  mrrv: 'GRN',
+  mirv: 'MI',
+  mrv: 'MRN',
+  rfim: 'QCI',
+  osd: 'DR',
   jo: 'Job Orders',
   gatepass: 'Gate Pass',
   'stock-transfer': 'Stock Transfer',
-  mrf: 'MRF',
+  mrf: 'MR',
   shipment: 'Shipments',
   customs: 'Customs',
   inventory: 'Inventory',

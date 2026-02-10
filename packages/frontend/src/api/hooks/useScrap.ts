@@ -115,3 +115,37 @@ export function useCloseScrap() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['scrap'] }),
   });
 }
+
+// ── Role-based Approvals ────────────────────────────────────────────────────
+export function useApproveBySiteManager() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<ApiResponse<unknown>>(`/scrap/${id}/approve-site-manager`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scrap'] }),
+  });
+}
+
+export function useApproveByQc() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<ApiResponse<unknown>>(`/scrap/${id}/approve-qc`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scrap'] }),
+  });
+}
+
+export function useApproveByStorekeeper() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await apiClient.post<ApiResponse<unknown>>(`/scrap/${id}/approve-storekeeper`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['scrap'] }),
+  });
+}

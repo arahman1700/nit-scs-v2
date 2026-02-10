@@ -257,7 +257,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                   key={account.email}
                   onClick={() => {
                     setEmail(account.email);
-                    setPassword('admin123');
+                    setPassword('Admin@2026!');
                     setError('');
                   }}
                   className="text-left px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-nesma-secondary/30 rounded-lg transition-all group"

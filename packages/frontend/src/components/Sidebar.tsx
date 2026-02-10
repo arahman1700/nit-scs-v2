@@ -42,7 +42,13 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'Master Data': Database,
   'Admin & Settings': Settings,
   'Receive (MRRV)': PackageCheck,
+  'GRN - Goods Receipt': PackageCheck,
   'Issue (MIRV)': Send,
+  'MI - Material Issuance': Send,
+  'QCI - Quality Inspection': Search,
+  'DR - Discrepancy Report': AlertTriangle,
+  'MRN - Material Return': RotateCcw,
+  'MR - Material Request': FileText,
   Inventory: Package,
   Return: RotateCcw,
   'Job Orders': ClipboardList,
@@ -57,6 +63,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Tasks: ListTodo,
   Inspections: Search,
   'OSD Reports': AlertTriangle,
+  'Discrepancy Reports': AlertTriangle,
   Incoming: PackageCheck,
   Shipments: Ship,
   'Gate Passes': DoorOpen,
@@ -139,30 +146,28 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
         {/* Children */}
         {isOpen && hasChildren && isExpanded && (
           <div className="mt-2 ms-4 ps-4 border-s border-white/10 space-y-1 animate-fade-in">
-            {(item.children as NavItemWithIcon[])!.map((child, idx) => (
-              <Link
-                key={idx}
-                to={child.path || '#'}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
-                  ${
-                    isActive(child.path)
-                      ? 'text-nesma-secondary bg-white/10 font-medium ltr:translate-x-1 rtl:-translate-x-1'
-                      : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 ltr:hover:translate-x-1 rtl:hover:-translate-x-1'
-                  }
-                `}
-              >
-                {child.type === 'divider' ? (
-                  <div className="h-px w-full bg-white/10 my-1"></div>
-                ) : (
-                  <>
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive(child.path) ? 'bg-nesma-secondary shadow-[0_0_5px_#80D1E9]' : 'bg-gray-600'}`}
-                    ></div>
-                    <span className="truncate">{child.label}</span>
-                  </>
-                )}
-              </Link>
-            ))}
+            {(item.children as NavItemWithIcon[])!.map((child, idx) =>
+              child.type === 'divider' ? (
+                <div key={idx} className="h-px w-full bg-white/10 my-2"></div>
+              ) : (
+                <Link
+                  key={idx}
+                  to={child.path || '#'}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
+                    ${
+                      isActive(child.path)
+                        ? 'text-nesma-secondary bg-white/10 font-medium ltr:translate-x-1 rtl:-translate-x-1'
+                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 ltr:hover:translate-x-1 rtl:hover:-translate-x-1'
+                    }
+                  `}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive(child.path) ? 'bg-nesma-secondary shadow-[0_0_5px_#80D1E9]' : 'bg-gray-600'}`}
+                  ></div>
+                  <span className="truncate">{child.label}</span>
+                </Link>
+              ),
+            )}
           </div>
         )}
       </div>

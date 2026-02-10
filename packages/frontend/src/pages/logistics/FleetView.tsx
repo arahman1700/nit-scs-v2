@@ -45,7 +45,7 @@ export const FleetView: React.FC = () => {
             ? 'Active'
             : job.status === JobStatus.COMPLETED
               ? 'Available'
-              : job.status === JobStatus.NEW
+              : job.status === JobStatus.DRAFT
                 ? 'Requested'
                 : 'Standby',
         lastUsed: job.date,

@@ -74,7 +74,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
     { id: 'jobs', label: 'Job Orders', icon: Truck },
     { id: 'shipments', label: 'Shipments', icon: Ship },
     { id: 'gate-passes', label: 'Gate Passes', icon: Shield },
-    { id: 'receiving', label: 'Receiving (MRRV)', icon: Package },
+    { id: 'receiving', label: 'Receiving (GRN)', icon: Package },
   ];
 
   return (
@@ -340,7 +340,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-4 py-3 text-xs text-gray-400 uppercase">MRRV</th>
+                <th className="px-4 py-3 text-xs text-gray-400 uppercase">GRN</th>
                 <th className="px-4 py-3 text-xs text-gray-400 uppercase">Supplier</th>
                 <th className="px-4 py-3 text-xs text-gray-400 uppercase">Warehouse</th>
                 <th className="px-4 py-3 text-xs text-gray-400 uppercase">Status</th>
@@ -362,7 +362,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               {allMrrvs.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
-                    No MRRVs
+                    No GRNs
                   </td>
                 </tr>
               )}

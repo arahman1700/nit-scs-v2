@@ -228,10 +228,14 @@ interface DocCountBreakdown {
 
 interface DocumentCounts {
   mrrv?: DocCountBreakdown;
+  grn?: DocCountBreakdown;
   mirv?: DocCountBreakdown;
+  mi?: DocCountBreakdown;
   jo?: DocCountBreakdown;
   mrv?: DocCountBreakdown;
+  mrn?: DocCountBreakdown;
   rfim?: DocCountBreakdown;
+  qci?: DocCountBreakdown;
 }
 
 interface SLACompliance {
@@ -493,31 +497,31 @@ export const AdminDashboard: React.FC = () => {
           <SectionCard
             title="Receiving & Inbound"
             icon={FileInput}
-            path="/admin/receiving"
+            path="/admin/material"
             loading={docCountsQuery.isLoading}
             metrics={[
-              { label: 'MRRV Total', value: docCounts?.mrrv?.total ?? 0 },
-              { label: 'Pending', value: docCounts?.mrrv?.pending ?? 0 },
+              { label: 'GRN Total', value: docCounts?.grn?.total ?? docCounts?.mrrv?.total ?? 0 },
+              { label: 'Pending', value: docCounts?.grn?.pending ?? docCounts?.mrrv?.pending ?? 0 },
             ]}
           />
           <SectionCard
             title="Issuing & Outbound"
             icon={FileOutput}
-            path="/admin/issuing"
+            path="/admin/material?tab=mi"
             loading={docCountsQuery.isLoading}
             metrics={[
-              { label: 'MIRV Total', value: docCounts?.mirv?.total ?? 0 },
-              { label: 'Pending', value: docCounts?.mirv?.pending ?? 0 },
+              { label: 'MI Total', value: docCounts?.mi?.total ?? docCounts?.mirv?.total ?? 0 },
+              { label: 'Pending', value: docCounts?.mi?.pending ?? docCounts?.mirv?.pending ?? 0 },
             ]}
           />
           <SectionCard
             title="Returns & Quality"
             icon={ShieldCheck}
-            path="/admin/quality"
+            path="/admin/material?tab=qci"
             loading={docCountsQuery.isLoading}
             metrics={[
-              { label: 'MRV', value: docCounts?.mrv?.total ?? 0 },
-              { label: 'RFIM', value: docCounts?.rfim?.total ?? 0 },
+              { label: 'MRN', value: docCounts?.mrn?.total ?? docCounts?.mrv?.total ?? 0 },
+              { label: 'QCI', value: docCounts?.qci?.total ?? docCounts?.rfim?.total ?? 0 },
             ]}
           />
           <SectionCard
@@ -545,17 +549,17 @@ export const AdminDashboard: React.FC = () => {
         <h2 className="text-lg font-bold text-white mb-4">Document Pipeline</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <DocCountCard
-            label="MRRV"
-            total={docCounts?.mrrv?.total ?? 0}
-            active={docCounts?.mrrv?.breakdown?.draft ?? 0}
+            label="GRN"
+            total={docCounts?.grn?.total ?? docCounts?.mrrv?.total ?? 0}
+            active={docCounts?.grn?.breakdown?.draft ?? docCounts?.mrrv?.breakdown?.draft ?? 0}
             activeLabel="pending"
             color="bg-emerald-500"
             loading={docCountsQuery.isLoading}
           />
           <DocCountCard
-            label="MIRV"
-            total={docCounts?.mirv?.total ?? 0}
-            active={docCounts?.mirv?.breakdown?.pending_approval ?? 0}
+            label="MI"
+            total={docCounts?.mi?.total ?? docCounts?.mirv?.total ?? 0}
+            active={docCounts?.mi?.breakdown?.pending_approval ?? docCounts?.mirv?.breakdown?.pending_approval ?? 0}
             activeLabel="pending"
             color="bg-blue-500"
             loading={docCountsQuery.isLoading}
@@ -569,9 +573,9 @@ export const AdminDashboard: React.FC = () => {
             loading={docCountsQuery.isLoading}
           />
           <DocCountCard
-            label="MRV"
-            total={docCounts?.mrv?.total ?? 0}
-            active={docCounts?.mrv?.breakdown?.draft ?? 0}
+            label="MRN"
+            total={docCounts?.mrn?.total ?? docCounts?.mrv?.total ?? 0}
+            active={docCounts?.mrn?.breakdown?.draft ?? docCounts?.mrv?.breakdown?.draft ?? 0}
             activeLabel="pending"
             color="bg-nesma-secondary"
             loading={docCountsQuery.isLoading}
@@ -604,7 +608,7 @@ export const AdminDashboard: React.FC = () => {
                   <th className="pb-2 font-medium">Project</th>
                   <th className="pb-2 font-medium">Client</th>
                   <th className="pb-2 font-medium text-center">Active JOs</th>
-                  <th className="pb-2 font-medium text-center">Pending MIRV</th>
+                  <th className="pb-2 font-medium text-center">Pending MI</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -663,9 +667,9 @@ export const AdminDashboard: React.FC = () => {
                       <td className="py-3">
                         <span
                           className={`text-[10px] px-2 py-1 rounded-full font-semibold border ${
-                            log.action.startsWith('MRRV')
+                            log.action.startsWith('GRN') || log.action.startsWith('MRRV')
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : log.action.startsWith('MIRV')
+                              : log.action.startsWith('MI') || log.action.startsWith('MIRV')
                                 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                                 : log.action.startsWith('JO')
                                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'

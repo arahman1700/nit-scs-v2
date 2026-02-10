@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Sentry from '@sentry/react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface RouteErrorBoundaryState {
@@ -27,6 +28,12 @@ export class RouteErrorBoundary extends React.Component<RouteErrorBoundaryProps,
 
   static getDerivedStateFromError(error: Error): RouteErrorBoundaryState {
     return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    Sentry.captureException(error, {
+      extra: { componentStack: errorInfo.componentStack, label: this.props.label },
+    });
   }
 
   handleReset = () => {

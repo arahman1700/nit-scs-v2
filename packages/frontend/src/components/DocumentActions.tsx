@@ -183,11 +183,11 @@ function useDocumentActions(resource: string, status: string): ActionDef[] {
     mirv: {
       draft: [
         { label: 'Submit', icon: Send, hook: submitMirv, color: 'text-blue-400' },
-        { label: 'Cancel', icon: Ban, hook: cancelMirv, color: 'text-red-400', confirm: 'Cancel this MIRV?' },
+        { label: 'Cancel', icon: Ban, hook: cancelMirv, color: 'text-red-400', confirm: 'Cancel this MI?' },
       ],
       pending_approval: [
         { label: 'Approve', icon: Check, hook: approveMirv, color: 'text-green-400' },
-        { label: 'Cancel', icon: Ban, hook: cancelMirv, color: 'text-red-400', confirm: 'Cancel this MIRV?' },
+        { label: 'Cancel', icon: Ban, hook: cancelMirv, color: 'text-red-400', confirm: 'Cancel this MI?' },
       ],
       approved: [{ label: 'Issue', icon: Package, hook: issueMirv, color: 'text-emerald-400' }],
     },
@@ -276,7 +276,7 @@ function useDocumentActions(resource: string, status: string): ActionDef[] {
     mrf: {
       draft: [
         { label: 'Submit', icon: Send, hook: submitMrf, color: 'text-blue-400' },
-        { label: 'Cancel', icon: Ban, hook: cancelMrf, color: 'text-red-400', confirm: 'Cancel this MRF?' },
+        { label: 'Cancel', icon: Ban, hook: cancelMrf, color: 'text-red-400', confirm: 'Cancel this MR?' },
       ],
       pending_review: [
         { label: 'Review', icon: Search, hook: reviewMrf, color: 'text-cyan-400', objectArg: true },
@@ -285,7 +285,7 @@ function useDocumentActions(resource: string, status: string): ActionDef[] {
           icon: X,
           hook: rejectMrf,
           color: 'text-red-400',
-          confirm: 'Reject this MRF?',
+          confirm: 'Reject this MR?',
           objectArg: true,
         },
       ],
@@ -294,7 +294,7 @@ function useDocumentActions(resource: string, status: string): ActionDef[] {
         { label: 'Reject', icon: X, hook: rejectMrf, color: 'text-red-400', confirm: 'Reject?', objectArg: true },
       ],
       approved: [{ label: 'Check Stock', icon: FileCheck, hook: checkStockMrf, color: 'text-teal-400' }],
-      stock_checked: [{ label: 'Convert to MIRV', icon: Package, hook: convertMirvMrf, color: 'text-emerald-400' }],
+      stock_checked: [{ label: 'Convert to MI', icon: Package, hook: convertMirvMrf, color: 'text-emerald-400' }],
       mirv_created: [{ label: 'Fulfill', icon: Check, hook: fulfillMrf, color: 'text-green-400' }],
     },
     shipments: {

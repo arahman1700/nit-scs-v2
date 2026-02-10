@@ -5,15 +5,15 @@
 // ============================================================================
 
 const DOC_PREFIXES: Record<string, string> = {
-  mrrv: 'MRRV',
-  mirv: 'MIRV',
-  mrv: 'MRV',
-  rfim: 'RFIM',
-  osd: 'OSD',
+  mrrv: 'GRN',
+  mirv: 'MI',
+  mrv: 'MRN',
+  rfim: 'QCI',
+  osd: 'DR',
   jo: 'JO-NIT',
   gatepass: 'GP',
   'stock-transfer': 'ST',
-  mrf: 'MRF',
+  mrf: 'MR',
   shipment: 'SH',
   customs: 'CC',
 };

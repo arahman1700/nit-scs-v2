@@ -1,9 +1,10 @@
-import React from 'react';
-import { Menu, Search, Settings, Languages } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Menu, Search, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { useDirection } from '@/contexts/DirectionProvider';
 import { NotificationCenter } from '@/components/NotificationCenter';
+import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -13,15 +14,22 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => {
   const { i18n, t } = useTranslation();
-  const { toggleDirection } = useDirection();
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-    i18n.changeLanguage(newLang);
-    toggleDirection();
-  };
+  const { toggleDirection, isRtl } = useDirection();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   void role; // role available for future use
+
+  // Close settings dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    };
+    if (settingsOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [settingsOpen]);
 
   return (
     <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-6 z-30 border-b border-white/10 bg-nesma-dark/80 backdrop-blur-md sticky top-0 shadow-lg">
@@ -58,21 +66,42 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
           <NotificationCenter />
 
           <button
-            onClick={toggleLanguage}
-            className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-gray-300 hover:text-white hidden sm:flex items-center gap-1.5"
-            aria-label={i18n.language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-            title={i18n.language === 'ar' ? 'English' : 'العربية'}
+            onClick={toggleDirection}
+            className="relative hidden sm:flex items-center h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs font-semibold overflow-hidden"
+            aria-label={isRtl ? 'Switch to English' : 'التبديل إلى العربية'}
+            title={isRtl ? 'English' : 'العربية'}
           >
-            <Languages size={20} />
-            <span className="text-[10px] font-bold uppercase tracking-wide">{i18n.language === 'ar' ? 'EN' : 'ع'}</span>
+            <span
+              className={`px-2.5 py-1 rounded-full transition-all ${!isRtl ? 'bg-nesma-primary text-white' : 'text-gray-400'}`}
+            >
+              EN
+            </span>
+            <span
+              className={`px-2.5 py-1 rounded-full transition-all ${isRtl ? 'bg-nesma-primary text-white' : 'text-gray-400'}`}
+            >
+              عر
+            </span>
           </button>
 
-          <button
-            className="relative cursor-pointer p-2 rounded-full hover:bg-white/10 transition-colors text-gray-300 hover:text-white hidden sm:block"
-            aria-label="Settings"
-          >
-            <Settings size={20} />
-          </button>
+          <div className="relative hidden sm:block" ref={settingsRef}>
+            <button
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className="relative cursor-pointer p-2 rounded-full hover:bg-white/10 transition-colors text-gray-300 hover:text-white"
+              aria-label="Settings"
+              aria-expanded={settingsOpen}
+            >
+              <Settings size={20} />
+            </button>
+
+            {settingsOpen && (
+              <div className="absolute end-0 top-full mt-2 w-64 bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 p-3 animate-fade-in">
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
+                  Quick Settings
+                </p>
+                <PushNotificationToggle />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="h-8 w-px bg-white/10 mx-1 md:mx-2 hidden sm:block"></div>

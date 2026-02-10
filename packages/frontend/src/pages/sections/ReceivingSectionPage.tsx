@@ -33,7 +33,7 @@ export const ReceivingSectionPage: React.FC = () => {
   }, [mrrvRows]);
 
   const kpis: KpiCardProps[] = [
-    { title: 'Pending MRRV', value: mrrvPending?.meta?.total ?? 0, icon: Clock, color: 'bg-amber-500' },
+    { title: 'Pending GRN', value: mrrvPending?.meta?.total ?? 0, icon: Clock, color: 'bg-amber-500' },
     { title: 'Total Receipts', value: mrrvAll?.meta?.total ?? 0, icon: ArrowDownCircle, color: 'bg-emerald-500' },
     { title: 'Incoming Shipments', value: shipIncoming?.meta?.total ?? 0, icon: Ship, color: 'bg-blue-500' },
     { title: 'Pending QC', value: rfimPending?.meta?.total ?? 0, icon: ClipboardCheck, color: 'bg-purple-500' },
@@ -41,7 +41,7 @@ export const ReceivingSectionPage: React.FC = () => {
 
   const tabs: TabDef[] = [
     { key: 'overview', label: 'Overview' },
-    { key: 'mrrv', label: 'MRRV', badge: mrrvPending?.meta?.total },
+    { key: 'mrrv', label: 'GRN', badge: mrrvPending?.meta?.total },
     { key: 'shipments', label: 'Shipments' },
     { key: 'customs', label: 'Customs' },
     { key: 'gate-passes', label: 'Gate Passes' },
@@ -55,7 +55,7 @@ export const ReceivingSectionPage: React.FC = () => {
       tabs={tabs}
       loading={mrrvLoading}
       quickActions={[
-        { label: 'New Receipt (MRRV)', icon: ArrowDownCircle, onClick: () => navigate('/admin/forms/mrrv') },
+        { label: 'New Receipt (GRN)', icon: ArrowDownCircle, onClick: () => navigate('/admin/forms/grn') },
         { label: 'New Shipment', icon: Ship, onClick: () => navigate('/admin/forms/shipment'), variant: 'secondary' },
         {
           label: 'Customs Clearance',
@@ -76,12 +76,12 @@ export const ReceivingSectionPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            {/* Top 10 MRRV queue */}
+            {/* Top 10 GRN queue */}
             <div className="glass-card rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <h3 className="text-white font-semibold">Recent MRRV Queue</h3>
+                <h3 className="text-white font-semibold">Recent GRN Queue</h3>
                 <button
-                  onClick={() => navigate('/admin/receiving/mrrv')}
+                  onClick={() => navigate('/admin/receiving/grn')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   View All
@@ -132,16 +132,16 @@ export const ReceivingSectionPage: React.FC = () => {
         mrrv: (
           <div className="glass-card rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold">Material Receiving Report Vouchers</h3>
+              <h3 className="text-white font-semibold">Goods Receipt Notes</h3>
               <div className="flex gap-3">
                 <button
-                  onClick={() => navigate('/admin/forms/mrrv')}
+                  onClick={() => navigate('/admin/forms/grn')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   + Create New
                 </button>
                 <button
-                  onClick={() => navigate('/admin/receiving/mrrv')}
+                  onClick={() => navigate('/admin/receiving/grn')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   View All
@@ -180,7 +180,7 @@ export const ReceivingSectionPage: React.FC = () => {
                 {mrrvRows.length === 0 && (
                   <tr>
                     <td colSpan={6} className="text-center text-gray-500 py-8">
-                      No MRRV records
+                      No GRN records
                     </td>
                   </tr>
                 )}

@@ -112,9 +112,9 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
   switch (formType) {
     case 'mirv':
       return {
-        title: isEditMode ? 'Edit Material Issue Request' : 'Material Issue Request',
-        titleEn: 'Material Issue Request',
-        code: 'MIRV',
+        title: isEditMode ? 'Edit Material Issuance' : 'Material Issuance',
+        titleEn: 'Material Issuance',
+        code: 'MI',
         subtitle: 'N-MS-NIT-LSS-FRM-0102',
         icon: Package,
         sections: [
@@ -150,9 +150,9 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
       };
     case 'mrrv':
       return {
-        title: isEditMode ? 'Edit Material Receiving Report' : 'Material Receiving Report',
-        titleEn: 'Material Receiving Report',
-        code: 'MRRV',
+        title: isEditMode ? 'Edit Goods Receipt Note' : 'Goods Receipt Note',
+        titleEn: 'Goods Receipt Note',
+        code: 'GRN',
         subtitle: 'N-MS-NIT-LSS-FRM-0101',
         icon: Package,
         sections: [
@@ -189,7 +189,7 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 defaultValue: currentUserName,
                 readOnly: true,
               },
-              { key: 'rfimRequired', label: 'Requires Inspection (RFIM)?', type: 'checkbox' },
+              { key: 'rfimRequired', label: 'Requires Inspection (QCI)?', type: 'checkbox' },
               { key: 'attachments', label: 'Attachments', type: 'file' },
             ],
           },
@@ -249,16 +249,16 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
       };
     case 'rfim':
       return {
-        title: isEditMode ? 'Edit Inspection Request' : 'Request for Inspection of Materials',
-        titleEn: 'Request for Inspection of Materials',
-        code: 'RFIM',
+        title: isEditMode ? 'Edit Quality Control Inspection' : 'Quality Control Inspection',
+        titleEn: 'Quality Control Inspection',
+        code: 'QCI',
         subtitle: 'N-MS-NIT-QC-FRM-0101',
         icon: Shield,
         sections: [
           {
             title: 'Voucher Reference',
             fields: [
-              { key: 'mrrvId', label: 'MRRV Reference', type: 'select', options: mrrvOptions, required: true },
+              { key: 'mrrvId', label: 'GRN Reference', type: 'select', options: mrrvOptions, required: true },
               {
                 key: 'inspectionDate',
                 label: 'Required Inspection Date',
@@ -311,16 +311,16 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
       };
     case 'osd':
       return {
-        title: isEditMode ? 'Edit OSD Report' : 'Over/Short/Damage Report',
-        titleEn: 'Over/Short/Damage Report',
-        code: 'OSD',
+        title: isEditMode ? 'Edit Discrepancy Report' : 'Discrepancy Report',
+        titleEn: 'Discrepancy Report',
+        code: 'DR',
         subtitle: 'N-MS-NIT-QC-FRM-0102',
         icon: AlertTriangle,
         sections: [
           {
             title: 'Voucher Reference',
             fields: [
-              { key: 'mrrvId', label: 'MRRV Reference', type: 'select', options: mrrvOptions, required: true },
+              { key: 'mrrvId', label: 'GRN Reference', type: 'select', options: mrrvOptions, required: true },
               {
                 key: 'reportDate',
                 label: 'Report Date',
@@ -368,9 +368,9 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
       };
     case 'mrv':
       return {
-        title: isEditMode ? 'Edit Material Return Voucher' : 'Material Return Voucher',
-        titleEn: 'Material Return Voucher',
-        code: 'MRV',
+        title: isEditMode ? 'Edit Material Return Note' : 'Material Return Note',
+        titleEn: 'Material Return Note',
+        code: 'MRN',
         subtitle: 'N-MS-NIT-LSS-FRM-0103',
         icon: RefreshCw,
         sections: [

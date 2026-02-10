@@ -33,11 +33,11 @@ function backendStatusToColumn(backendStatus: string): JobStatus {
     case 'draft':
     case 'pending_approval':
     case 'rejected':
-      return JobStatus.NEW;
+      return JobStatus.DRAFT;
     case 'approved':
     case 'assigned':
     case 'quoted':
-      return JobStatus.ASSIGNING;
+      return JobStatus.ASSIGNED;
     case 'in_progress':
     case 'on_hold':
       return JobStatus.IN_PROGRESS;
@@ -47,7 +47,7 @@ function backendStatusToColumn(backendStatus: string): JobStatus {
     case 'cancelled':
       return JobStatus.CANCELLED;
     default:
-      return JobStatus.NEW;
+      return JobStatus.DRAFT;
   }
 }
 
@@ -372,8 +372,8 @@ export const JobOrdersKanban: React.FC = () => {
     borderColor: string;
     icon: React.FC<{ size?: number }>;
   }[] = [
-    { status: JobStatus.NEW, color: 'bg-gray-400', borderColor: 'gray', icon: AlertCircle },
-    { status: JobStatus.ASSIGNING, color: 'bg-amber-400', borderColor: 'amber', icon: User },
+    { status: JobStatus.DRAFT, color: 'bg-gray-400', borderColor: 'gray', icon: AlertCircle },
+    { status: JobStatus.ASSIGNED, color: 'bg-amber-400', borderColor: 'amber', icon: User },
     { status: JobStatus.IN_PROGRESS, color: 'bg-nesma-secondary', borderColor: 'blue', icon: Truck },
     { status: JobStatus.COMPLETED, color: 'bg-emerald-400', borderColor: 'emerald', icon: CheckCircle },
     { status: JobStatus.CANCELLED, color: 'bg-red-400', borderColor: 'red', icon: XCircle },

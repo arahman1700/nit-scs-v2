@@ -59,13 +59,11 @@ export const MrfForm: React.FC = () => {
         <div className="w-20 h-20 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-6 border border-green-500/50">
           <CheckCircle size={40} />
         </div>
-        <h2 className="text-3xl font-bold text-white mb-2">Material Requisition Submitted</h2>
+        <h2 className="text-3xl font-bold text-white mb-2">Material Request Submitted</h2>
         <p className="text-gray-400 mb-2">
-          MRF <span className="text-nesma-secondary font-medium">{documentNumber}</span>
+          MR <span className="text-nesma-secondary font-medium">{documentNumber}</span>
         </p>
-        <p className="text-gray-500 text-sm mb-6">
-          Will convert to MIRV upon approval. Approval: {approvalLevel.label}
-        </p>
+        <p className="text-gray-500 text-sm mb-6">Will convert to MI upon approval. Approval: {approvalLevel.label}</p>
         <div className="flex gap-4">
           <button
             onClick={() => {
@@ -98,12 +96,12 @@ export const MrfForm: React.FC = () => {
           Dashboard
         </span>
         <span className="text-gray-600">/</span>
-        <span className="text-white font-medium">Material Requisition</span>
+        <span className="text-white font-medium">Material Request</span>
       </div>
 
       <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/10">
         <div className="border-b border-white/10 p-8 bg-gradient-to-r from-nesma-primary/20 to-transparent">
-          <h1 className="text-3xl font-bold text-white mb-1">Material Requisition Form</h1>
+          <h1 className="text-3xl font-bold text-white mb-1">Material Request Form</h1>
           <p className="text-gray-400 mb-2">Request materials for your project</p>
           <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
             {nextNumber}
@@ -202,7 +200,7 @@ export const MrfForm: React.FC = () => {
                 <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
               </div>
               <p className="text-xs text-gray-500">
-                Upon approval, this MRF will auto-convert to a MIRV (Material Issue Request)
+                Upon approval, this MR will auto-convert to an MI (Material Issuance)
               </p>
             </div>
           )}

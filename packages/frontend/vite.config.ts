@@ -25,58 +25,63 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon.svg'],
+      includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'NIT Logistics - \u0646\u0633\u0645\u0627 \u0644\u0644\u0628\u0646\u064A\u0629 \u0627\u0644\u062A\u062D\u062A\u064A\u0629 \u0648\u0627\u0644\u062A\u0642\u0646\u064A\u0629',
-        short_name: 'NIT Logistics',
-        description: 'Supply Chain Management System',
-        theme_color: '#2E3A8C',
-        background_color: '#0a1929',
+        name: 'NIT Supply Chain System',
+        short_name: 'NIT SCS',
+        description: 'Comprehensive supply chain management for Nesma Infrastructure & Technology',
+        theme_color: '#0E2841',
+        background_color: '#051020',
         display: 'standalone',
-        orientation: 'portrait',
-        scope: '/',
         start_url: '/',
-        dir: 'auto',
-        lang: 'en',
         icons: [
           {
-            src: '/icons/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
-            purpose: 'any',
-          },
-          {
-            src: '/icons/icon-192x192.png',
+            src: '/pwa-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/icons/icon-512x512.png',
+            src: '/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Import push notification handler into the service worker
+        importScripts: ['sw-push.js'],
+        // Cache strategies
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*\/api\//,
+            // API calls: network-first with fallback
+            urlPattern: /\/api\/v1\/.*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
-              expiration: { maxEntries: 100, maxAgeSeconds: 300 },
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 5 * 60, // 5 minutes
+              },
+              networkTimeoutSeconds: 5,
             },
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            // Static assets: cache-first
+            urlPattern: /\.(js|css|png|jpg|jpeg|svg|gif|woff2?)$/,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'image-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 2592000 },
+              cacheName: 'static-assets',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
             },
           },
         ],
+        // Don't precache everything - just the shell
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Skip large chunks
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB
       },
     }),
   ],
@@ -85,6 +90,10 @@ export default defineConfig({
       output: {
         manualChunks: {
           'ag-grid': ['ag-grid-community', 'ag-grid-react'],
+          charts: ['recharts'],
+          dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          socketio: ['socket.io-client'],
+          i18n: ['i18next', 'react-i18next'],
         },
       },
     },

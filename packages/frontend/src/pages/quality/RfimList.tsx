@@ -119,10 +119,10 @@ export const RfimList: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white glow-text">Inspection Requests (RFIM)</h1>
+          <h1 className="text-3xl font-bold text-white glow-text">Inspection Requests (QCI)</h1>
           <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
             <span className="bg-nesma-primary/20 text-nesma-secondary px-2 py-0.5 rounded text-xs border border-nesma-primary/30">
-              QC-RFIM
+              QC-QCI
             </span>
             Manage quality control inspections and results
           </p>
@@ -131,8 +131,8 @@ export const RfimList: React.FC = () => {
           <ExportButton
             data={filteredData as unknown as Record<string, unknown>[]}
             columns={[
-              { key: 'formNumber', label: 'RFIM #' },
-              { key: 'mrrvId', label: 'MRRV Ref' },
+              { key: 'formNumber', label: 'QCI #' },
+              { key: 'mrrvId', label: 'GRN Ref' },
               { key: 'status', label: 'Status' },
               { key: 'priority', label: 'Priority' },
               { key: 'date', label: 'Date' },
@@ -140,7 +140,7 @@ export const RfimList: React.FC = () => {
             filename="RFIM"
           />
           <button
-            onClick={() => navigate('/admin/forms/rfim')}
+            onClick={() => navigate('/admin/forms/qci')}
             className="flex items-center gap-2 px-4 py-2 bg-nesma-primary text-white rounded-lg hover:bg-nesma-accent text-sm shadow-lg shadow-nesma-primary/20 transition-all transform hover:-translate-y-0.5"
           >
             <Plus size={16} />
@@ -158,7 +158,7 @@ export const RfimList: React.FC = () => {
             <Search size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search RFIM ID, MRRV, Inspector..."
+              placeholder="Search QCI ID, GRN, Inspector..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50 focus:ring-1 focus:ring-nesma-secondary/50 transition-all"
@@ -214,8 +214,8 @@ export const RfimList: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead className="nesma-table-head text-nesma-secondary text-xs uppercase tracking-wider font-semibold">
               <tr>
-                <th className="px-6 py-4 whitespace-nowrap">RFIM ID</th>
-                <th className="px-6 py-4 whitespace-nowrap">MRRV Ref</th>
+                <th className="px-6 py-4 whitespace-nowrap">QCI ID</th>
+                <th className="px-6 py-4 whitespace-nowrap">GRN Ref</th>
                 <th className="px-6 py-4 whitespace-nowrap">Inspection Type</th>
                 <th className="px-6 py-4 whitespace-nowrap">Priority</th>
                 <th className="px-6 py-4 whitespace-nowrap">Status</th>
@@ -331,7 +331,7 @@ export const RfimList: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-gray-400 uppercase tracking-wider block mb-1">MRRV Reference</span>
+                  <span className="text-xs text-gray-400 uppercase tracking-wider block mb-1">GRN Reference</span>
                   <span className="text-white font-mono font-medium">{selectedItem.mrrvId}</span>
                 </div>
               </div>
@@ -387,7 +387,7 @@ export const RfimList: React.FC = () => {
                 onClick={() => {
                   const id = selectedItem?.id;
                   setSelectedItem(null);
-                  if (id) navigate(`/admin/forms/rfim/${id}`);
+                  if (id) navigate(`/admin/forms/qci/${id}`);
                 }}
                 className="px-5 py-2.5 bg-nesma-primary hover:bg-nesma-accent text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-nesma-primary/20"
               >

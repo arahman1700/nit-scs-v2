@@ -8,8 +8,8 @@ const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 interface LineItemsTableProps {
   items: VoucherLineItem[];
   onItemsChange: (items: VoucherLineItem[]) => void;
-  showCondition?: boolean; // For MRV/MRRV
-  showStockAvailability?: boolean; // For MIRV - shows available qty
+  showCondition?: boolean; // For MRN/GRN
+  showStockAvailability?: boolean; // For MI - shows available qty
   readOnly?: boolean;
 }
 

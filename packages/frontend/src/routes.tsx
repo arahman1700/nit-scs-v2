@@ -2,6 +2,59 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { UserRole } from '@nit-scs-v2/shared/types';
 
+// ── Role-based route guard component ──────────────────────────────────────
+const RoleGuard: React.FC<{
+  currentRole: UserRole;
+  allowedRoles: UserRole[];
+  children: React.ReactNode;
+}> = ({ currentRole, allowedRoles, children }) => {
+  if (!allowedRoles.includes(currentRole)) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+};
+
+// ── Role groups ──────────────────────────────────────────────────────────
+const ADMIN_ROLES = [UserRole.ADMIN];
+const ADMIN_MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER, UserRole.SCRAP_COMMITTEE_MEMBER];
+const WAREHOUSE_ROLES = [UserRole.ADMIN, UserRole.WAREHOUSE_SUPERVISOR, UserRole.WAREHOUSE_STAFF];
+const TRANSPORT_ROLES = [UserRole.ADMIN, UserRole.FREIGHT_FORWARDER, UserRole.TRANSPORT_SUPERVISOR];
+const QC_ROLES = [UserRole.ADMIN, UserRole.QC_OFFICER];
+const LOGISTICS_ROLES = [UserRole.ADMIN, UserRole.LOGISTICS_COORDINATOR, UserRole.TRANSPORT_SUPERVISOR];
+const ENGINEER_ROLES = [UserRole.ADMIN, UserRole.SITE_ENGINEER];
+const MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER];
+
+// ── Role-to-redirect map ─────────────────────────────────────────────────
+const ROLE_REDIRECT: Record<UserRole, string> = {
+  [UserRole.ADMIN]: '/admin',
+  [UserRole.MANAGER]: '/manager',
+  [UserRole.WAREHOUSE_SUPERVISOR]: '/warehouse',
+  [UserRole.WAREHOUSE_STAFF]: '/warehouse',
+  [UserRole.LOGISTICS_COORDINATOR]: '/logistics',
+  [UserRole.SITE_ENGINEER]: '/site-engineer',
+  [UserRole.QC_OFFICER]: '/qc',
+  [UserRole.FREIGHT_FORWARDER]: '/transport',
+  [UserRole.TRANSPORT_SUPERVISOR]: '/logistics',
+  [UserRole.SCRAP_COMMITTEE_MEMBER]: '/admin',
+};
+
+// ── 404 Not Found page ───────────────────────────────────────────────────
+const NotFoundPage: React.FC = () => (
+  <div className="min-h-[60vh] flex items-center justify-center">
+    <div className="glass-card rounded-2xl p-10 max-w-md text-center border border-white/10">
+      <div className="text-6xl font-bold text-nesma-primary mb-4">404</div>
+      <h1 className="text-xl font-semibold text-white mb-2">Page Not Found</h1>
+      <p className="text-gray-400 text-sm mb-6">The page you are looking for does not exist or has been moved.</p>
+      <a
+        href="/"
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-nesma-primary text-white rounded-xl hover:bg-nesma-accent transition-all text-sm"
+      >
+        Go to Dashboard
+      </a>
+    </div>
+  </div>
+);
+
 // ── Lazy-loaded pages (code-split) ──────────────────────────────────────────
 const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
 const AdminResourceList = React.lazy(() =>
@@ -34,6 +87,87 @@ const RentalContractForm = React.lazy(() =>
   import('@/pages/RentalContractForm').then(m => ({ default: m.RentalContractForm })),
 );
 const ToolIssueForm = React.lazy(() => import('@/pages/ToolIssueForm').then(m => ({ default: m.ToolIssueForm })));
+
+// V2 Dashboard imports
+const AssetDashboard = React.lazy(() =>
+  import('@/pages/dashboards/AssetDashboard').then(m => ({ default: m.AssetDashboard })),
+);
+const LaborDashboard = React.lazy(() =>
+  import('@/pages/dashboards/LaborDashboard').then(m => ({ default: m.LaborDashboard })),
+);
+const ForecastDashboard = React.lazy(() =>
+  import('@/pages/dashboards/ForecastDashboard').then(m => ({ default: m.ForecastDashboard })),
+);
+
+// V2 Form imports (additional)
+const HandoverForm = React.lazy(() => import('@/pages/forms/HandoverForm').then(m => ({ default: m.HandoverForm })));
+const GeneratorFuelForm = React.lazy(() =>
+  import('@/pages/forms/GeneratorFuelForm').then(m => ({ default: m.GeneratorFuelForm })),
+);
+const GeneratorMaintenanceForm = React.lazy(() =>
+  import('@/pages/forms/GeneratorMaintenanceForm').then(m => ({ default: m.GeneratorMaintenanceForm })),
+);
+const WarehouseZoneForm = React.lazy(() =>
+  import('@/pages/forms/WarehouseZoneForm').then(m => ({ default: m.WarehouseZoneForm })),
+);
+const ToolForm = React.lazy(() => import('@/pages/forms/ToolForm').then(m => ({ default: m.ToolForm })));
+
+// ABC Analysis page
+const AbcAnalysisPage = React.lazy(() =>
+  import('@/pages/warehouse/AbcAnalysisPage').then(m => ({ default: m.AbcAnalysisPage })),
+);
+
+// Put-Away Rules page
+const PutAwayRulesPage = React.lazy(() =>
+  import('@/pages/warehouse/PutAwayRulesPage').then(m => ({ default: m.PutAwayRulesPage })),
+);
+
+// Cycle Counting pages
+const CycleCountListPage = React.lazy(() =>
+  import('@/pages/warehouse/CycleCountListPage').then(m => ({ default: m.CycleCountListPage })),
+);
+const CycleCountDetailPage = React.lazy(() =>
+  import('@/pages/warehouse/CycleCountDetailPage').then(m => ({ default: m.CycleCountDetailPage })),
+);
+
+// Wave Picking page
+const WavePickingPage = React.lazy(() =>
+  import('@/pages/warehouse/WavePickingPage').then(m => ({ default: m.WavePickingPage })),
+);
+
+// Slotting Optimization page
+const SlottingPage = React.lazy(() =>
+  import('@/pages/warehouse/SlottingPage').then(m => ({ default: m.SlottingPage })),
+);
+
+// Advance Shipping Notice page
+const AsnPage = React.lazy(() => import('@/pages/warehouse/AsnPage').then(m => ({ default: m.AsnPage })));
+
+// Cross-Docking page
+const CrossDockDashboard = React.lazy(() =>
+  import('@/pages/warehouse/CrossDockDashboard').then(m => ({ default: m.CrossDockDashboard })),
+);
+
+// IoT Sensor Monitoring
+const SensorDashboard = React.lazy(() =>
+  import('@/pages/warehouse/SensorDashboard').then(m => ({ default: m.SensorDashboard })),
+);
+
+// Yard Management
+const YardDashboard = React.lazy(() =>
+  import('@/pages/warehouse/YardDashboard').then(m => ({ default: m.YardDashboard })),
+);
+
+// Mobile scan workflow pages
+const MobileGrnReceive = React.lazy(() =>
+  import('@/pages/warehouse/MobileGrnReceive').then(m => ({ default: m.MobileGrnReceive })),
+);
+const MobileMiIssue = React.lazy(() =>
+  import('@/pages/warehouse/MobileMiIssue').then(m => ({ default: m.MobileMiIssue })),
+);
+const MobileWtTransfer = React.lazy(() =>
+  import('@/pages/warehouse/MobileWtTransfer').then(m => ({ default: m.MobileWtTransfer })),
+);
 
 // New role dashboards
 const ManagerDashboard = React.lazy(() =>
@@ -89,6 +223,11 @@ const AdminSystemPage = React.lazy(() =>
   import('@/pages/sections/AdminSystemPage').then(m => ({ default: m.AdminSystemPage })),
 );
 
+// Inspection Tools (AQL Calculator & Checklists)
+const InspectionToolsPage = React.lazy(() =>
+  import('@/pages/quality/InspectionToolsPage').then(m => ({ default: m.InspectionToolsPage })),
+);
+
 // Section Landing Pages (V2 - NEW)
 const MaterialSectionPage = React.lazy(() =>
   import('@/pages/sections/MaterialSectionPage').then(m => ({ default: m.MaterialSectionPage })),
@@ -97,37 +236,29 @@ const AssetSectionPage = React.lazy(() =>
   import('@/pages/sections/AssetSectionPage').then(m => ({ default: m.AssetSectionPage })),
 );
 
+// Route Optimizer page
+const RouteOptimizerPage = React.lazy(() =>
+  import('@/pages/logistics/RouteOptimizerPage').then(m => ({ default: m.RouteOptimizerPage })),
+);
+
+// Pending Approvals page
+const PendingApprovalsPage = React.lazy(() =>
+  import('@/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
+);
+
 export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ currentRole }) => (
   <Routes>
-    <Route
-      path="/"
-      element={
-        currentRole === UserRole.ADMIN ? (
-          <Navigate to="/admin" />
-        ) : currentRole === UserRole.MANAGER ? (
-          <Navigate to="/manager" />
-        ) : currentRole === UserRole.WAREHOUSE_SUPERVISOR || currentRole === UserRole.WAREHOUSE_STAFF ? (
-          <Navigate to="/warehouse" />
-        ) : currentRole === UserRole.QC_OFFICER ? (
-          <Navigate to="/qc" />
-        ) : currentRole === UserRole.LOGISTICS_COORDINATOR ? (
-          <Navigate to="/logistics" />
-        ) : currentRole === UserRole.SITE_ENGINEER ? (
-          <Navigate to="/site-engineer" />
-        ) : currentRole === UserRole.FREIGHT_FORWARDER ? (
-          <Navigate to="/transport" />
-        ) : currentRole === UserRole.TRANSPORT_SUPERVISOR ? (
-          <Navigate to="/logistics" />
-        ) : currentRole === UserRole.SCRAP_COMMITTEE_MEMBER ? (
-          <Navigate to="/assets/scrap/ssc" />
-        ) : (
-          <Navigate to="/warehouse" />
-        )
-      }
-    />
+    <Route path="/" element={<Navigate to={ROLE_REDIRECT[currentRole] || '/warehouse'} />} />
 
     {/* ADMIN SECTION ROUTES */}
-    <Route path="/admin" element={<AdminDashboard />} />
+    <Route
+      path="/admin"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ADMIN_MANAGER_ROLES}>
+          <AdminDashboard />
+        </RoleGuard>
+      }
+    />
 
     {/* Section Landing Pages (V1 - kept for backward compatibility) */}
     <Route path="/admin/inventory" element={<InventorySectionPage />} />
@@ -149,6 +280,7 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     {/* V2 Form Routes */}
     <Route path="/admin/forms/grn" element={<ResourceForm />} />
     <Route path="/admin/forms/grn/:id" element={<ResourceForm />} />
+    <Route path="/admin/forms/qci" element={<ResourceForm />} />
     <Route path="/admin/forms/qci/:id" element={<ResourceForm />} />
     <Route path="/admin/forms/dr" element={<ResourceForm />} />
     <Route path="/admin/forms/dr/:id" element={<ResourceForm />} />
@@ -170,6 +302,34 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/forms/rental-contract/:id" element={<RentalContractForm />} />
     <Route path="/admin/forms/tool-issue" element={<ToolIssueForm />} />
     <Route path="/admin/forms/tool-issue/:id" element={<ToolIssueForm />} />
+    <Route path="/admin/forms/handover" element={<HandoverForm />} />
+    <Route path="/admin/forms/handover/:id" element={<HandoverForm />} />
+    <Route path="/admin/forms/generator-fuel" element={<GeneratorFuelForm />} />
+    <Route path="/admin/forms/generator-fuel/:id" element={<GeneratorFuelForm />} />
+    <Route path="/admin/forms/generator-maintenance" element={<GeneratorMaintenanceForm />} />
+    <Route path="/admin/forms/generator-maintenance/:id" element={<GeneratorMaintenanceForm />} />
+    <Route path="/admin/forms/warehouse-zone" element={<WarehouseZoneForm />} />
+    <Route path="/admin/forms/warehouse-zone/:id" element={<WarehouseZoneForm />} />
+    <Route path="/admin/forms/tool" element={<ToolForm />} />
+    <Route path="/admin/forms/tool/:id" element={<ToolForm />} />
+
+    {/* V2 Dashboard Routes */}
+    <Route path="/admin/dashboards/assets" element={<AssetDashboard />} />
+    <Route path="/admin/dashboards/labor" element={<LaborDashboard />} />
+    <Route path="/admin/dashboards/abc-analysis" element={<AbcAnalysisPage />} />
+    <Route path="/admin/dashboards/forecast" element={<ForecastDashboard />} />
+    <Route path="/admin/warehouse/putaway-rules" element={<PutAwayRulesPage />} />
+    <Route path="/admin/warehouse/cycle-counts" element={<CycleCountListPage />} />
+    <Route path="/admin/warehouse/cycle-counts/:id" element={<CycleCountDetailPage />} />
+    <Route path="/admin/warehouse/wave-picking" element={<WavePickingPage />} />
+    <Route path="/admin/warehouse/asn" element={<AsnPage />} />
+    <Route path="/admin/warehouse/slotting" element={<SlottingPage />} />
+    <Route path="/admin/warehouse/cross-docking" element={<CrossDockDashboard />} />
+    <Route path="/admin/warehouse/sensors" element={<SensorDashboard />} />
+    <Route path="/admin/warehouse/yard" element={<YardDashboard />} />
+    <Route path="/admin/logistics/route-optimizer" element={<RouteOptimizerPage />} />
+    <Route path="/admin/quality/inspection-tools" element={<InspectionToolsPage />} />
+    <Route path="/admin/parallel-approvals" element={<PendingApprovalsPage />} />
 
     {/* V1 Form Routes (kept for backward compatibility) */}
     <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
@@ -234,53 +394,425 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/:section/:resource" element={<AdminResourceList />} />
 
     {/* WAREHOUSE ROUTES */}
-    <Route path="/warehouse" element={<WarehouseDashboard />} />
-    <Route path="/warehouse/:tab" element={<WarehouseDashboard />} />
+    <Route
+      path="/warehouse"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <WarehouseDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/:tab"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <WarehouseDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/abc-analysis"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <AbcAnalysisPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/forecast"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <ForecastDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/putaway-rules"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <PutAwayRulesPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/cycle-counts"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <CycleCountListPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/cycle-counts/:id"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <CycleCountDetailPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/wave-picking"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <WavePickingPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/asn"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <AsnPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/slotting"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <SlottingPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/cross-docking"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <CrossDockDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/sensors"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <SensorDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/yard"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <YardDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/mobile/grn-receive"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <MobileGrnReceive />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/mobile/mi-issue"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <MobileMiIssue />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/mobile/wt-transfer"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <MobileWtTransfer />
+        </RoleGuard>
+      }
+    />
 
     {/* TRANSPORT ROUTES */}
-    <Route path="/transport" element={<TransportDashboard />} />
-    <Route path="/transport/:view" element={<TransportDashboard />} />
+    <Route
+      path="/transport"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={TRANSPORT_ROLES}>
+          <TransportDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/transport/:view"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={TRANSPORT_ROLES}>
+          <TransportDashboard />
+        </RoleGuard>
+      }
+    />
 
     {/* ENGINEER ROUTES */}
-    <Route path="/engineer" element={<EngineerDashboard />} />
-    <Route path="/engineer/*" element={<EngineerDashboard />} />
+    <Route
+      path="/engineer"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <EngineerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/engineer/*"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <EngineerDashboard />
+        </RoleGuard>
+      }
+    />
 
     {/* MANAGER ROUTES */}
-    <Route path="/manager" element={<ManagerDashboard />} />
-    <Route path="/manager/:tab" element={<ManagerDashboard />} />
-    <Route path="/manager/forms/:formType" element={<ResourceForm />} />
-    <Route path="/manager/forms/:formType/:id" element={<ResourceForm />} />
-    <Route path="/manager/tasks" element={<TasksPage />} />
-    <Route path="/manager/documents" element={<DocumentsPage />} />
+    <Route
+      path="/manager"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <ManagerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/:tab"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <ManagerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/forms/:formType"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/forms/:formType/:id"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/documents"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <DocumentsPage />
+        </RoleGuard>
+      }
+    />
 
     {/* QC OFFICER ROUTES */}
-    <Route path="/qc" element={<QCOfficerDashboard />} />
-    <Route path="/qc/:tab" element={<QCOfficerDashboard />} />
-    <Route path="/qc/forms/osd" element={<ResourceForm />} />
-    <Route path="/qc/forms/:formType" element={<ResourceForm />} />
-    <Route path="/qc/tasks" element={<TasksPage />} />
+    <Route
+      path="/qc"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <QCOfficerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/qc/:tab"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <QCOfficerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/qc/forms/osd"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/qc/forms/:formType"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/qc/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/quality/inspection-tools"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={QC_ROLES}>
+          <InspectionToolsPage />
+        </RoleGuard>
+      }
+    />
 
     {/* LOGISTICS COORDINATOR ROUTES */}
-    <Route path="/logistics" element={<LogisticsCoordinatorDashboard />} />
-    <Route path="/logistics/:tab" element={<LogisticsCoordinatorDashboard />} />
-    <Route path="/logistics/forms/jo" element={<ResourceForm />} />
-    <Route path="/logistics/forms/shipment" element={<ShipmentForm />} />
-    <Route path="/logistics/forms/gatepass" element={<GatePassForm />} />
-    <Route path="/logistics/forms/:formType" element={<ResourceForm />} />
-    <Route path="/logistics/forms/:formType/:id" element={<ResourceForm />} />
-    <Route path="/logistics/tasks" element={<TasksPage />} />
+    <Route
+      path="/logistics"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <LogisticsCoordinatorDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/:tab"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <LogisticsCoordinatorDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/forms/jo"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/forms/shipment"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <ShipmentForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/forms/gatepass"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <GatePassForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/forms/:formType"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/forms/:formType/:id"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/logistics/route-optimizer"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={LOGISTICS_ROLES}>
+          <RouteOptimizerPage />
+        </RoleGuard>
+      }
+    />
 
     {/* SITE ENGINEER ROUTES */}
-    <Route path="/site-engineer" element={<SiteEngineerDashboard />} />
-    <Route path="/site-engineer/*" element={<SiteEngineerDashboard />} />
-    <Route path="/site-engineer/forms/:formType" element={<ResourceForm />} />
-    <Route path="/site-engineer/tasks" element={<TasksPage />} />
+    <Route
+      path="/site-engineer"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <SiteEngineerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/site-engineer/*"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <SiteEngineerDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/site-engineer/forms/:formType"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <ResourceForm />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/site-engineer/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
 
     {/* SHARED FEATURE ROUTES */}
-    <Route path="/admin/tasks" element={<TasksPage />} />
-    <Route path="/admin/documents" element={<DocumentsPage />} />
-    <Route path="/warehouse/tasks" element={<TasksPage />} />
-    <Route path="/transport/tasks" element={<TasksPage />} />
-    <Route path="/engineer/tasks" element={<TasksPage />} />
+    <Route
+      path="/admin/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ADMIN_MANAGER_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/admin/documents"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ADMIN_MANAGER_ROLES}>
+          <DocumentsPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/transport/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={TRANSPORT_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/engineer/tasks"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
+          <TasksPage />
+        </RoleGuard>
+      }
+    />
+
+    {/* PENDING APPROVALS — accessible to all authenticated roles */}
+    <Route path="/approvals/pending" element={<PendingApprovalsPage />} />
+
+    {/* 404 Catch-all — must be last */}
+    <Route path="*" element={<NotFoundPage />} />
   </Routes>
 );

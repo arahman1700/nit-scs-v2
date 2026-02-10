@@ -24,6 +24,7 @@ import {
   useMiList,
   useMrnList,
   useMrList,
+  useBinCardList,
 } from '@/api/hooks';
 import { useInventory, useItems } from '@/api/hooks/useMasterData';
 import type { ColumnDef } from '@/config/resourceColumns';
@@ -43,10 +44,11 @@ export const MaterialSectionPage: React.FC = () => {
 
   const inventoryQuery = useInventory({ pageSize: 100 });
   const itemsQuery = useItems({ pageSize: 100 });
+  const binCardQuery = useBinCardList({ pageSize: 100 });
 
   const itemColumns: ColumnDef[] = [
-    { key: 'code', label: 'Item Code' },
-    { key: 'name', label: 'Description' },
+    { key: 'itemCode', label: 'Item Code' },
+    { key: 'itemDescription', label: 'Description' },
     { key: 'category', label: 'Category' },
   ];
 
@@ -102,7 +104,9 @@ export const MaterialSectionPage: React.FC = () => {
               {Object.entries(statusCounts).map(([status, count]) => (
                 <div key={status} className="glass-card p-4 rounded-xl text-center">
                   <p className="text-2xl font-bold text-white">{count}</p>
-                  <p className="text-gray-400 text-xs mt-1">{status}</p>
+                  <p className="text-gray-400 text-xs mt-1">
+                    {status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  </p>
                 </div>
               ))}
             </div>
@@ -130,14 +134,28 @@ export const MaterialSectionPage: React.FC = () => {
                   {grnRows.slice(0, 10).map(r => (
                     <tr key={r.id as string} className="border-b border-white/5 hover:bg-white/5">
                       <td className="px-4 py-3 text-sm text-gray-300">
-                        {(r.documentNumber as string) ?? (r.id as string).slice(0, 8)}
+                        {(r.mrrvNumber as string) ?? (r.documentNumber as string) ?? (r.id as string).slice(0, 8)}
                       </td>
                       <td className="px-4 py-3 text-sm text-white">
-                        {(r.supplierName as string) ?? (r.supplier as string) ?? '-'}
+                        {((r.supplier as Record<string, unknown>)?.supplierName as string) ??
+                          (r.supplierName as string) ??
+                          '-'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{(r.warehouseName as string) ?? '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-400">
-                        {(r.receivedDate as string) ?? (r.createdAt as string)?.slice(0, 10) ?? '-'}
+                        {((r.warehouse as Record<string, unknown>)?.warehouseName as string) ??
+                          (r.warehouseName as string) ??
+                          '-'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-400">
+                        {(() => {
+                          const d = (r.receiveDate as string) ?? (r.createdAt as string);
+                          if (!d) return '-';
+                          return new Date(d).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          });
+                        })()}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={(r.status as string) ?? 'draft'} />
@@ -230,29 +248,13 @@ export const MaterialSectionPage: React.FC = () => {
           />
         ),
         'bin-cards': (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Package className="w-5 h-5 text-nesma-secondary" />
-              <h3 className="text-white font-semibold">Bin Cards</h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="glass-card rounded-xl p-6 text-center">
-                <Package className="w-8 h-8 mx-auto mb-3 text-blue-400" />
-                <h4 className="text-white font-medium mb-1">Physical Tracking</h4>
-                <p className="text-gray-400 text-xs">Zone-Aisle-Shelf format bin locations for all items</p>
-              </div>
-              <div className="glass-card rounded-xl p-6 text-center">
-                <ArrowDownCircle className="w-8 h-8 mx-auto mb-3 text-emerald-400" />
-                <h4 className="text-white font-medium mb-1">GRN Receipts In</h4>
-                <p className="text-gray-400 text-xs">Automatic bin updates on goods receipt</p>
-              </div>
-              <div className="glass-card rounded-xl p-6 text-center">
-                <ArrowUpCircle className="w-8 h-8 mx-auto mb-3 text-amber-400" />
-                <h4 className="text-white font-medium mb-1">MI Issues Out</h4>
-                <p className="text-gray-400 text-xs">FIFO consumption tracked per bin location</p>
-              </div>
-            </div>
-          </div>
+          <DocumentListPanel
+            title="Bin Cards"
+            icon={Package}
+            columns={RESOURCE_COLUMNS['bin-cards'].columns}
+            rows={(binCardQuery.data?.data ?? []) as Record<string, unknown>[]}
+            loading={binCardQuery.isLoading}
+          />
         ),
         'non-moving': (
           <div className="space-y-4">

@@ -29,3 +29,39 @@ export function usePrintLabels() {
     },
   });
 }
+
+// ── Print GRN Labels ────────────────────────────────────────────────────────
+export function useGrnLabels() {
+  return useMutation({
+    mutationFn: async (grnId: string) => {
+      const { data } = await apiClient.post<string>(
+        `/barcodes/print-labels/grn/${grnId}`,
+        {},
+        { responseType: 'text' },
+      );
+      return data;
+    },
+  });
+}
+
+// ── Print Bin QR Labels ─────────────────────────────────────────────────────
+export function useBinQrLabels() {
+  return useMutation({
+    mutationFn: async (params: { binCardIds?: string[]; warehouseId?: string; zoneId?: string }) => {
+      const { data } = await apiClient.post<string>('/barcodes/print-labels/bins', params, { responseType: 'text' });
+      return data;
+    },
+  });
+}
+
+// ── Lookup Bin by Scanned QR Code ───────────────────────────────────────────
+export function useBinLookup(code: string | undefined) {
+  return useQuery({
+    queryKey: ['barcode', 'bin-lookup', code],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<unknown>>(`/barcodes/lookup/bin/${encodeURIComponent(code!)}`);
+      return data;
+    },
+    enabled: !!code,
+  });
+}

@@ -138,9 +138,9 @@ export const WarehouseDashboard: React.FC = () => {
         <div className="flex flex-wrap gap-2 p-1 bg-white/5 rounded-xl border border-white/10 w-full md:w-auto overflow-x-auto">
           {[
             { key: 'overview', label: 'Overview' },
-            { key: 'receive', label: 'Receive (MRRV)' },
-            { key: 'issue', label: 'Issue (MIRV)' },
-            { key: 'return', label: 'Return (MRV)' },
+            { key: 'receive', label: 'Receive (GRN)' },
+            { key: 'issue', label: 'Issue (MI)' },
+            { key: 'return', label: 'Return (MRN)' },
             { key: 'inventory', label: 'Inventory' },
           ].map(t => (
             <button
@@ -173,21 +173,21 @@ export const WarehouseDashboard: React.FC = () => {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard
-              title="Pending MRRV"
+              title="Pending GRN"
               value={`${pendingMRRV.length}`}
               icon={ArrowDownCircle}
               colorClass="border-emerald-500"
               bgClass="bg-emerald-500 text-emerald-400"
             />
             <StatCard
-              title="Approved MIRV"
+              title="Approved MI"
               value={`${approvedMIRV.length}`}
               icon={ArrowUpCircle}
               colorClass="border-blue-500"
               bgClass="bg-blue-500 text-blue-400"
             />
             <StatCard
-              title="Pending MRV"
+              title="Pending MRN"
               value={`${pendingMRV.length}`}
               icon={RefreshCw}
               colorClass="border-amber-500"
@@ -203,10 +203,10 @@ export const WarehouseDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent MRRV */}
+            {/* Recent GRN */}
             <div className="glass-card p-6 rounded-xl">
               <h3 className="font-bold text-lg text-white mb-4 border-b border-white/10 pb-2 flex items-center justify-between">
-                <span>Recent MRRV</span>
+                <span>Recent GRN</span>
                 <button
                   onClick={() => handleTabChange('receive')}
                   className="text-xs text-nesma-secondary hover:text-white flex items-center gap-1"
@@ -242,10 +242,10 @@ export const WarehouseDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Recent MIRV */}
+            {/* Recent MI */}
             <div className="glass-card p-6 rounded-xl">
               <h3 className="font-bold text-lg text-white mb-4 border-b border-white/10 pb-2 flex items-center justify-between">
-                <span>Recent MIRV</span>
+                <span>Recent MI</span>
                 <button
                   onClick={() => handleTabChange('issue')}
                   className="text-xs text-nesma-secondary hover:text-white flex items-center gap-1"
@@ -315,11 +315,11 @@ export const WarehouseDashboard: React.FC = () => {
         </>
       )}
 
-      {/* ======================== RECEIVE (MRRV) TAB ======================== */}
+      {/* ======================== RECEIVE (GRN) TAB ======================== */}
       {activeTab === 'receive' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">Material Receiving (MRRV)</h2>
+            <h2 className="text-xl font-bold text-white">Material Receiving (GRN)</h2>
             <Link
               to="/warehouse/forms/mrrv"
               onClick={e => {
@@ -359,7 +359,7 @@ export const WarehouseDashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* MRRV Table */}
+          {/* GRN Table */}
           <div className="glass-card rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -371,7 +371,7 @@ export const WarehouseDashboard: React.FC = () => {
                     <th className="px-6 py-4 font-medium">Warehouse</th>
                     <th className="px-6 py-4 font-medium">Value</th>
                     <th className="px-6 py-4 font-medium">PO</th>
-                    <th className="px-6 py-4 font-medium">RFIM</th>
+                    <th className="px-6 py-4 font-medium">QCI</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium"></th>
                   </tr>
@@ -417,11 +417,11 @@ export const WarehouseDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ======================== ISSUE (MIRV) TAB ======================== */}
+      {/* ======================== ISSUE (MI) TAB ======================== */}
       {activeTab === 'issue' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">Material Issue (MIRV)</h2>
+            <h2 className="text-xl font-bold text-white">Material Issue (MI)</h2>
             <button
               onClick={() => navigate('/admin/forms/mirv')}
               className="flex items-center gap-2 px-4 py-2 bg-nesma-primary text-white rounded-xl text-sm hover:bg-nesma-accent transition-all shadow-lg shadow-nesma-primary/20"
@@ -458,7 +458,7 @@ export const WarehouseDashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* MIRV Table */}
+          {/* MI Table */}
           <div className="glass-card rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -516,11 +516,11 @@ export const WarehouseDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ======================== RETURN (MRV) TAB ======================== */}
+      {/* ======================== RETURN (MRN) TAB ======================== */}
       {activeTab === 'return' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">Material Return (MRV)</h2>
+            <h2 className="text-xl font-bold text-white">Material Return (MRN)</h2>
             <button
               onClick={() => navigate('/admin/forms/mrv')}
               className="flex items-center gap-2 px-4 py-2 bg-nesma-primary text-white rounded-xl text-sm hover:bg-nesma-accent transition-all shadow-lg shadow-nesma-primary/20"
@@ -530,7 +530,7 @@ export const WarehouseDashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* MRV Cards */}
+          {/* MRN Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mrvData.map(mrv => (
               <div

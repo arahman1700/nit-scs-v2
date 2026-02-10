@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, Truck, CheckCircle } from 'lucide-react';
+import { Save, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { useProjects } from '@/api/hooks/useMasterData';
+import { useCreateImsf } from '@/api/hooks/useImsf';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 
@@ -18,16 +19,29 @@ export const ImsfForm: React.FC = () => {
   const projects = (projectQuery.data?.data ?? []) as Project[];
 
   const nextNumber = useMemo(() => previewNextNumber('imsf'), []);
+  const createMutation = useCreateImsf();
 
   const [submitted, setSubmitted] = useState(false);
   const [documentNumber, setDocumentNumber] = useState<string | null>(null);
-  const submitting = false;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: wire up useCreateImsf mutation
-    setSubmitted(true);
-    setDocumentNumber(nextNumber);
+    const payload = {
+      ...formData,
+      lines: lineItems.map(li => ({
+        itemCode: li.itemCode,
+        itemName: li.itemName,
+        unit: li.unit,
+        quantity: li.quantity,
+      })),
+    };
+    createMutation.mutate(payload, {
+      onSuccess: res => {
+        const doc = res as unknown as { data?: { imsfNumber?: string } };
+        setDocumentNumber(doc.data?.imsfNumber ?? nextNumber);
+        setSubmitted(true);
+      },
+    });
   };
 
   if (submitted) {
@@ -143,11 +157,11 @@ export const ImsfForm: React.FC = () => {
         </button>
         <button
           type="submit"
-          disabled={submitting || lineItems.length === 0}
+          disabled={createMutation.isPending || lineItems.length === 0}
           className="btn-primary px-6 py-2 rounded-lg flex items-center gap-2"
         >
-          <Save className="w-4 h-4" />
-          {submitting ? 'Creating...' : 'Create IMSF'}
+          {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {createMutation.isPending ? 'Creating...' : 'Create IMSF'}
         </button>
       </div>
     </form>

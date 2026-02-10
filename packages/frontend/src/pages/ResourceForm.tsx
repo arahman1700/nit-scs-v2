@@ -201,7 +201,7 @@ export const ResourceForm: React.FC = () => {
             </div>
           ))}
 
-          {/* Line Items Section for MRRV, MIRV, MRV */}
+          {/* Line Items Section for GRN, MI, MRN */}
           {hasLineItems && (
             <LineItemsTable
               items={lineItems}
@@ -230,12 +230,12 @@ export const ResourceForm: React.FC = () => {
             <div className="flex gap-3 flex-wrap">
               {Boolean(formData.rfimRequired) && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-400">
-                  <Info size={14} /> Auto-creates RFIM inspection request
+                  <Info size={14} /> Auto-creates QCI inspection request
                 </div>
               )}
               {lineItems.some(li => li.condition === 'Damaged') && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-400">
-                  <AlertTriangle size={14} /> Damaged items detected -- OSD report will be created
+                  <AlertTriangle size={14} /> Damaged items detected -- DR report will be created
                 </div>
               )}
             </div>

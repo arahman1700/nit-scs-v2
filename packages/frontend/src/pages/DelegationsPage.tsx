@@ -22,15 +22,15 @@ import type { DelegationRule } from '@/api/hooks/useDelegations';
 
 const SCOPE_OPTIONS = [
   { value: 'all', label: 'All Documents' },
-  { value: 'mrrv', label: 'MRRV' },
-  { value: 'mirv', label: 'MIRV' },
-  { value: 'mrv', label: 'MRV' },
-  { value: 'rfim', label: 'RFIM' },
-  { value: 'osd', label: 'OSD' },
+  { value: 'mrrv', label: 'GRN' },
+  { value: 'mirv', label: 'MI' },
+  { value: 'mrv', label: 'MRN' },
+  { value: 'rfim', label: 'QCI' },
+  { value: 'osd', label: 'DR' },
   { value: 'job-order', label: 'Job Orders' },
   { value: 'gate-pass', label: 'Gate Pass' },
   { value: 'stock-transfer', label: 'Stock Transfer' },
-  { value: 'mrf', label: 'MRF' },
+  { value: 'mrf', label: 'MR' },
   { value: 'shipment', label: 'Shipments' },
 ];
 

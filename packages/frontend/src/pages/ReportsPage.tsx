@@ -219,7 +219,7 @@ export const ReportsPage: React.FC = () => {
       sla: { title: 'SLA Compliance', columns: ['JO#', 'SLA Target', 'Actual', 'Status'], dataQ: slaQ },
       material: {
         title: 'Material Movement',
-        columns: ['Date', 'MRRV Count', 'MIRV Count', 'MRV Count'],
+        columns: ['Date', 'GRN Count', 'MI Count', 'MRN Count'],
         dataQ: materialQ,
       },
       supplier: {
@@ -389,9 +389,9 @@ export const ReportsPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <KpiCard label="Total MRRV" value={num(s.totalMRRV).toLocaleString()} color="text-emerald-400" />
-          <KpiCard label="Total MIRV" value={num(s.totalMIRV).toLocaleString()} color="text-nesma-secondary" />
-          <KpiCard label="Total MRV" value={num(s.totalMRV).toLocaleString()} color="text-amber-400" />
+          <KpiCard label="Total GRN" value={num(s.totalMRRV).toLocaleString()} color="text-emerald-400" />
+          <KpiCard label="Total MI" value={num(s.totalMIRV).toLocaleString()} color="text-nesma-secondary" />
+          <KpiCard label="Total MRN" value={num(s.totalMRV).toLocaleString()} color="text-amber-400" />
           <KpiCard label="Net Movement" value={num(s.netMovement).toLocaleString()} />
         </div>
         <ChartWrapper title="Material Movement Over Time">
@@ -401,12 +401,12 @@ export const ReportsPage: React.FC = () => {
             <YAxis tick={AXIS_TICK} />
             <Tooltip contentStyle={TOOLTIP_STYLE} />
             <Legend wrapperStyle={{ color: '#9CA3AF', fontSize: 12 }} />
-            <Line type="monotone" dataKey="mrrv" stroke="#4CAF50" strokeWidth={2} name="MRRV" dot={false} />
-            <Line type="monotone" dataKey="mirv" stroke="#80D1E9" strokeWidth={2} name="MIRV" dot={false} />
-            <Line type="monotone" dataKey="mrv" stroke="#FF9800" strokeWidth={2} name="MRV" dot={false} />
+            <Line type="monotone" dataKey="mrrv" stroke="#4CAF50" strokeWidth={2} name="GRN" dot={false} />
+            <Line type="monotone" dataKey="mirv" stroke="#80D1E9" strokeWidth={2} name="MI" dot={false} />
+            <Line type="monotone" dataKey="mrv" stroke="#FF9800" strokeWidth={2} name="MRN" dot={false} />
           </LineChart>
         </ChartWrapper>
-        <DataTable columns={['Date', 'MRRV Count', 'MIRV Count', 'MRV Count']} rows={rows} />
+        <DataTable columns={['Date', 'GRN Count', 'MI Count', 'MRN Count']} rows={rows} />
       </div>
     );
   };
@@ -441,8 +441,8 @@ export const ReportsPage: React.FC = () => {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <KpiCard label="MRRV Total" value={formatCurrency(num(s.mrrvTotal))} sub={`${num(s.mrrvCount)} receipts`} />
-          <KpiCard label="MIRV Total" value={formatCurrency(num(s.mirvTotal))} sub={`${num(s.mirvCount)} issuances`} />
+          <KpiCard label="GRN Total" value={formatCurrency(num(s.mrrvTotal))} sub={`${num(s.mrrvCount)} receipts`} />
+          <KpiCard label="MI Total" value={formatCurrency(num(s.mirvTotal))} sub={`${num(s.mirvCount)} issuances`} />
           <KpiCard label="JO Costs" value={formatCurrency(num(s.joCosts))} sub={`${num(s.joCount)} orders`} />
           <KpiCard label="Inventory Value" value={formatCurrency(num(s.inventoryValue))} color="text-nesma-secondary" />
         </div>

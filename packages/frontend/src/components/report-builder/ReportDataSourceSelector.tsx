@@ -1,13 +1,13 @@
 import React from 'react';
 
 const ENTITY_TYPES = [
-  { value: 'mrrv', label: 'Material Receiving (MRRV)' },
-  { value: 'mirv', label: 'Material Issuing (MIRV)' },
-  { value: 'mrv', label: 'Material Returns (MRV)' },
-  { value: 'mrf', label: 'Material Requisitions (MRF)' },
+  { value: 'mrrv', label: 'Goods Receipt Notes (GRN)' },
+  { value: 'mirv', label: 'Material Issuance (MI)' },
+  { value: 'mrv', label: 'Material Return Notes (MRN)' },
+  { value: 'mrf', label: 'Material Requests (MR)' },
   { value: 'jo', label: 'Job Orders' },
-  { value: 'rfim', label: 'Inspections (RFIM)' },
-  { value: 'osd', label: 'OSD Reports' },
+  { value: 'rfim', label: 'Quality Control Inspections (QCI)' },
+  { value: 'osd', label: 'Discrepancy Reports (DR)' },
   { value: 'inventory', label: 'Inventory' },
   { value: 'shipments', label: 'Shipments' },
   { value: 'gate_pass', label: 'Gate Passes' },

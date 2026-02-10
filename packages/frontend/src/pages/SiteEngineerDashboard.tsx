@@ -49,7 +49,7 @@ export const SiteEngineerDashboard: React.FC = () => {
     const items = [
       ...allMirvs.slice(0, 50).map(m => ({
         id: m.id as string,
-        type: 'MIRV' as const,
+        type: 'MI' as const,
         title: `Material Issue - ${(m.project as string) || ''}`,
         date: m.date as string,
         status: m.status as string,
@@ -65,8 +65,8 @@ export const SiteEngineerDashboard: React.FC = () => {
       })),
       ...allMrfs.slice(0, 50).map(m => ({
         id: m.id as string,
-        type: 'MRF' as const,
-        title: `Material Requisition - ${(m.project as string) || ''}`,
+        type: 'MR' as const,
+        title: `Material Request - ${(m.project as string) || ''}`,
         date: m.date as string,
         status: m.status as string,
         value: 0,
@@ -200,7 +200,7 @@ export const SiteEngineerDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              title: 'Material Issue (MIRV)',
+              title: 'Material Issue (MI)',
               desc: 'Request materials from warehouse',
               icon: Package,
               path: '/site-engineer/forms/mirv',
@@ -214,7 +214,7 @@ export const SiteEngineerDashboard: React.FC = () => {
               color: 'bg-nesma-primary',
             },
             {
-              title: 'Material Requisition (MRF)',
+              title: 'Material Request (MR)',
               desc: 'Request materials to be purchased',
               icon: FileText,
               path: '/site-engineer/forms/mrf',

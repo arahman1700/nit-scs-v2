@@ -4,7 +4,8 @@ import { toast } from '@/components/Toaster';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000, // 30 seconds
+      staleTime: 30_000, // 30 seconds — data stays fresh
+      gcTime: 5 * 60_000, // 5 minutes — garbage collection time
       retry: 2,
       refetchOnWindowFocus: false,
     },

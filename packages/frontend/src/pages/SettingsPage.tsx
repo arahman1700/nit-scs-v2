@@ -129,7 +129,7 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div className="p-6 space-y-6">
           <div>
-            <h4 className="text-sm font-bold text-gray-300 mb-3">MIRV / MRF Approval (5 Levels)</h4>
+            <h4 className="text-sm font-bold text-gray-300 mb-3">MI / MR Approval (5 Levels)</h4>
             <div className="space-y-2">
               {MI_APPROVAL_LEVELS.map(level => (
                 <div

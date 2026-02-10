@@ -108,6 +108,20 @@ export function useConvertMiMr() {
   });
 }
 
+export function useConvertMrToImsf() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, receiverProjectId }: { id: string; receiverProjectId: string }) => {
+      const { data } = await apiClient.post<ApiResponse<unknown>>(`/mr/${id}/convert-to-imsf`, { receiverProjectId });
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mr'] });
+      qc.invalidateQueries({ queryKey: ['imsf'] });
+    },
+  });
+}
+
 export function useFulfillMr() {
   const qc = useQueryClient();
   return useMutation({

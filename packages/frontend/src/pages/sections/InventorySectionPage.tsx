@@ -115,7 +115,7 @@ export const InventorySectionPage: React.FC = () => {
         tabs={tabs}
         loading={invLoading}
         quickActions={[
-          { label: 'New Receipt (MRRV)', icon: ArrowDownCircle, onClick: () => navigate('/admin/forms/mrrv') },
+          { label: 'New Receipt (GRN)', icon: ArrowDownCircle, onClick: () => navigate('/admin/forms/grn') },
           {
             label: 'Stock Transfer',
             icon: ArrowRightLeft,

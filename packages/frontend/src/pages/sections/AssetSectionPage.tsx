@@ -20,10 +20,10 @@ export const AssetSectionPage: React.FC = () => {
   const toolQuery = useToolList({ pageSize: 50 });
 
   const kpis: KpiCardProps[] = [
-    { title: 'Active Surplus', value: 0, icon: TrendingDown, color: 'bg-amber-500' },
-    { title: 'Scrap Pending', value: 0, icon: Recycle, color: 'bg-red-500' },
+    { title: 'Active Surplus', value: surplusQuery.data?.meta?.total ?? 0, icon: TrendingDown, color: 'bg-amber-500' },
+    { title: 'Scrap Pending', value: scrapQuery.data?.meta?.total ?? 0, icon: Recycle, color: 'bg-red-500' },
     { title: 'SSC Bids', value: 0, icon: Gavel, color: 'bg-purple-500' },
-    { title: 'Tools Issued', value: 0, icon: Wrench, color: 'bg-blue-500' },
+    { title: 'Tools Registered', value: toolQuery.data?.meta?.total ?? 0, icon: Wrench, color: 'bg-blue-500' },
   ];
 
   const tabs: TabDef[] = [
@@ -42,10 +42,11 @@ export const AssetSectionPage: React.FC = () => {
       subtitle="Surplus, scrap, tools, fixed assets, and depreciation management"
       kpis={kpis}
       tabs={tabs}
-      loading={false}
+      loading={surplusQuery.isLoading || scrapQuery.isLoading || toolQuery.isLoading}
       quickActions={[
         { label: 'Report Surplus', icon: TrendingDown, onClick: () => navigate('/admin/forms/surplus') },
         { label: 'Report Scrap', icon: Recycle, onClick: () => navigate('/admin/forms/scrap'), variant: 'secondary' },
+        { label: 'New Tool', icon: Wrench, onClick: () => navigate('/admin/forms/tool'), variant: 'secondary' },
       ]}
       children={{
         overview: (
@@ -158,48 +159,37 @@ export const AssetSectionPage: React.FC = () => {
                         className="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0"
                       >
                         <span className="text-gray-400 text-sm">{cat}</span>
-                        <span className="text-white text-sm font-medium">0</span>
+                        <span className="text-gray-500 text-xs italic">Pending integration</span>
                       </div>
                     ),
                   )}
                 </div>
               </div>
-              <div className="glass-card rounded-xl p-6">
+              <div className="glass-card rounded-xl p-6 col-span-2">
                 <div className="flex items-center gap-3 mb-3">
                   <Package className="w-6 h-6 text-emerald-400" />
-                  <h4 className="text-white font-medium">Asset Summary</h4>
+                  <h4 className="text-white font-medium">Fixed Asset Management</h4>
                 </div>
-                <div className="space-y-3">
-                  <div className="text-center py-2">
-                    <p className="text-3xl font-bold text-white">0</p>
-                    <p className="text-gray-500 text-xs mt-1">Total Assets</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="text-center p-2 bg-white/5 rounded-lg">
-                      <p className="text-lg font-bold text-emerald-400">0</p>
-                      <p className="text-gray-500 text-xs">Active</p>
-                    </div>
-                    <div className="text-center p-2 bg-white/5 rounded-lg">
-                      <p className="text-lg font-bold text-amber-400">0</p>
-                      <p className="text-gray-500 text-xs">Disposed</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="glass-card rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <TrendingDown className="w-6 h-6 text-amber-400" />
-                  <h4 className="text-white font-medium">Depreciation</h4>
-                </div>
-                <p className="text-gray-400 text-sm mb-3">
-                  Track asset value over time with straight-line depreciation.
+                <p className="text-gray-400 text-sm mb-4">
+                  Track company fixed assets including buildings, vehicles, equipment, and IT infrastructure. Assets are
+                  linked to depreciation schedules for accurate financial reporting.
                 </p>
-                <button
-                  onClick={() => navigate('/admin/assets?tab=depreciation')}
-                  className="text-nesma-secondary text-xs hover:underline"
-                >
-                  View Depreciation Dashboard
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => navigate('/admin/assets?tab=depreciation')}
+                    className="text-nesma-secondary text-sm hover:underline flex items-center gap-1"
+                  >
+                    <TrendingDown className="w-4 h-4" />
+                    View Depreciation Dashboard
+                  </button>
+                  <button
+                    onClick={() => navigate('/admin/assets?tab=tools')}
+                    className="text-nesma-secondary text-sm hover:underline flex items-center gap-1"
+                  >
+                    <Wrench className="w-4 h-4" />
+                    Tool Management
+                  </button>
+                </div>
               </div>
             </div>
           </div>

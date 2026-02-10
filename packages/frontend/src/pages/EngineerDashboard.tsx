@@ -46,7 +46,7 @@ export const EngineerDashboard: React.FC = () => {
 
   const project = useMemo(() => allProjects.find(p => p.id === CURRENT_ENGINEER.projectId), [allProjects]);
 
-  // Engineer's material requests (MIRVs)
+  // Engineer's material requests (MIs)
   const myMirvs = useMemo(() => allMirvs.filter(m => m.requester === CURRENT_ENGINEER.shortName), [allMirvs]);
 
   // Engineer's job orders
@@ -59,7 +59,7 @@ export const EngineerDashboard: React.FC = () => {
   const allRequests = useMemo(() => {
     const mirvRequests = myMirvs.map(m => ({
       id: m.id as string,
-      type: 'MIRV' as const,
+      type: 'MI' as const,
       title: `Material Issue - ${m.project as string}`,
       date: m.date as string,
       status: m.status as string,
@@ -86,11 +86,11 @@ export const EngineerDashboard: React.FC = () => {
     }).length;
     const pending = allRequests.filter(r => {
       const s = r.status as string;
-      return s === 'Draft' || s === 'Pending Approval' || s === JobStatus.NEW;
+      return s === 'Draft' || s === 'pending_approval' || s === JobStatus.DRAFT;
     }).length;
     const inProgress = allRequests.filter(r => {
       const s = r.status as string;
-      return s === 'Approved' || s === 'In Progress' || s === JobStatus.IN_PROGRESS || s === JobStatus.ASSIGNING;
+      return s === 'approved' || s === 'In Progress' || s === JobStatus.IN_PROGRESS || s === JobStatus.ASSIGNED;
     }).length;
     const totalValue = allRequests.reduce((sum, r) => sum + (r.value || 0), 0);
     return { completed, pending, inProgress, totalValue };
@@ -125,7 +125,7 @@ export const EngineerDashboard: React.FC = () => {
 
         {/* Filter Tabs */}
         <div className="flex gap-2">
-          {['All', 'MIRV', 'JO'].map(f => (
+          {['All', 'MI', 'JO'].map(f => (
             <button
               key={f}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
@@ -134,7 +134,7 @@ export const EngineerDashboard: React.FC = () => {
                   : 'bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10'
               }`}
             >
-              {f === 'All' ? 'All' : f === 'MIRV' ? 'Material' : 'Job Orders'}
+              {f === 'All' ? 'All' : f === 'MI' ? 'Material' : 'Job Orders'}
             </button>
           ))}
         </div>
@@ -162,7 +162,7 @@ export const EngineerDashboard: React.FC = () => {
                     <td className="py-3 px-4">
                       <span
                         className={`text-xs px-2.5 py-1 rounded-full font-medium border ${
-                          req.type === 'MIRV'
+                          req.type === 'MI'
                             ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
                             : 'bg-orange-500/10 text-orange-400 border-orange-500/20'
                         }`}
@@ -223,7 +223,7 @@ export const EngineerDashboard: React.FC = () => {
               <div className="p-2 bg-blue-500/20 rounded-lg">
                 <Package size={18} className="text-blue-400" />
               </div>
-              <span className="text-sm text-gray-400">MIRVs</span>
+              <span className="text-sm text-gray-400">MIs</span>
             </div>
             <p className="text-2xl font-bold text-white">{myMirvs.length}</p>
           </div>
@@ -330,7 +330,7 @@ export const EngineerDashboard: React.FC = () => {
                 <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
                   Material Issue Request
                 </h3>
-                <p className="text-sm text-gray-400">MIRV</p>
+                <p className="text-sm text-gray-400">MI</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -372,7 +372,7 @@ export const EngineerDashboard: React.FC = () => {
                 <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
                   Material Return
                 </h3>
-                <p className="text-sm text-gray-400">MRV</p>
+                <p className="text-sm text-gray-400">MRN</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -391,13 +391,13 @@ export const EngineerDashboard: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white group-hover:text-nesma-secondary transition-colors">
-                  OSD Report
+                  Discrepancy Report
                 </h3>
-                <p className="text-sm text-gray-400">Over/Short/Damage</p>
+                <p className="text-sm text-gray-400">DR</p>
               </div>
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">
-              Report shortage, overage, or damage in received materials.
+              Report discrepancies (shortage, overage, or damage) in received materials.
             </p>
           </button>
         </div>

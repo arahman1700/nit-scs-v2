@@ -72,7 +72,7 @@ export const QualitySectionPage: React.FC = () => {
   const kpis: KpiCardProps[] = [
     { title: 'Pending Returns', value: pendingReturns, icon: RotateCcw, color: 'bg-amber-500' },
     { title: 'Open Inspections', value: openInspections, icon: Search, color: 'bg-blue-500' },
-    { title: 'OSD Reports', value: osdTotal, icon: AlertTriangle, color: 'bg-red-500' },
+    { title: 'DR Reports', value: osdTotal, icon: AlertTriangle, color: 'bg-red-500' },
     { title: 'QC Pass Rate', value: `${qcPassRate}%`, icon: CheckCircle, color: 'bg-emerald-500' },
   ];
 
@@ -82,7 +82,7 @@ export const QualitySectionPage: React.FC = () => {
     { key: 'overview', label: 'Overview' },
     { key: 'mrv', label: 'Returns', badge: pendingReturns },
     { key: 'rfim', label: 'Inspections', badge: openInspections },
-    { key: 'osd', label: 'OSD Reports' },
+    { key: 'osd', label: 'DR Reports' },
   ];
 
   // ── Overview: Returns by type chart data ──────────────────────────────────
@@ -110,17 +110,17 @@ export const QualitySectionPage: React.FC = () => {
   // ── Quick actions ─────────────────────────────────────────────────────────
 
   const quickActions = [
-    { label: 'New Return', icon: RotateCcw, onClick: () => navigate('/admin/forms/mrv') },
+    { label: 'New Return', icon: RotateCcw, onClick: () => navigate('/admin/forms/mrn') },
     {
       label: 'Inspection Request',
       icon: ClipboardList,
-      onClick: () => navigate('/admin/forms/rfim'),
+      onClick: () => navigate('/admin/forms/qci'),
       variant: 'secondary' as const,
     },
     {
-      label: 'OSD Report',
+      label: 'DR Report',
       icon: FileWarning,
-      onClick: () => navigate('/admin/forms/osd'),
+      onClick: () => navigate('/admin/forms/dr'),
       variant: 'secondary' as const,
     },
   ];
@@ -257,7 +257,7 @@ export const QualitySectionPage: React.FC = () => {
         {mrvData.length > 15 && (
           <div className="p-3 text-center border-t border-white/10">
             <button
-              onClick={() => navigate('/admin/list/mrv')}
+              onClick={() => navigate('/admin/list/mrn')}
               className="text-nesma-secondary text-sm hover:underline"
             >
               View All {mrvQuery.data?.meta?.total ?? mrvData.length} Returns
@@ -287,7 +287,7 @@ export const QualitySectionPage: React.FC = () => {
           <thead>
             <tr className="border-b border-white/10">
               <th className="text-left p-4 text-nesma-secondary font-medium">ID</th>
-              <th className="text-left p-4 text-nesma-secondary font-medium">MRRV Ref</th>
+              <th className="text-left p-4 text-nesma-secondary font-medium">GRN Ref</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Report Type</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Qty Affected</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Action</th>
@@ -313,7 +313,7 @@ export const QualitySectionPage: React.FC = () => {
             {osdData.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-gray-500">
-                  No OSD reports found
+                  No DR reports found
                 </td>
               </tr>
             )}
@@ -321,11 +321,8 @@ export const QualitySectionPage: React.FC = () => {
         </table>
         {osdData.length > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button
-              onClick={() => navigate('/admin/list/osd')}
-              className="text-nesma-secondary text-sm hover:underline"
-            >
-              View All {osdTotal} OSD Reports
+            <button onClick={() => navigate('/admin/list/dr')} className="text-nesma-secondary text-sm hover:underline">
+              View All {osdTotal} DR Reports
             </button>
           </div>
         )}

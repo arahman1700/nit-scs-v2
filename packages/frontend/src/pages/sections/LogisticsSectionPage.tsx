@@ -30,6 +30,7 @@ import {
   useGatePassList,
   useRentalContractList,
   useShipmentList,
+  useGeneratorMaintenanceList,
 } from '@/api/hooks';
 
 const LazyKanban = React.lazy(() =>
@@ -61,6 +62,7 @@ export const LogisticsSectionPage: React.FC = () => {
   const gpQuery = useGatePassList({ pageSize: 50 });
   const rcQuery = useRentalContractList({ pageSize: 50 });
   const shipQuery = useShipmentList({ pageSize: 50 });
+  const genQuery = useGeneratorMaintenanceList({ pageSize: 50 });
 
   const stats = statsQuery.data?.data;
   const sla = slaQuery.data?.data;
@@ -428,11 +430,13 @@ export const LogisticsSectionPage: React.FC = () => {
 
     generators: (
       <DocumentListPanel
-        title="Generators"
+        title="Generator Maintenance"
         icon={Zap}
         columns={RESOURCE_COLUMNS.generators.columns}
-        rows={[]}
-        loading={false}
+        rows={(genQuery.data?.data ?? []) as Record<string, unknown>[]}
+        loading={genQuery.isLoading}
+        createLabel="New Maintenance"
+        createUrl="/admin/forms/generator-maintenance"
       />
     ),
 

@@ -15,6 +15,13 @@ export interface ResourceConfig {
 }
 
 const sarFormat = (v: unknown) => `${(v as number)?.toLocaleString()} SAR`;
+const dateFormat = (v: unknown) => {
+  if (!v) return '-';
+  const d = new Date(v as string);
+  return isNaN(d.getTime())
+    ? String(v)
+    : d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 const statusCol = (v: unknown) => <StatusBadge status={v as string} />;
 const slaCol = (v: unknown) => {
   const val = v as string;
@@ -29,8 +36,8 @@ const slaCol = (v: unknown) => {
 
 const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
   mrrv: {
-    title: 'Receipt Vouchers',
-    code: 'MRRV',
+    title: 'Goods Receipt Notes',
+    code: 'GRN',
     columns: [
       { key: 'id', label: 'ID' },
       { key: 'supplier', label: 'Supplier' },
@@ -42,8 +49,8 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     ],
   },
   mirv: {
-    title: 'Issue Vouchers',
-    code: 'MIRV',
+    title: 'Material Issuance',
+    code: 'MI',
     columns: [
       { key: 'id', label: 'ID' },
       { key: 'project', label: 'Project' },
@@ -55,8 +62,8 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     ],
   },
   mrv: {
-    title: 'Return Vouchers',
-    code: 'MRV',
+    title: 'Material Return Notes',
+    code: 'MRN',
     columns: [
       { key: 'id', label: 'ID' },
       { key: 'returnType', label: 'Return Type' },
@@ -84,13 +91,12 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Inventory Levels',
     code: 'INV',
     columns: [
-      { key: 'code', label: 'Item Code' },
-      { key: 'name', label: 'Description' },
-      { key: 'warehouse', label: 'Warehouse' },
-      { key: 'quantity', label: 'Available Qty' },
-      { key: 'reserved', label: 'Reserved' },
-      { key: 'onOrder', label: 'On Order' },
-      { key: 'stockStatus', label: 'Status', component: statusCol },
+      { key: 'item.itemCode', label: 'Item Code' },
+      { key: 'item.itemDescription', label: 'Description' },
+      { key: 'warehouse.warehouseName', label: 'Warehouse' },
+      { key: 'qtyOnHand', label: 'Available Qty' },
+      { key: 'qtyReserved', label: 'Reserved' },
+      { key: 'lastMovementDate', label: 'Last Movement', format: dateFormat },
     ],
   },
   'job-orders': {
@@ -109,11 +115,11 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     ],
   },
   rfim: {
-    title: 'Inspection Requests',
-    code: 'RFIM',
+    title: 'Quality Control Inspections',
+    code: 'QCI',
     columns: [
       { key: 'id', label: 'ID' },
-      { key: 'mrrvId', label: 'MRRV ID' },
+      { key: 'mrrvId', label: 'GRN ID' },
       { key: 'inspectionType', label: 'Inspection Type' },
       { key: 'priority', label: 'Priority' },
       { key: 'status', label: 'Result', component: statusCol },
@@ -121,11 +127,11 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     ],
   },
   osd: {
-    title: 'OSD Reports',
-    code: 'OSD',
+    title: 'Discrepancy Reports',
+    code: 'DR',
     columns: [
       { key: 'id', label: 'ID' },
-      { key: 'mrrvId', label: 'MRRV ID' },
+      { key: 'mrrvId', label: 'GRN ID' },
       { key: 'reportType', label: 'Type' },
       { key: 'qtyAffected', label: 'Qty' },
       { key: 'actionRequired', label: 'Action' },
@@ -250,10 +256,10 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Goods Receipt Notes',
     code: 'GRN',
     columns: [
-      { key: 'documentNumber', label: 'GRN #' },
-      { key: 'supplierName', label: 'Supplier' },
-      { key: 'warehouseName', label: 'Warehouse' },
-      { key: 'receivedDate', label: 'Date' },
+      { key: 'mrrvNumber', label: 'GRN #' },
+      { key: 'supplier.supplierName', label: 'Supplier' },
+      { key: 'warehouse.warehouseName', label: 'Warehouse' },
+      { key: 'receiveDate', label: 'Date', format: dateFormat },
       { key: 'totalValue', label: 'Value', format: sarFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
@@ -262,10 +268,10 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Quality Control Inspections',
     code: 'QCI',
     columns: [
-      { key: 'documentNumber', label: 'QCI #' },
-      { key: 'grnNumber', label: 'GRN Ref' },
-      { key: 'inspectorName', label: 'Inspector' },
-      { key: 'inspectionDate', label: 'Date' },
+      { key: 'rfimNumber', label: 'QCI #' },
+      { key: 'mrrv.mrrvNumber', label: 'GRN Ref' },
+      { key: 'inspector.fullName', label: 'Inspector' },
+      { key: 'inspectionDate', label: 'Date', format: dateFormat },
       { key: 'result', label: 'Result' },
       { key: 'status', label: 'Status', component: statusCol },
     ],
@@ -274,10 +280,10 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Discrepancy Reports',
     code: 'DR',
     columns: [
-      { key: 'documentNumber', label: 'DR #' },
-      { key: 'grnNumber', label: 'GRN Ref' },
-      { key: 'discrepancyType', label: 'Type' },
-      { key: 'description', label: 'Description' },
+      { key: 'osdNumber', label: 'DR #' },
+      { key: 'mrrv.mrrvNumber', label: 'GRN Ref' },
+      { key: 'supplier.supplierName', label: 'Supplier' },
+      { key: 'reportDate', label: 'Date', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -285,12 +291,12 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Material Issuance',
     code: 'MI',
     columns: [
-      { key: 'documentNumber', label: 'MI #' },
-      { key: 'projectName', label: 'Project' },
-      { key: 'requesterName', label: 'Requester' },
-      { key: 'issuedDate', label: 'Date' },
-      { key: 'warehouseName', label: 'Warehouse' },
-      { key: 'totalValue', label: 'Value', format: sarFormat },
+      { key: 'mirvNumber', label: 'MI #' },
+      { key: 'project.projectName', label: 'Project' },
+      { key: 'requestedBy.fullName', label: 'Requester' },
+      { key: 'requestDate', label: 'Date', format: dateFormat },
+      { key: 'warehouse.warehouseName', label: 'Warehouse' },
+      { key: 'estimatedValue', label: 'Value', format: sarFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -298,11 +304,11 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Material Return Notes',
     code: 'MRN',
     columns: [
-      { key: 'documentNumber', label: 'MRN #' },
+      { key: 'mrvNumber', label: 'MRN #' },
       { key: 'returnType', label: 'Return Type' },
-      { key: 'projectName', label: 'Project' },
-      { key: 'warehouseName', label: 'Warehouse' },
-      { key: 'returnDate', label: 'Date' },
+      { key: 'project.projectName', label: 'Project' },
+      { key: 'toWarehouse.warehouseName', label: 'Warehouse' },
+      { key: 'returnDate', label: 'Date', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -310,12 +316,11 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     title: 'Material Requests',
     code: 'MR',
     columns: [
-      { key: 'documentNumber', label: 'MR #' },
-      { key: 'projectName', label: 'Project' },
-      { key: 'requesterName', label: 'Requester' },
-      { key: 'requestDate', label: 'Date' },
-      { key: 'totalValue', label: 'Value', format: sarFormat },
-      { key: 'slaStatus', label: 'SLA', component: slaCol },
+      { key: 'mrfNumber', label: 'MR #' },
+      { key: 'project.projectName', label: 'Project' },
+      { key: 'requestedBy.fullName', label: 'Requester' },
+      { key: 'requestDate', label: 'Date', format: dateFormat },
+      { key: 'totalEstimatedValue', label: 'Value', format: sarFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -327,7 +332,7 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
       { key: 'senderProjectName', label: 'From Project' },
       { key: 'receiverProjectName', label: 'To Project' },
       { key: 'materialType', label: 'Type' },
-      { key: 'requiredDate', label: 'Required' },
+      { key: 'requiredDate', label: 'Required', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -338,7 +343,7 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
       { key: 'documentNumber', label: 'WT #' },
       { key: 'fromWarehouse', label: 'From' },
       { key: 'toWarehouse', label: 'To' },
-      { key: 'transferDate', label: 'Date' },
+      { key: 'transferDate', label: 'Date', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -386,9 +391,9 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
     columns: [
       { key: 'toolName', label: 'Tool' },
       { key: 'issuedToName', label: 'Issued To' },
-      { key: 'issuedDate', label: 'Issued' },
-      { key: 'expectedReturnDate', label: 'Expected Return' },
-      { key: 'actualReturnDate', label: 'Returned' },
+      { key: 'issuedDate', label: 'Issued', format: dateFormat },
+      { key: 'expectedReturnDate', label: 'Expected Return', format: dateFormat },
+      { key: 'actualReturnDate', label: 'Returned', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -399,9 +404,32 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
       { key: 'contractNumber', label: 'Contract #' },
       { key: 'supplierName', label: 'Supplier' },
       { key: 'equipmentType', label: 'Equipment' },
-      { key: 'startDate', label: 'Start' },
-      { key: 'endDate', label: 'End' },
+      { key: 'startDate', label: 'Start', format: dateFormat },
+      { key: 'endDate', label: 'End', format: dateFormat },
       { key: 'monthlyRate', label: 'Rate/Month', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  'bin-cards': {
+    title: 'Bin Cards',
+    code: 'BIN',
+    columns: [
+      { key: 'binNumber', label: 'Bin #' },
+      { key: 'item.itemCode', label: 'Item Code' },
+      { key: 'item.itemDescription', label: 'Description' },
+      { key: 'warehouse.warehouseName', label: 'Warehouse' },
+      { key: 'currentQty', label: 'Qty' },
+      { key: 'lastVerifiedAt', label: 'Last Verified', format: dateFormat },
+    ],
+  },
+  handovers: {
+    title: 'Storekeeper Handovers',
+    code: 'HO',
+    columns: [
+      { key: 'warehouse.warehouseName', label: 'Warehouse' },
+      { key: 'outgoingEmployee.fullName', label: 'Outgoing' },
+      { key: 'incomingEmployee.fullName', label: 'Incoming' },
+      { key: 'handoverDate', label: 'Date', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
     ],
   },
@@ -413,8 +441,57 @@ const RESOURCE_COLUMNS: Record<string, ResourceConfig> = {
       { key: 'driverName', label: 'Driver' },
       { key: 'vehiclePlateNo', label: 'Plate' },
       { key: 'vehicleType', label: 'Vehicle' },
-      { key: 'createdAt', label: 'Date' },
+      { key: 'createdAt', label: 'Date', format: dateFormat },
       { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  ssc: {
+    title: 'Scrap Sales Committee',
+    code: 'SSC',
+    columns: [
+      { key: 'batchNumber', label: 'Batch #' },
+      { key: 'bidDate', label: 'Bid Date', format: dateFormat },
+      { key: 'materialType', label: 'Material' },
+      { key: 'totalWeight', label: 'Weight (kg)' },
+      { key: 'numberOfBidders', label: 'Bidders' },
+      { key: 'highestBid', label: 'Highest Bid', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  'generator-fuel': {
+    title: 'Generator Fuel Logs',
+    code: 'GFL',
+    columns: [
+      { key: 'generatorAssetId', label: 'Generator' },
+      { key: 'fuelDate', label: 'Date', format: dateFormat },
+      { key: 'liters', label: 'Liters' },
+      { key: 'meterReading', label: 'Meter Reading' },
+      { key: 'projectName', label: 'Project' },
+      { key: 'recordedBy', label: 'Recorded By' },
+    ],
+  },
+  'generator-maintenance': {
+    title: 'Generator Maintenance',
+    code: 'GMN',
+    columns: [
+      { key: 'generatorAssetId', label: 'Generator' },
+      { key: 'maintenanceType', label: 'Type' },
+      { key: 'scheduledDate', label: 'Scheduled', format: dateFormat },
+      { key: 'completedDate', label: 'Completed', format: dateFormat },
+      { key: 'cost', label: 'Cost', format: sarFormat },
+      { key: 'status', label: 'Status', component: statusCol },
+    ],
+  },
+  'warehouse-zones': {
+    title: 'Warehouse Zones',
+    code: 'WZ',
+    columns: [
+      { key: 'zoneCode', label: 'Zone' },
+      { key: 'zoneName', label: 'Name' },
+      { key: 'warehouseName', label: 'Warehouse' },
+      { key: 'zoneType', label: 'Type' },
+      { key: 'capacity', label: 'Capacity' },
+      { key: 'utilization', label: 'Utilization' },
     ],
   },
 };

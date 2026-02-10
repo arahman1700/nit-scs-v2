@@ -257,7 +257,7 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
     case 'mrrv':
       return {
         ...common,
-        title: 'Material Receiving Report Voucher',
+        title: 'Goods Receipt Note',
         fields: [
           { label: 'Supplier', value: String((record as Record<string, unknown>).supplier || record.supplierId || '') },
           {
@@ -274,7 +274,7 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
     case 'mirv':
       return {
         ...common,
-        title: 'Material Issue Report Voucher',
+        title: 'Material Issuance',
         fields: [
           { label: 'Project', value: String(record.project || record.projectId || '') },
           { label: 'Requester', value: String(record.requester || record.requesterId || '') },
@@ -286,7 +286,7 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
     case 'mrv':
       return {
         ...common,
-        title: 'Material Return Voucher',
+        title: 'Material Return Note',
         fields: [
           { label: 'Return Type', value: String(record.returnType || '') },
           { label: 'Project', value: String(record.project || record.projectId || '') },
@@ -311,9 +311,9 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
     case 'rfim':
       return {
         ...common,
-        title: 'Request for Inspection of Materials',
+        title: 'Quality Control Inspection',
         fields: [
-          { label: 'MRRV ID', value: String(record.mrrvId || '') },
+          { label: 'GRN ID', value: String(record.mrrvId || '') },
           { label: 'Inspection Type', value: String(record.inspectionType || '') },
           { label: 'Priority', value: String(record.priority || '') },
           { label: 'Inspector', value: String(record.inspector || '') },
@@ -324,9 +324,9 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
     case 'osd':
       return {
         ...common,
-        title: 'Over/Short/Damage Report',
+        title: 'Discrepancy Report',
         fields: [
-          { label: 'MRRV ID', value: String(record.mrrvId || '') },
+          { label: 'GRN ID', value: String(record.mrrvId || '') },
           { label: 'Report Type', value: String(record.reportType || '') },
           { label: 'Qty Affected', value: String(record.qtyAffected || '') },
           { label: 'Action Required', value: String(record.actionRequired || '') },

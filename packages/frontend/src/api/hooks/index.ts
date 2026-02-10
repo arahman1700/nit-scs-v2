@@ -153,6 +153,7 @@ export {
   useApproveMr,
   useCheckStockMr,
   useConvertMiMr,
+  useConvertMrToImsf,
   useFulfillMr,
   useRejectMr,
   useCancelMr,
@@ -209,10 +210,23 @@ export {
   useMarkSoldScrap,
   useDisposeScrap,
   useCloseScrap,
+  useApproveBySiteManager,
+  useApproveByQc,
+  useApproveByStorekeeper,
 } from './useScrap';
 
-// SSC — new module (CRUD only)
-export { useSscList, useSsc, useCreateSsc, useUpdateSsc, useDeleteSsc } from './useSsc';
+// SSC — new module
+export {
+  useSscList,
+  useSsc,
+  useCreateSsc,
+  useUpdateSsc,
+  useDeleteSsc,
+  useAcceptBid,
+  useRejectBid,
+  useSignMemo,
+  useNotifyFinance,
+} from './useSsc';
 
 // Rental Contracts — new module
 export {
@@ -236,8 +250,8 @@ export {
   useReturnToolIssue,
 } from './useToolIssues';
 
-// Tools — new module (CRUD only)
-export { useToolList, useTool, useCreateTool, useUpdateTool, useDeleteTool } from './useTools';
+// Tools — new module
+export { useToolList, useTool, useCreateTool, useUpdateTool, useDeleteTool, useDecommissionTool } from './useTools';
 
 // Generator Fuel — new module (CRUD only)
 export {
@@ -266,3 +280,169 @@ export {
   useUpdateWarehouseZone,
   useDeleteWarehouseZone,
 } from './useWarehouseZones';
+
+// Bin Cards — new module
+export {
+  useBinCardList,
+  useBinCard,
+  useCreateBinCard,
+  useUpdateBinCard,
+  useBinCardTransactionList,
+  useCreateBinCardTransaction,
+} from './useBinCards';
+
+// Handovers — new module
+export {
+  useHandoverList,
+  useHandover,
+  useCreateHandover,
+  useUpdateHandover,
+  useStartHandoverVerification,
+  useCompleteHandover,
+} from './useHandovers';
+
+// Labor Productivity
+export { useLaborProductivity } from './useLaborProductivity';
+
+// ABC Analysis — inventory classification
+export { useAbcAnalysis, useAbcSummary, useRecalculateAbc } from './useAbcAnalysis';
+
+// Put-Away Rules — zone placement engine
+export {
+  usePutAwayRules,
+  usePutAwayRule,
+  useCreatePutAwayRule,
+  useUpdatePutAwayRule,
+  useDeletePutAwayRule,
+  usePutAwaySuggestion,
+} from './usePutAwayRules';
+
+// Cycle Counts — physical inventory counting
+export {
+  useCycleCountList,
+  useCycleCount,
+  useCreateCycleCount,
+  useGenerateLines,
+  useStartCycleCount,
+  useRecordCount,
+  useCompleteCycleCount,
+  useApplyAdjustments,
+  useCancelCycleCount,
+} from './useCycleCounts';
+
+// Pick Path Optimization & Wave Picking
+export {
+  useOptimizePickPath,
+  useWaveList,
+  useWave,
+  useCreateWave,
+  useStartWave,
+  useCompleteWave,
+} from './usePickOptimizer';
+export type { PickStop, PickPath, Wave } from './usePickOptimizer';
+
+// Route Optimization (JO Transport)
+export { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from './useRouteOptimizer';
+export type { RouteStop, OptimizedRouteStop, OptimizedRoute, UndeliveredJO, FuelEstimate } from './useRouteOptimizer';
+
+// ASN (Advance Shipping Notice) — new module
+export {
+  useAsnList,
+  useAsn,
+  useCreateAsn,
+  useUpdateAsn,
+  useMarkInTransit,
+  useMarkArrived,
+  useReceiveAsn,
+  useCancelAsn,
+  useAsnVariance,
+} from './useAsn';
+
+// Inspection Tools (AQL Calculator & Checklists)
+export {
+  useAqlCalculation,
+  useAqlTable,
+  useChecklistList,
+  useChecklist,
+  useCreateChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useAddChecklistItem,
+  useUpdateChecklistItem,
+  useDeleteChecklistItem,
+  useReorderChecklistItems,
+} from './useInspection';
+export type { InspectionLevel, AqlSample, AqlTableRow, AqlTable, ChecklistItem, Checklist } from './useInspection';
+
+// Slotting Optimization
+export { useSlottingAnalysis, usePickFrequencies, useApplySlotting } from './useSlotting';
+export type { SlottingSuggestion, SlottingAnalysis, ItemPickFrequency } from './useSlotting';
+
+// Push Notifications — web push subscription management
+export { useVapidKey, useSubscribePush, useUnsubscribePush, useTestPush } from './usePush';
+
+// Demand Forecasting — statistical demand prediction
+export { useDemandForecast, useTopDemandItems, useReorderAlerts, useSeasonalPatterns } from './useDemandForecast';
+export type { ItemForecast, SeasonalPattern } from './useDemandForecast';
+
+// Cross-Docking — bypass put-away workflow
+export {
+  useCrossDockOpportunities,
+  useCrossDockStats,
+  useCrossDockList,
+  useCrossDock,
+  useCreateCrossDock,
+  useApproveCrossDock,
+  useExecuteCrossDock,
+  useCompleteCrossDock,
+  useCancelCrossDock,
+} from './useCrossDock';
+export type { CrossDock, CrossDockOpportunity, CrossDockStats } from './useCrossDock';
+
+// Parallel Approvals — multi-approver groups
+export {
+  useDocumentApprovalGroups,
+  usePendingApprovals,
+  useCreateParallelApproval,
+  useRespondToApproval,
+} from './useParallelApprovals';
+export type { ParallelApprovalGroup, ParallelApprovalResponse } from './useParallelApprovals';
+
+// IoT Sensor Monitoring
+export {
+  useSensorList,
+  useSensor,
+  useCreateSensor,
+  useUpdateSensor,
+  useDeleteSensor,
+  useIngestReading,
+  useSensorReadings,
+  useSensorAlerts,
+  useAcknowledgeAlert,
+  useSensorStatus,
+  useZoneHeatmap,
+} from './useSensors';
+export type { Sensor, SensorReading, SensorAlert, ZoneHeatmapEntry } from './useSensors';
+
+// Yard Management
+export {
+  useDockDoorList,
+  useDockDoor,
+  useAvailableDockDoors,
+  useCreateDockDoor,
+  useUpdateDockDoor,
+  useDeleteDockDoor,
+  useAppointmentList,
+  useAppointment,
+  useCreateAppointment,
+  useCheckInAppointment,
+  useCompleteAppointment,
+  useCancelAppointment,
+  useTruckVisitList,
+  useCheckInTruck,
+  useAssignDock,
+  useCheckOutTruck,
+  useYardStatus,
+  useDockUtilization,
+} from './useYard';
+export type { DockDoor, YardAppointment, TruckVisit, YardStatus, DockUtilization } from './useYard';
