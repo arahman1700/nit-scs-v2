@@ -43,10 +43,16 @@ jobs:
 
       - name: Lint
         run: pnpm run lint
-        continue-on-error: true
 
-      - name: Test
-        run: pnpm run test
+      - name: Test with coverage
+        run: pnpm --filter @nit-scs-v2/backend test -- --coverage --reporter=json --outputFile=coverage.json
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: packages/backend/coverage/
 
   build:
     name: Build
@@ -82,3 +88,12 @@ jobs:
 
       - name: TypeScript check & build frontend
         run: pnpm --filter @nit-scs-v2/frontend exec tsc -b --noEmit && pnpm --filter @nit-scs-v2/frontend run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            packages/backend/dist/
+            packages/frontend/dist/
+            packages/shared/dist/

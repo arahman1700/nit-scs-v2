@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: nit_scs
       POSTGRES_USER: nit_admin
-      POSTGRES_PASSWORD: nit_scs_dev_2026
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nit_scs_dev_2026}
     ports:
       - '5432:5432'
     volumes:

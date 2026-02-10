@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: nit-scs
+    name: nit-scs-v2
     runtime: docker
     dockerfilePath: packages/backend/Dockerfile
     dockerContext: .
@@ -9,11 +9,11 @@ services:
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: nit-scs-db
+          name: nit-scs-v2-db
           property: connectionString
       - key: REDIS_URL
         fromService:
-          name: nit-scs-redis
+          name: nit-scs-v2-redis
           type: redis
           property: connectionString
       - key: JWT_SECRET
@@ -29,10 +29,10 @@ services:
       - key: PORT
         value: 4000
       - key: CORS_ORIGIN
-        value: 'https://nit-scs.onrender.com'
+        value: 'https://nit-scs-v2.onrender.com'
 
 databases:
-  - name: nit-scs-db
+  - name: nit-scs-v2-db
     plan: free
     databaseName: nit_scs
     user: nit_admin
