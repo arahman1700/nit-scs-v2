@@ -1,3 +1,7 @@
+/**
+ * @deprecated V1 route — use V2 equivalent at ./mr.routes.ts
+ * Kept for backward compatibility during migration period.
+ */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { mrfCreateSchema, mrfUpdateSchema } from '../schemas/logistics.schema.js';

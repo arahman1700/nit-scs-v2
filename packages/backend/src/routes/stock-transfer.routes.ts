@@ -1,3 +1,7 @@
+/**
+ * @deprecated V1 route — use V2 equivalent at ./wt.routes.ts
+ * Kept for backward compatibility during migration period.
+ */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { stockTransferCreateSchema, stockTransferUpdateSchema } from '../schemas/logistics.schema.js';

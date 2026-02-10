@@ -510,6 +510,8 @@ describe('mrf.service', () => {
       mockedGetStockLevel.mockResolvedValue({ available: 0 });
       mockPrisma.mrfLine.update.mockResolvedValue({});
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      // Cross-project check: no other projects available
+      mockPrisma.project.findMany.mockResolvedValue([]);
 
       const result = await checkStock('mrf-1');
 

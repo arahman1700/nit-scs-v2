@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import supertest from 'supertest';
 import { createTestApp, signTestToken } from '../test-utils/test-app.js';
+import { NotFoundError, AuthorizationError } from '@nit-scs-v2/shared';
 
 // Ensure JWT secrets are available before any module evaluates
 vi.hoisted(() => {
@@ -125,7 +126,7 @@ describe('Notification Routes', () => {
     });
 
     it('returns 404 when notification not found', async () => {
-      vi.mocked(notificationService.markAsRead).mockRejectedValue(new Error('Notification not found'));
+      vi.mocked(notificationService.markAsRead).mockRejectedValue(new NotFoundError('Notification', NOTIF_ID));
 
       const res = await request.put(`${BASE}/${NOTIF_ID}/read`).set('Authorization', `Bearer ${token}`);
 
@@ -134,7 +135,9 @@ describe('Notification Routes', () => {
     });
 
     it('returns 403 when access denied', async () => {
-      vi.mocked(notificationService.markAsRead).mockRejectedValue(new Error('Access denied'));
+      vi.mocked(notificationService.markAsRead).mockRejectedValue(
+        new AuthorizationError('You do not have access to this notification'),
+      );
 
       const res = await request.put(`${BASE}/${NOTIF_ID}/read`).set('Authorization', `Bearer ${token}`);
 
@@ -171,7 +174,7 @@ describe('Notification Routes', () => {
     });
 
     it('returns 404 when notification not found', async () => {
-      vi.mocked(notificationService.deleteNotification).mockRejectedValue(new Error('Notification not found'));
+      vi.mocked(notificationService.deleteNotification).mockRejectedValue(new NotFoundError('Notification', NOTIF_ID));
 
       const res = await request.delete(`${BASE}/${NOTIF_ID}`).set('Authorization', `Bearer ${token}`);
 
@@ -180,7 +183,9 @@ describe('Notification Routes', () => {
     });
 
     it('returns 403 when access denied', async () => {
-      vi.mocked(notificationService.deleteNotification).mockRejectedValue(new Error('Access denied'));
+      vi.mocked(notificationService.deleteNotification).mockRejectedValue(
+        new AuthorizationError('You do not have access to this notification'),
+      );
 
       const res = await request.delete(`${BASE}/${NOTIF_ID}`).set('Authorization', `Bearer ${token}`);
 

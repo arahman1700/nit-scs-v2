@@ -100,7 +100,50 @@ export async function report(id: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'reported');
 
+  if (!scrap.photos || (scrap.photos as unknown[]).length === 0) {
+    throw new BusinessRuleError('Photos are required before reporting scrap items (SCRAP-V001)');
+  }
+
   return prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'reported' } });
+}
+
+export async function approveBySiteManager(id: string, userId: string) {
+  const scrap = await prisma.scrapItem.findUnique({ where: { id } });
+  if (!scrap) throw new NotFoundError('Scrap', id);
+  if (scrap.status !== 'reported') {
+    throw new BusinessRuleError('Scrap item must be in "reported" status for site manager approval');
+  }
+
+  return prisma.scrapItem.update({
+    where: { id: scrap.id },
+    data: { siteManagerApproval: true },
+  });
+}
+
+export async function approveByQc(id: string, userId: string) {
+  const scrap = await prisma.scrapItem.findUnique({ where: { id } });
+  if (!scrap) throw new NotFoundError('Scrap', id);
+  if (scrap.status !== 'reported') {
+    throw new BusinessRuleError('Scrap item must be in "reported" status for QC approval');
+  }
+
+  return prisma.scrapItem.update({
+    where: { id: scrap.id },
+    data: { qcApproval: true },
+  });
+}
+
+export async function approveByStorekeeper(id: string, userId: string) {
+  const scrap = await prisma.scrapItem.findUnique({ where: { id } });
+  if (!scrap) throw new NotFoundError('Scrap', id);
+  if (scrap.status !== 'reported') {
+    throw new BusinessRuleError('Scrap item must be in "reported" status for storekeeper approval');
+  }
+
+  return prisma.scrapItem.update({
+    where: { id: scrap.id },
+    data: { storekeeperApproval: true },
+  });
 }
 
 export async function approve(id: string) {
@@ -108,12 +151,19 @@ export async function approve(id: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'approved');
 
+  if (!scrap.siteManagerApproval) {
+    throw new BusinessRuleError('Site Manager approval is required before final approval');
+  }
+  if (!scrap.qcApproval) {
+    throw new BusinessRuleError('QC approval is required before final approval');
+  }
+  if (!scrap.storekeeperApproval) {
+    throw new BusinessRuleError('Storekeeper approval is required before final approval');
+  }
+
   return prisma.scrapItem.update({
     where: { id: scrap.id },
-    data: {
-      status: 'approved',
-      siteManagerApproval: true,
-    },
+    data: { status: 'approved' },
   });
 }
 
@@ -132,7 +182,11 @@ export async function markSold(id: string, buyerName: string) {
 
   return prisma.scrapItem.update({
     where: { id: scrap.id },
-    data: { status: 'sold', buyerName },
+    data: {
+      status: 'sold',
+      buyerName,
+      buyerPickupDeadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+    },
   });
 }
 

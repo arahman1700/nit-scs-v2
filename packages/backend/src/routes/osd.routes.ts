@@ -1,3 +1,7 @@
+/**
+ * @deprecated V1 route — use V2 equivalent at ./dr.routes.ts
+ * Kept for backward compatibility during migration period.
+ */
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { osdCreateSchema, osdUpdateSchema } from '../schemas/document.schema.js';
 import * as osdService from '../services/osd.service.js';

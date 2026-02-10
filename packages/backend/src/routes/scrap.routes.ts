@@ -34,6 +34,27 @@ export default createDocumentRouter({
       socketData: () => ({ status: 'reported' }),
     },
     {
+      path: 'approve-site-manager',
+      roles: APPROVE_ROLES,
+      handler: (id, req) => scrapService.approveBySiteManager(id, req.user!.userId),
+      socketEvent: 'scrap:site_manager_approved',
+      socketData: () => ({ siteManagerApproval: true }),
+    },
+    {
+      path: 'approve-qc',
+      roles: APPROVE_ROLES,
+      handler: (id, req) => scrapService.approveByQc(id, req.user!.userId),
+      socketEvent: 'scrap:qc_approved',
+      socketData: () => ({ qcApproval: true }),
+    },
+    {
+      path: 'approve-storekeeper',
+      roles: APPROVE_ROLES,
+      handler: (id, req) => scrapService.approveByStorekeeper(id, req.user!.userId),
+      socketEvent: 'scrap:storekeeper_approved',
+      socketData: () => ({ storekeeperApproval: true }),
+    },
+    {
       path: 'approve',
       roles: APPROVE_ROLES,
       handler: id => scrapService.approve(id),

@@ -85,15 +85,70 @@ export async function start(id: string, userId: string) {
 export async function complete(id: string, result: string, comments?: string) {
   const qci = await prisma.rfim.findUnique({ where: { id } });
   if (!qci) throw new NotFoundError('QCI', id);
-  assertTransition(DOC_TYPE, qci.status, 'completed');
 
   if (!result || !['pass', 'fail', 'conditional'].includes(result)) {
     throw new BusinessRuleError('Inspection result is required (pass, fail, or conditional)');
   }
+
+  // If result is 'conditional', route through completeConditional instead
+  if (result === 'conditional') {
+    return completeConditional(id, comments);
+  }
+
+  assertTransition(DOC_TYPE, qci.status, 'completed');
 
   const updated = await prisma.rfim.update({
     where: { id: qci.id },
     data: { status: 'completed', result, comments: comments ?? qci.comments },
   });
   return { updated, mrrvId: qci.mrrvId };
+}
+
+/**
+ * Complete a QCI with a conditional acceptance result.
+ * Sets status to 'completed_conditional' which requires PM approval to become fully completed.
+ * The pmApprovalRequired flag is implicitly true for conditional completions.
+ */
+export async function completeConditional(id: string, comments?: string) {
+  const qci = await prisma.rfim.findUnique({ where: { id } });
+  if (!qci) throw new NotFoundError('QCI', id);
+  assertTransition(DOC_TYPE, qci.status, 'completed_conditional');
+
+  const updated = await prisma.rfim.update({
+    where: { id: qci.id },
+    data: {
+      status: 'completed_conditional',
+      result: 'conditional',
+      comments: comments ?? qci.comments,
+      // NOTE: pmApprovalRequired field pending schema migration — will be set to true
+      // pmApprovalRequired: true,
+    },
+  });
+  return { updated, mrrvId: qci.mrrvId, pmApprovalRequired: true };
+}
+
+/**
+ * PM approves a conditional QCI, upgrading it to fully completed.
+ * Only QCIs in 'completed_conditional' status can be PM-approved.
+ */
+export async function pmApprove(id: string, pmUserId: string, comments?: string) {
+  const qci = await prisma.rfim.findUnique({ where: { id } });
+  if (!qci) throw new NotFoundError('QCI', id);
+
+  if (qci.status !== 'completed_conditional') {
+    throw new BusinessRuleError('Only conditionally completed QCIs can receive PM approval');
+  }
+  assertTransition(DOC_TYPE, qci.status, 'completed');
+
+  const updated = await prisma.rfim.update({
+    where: { id: qci.id },
+    data: {
+      status: 'completed',
+      comments: comments ? `${qci.comments ?? ''}\n[PM Approval] ${comments}`.trim() : qci.comments,
+      // NOTE: pmApprovedById and pmApprovalDate fields pending schema migration
+      // pmApprovedById: pmUserId,
+      // pmApprovalDate: new Date(),
+    },
+  });
+  return { updated, mrrvId: qci.mrrvId, pmApprovedBy: pmUserId };
 }

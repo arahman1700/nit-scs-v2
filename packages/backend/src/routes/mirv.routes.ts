@@ -1,3 +1,7 @@
+/**
+ * @deprecated V1 route — use V2 equivalent at ./mi.routes.ts
+ * Kept for backward compatibility during migration period.
+ */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { mirvCreateSchema, mirvUpdateSchema, approvalActionSchema } from '../schemas/document.schema.js';

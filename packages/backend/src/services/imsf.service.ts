@@ -60,7 +60,11 @@ export async function getById(id: string) {
   return imsf;
 }
 
-export async function create(headerData: Omit<ImsfCreateDto, 'lines'>, lines: ImsfLineDto[], userId: string) {
+export async function create(
+  headerData: Omit<ImsfCreateDto, 'lines'> & { originMrId?: string },
+  lines: ImsfLineDto[],
+  userId: string,
+) {
   return prisma.$transaction(async tx => {
     const imsfNumber = await generateDocumentNumber('imsf');
     return tx.imsf.create({
@@ -71,6 +75,7 @@ export async function create(headerData: Omit<ImsfCreateDto, 'lines'>, lines: Im
         materialType: headerData.materialType ?? 'normal',
         requiredDate: headerData.requiredDate ? new Date(headerData.requiredDate) : null,
         status: 'created',
+        originMrId: headerData.originMrId ?? null,
         notes: headerData.notes ?? null,
         createdById: userId,
         imsfLines: {

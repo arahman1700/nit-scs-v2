@@ -212,6 +212,23 @@ export async function approve(
   };
 }
 
+/**
+ * QC counter-signature for an approved MI (V5 requirement).
+ * Must be called before materials can be issued.
+ * NOTE: qcSignatureId field pending schema migration on mirv table.
+ */
+export async function signQc(id: string, qcUserId: string) {
+  const mi = await prisma.mirv.findUnique({ where: { id } });
+  if (!mi) throw new NotFoundError('MI', id);
+  if (mi.status !== 'approved') {
+    throw new BusinessRuleError('MI must be approved for QC signature');
+  }
+  return prisma.mirv.update({
+    where: { id },
+    data: { qcSignatureId: qcUserId } as any, // qcSignatureId pending schema migration
+  });
+}
+
 export async function issue(id: string, userId: string) {
   const mi = await prisma.mirv.findUnique({
     where: { id },
@@ -220,6 +237,12 @@ export async function issue(id: string, userId: string) {
   if (!mi) throw new NotFoundError('MI', id);
   if (mi.status !== 'approved' && mi.status !== 'partially_issued') {
     throw new BusinessRuleError('MI must be approved or partially issued to issue materials');
+  }
+
+  // V5 requirement: QC counter-signature must be present before issuing
+  // NOTE: qcSignatureId field pending schema migration — guard with optional chaining
+  if (!(mi as any).qcSignatureId) {
+    throw new BusinessRuleError('QC counter-signature is required before issuing materials (V5 requirement)');
   }
 
   const consumeItems = mi.mirvLines.map(line => ({
@@ -255,23 +278,32 @@ export async function issue(id: string, userId: string) {
     },
   });
 
-  // Auto-create outbound GatePass
-  const gatePassNumber = await generateDocumentNumber('gatepass');
-  await prisma.gatePass.create({
-    data: {
-      gatePassNumber,
-      passType: 'outbound',
-      mirvId: mi.id,
-      projectId: mi.projectId,
-      warehouseId: mi.warehouseId,
-      vehicleNumber: 'TBD',
-      driverName: 'TBD',
-      destination: mi.locationOfWork ?? 'Project Site',
-      issueDate: new Date(),
-      status: 'pending',
-      issuedById: userId,
-    },
-  });
+  // Auto-create outbound GatePass (idempotent — only if not already auto-created)
+  // NOTE: gatePassAutoCreated field pending schema migration on mirv table
+  if (!(mi as any).gatePassAutoCreated) {
+    const gatePassNumber = await generateDocumentNumber('gatepass');
+    await prisma.gatePass.create({
+      data: {
+        gatePassNumber,
+        passType: 'outbound',
+        mirvId: mi.id,
+        projectId: mi.projectId,
+        warehouseId: mi.warehouseId,
+        vehicleNumber: 'TBD',
+        driverName: 'TBD',
+        destination: mi.locationOfWork ?? 'Project Site',
+        issueDate: new Date(),
+        status: 'pending',
+        issuedById: userId,
+        notes: `Auto-created from MI ${mi.mirvNumber}`,
+      },
+    });
+    // Mark MI as having auto-created gate pass to prevent duplicates
+    await prisma.mirv.update({
+      where: { id: mi.id },
+      data: { gatePassAutoCreated: true } as any, // gatePassAutoCreated pending schema migration
+    });
+  }
 
   return { id: mi.id, totalCost, warehouseId: mi.warehouseId };
 }

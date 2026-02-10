@@ -43,9 +43,16 @@ export default createDocumentRouter({
     {
       path: 'action',
       roles: APPROVE_ROLES,
-      handler: id => surplusService.action(id),
+      handler: (id, req) => surplusService.action(id, req.user!.userId),
       socketEvent: 'surplus:actioned',
       socketData: () => ({ status: 'actioned' }),
+    },
+    {
+      path: 'scm-approve',
+      roles: APPROVE_ROLES,
+      handler: (id, req) => surplusService.scmApprove(id, req.user!.userId),
+      socketEvent: 'surplus:scm_approved',
+      socketData: () => ({ status: 'approved' }),
     },
     {
       path: 'close',

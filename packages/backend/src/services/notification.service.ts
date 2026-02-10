@@ -1,6 +1,8 @@
 import type { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../utils/prisma.js';
 import { emitToUser } from '../socket/setup.js';
+import { NotFoundError, AuthorizationError } from '@nit-scs-v2/shared';
+import { sendPushToUser } from './push-notification.service.js';
 
 export interface CreateNotificationParams {
   recipientId: string;
@@ -32,6 +34,19 @@ export async function createNotification(params: CreateNotificationParams, io?: 
   if (io) {
     emitToUser(io, params.recipientId, 'notification:new', notification);
   }
+
+  // Send web push notification (fire-and-forget, don't block the response)
+  sendPushToUser(params.recipientId, {
+    title: params.title,
+    body: params.body || '',
+    url:
+      params.referenceTable && params.referenceId
+        ? `/${params.referenceTable}/${params.referenceId}`
+        : '/notifications',
+    tag: params.notificationType,
+  }).catch(() => {
+    // Silently ignore push failures — socket/in-app notifications still work
+  });
 
   return notification;
 }
@@ -67,10 +82,10 @@ export async function markAsRead(notificationId: string, userId: string): Promis
   const notification = await prisma.notification.findUnique({ where: { id: notificationId } });
 
   if (!notification) {
-    throw new Error('Notification not found');
+    throw new NotFoundError('Notification', notificationId);
   }
   if (notification.recipientId !== userId) {
-    throw new Error('Access denied');
+    throw new AuthorizationError('You do not have access to this notification');
   }
 
   await prisma.notification.update({
@@ -92,10 +107,10 @@ export async function deleteNotification(notificationId: string, userId: string)
   const notification = await prisma.notification.findUnique({ where: { id: notificationId } });
 
   if (!notification) {
-    throw new Error('Notification not found');
+    throw new NotFoundError('Notification', notificationId);
   }
   if (notification.recipientId !== userId) {
-    throw new Error('Access denied');
+    throw new AuthorizationError('You do not have access to this notification');
   }
 
   await prisma.notification.delete({ where: { id: notificationId } });

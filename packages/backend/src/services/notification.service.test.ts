@@ -248,20 +248,20 @@ describe('notification.service', () => {
       });
     });
 
-    it('should throw "Notification not found" when notification does not exist', async () => {
+    it('should throw NotFoundError when notification does not exist', async () => {
       mockPrisma.notification.findUnique.mockResolvedValue(null);
 
-      await expect(markAsRead('notif-missing', 'user-001')).rejects.toThrow('Notification not found');
+      await expect(markAsRead('notif-missing', 'user-001')).rejects.toThrow('not found');
       expect(mockPrisma.notification.update).not.toHaveBeenCalled();
     });
 
-    it('should throw "Access denied" when user does not own the notification', async () => {
+    it('should throw AuthorizationError when user does not own the notification', async () => {
       mockPrisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
         recipientId: 'user-002',
       });
 
-      await expect(markAsRead('notif-1', 'user-001')).rejects.toThrow('Access denied');
+      await expect(markAsRead('notif-1', 'user-001')).rejects.toThrow('You do not have access to this notification');
       expect(mockPrisma.notification.update).not.toHaveBeenCalled();
     });
   });
@@ -312,20 +312,22 @@ describe('notification.service', () => {
       });
     });
 
-    it('should throw "Notification not found" when notification does not exist', async () => {
+    it('should throw NotFoundError when notification does not exist', async () => {
       mockPrisma.notification.findUnique.mockResolvedValue(null);
 
-      await expect(deleteNotification('notif-missing', 'user-001')).rejects.toThrow('Notification not found');
+      await expect(deleteNotification('notif-missing', 'user-001')).rejects.toThrow('not found');
       expect(mockPrisma.notification.delete).not.toHaveBeenCalled();
     });
 
-    it('should throw "Access denied" when user does not own the notification', async () => {
+    it('should throw AuthorizationError when user does not own the notification', async () => {
       mockPrisma.notification.findUnique.mockResolvedValue({
         id: 'notif-1',
         recipientId: 'user-other',
       });
 
-      await expect(deleteNotification('notif-1', 'user-001')).rejects.toThrow('Access denied');
+      await expect(deleteNotification('notif-1', 'user-001')).rejects.toThrow(
+        'You do not have access to this notification',
+      );
       expect(mockPrisma.notification.delete).not.toHaveBeenCalled();
     });
   });

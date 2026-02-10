@@ -77,6 +77,15 @@ export async function getById(id: string) {
 export async function create(body: JoCreateDto, userId: string) {
   const { transportDetails, rentalDetails, generatorDetails, scrapDetails, equipmentLines, ...headerData } = body;
 
+  // Insurance threshold check: >7M SAR requires insurance
+  const amount = headerData.totalAmount ?? 0;
+  if (amount > 7_000_000 && !headerData.insuranceRequired) {
+    throw new BusinessRuleError('Insurance is required for Job Orders exceeding 7,000,000 SAR');
+  }
+
+  // Monthly rentals require COO approval
+  const coaApprovalRequired = headerData.joType === 'rental_monthly' ? true : (headerData.coaApprovalRequired ?? false);
+
   const jo = await prisma.$transaction(async tx => {
     const joNumber = await generateDocumentNumber('jo');
     const created = await tx.jobOrder.create({
@@ -94,6 +103,21 @@ export async function create(body: JoCreateDto, userId: string) {
         notes: headerData.notes ?? null,
         totalAmount: headerData.totalAmount ?? 0,
         status: 'draft',
+        // Logistics Process V5 fields
+        driverName: headerData.driverName ?? null,
+        driverNationality: headerData.driverNationality ?? null,
+        driverIdNumber: headerData.driverIdNumber ?? null,
+        vehicleBrand: headerData.vehicleBrand ?? null,
+        vehicleYear: headerData.vehicleYear ?? null,
+        vehiclePlate: headerData.vehiclePlate ?? null,
+        googleMapsPickup: headerData.googleMapsPickup ?? null,
+        googleMapsDelivery: headerData.googleMapsDelivery ?? null,
+        insuranceValue: headerData.insuranceValue ?? null,
+        insuranceRequired: headerData.insuranceRequired ?? false,
+        projectBudgetApproved: headerData.projectBudgetApproved ?? null,
+        coaApprovalRequired,
+        shiftStartTime: headerData.shiftStartTime ? new Date(headerData.shiftStartTime) : null,
+        cnNumber: headerData.cnNumber ?? null,
       },
     });
 

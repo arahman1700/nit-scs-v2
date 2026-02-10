@@ -264,7 +264,7 @@ export const sscBidCreateSchema = z.object({
   bidderName: z.string().min(1, 'Bidder name is required'),
   bidderContact: z.string().optional(),
   bidAmount: decimalPositive,
-  bidDate: z.string().datetime(),
+  bidDate: z.string().datetime().optional(),
 });
 
 export const sscBidUpdateSchema = z.object({
@@ -381,6 +381,71 @@ export const warehouseZoneUpdateSchema = z.object({
   zoneType: z.enum(['civil', 'mechanical', 'electrical', 'scrap', 'container', 'open_yard', 'hazardous']).optional(),
   capacity: z.number().int().optional(),
   currentOccupancy: z.number().int().optional(),
+});
+
+// ── Bin Card ──────────────────────────────────────────────────────────────
+
+export const binCardCreateSchema = z.object({
+  itemId: uuid,
+  warehouseId: uuid,
+  binNumber: z.string().min(1, 'Bin number is required').max(30),
+  currentQty: decimalNonNegative.optional(),
+});
+
+export const binCardUpdateSchema = z.object({
+  binNumber: z.string().max(30).optional(),
+  currentQty: decimalNonNegative.optional(),
+});
+
+export const binCardTransactionCreateSchema = z.object({
+  binCardId: uuid,
+  transactionType: z.enum(['receipt', 'issue', 'adjustment', 'transfer']),
+  referenceType: z.enum(['grn', 'mi', 'wt', 'adjustment']),
+  referenceId: uuid,
+  referenceNumber: z.string().optional(),
+  qtyIn: decimalNonNegative.optional(),
+  qtyOut: decimalNonNegative.optional(),
+  runningBalance: z.number(),
+});
+
+// ── Storekeeper Handover ──────────────────────────────────────────────────
+
+export const handoverCreateSchema = z.object({
+  warehouseId: uuid,
+  outgoingEmployeeId: uuid,
+  incomingEmployeeId: uuid,
+  handoverDate: z.string().datetime(),
+  notes: z.string().optional(),
+});
+
+export const handoverUpdateSchema = z.object({
+  status: z.enum(['initiated', 'in_progress', 'completed']).optional(),
+  inventoryVerified: z.boolean().optional(),
+  discrepanciesFound: z.boolean().optional(),
+  notes: z.string().optional(),
+});
+
+// ── Put-Away Rules ──────────────────────────────────────────────────────
+
+export const putAwayRuleCreateSchema = z.object({
+  name: z.string().min(1, 'Rule name is required').max(200),
+  priority: z.number().int().min(1).max(9999).optional(),
+  warehouseId: uuid,
+  targetZoneId: uuid.optional(),
+  itemCategory: z.string().max(50).optional(),
+  isHazardous: z.boolean().optional(),
+  maxWeight: z.number().positive().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const putAwayRuleUpdateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  priority: z.number().int().min(1).max(9999).optional(),
+  targetZoneId: uuid.nullable().optional(),
+  itemCategory: z.string().max(50).nullable().optional(),
+  isHazardous: z.boolean().optional(),
+  maxWeight: z.number().positive().nullable().optional(),
+  isActive: z.boolean().optional(),
 });
 
 // ── Approval Action ─────────────────────────────────────────────────────

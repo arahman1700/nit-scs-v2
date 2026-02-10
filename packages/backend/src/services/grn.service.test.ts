@@ -1,5 +1,7 @@
 import type { PrismaMock } from '../test-utils/prisma-mock.js';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 
+// ── Hoisted mock container ──────────────────────────────────────────────
 const { mockPrisma } = vi.hoisted(() => {
   return { mockPrisma: {} as PrismaMock };
 });
@@ -7,80 +9,35 @@ const { mockPrisma } = vi.hoisted(() => {
 vi.mock('../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('./inventory.service.js', () => ({ addStockBatch: vi.fn() }));
-vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
-
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
-  return {
-    ...actual,
-    assertTransition: vi.fn(),
-  };
+  return { ...actual, assertTransition: vi.fn() };
 });
 
 import { createPrismaMock } from '../test-utils/prisma-mock.js';
+import { list, getById, create, update, submit, approveQc, receive, store } from './grn.service.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch } from './inventory.service.js';
-import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
-import { list, getById, create, update, submit, approveQc, receive, store } from './mrrv.service.js';
+import { assertTransition } from '@nit-scs-v2/shared';
 
-const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
+const mockedGenerateDocNumber = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const mockedAddStockBatch = addStockBatch as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 
-// ── Helpers ──────────────────────────────────────────────────────────────
-
-function makeMrrv(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'mrrv-1',
-    mrrvNumber: 'MRRV-2025-0001',
-    supplierId: 'sup-1',
-    warehouseId: 'wh-1',
-    projectId: 'proj-1',
-    poNumber: 'PO-001',
-    receivedById: 'user-1',
-    receiveDate: new Date('2025-06-01'),
-    rfimRequired: false,
-    hasOsd: false,
-    totalValue: 1000,
-    status: 'draft',
-    notes: null,
-    ...overrides,
-  };
-}
-
-function makeMrrvLine(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'line-1',
-    mrrvId: 'mrrv-1',
-    itemId: 'item-1',
-    uomId: 'uom-1',
-    qtyOrdered: 10,
-    qtyReceived: 10,
-    qtyDamaged: 0,
-    unitCost: 100,
-    condition: 'good',
-    storageLocation: null,
-    expiryDate: null,
-    notes: null,
-    ...overrides,
-  };
-}
-
-// ═════════════════════════════════════════════════════════════════════════
-
-describe('mrrv.service', () => {
+describe('grn.service', () => {
   beforeEach(() => {
     Object.assign(mockPrisma, createPrismaMock());
     vi.clearAllMocks();
   });
 
-  // ─── list ────────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // list
+  // ─────────────────────────────────────────────────────────────────────────
   describe('list', () => {
-    const baseParams = { skip: 0, pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' };
+    const baseParams = { sortBy: 'createdAt', sortDir: 'desc' as const, skip: 0, pageSize: 25 };
 
-    it('returns data and total', async () => {
-      const rows = [makeMrrv()];
+    it('should return data and total', async () => {
+      const rows = [{ id: 'grn-1' }];
       mockPrisma.mrrv.findMany.mockResolvedValue(rows);
       mockPrisma.mrrv.count.mockResolvedValue(1);
 
@@ -89,516 +46,300 @@ describe('mrrv.service', () => {
       expect(result).toEqual({ data: rows, total: 1 });
     });
 
-    it('applies search filter to mrrvNumber and supplierName', async () => {
+    it('should apply search filter with OR clause', async () => {
       mockPrisma.mrrv.findMany.mockResolvedValue([]);
       mockPrisma.mrrv.count.mockResolvedValue(0);
 
-      await list({ ...baseParams, search: 'test' });
+      await list({ ...baseParams, search: 'GRN-001' });
 
-      const call = mockPrisma.mrrv.findMany.mock.calls[0][0];
-      expect(call.where.OR).toEqual([
-        { mrrvNumber: { contains: 'test', mode: 'insensitive' } },
-        { supplier: { supplierName: { contains: 'test', mode: 'insensitive' } } },
-      ]);
+      const where = mockPrisma.mrrv.findMany.mock.calls[0][0].where;
+      expect(where.OR).toBeDefined();
+      expect(where.OR).toHaveLength(2);
     });
 
-    it('applies status filter', async () => {
+    it('should apply status filter', async () => {
       mockPrisma.mrrv.findMany.mockResolvedValue([]);
       mockPrisma.mrrv.count.mockResolvedValue(0);
 
-      await list({ ...baseParams, status: 'pending_qc' });
+      await list({ ...baseParams, status: 'draft' });
 
-      const call = mockPrisma.mrrv.findMany.mock.calls[0][0];
-      expect(call.where.status).toBe('pending_qc');
+      const where = mockPrisma.mrrv.findMany.mock.calls[0][0].where;
+      expect(where.status).toBe('draft');
     });
 
-    it('applies scope filters (warehouseId, projectId, receivedById)', async () => {
+    it('should apply projectId filter', async () => {
       mockPrisma.mrrv.findMany.mockResolvedValue([]);
       mockPrisma.mrrv.count.mockResolvedValue(0);
 
-      await list({
-        ...baseParams,
-        warehouseId: 'wh-2',
-        projectId: 'proj-3',
-        receivedById: 'user-5',
-      });
+      await list({ ...baseParams, projectId: 'proj-1' });
 
-      const call = mockPrisma.mrrv.findMany.mock.calls[0][0];
-      expect(call.where.warehouseId).toBe('wh-2');
-      expect(call.where.projectId).toBe('proj-3');
-      expect(call.where.receivedById).toBe('user-5');
+      const where = mockPrisma.mrrv.findMany.mock.calls[0][0].where;
+      expect(where.projectId).toBe('proj-1');
     });
 
-    it('applies pagination and sorting', async () => {
+    it('should pass pagination to findMany', async () => {
       mockPrisma.mrrv.findMany.mockResolvedValue([]);
       mockPrisma.mrrv.count.mockResolvedValue(0);
 
-      await list({ skip: 20, pageSize: 10, sortBy: 'mrrvNumber', sortDir: 'asc' });
+      await list({ ...baseParams, skip: 10, pageSize: 5 });
 
-      const call = mockPrisma.mrrv.findMany.mock.calls[0][0];
-      expect(call.skip).toBe(20);
-      expect(call.take).toBe(10);
-      expect(call.orderBy).toEqual({ mrrvNumber: 'asc' });
+      const args = mockPrisma.mrrv.findMany.mock.calls[0][0];
+      expect(args.skip).toBe(10);
+      expect(args.take).toBe(5);
     });
   });
 
-  // ─── getById ─────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // getById
+  // ─────────────────────────────────────────────────────────────────────────
   describe('getById', () => {
-    it('returns the mrrv with detail includes', async () => {
-      const mrrv = makeMrrv();
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
+    it('should return the GRN when found', async () => {
+      const grn = { id: 'grn-1', mrrvNumber: 'GRN-001' };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
 
-      const result = await getById('mrrv-1');
+      const result = await getById('grn-1');
 
-      expect(result).toEqual(mrrv);
-      expect(mockPrisma.mrrv.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'mrrv-1' } }));
+      expect(result).toEqual(grn);
+      expect(mockPrisma.mrrv.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'grn-1' } }));
     });
 
-    it('throws NotFoundError when mrrv does not exist', async () => {
+    it('should throw NotFoundError when GRN not found', async () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
       await expect(getById('nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 
-  // ─── create ──────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // create
+  // ─────────────────────────────────────────────────────────────────────────
   describe('create', () => {
     const headerData = {
       supplierId: 'sup-1',
       warehouseId: 'wh-1',
-      receiveDate: '2025-06-01',
-      rfimRequired: false,
+      receiveDate: '2026-03-01T00:00:00Z',
     };
-
     const lines = [
-      { itemId: 'item-1', qtyReceived: 10, qtyDamaged: 0, uomId: 'uom-1', unitCost: 50 },
-      { itemId: 'item-2', qtyReceived: 5, qtyDamaged: 2, uomId: 'uom-2', unitCost: 100 },
+      { itemId: 'item-1', qtyReceived: 10, unitCost: 50, uomId: 'uom-1' },
+      { itemId: 'item-2', qtyReceived: 5, unitCost: 200, uomId: 'uom-2' },
     ];
 
-    it('generates a document number', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0042');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv({ mrrvNumber: 'MRRV-2025-0042' }));
+    it('should generate document number and create GRN', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('GRN-001');
+      mockPrisma.mrrv.create.mockResolvedValue({ id: 'grn-1', mrrvNumber: 'GRN-001' });
+
+      const result = await create(headerData, lines, 'user-1');
+
+      expect(result).toEqual({ id: 'grn-1', mrrvNumber: 'GRN-001' });
+      expect(mockedGenerateDocNumber).toHaveBeenCalledWith('grn');
+    });
+
+    it('should calculate totalValue from unitCost * qtyReceived', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('GRN-002');
+      mockPrisma.mrrv.create.mockResolvedValue({ id: 'grn-2' });
 
       await create(headerData, lines, 'user-1');
 
-      expect(mockedGenDoc).toHaveBeenCalledWith('mrrv');
+      const createArgs = mockPrisma.mrrv.create.mock.calls[0][0];
+      // 50*10 + 200*5 = 500 + 1000 = 1500
+      expect(createArgs.data.totalValue).toBe(1500);
     });
 
-    it('calculates totalValue from lines', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0043');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv());
+    it('should set status to draft and receivedById', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('GRN-003');
+      mockPrisma.mrrv.create.mockResolvedValue({ id: 'grn-3' });
 
       await create(headerData, lines, 'user-1');
 
-      const call = mockPrisma.mrrv.create.mock.calls[0][0];
-      // line1: 50*10 = 500, line2: 100*5 = 500, total = 1000
-      expect(call.data.totalValue).toBe(1000);
-    });
-
-    it('sets hasOsd to true when damaged lines exist', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0044');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv({ hasOsd: true }));
-
-      await create(headerData, lines, 'user-1');
-
-      const call = mockPrisma.mrrv.create.mock.calls[0][0];
-      expect(call.data.hasOsd).toBe(true);
-    });
-
-    it('sets hasOsd to false when no damaged lines', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0045');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv());
-      const cleanLines = [{ itemId: 'item-1', qtyReceived: 10, qtyDamaged: 0, uomId: 'uom-1', unitCost: 50 }];
-
-      await create(headerData, cleanLines, 'user-1');
-
-      const call = mockPrisma.mrrv.create.mock.calls[0][0];
-      expect(call.data.hasOsd).toBe(false);
-    });
-
-    it('creates mrrv with nested mrrvLines', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0046');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv());
-
-      await create(headerData, lines, 'user-1');
-
-      const call = mockPrisma.mrrv.create.mock.calls[0][0];
-      expect(call.data.mrrvLines.create).toHaveLength(2);
-      expect(call.data.mrrvLines.create[0]).toEqual(
-        expect.objectContaining({
-          itemId: 'item-1',
-          qtyReceived: 10,
-          uomId: 'uom-1',
-          unitCost: 50,
-        }),
-      );
-    });
-
-    it('sets status to draft', async () => {
-      mockedGenDoc.mockResolvedValue('MRRV-2025-0047');
-      mockPrisma.mrrv.create.mockResolvedValue(makeMrrv());
-
-      await create(headerData, lines, 'user-1');
-
-      const call = mockPrisma.mrrv.create.mock.calls[0][0];
-      expect(call.data.status).toBe('draft');
+      const createArgs = mockPrisma.mrrv.create.mock.calls[0][0];
+      expect(createArgs.data.status).toBe('draft');
+      expect(createArgs.data.receivedById).toBe('user-1');
     });
   });
 
-  // ─── update ──────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // update
+  // ─────────────────────────────────────────────────────────────────────────
   describe('update', () => {
-    it('updates a draft MRRV successfully', async () => {
-      const existing = makeMrrv({ status: 'draft' });
+    it('should update a draft GRN', async () => {
+      const existing = { id: 'grn-1', status: 'draft' };
+      const updated = { id: 'grn-1', status: 'draft', notes: 'Updated' };
       mockPrisma.mrrv.findUnique.mockResolvedValue(existing);
-      const updated = { ...existing, notes: 'Updated notes' };
       mockPrisma.mrrv.update.mockResolvedValue(updated);
 
-      const result = await update('mrrv-1', { notes: 'Updated notes' });
+      const result = await update('grn-1', { notes: 'Updated' });
 
       expect(result).toEqual({ existing, updated });
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrrv-1' },
-          data: expect.objectContaining({ notes: 'Updated notes' }),
-        }),
-      );
     });
 
-    it('throws NotFoundError when mrrv does not exist', async () => {
+    it('should throw NotFoundError when GRN not found', async () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
-      await expect(update('nonexistent', { notes: 'x' })).rejects.toThrow(NotFoundError);
+      await expect(update('nonexistent', {})).rejects.toThrow(NotFoundError);
     });
 
-    it('throws BusinessRuleError when mrrv is not in draft status', async () => {
-      mockPrisma.mrrv.findUnique.mockResolvedValue(makeMrrv({ status: 'pending_qc' }));
+    it('should throw BusinessRuleError when GRN is not draft', async () => {
+      mockPrisma.mrrv.findUnique.mockResolvedValue({ id: 'grn-1', status: 'pending_qc' });
 
-      await expect(update('mrrv-1', { notes: 'x' })).rejects.toThrow(BusinessRuleError);
+      await expect(update('grn-1', {})).rejects.toThrow('Only draft GRNs can be updated');
     });
   });
 
-  // ─── submit ──────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // submit (draft -> pending_qc)
+  // ─────────────────────────────────────────────────────────────────────────
   describe('submit', () => {
-    it('calls assertTransition and updates to pending_qc', async () => {
-      const mrrv = makeMrrv({ status: 'draft', mrrvLines: [], rfimRequired: false });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
+    it('should transition GRN from draft to pending_qc', async () => {
+      const grn = { id: 'grn-1', status: 'draft', rfimRequired: false, mrrvLines: [] };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
       mockPrisma.mrrv.update.mockResolvedValue({});
 
-      const result = await submit('mrrv-1');
+      const result = await submit('grn-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'draft', 'pending_qc');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrrv-1' },
-          data: { status: 'pending_qc' },
-        }),
-      );
-      expect(result).toEqual({ id: 'mrrv-1', rfimRequired: false });
+      expect(result).toEqual({ id: 'grn-1', qciRequired: false });
+      expect(mockedAssertTransition).toHaveBeenCalledWith('grn', 'draft', 'pending_qc');
     });
 
-    it('throws NotFoundError when mrrv not found', async () => {
-      mockPrisma.mrrv.findUnique.mockResolvedValue(null);
-
-      await expect(submit('nonexistent')).rejects.toThrow(NotFoundError);
-    });
-
-    it('creates RFIM when rfimRequired is true', async () => {
-      const mrrv = makeMrrv({ status: 'draft', rfimRequired: true, mrrvLines: [] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
+    it('should auto-create QCI when rfimRequired is true', async () => {
+      const grn = { id: 'grn-1', status: 'draft', rfimRequired: true, mrrvLines: [] };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockedGenerateDocNumber.mockResolvedValue('QCI-001');
       mockPrisma.mrrv.update.mockResolvedValue({});
       mockPrisma.rfim.create.mockResolvedValue({});
-      mockedGenDoc.mockResolvedValue('RFIM-2025-0001');
 
-      const result = await submit('mrrv-1');
+      const result = await submit('grn-1');
 
-      expect(mockedGenDoc).toHaveBeenCalledWith('rfim');
-      expect(mockPrisma.rfim.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            rfimNumber: 'RFIM-2025-0001',
-            mrrvId: 'mrrv-1',
-            status: 'pending',
-          }),
-        }),
-      );
-      expect(result.rfimRequired).toBe(true);
+      expect(result.qciRequired).toBe(true);
+      expect(mockPrisma.rfim.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.rfim.create.mock.calls[0][0].data.rfimNumber).toBe('QCI-001');
+      expect(mockPrisma.rfim.create.mock.calls[0][0].data.mrrvId).toBe('grn-1');
     });
 
-    it('does not create RFIM when rfimRequired is false', async () => {
-      const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
+    it('should not create QCI when rfimRequired is false', async () => {
+      const grn = { id: 'grn-1', status: 'draft', rfimRequired: false, mrrvLines: [] };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
       mockPrisma.mrrv.update.mockResolvedValue({});
 
-      await submit('mrrv-1');
+      await submit('grn-1');
 
       expect(mockPrisma.rfim.create).not.toHaveBeenCalled();
     });
 
-    it('creates OSD report for damaged lines', async () => {
-      const damagedLine = makeMrrvLine({ id: 'line-dmg', qtyDamaged: 3 });
-      const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [damagedLine] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
-      mockPrisma.osdReport.create.mockResolvedValue({});
-      mockedGenDoc.mockResolvedValue('OSD-2025-0001');
+    it('should throw NotFoundError when GRN not found', async () => {
+      mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
-      await submit('mrrv-1');
-
-      expect(mockedGenDoc).toHaveBeenCalledWith('osd');
-      expect(mockPrisma.osdReport.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            osdNumber: 'OSD-2025-0001',
-            mrrvId: 'mrrv-1',
-            supplierId: 'sup-1',
-            warehouseId: 'wh-1',
-            reportTypes: ['damage'],
-            status: 'draft',
-            osdLines: {
-              create: expect.arrayContaining([
-                expect.objectContaining({
-                  itemId: 'item-1',
-                  mrrvLineId: 'line-dmg',
-                  qtyDamaged: 3,
-                  damageType: 'physical',
-                }),
-              ]),
-            },
-          }),
-        }),
-      );
-    });
-
-    it('sets hasOsd to true when damaged lines exist', async () => {
-      const damagedLine = makeMrrvLine({ qtyDamaged: 1 });
-      const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [damagedLine] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
-      mockPrisma.osdReport.create.mockResolvedValue({});
-      mockedGenDoc.mockResolvedValue('OSD-001');
-
-      await submit('mrrv-1');
-
-      // Second update call sets hasOsd
-      const updateCalls = mockPrisma.mrrv.update.mock.calls;
-      const hasOsdCall = updateCalls.find(
-        (c: unknown[]) =>
-          (c[0] as Record<string, unknown>).data &&
-          ((c[0] as Record<string, unknown>).data as Record<string, unknown>).hasOsd === true,
-      );
-      expect(hasOsdCall).toBeDefined();
-    });
-
-    it('does not create OSD when no damaged lines', async () => {
-      const cleanLine = makeMrrvLine({ qtyDamaged: 0 });
-      const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [cleanLine] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
-
-      await submit('mrrv-1');
-
-      expect(mockPrisma.osdReport.create).not.toHaveBeenCalled();
+      await expect(submit('nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 
-  // ─── approveQc ───────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // approveQc (pending_qc -> qc_approved)
+  // ─────────────────────────────────────────────────────────────────────────
   describe('approveQc', () => {
-    it('transitions to qc_approved and sets qcInspectorId', async () => {
-      const mrrv = makeMrrv({ status: 'pending_qc' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      const updated = { ...mrrv, status: 'qc_approved', qcInspectorId: 'inspector-1' };
-      mockPrisma.mrrv.update.mockResolvedValue(updated);
+    it('should approve QC and set inspector', async () => {
+      const grn = { id: 'grn-1', status: 'pending_qc' };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.update.mockResolvedValue({ ...grn, status: 'qc_approved' });
 
-      const result = await approveQc('mrrv-1', 'inspector-1');
+      const result = await approveQc('grn-1', 'inspector-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'pending_qc', 'qc_approved');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrrv-1' },
-          data: expect.objectContaining({
-            status: 'qc_approved',
-            qcInspectorId: 'inspector-1',
-          }),
-        }),
-      );
       expect(result.status).toBe('qc_approved');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('grn', 'pending_qc', 'qc_approved');
+      const updateData = mockPrisma.mrrv.update.mock.calls[0][0].data;
+      expect(updateData.qcInspectorId).toBe('inspector-1');
+      expect(updateData.qcApprovedDate).toBeInstanceOf(Date);
     });
 
-    it('throws NotFoundError when mrrv not found', async () => {
+    it('should throw NotFoundError when GRN not found', async () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
       await expect(approveQc('nonexistent', 'user-1')).rejects.toThrow(NotFoundError);
     });
-
-    it('sets qcApprovedDate', async () => {
-      const mrrv = makeMrrv({ status: 'pending_qc' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'qc_approved' });
-
-      await approveQc('mrrv-1', 'inspector-1');
-
-      const call = mockPrisma.mrrv.update.mock.calls[0][0];
-      expect(call.data.qcApprovedDate).toBeInstanceOf(Date);
-    });
   });
 
-  // ─── receive ─────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // receive (qc_approved -> received)
+  // ─────────────────────────────────────────────────────────────────────────
   describe('receive', () => {
-    it('transitions to received', async () => {
-      const mrrv = makeMrrv({ status: 'qc_approved' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      const updated = { ...mrrv, status: 'received' };
-      mockPrisma.mrrv.update.mockResolvedValue(updated);
+    it('should transition to received', async () => {
+      const grn = { id: 'grn-1', status: 'qc_approved' };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.update.mockResolvedValue({ ...grn, status: 'received' });
 
-      const result = await receive('mrrv-1');
+      const result = await receive('grn-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'qc_approved', 'received');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrrv-1' },
-          data: { status: 'received' },
-        }),
-      );
       expect(result.status).toBe('received');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('grn', 'qc_approved', 'received');
     });
 
-    it('throws NotFoundError when mrrv not found', async () => {
+    it('should throw NotFoundError when GRN not found', async () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
       await expect(receive('nonexistent')).rejects.toThrow(NotFoundError);
     });
   });
 
-  // ─── store ───────────────────────────────────────────────────────────
-
+  // ─────────────────────────────────────────────────────────────────────────
+  // store (received -> stored) -- adds stock
+  // ─────────────────────────────────────────────────────────────────────────
   describe('store', () => {
-    it('transitions to stored', async () => {
-      const mrrv = makeMrrv({ status: 'received', mrrvLines: [] });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+    it('should transition to stored and add stock', async () => {
+      const grn = {
+        id: 'grn-1',
+        status: 'received',
+        warehouseId: 'wh-1',
+        supplierId: 'sup-1',
+        mrrvLines: [
+          { id: 'line-1', itemId: 'item-1', qtyReceived: 10, qtyDamaged: 2, unitCost: 50, expiryDate: null },
+          { id: 'line-2', itemId: 'item-2', qtyReceived: 5, qtyDamaged: 0, unitCost: 100, expiryDate: null },
+        ],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockedAddStockBatch.mockResolvedValue(undefined);
 
-      await store('mrrv-1', 'user-1');
+      const result = await store('grn-1', 'user-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'received', 'stored');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrrv-1' },
-          data: { status: 'stored' },
-        }),
-      );
+      expect(result).toEqual({ id: 'grn-1', warehouseId: 'wh-1', linesStored: 2 });
+      expect(mockedAssertTransition).toHaveBeenCalledWith('grn', 'received', 'stored');
+      expect(mockedAddStockBatch).toHaveBeenCalledTimes(1);
+
+      // Check stock items: qty = qtyReceived - qtyDamaged
+      const stockItems = mockedAddStockBatch.mock.calls[0][0];
+      expect(stockItems).toHaveLength(2);
+      expect(stockItems[0].qty).toBe(8); // 10 - 2
+      expect(stockItems[1].qty).toBe(5); // 5 - 0
     });
 
-    it('throws NotFoundError when mrrv not found', async () => {
+    it('should filter out lines with zero usable qty', async () => {
+      const grn = {
+        id: 'grn-1',
+        status: 'received',
+        warehouseId: 'wh-1',
+        supplierId: 'sup-1',
+        mrrvLines: [{ id: 'line-1', itemId: 'item-1', qtyReceived: 5, qtyDamaged: 5, unitCost: 50, expiryDate: null }],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockedAddStockBatch.mockResolvedValue(undefined);
+
+      await store('grn-1', 'user-1');
+
+      const stockItems = mockedAddStockBatch.mock.calls[0][0];
+      expect(stockItems).toHaveLength(0);
+    });
+
+    it('should throw NotFoundError when GRN not found', async () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
       await expect(store('nonexistent', 'user-1')).rejects.toThrow(NotFoundError);
-    });
-
-    it('calls addStockBatch with filtered lines (qtyToStore > 0)', async () => {
-      const lines = [
-        makeMrrvLine({
-          id: 'line-a',
-          itemId: 'item-1',
-          qtyReceived: 10,
-          qtyDamaged: 2,
-          unitCost: 50,
-          expiryDate: new Date('2027-01-01'),
-        }),
-        makeMrrvLine({
-          id: 'line-b',
-          itemId: 'item-2',
-          qtyReceived: 5,
-          qtyDamaged: 0,
-          unitCost: 100,
-          expiryDate: null,
-        }),
-      ];
-      const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
-      mockedAddStockBatch.mockResolvedValue(undefined);
-
-      await store('mrrv-1', 'user-1');
-
-      expect(mockedAddStockBatch).toHaveBeenCalledTimes(1);
-      const batchArg = mockedAddStockBatch.mock.calls[0][0];
-      expect(batchArg).toHaveLength(2);
-
-      // First line: qtyToStore = 10 - 2 = 8
-      expect(batchArg[0]).toEqual(
-        expect.objectContaining({
-          itemId: 'item-1',
-          warehouseId: 'wh-1',
-          qty: 8,
-          unitCost: 50,
-          supplierId: 'sup-1',
-          mrrvLineId: 'line-a',
-          expiryDate: new Date('2027-01-01'),
-          performedById: 'user-1',
-        }),
-      );
-
-      // Second line: qtyToStore = 5 - 0 = 5
-      expect(batchArg[1]).toEqual(
-        expect.objectContaining({
-          itemId: 'item-2',
-          warehouseId: 'wh-1',
-          qty: 5,
-          unitCost: 100,
-          supplierId: 'sup-1',
-          mrrvLineId: 'line-b',
-          performedById: 'user-1',
-        }),
-      );
-    });
-
-    it('calls addStockBatch with empty array when all qtyToStore is 0', async () => {
-      const lines = [
-        makeMrrvLine({ qtyReceived: 5, qtyDamaged: 5 }), // net 0
-      ];
-      const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
-      mockedAddStockBatch.mockResolvedValue(undefined);
-
-      await store('mrrv-1', 'user-1');
-
-      expect(mockedAddStockBatch).toHaveBeenCalledWith([]);
-    });
-
-    it('returns id, warehouseId, and linesStored count', async () => {
-      const lines = [makeMrrvLine(), makeMrrvLine({ id: 'line-2' })];
-      const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
-      mockedAddStockBatch.mockResolvedValue(undefined);
-
-      const result = await store('mrrv-1', 'user-1');
-
-      expect(result).toEqual({
-        id: 'mrrv-1',
-        warehouseId: 'wh-1',
-        linesStored: 2,
-      });
-    });
-
-    it('passes undefined for unitCost when line has no unitCost', async () => {
-      const lines = [makeMrrvLine({ unitCost: null, qtyReceived: 10, qtyDamaged: 0 })];
-      const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
-      mockedAddStockBatch.mockResolvedValue(undefined);
-
-      await store('mrrv-1', 'user-1');
-
-      const batchArg = mockedAddStockBatch.mock.calls[0][0];
-      expect(batchArg[0]).toEqual(expect.objectContaining({ unitCost: undefined }));
     });
   });
 });

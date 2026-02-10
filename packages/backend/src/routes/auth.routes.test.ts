@@ -191,10 +191,10 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(res.body.message).toMatch(/Invalid refresh token/);
   });
 
-  it('should return 400 when refreshToken is missing', async () => {
+  it('should return 401 when refreshToken is missing from both body and cookie', async () => {
     const res = await request.post('/api/v1/auth/refresh').send({});
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
     expect(refreshMock).not.toHaveBeenCalled();
   });

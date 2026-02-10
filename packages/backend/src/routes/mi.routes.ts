@@ -64,6 +64,13 @@ export default createDocumentRouter({
       },
     },
     {
+      path: 'sign-qc',
+      roles: ['admin', 'qc_officer'],
+      handler: (id, req) => mirvService.signQc(id, req.user!.userId),
+      socketEvent: 'mi:qc_signed',
+      socketData: () => ({ status: 'approved', qcSigned: true }),
+    },
+    {
       path: 'issue',
       roles: ['admin', 'warehouse_supervisor', 'warehouse_staff'],
       handler: async (id, req) => {

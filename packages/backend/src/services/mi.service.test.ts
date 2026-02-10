@@ -353,6 +353,7 @@ describe('mirv.service', () => {
       warehouseId: 'wh-1',
       projectId: 'proj-1',
       locationOfWork: 'Site A',
+      qcSignatureId: 'qc-user-1',
       mirvLines: [
         { id: 'line-1', itemId: 'item-1', qtyRequested: 10, qtyApproved: 8 },
         { id: 'line-2', itemId: 'item-2', qtyRequested: 5, qtyApproved: null },

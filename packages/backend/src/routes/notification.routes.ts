@@ -52,15 +52,20 @@ router.get('/unread-count', async (req: Request, res: Response, next: NextFuncti
 
 // ── POST / — Create notification (admin/manager only) ──────────────────
 
-router.post('/', requireRole('admin', 'manager'), validate(notificationCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const io = req.app.get('io') as SocketIOServer;
-    const notification = await notificationService.createNotification(req.body, io);
-    sendCreated(res, notification);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/',
+  requireRole('admin', 'manager'),
+  validate(notificationCreateSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const io = req.app.get('io') as SocketIOServer;
+      const notification = await notificationService.createNotification(req.body, io);
+      sendCreated(res, notification);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── PUT /read-all — Mark all as read for current user ───────────────────
 // IMPORTANT: This must be defined BEFORE /:id/read to avoid route conflicts
@@ -82,16 +87,7 @@ router.put('/:id/read', async (req: Request, res: Response, next: NextFunction) 
     await notificationService.markAsRead(notificationId, req.user!.userId);
     sendSuccess(res, { message: 'Notification marked as read' });
   } catch (err) {
-    if (err instanceof Error) {
-      if (err.message === 'Notification not found') {
-        sendError(res, 404, err.message);
-        return;
-      }
-      if (err.message === 'Access denied') {
-        sendError(res, 403, err.message);
-        return;
-      }
-    }
+    // AppError subclasses (NotFoundError, AuthorizationError) propagate to the global error handler
     next(err);
   }
 });
@@ -104,16 +100,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
     await notificationService.deleteNotification(notificationId, req.user!.userId);
     sendNoContent(res);
   } catch (err) {
-    if (err instanceof Error) {
-      if (err.message === 'Notification not found') {
-        sendError(res, 404, err.message);
-        return;
-      }
-      if (err.message === 'Access denied') {
-        sendError(res, 403, err.message);
-        return;
-      }
-    }
+    // AppError subclasses (NotFoundError, AuthorizationError) propagate to the global error handler
     next(err);
   }
 });

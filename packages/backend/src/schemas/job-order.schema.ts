@@ -95,6 +95,21 @@ const joBaseFields = {
   description: z.string().min(1),
   notes: z.string().optional(),
   totalAmount: decimalNonNegative.optional(),
+  // Logistics Process V5 fields
+  driverName: z.string().optional(),
+  driverNationality: z.string().optional(),
+  driverIdNumber: z.string().optional(),
+  vehicleBrand: z.string().optional(),
+  vehicleYear: z.number().int().optional(),
+  vehiclePlate: z.string().optional(),
+  googleMapsPickup: z.string().optional(),
+  googleMapsDelivery: z.string().optional(),
+  insuranceValue: decimalNonNegative.optional(),
+  insuranceRequired: z.boolean().optional(),
+  projectBudgetApproved: z.boolean().optional(),
+  coaApprovalRequired: z.boolean().optional(),
+  shiftStartTime: z.string().datetime().optional(),
+  cnNumber: z.string().optional(),
 };
 
 // ── Create Schema ─────────────────────────────────────────────────────
@@ -120,6 +135,21 @@ export const joUpdateSchema = z.object({
   description: z.string().min(1).optional(),
   notes: z.string().optional(),
   totalAmount: decimalNonNegative.optional(),
+  // Logistics Process V5 fields
+  driverName: z.string().optional(),
+  driverNationality: z.string().optional(),
+  driverIdNumber: z.string().optional(),
+  vehicleBrand: z.string().optional(),
+  vehicleYear: z.number().int().optional(),
+  vehiclePlate: z.string().optional(),
+  googleMapsPickup: z.string().optional(),
+  googleMapsDelivery: z.string().optional(),
+  insuranceValue: decimalNonNegative.optional(),
+  insuranceRequired: z.boolean().optional(),
+  projectBudgetApproved: z.boolean().optional(),
+  coaApprovalRequired: z.boolean().optional(),
+  shiftStartTime: z.string().datetime().optional(),
+  cnNumber: z.string().optional(),
 });
 
 // ── Approval Schema ───────────────────────────────────────────────────

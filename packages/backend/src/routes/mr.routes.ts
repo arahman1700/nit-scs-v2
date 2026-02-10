@@ -85,6 +85,25 @@ export default createDocumentRouter({
       },
     },
     {
+      path: 'convert-to-imsf',
+      roles: APPROVE_ROLES,
+      handler: async (id, req) => {
+        const { receiverProjectId } = req.body as { receiverProjectId: string };
+        const result = await mrfService.convertToImsf(id, req.user!.userId, receiverProjectId);
+        const io = req.app.get('io') as SocketIOServer | undefined;
+        if (io) {
+          emitToAll(io, 'imsf:created', { id: result.id, imsfNumber: result.imsfNumber });
+          emitToAll(io, 'entity:created', { entity: 'imsf' });
+        }
+        return result;
+      },
+      socketEvent: 'mr:imsf_created',
+      socketData: r => {
+        const res = r as { id: string; imsfNumber: string };
+        return { status: 'not_available_locally', imsf: { id: res.id, imsfNumber: res.imsfNumber } };
+      },
+    },
+    {
       path: 'fulfill',
       roles: APPROVE_ROLES,
       handler: id => mrfService.fulfill(id),

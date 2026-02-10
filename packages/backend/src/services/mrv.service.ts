@@ -149,10 +149,32 @@ export async function complete(id: string, userId: string) {
   }));
   await addStockBatch(stockItems);
 
+  // Auto-create SurplusItem when returnType is 'surplus'
+  let surplusItemId: string | null = null;
+  if (mrv.returnType === 'surplus') {
+    const totalReturnQty = mrv.mrvLines.reduce((sum, l) => sum + Number(l.qtyReturned), 0);
+    const surplusNumber = await generateDocumentNumber('surplus');
+    const surplus = await prisma.surplusItem.create({
+      data: {
+        surplusNumber,
+        itemId: mrv.mrvLines[0]?.itemId,
+        warehouseId: mrv.toWarehouseId,
+        projectId: mrv.projectId,
+        qty: totalReturnQty,
+        status: 'identified',
+        createdById: userId,
+        // NOTE: mrvId field pending schema migration to link surplus back to MRV
+        // mrvId: mrv.id,
+      } as any,
+    });
+    surplusItemId = surplus.id;
+  }
+
   return {
     id: mrv.id,
     toWarehouseId: mrv.toWarehouseId,
     goodLinesRestocked: goodLines.length,
     totalLines: mrv.mrvLines.length,
+    surplusItemId,
   };
 }

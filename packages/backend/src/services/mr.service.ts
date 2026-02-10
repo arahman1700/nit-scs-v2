@@ -173,7 +173,12 @@ export async function approve(id: string, userId: string) {
 
   return prisma.materialRequisition.update({
     where: { id: mr.id },
-    data: { status: 'approved', approvedById: userId, approvalDate: new Date() },
+    data: {
+      status: 'approved',
+      approvedById: userId,
+      approvalDate: new Date(),
+      stockVerificationSla: new Date(Date.now() + 4 * 60 * 60 * 1000),
+    },
   });
 }
 
@@ -188,7 +193,13 @@ export async function checkStock(id: string) {
   if (!mr) throw new NotFoundError('MR', id);
   if (mr.status !== 'approved') throw new BusinessRuleError('MR must be approved to check stock');
 
-  const stockResults: Array<{ lineId: string; itemId: string | null; available: number; source: string }> = [];
+  const stockResults: Array<{
+    lineId: string;
+    itemId: string | null;
+    available: number;
+    source: string;
+    otherProjectId?: string;
+  }> = [];
 
   for (const line of mr.mrfLines) {
     if (!line.itemId) {
@@ -218,12 +229,119 @@ export async function checkStock(id: string) {
     stockResults.push({ lineId: line.id, itemId: line.itemId, available: totalAvailable, source });
   }
 
+  // Cross-project stock check: if ALL lines are 'purchase_required', check other projects
+  const allPurchaseRequired = stockResults.every(r => r.source === 'purchase_required');
+  let suggestImsf = false;
+
+  if (allPurchaseRequired) {
+    const otherProjects = await prisma.project.findMany({
+      where: { id: { not: mr.projectId }, status: 'active' },
+      select: { id: true, warehouses: { select: { id: true } } },
+    });
+
+    for (const result of stockResults) {
+      if (!result.itemId) continue;
+
+      for (const project of otherProjects) {
+        let otherAvailable = 0;
+        for (const wh of project.warehouses) {
+          const stock = await getStockLevel(result.itemId, wh.id);
+          otherAvailable += stock.available;
+        }
+
+        if (otherAvailable > 0) {
+          result.source = 'available_other_project';
+          result.otherProjectId = project.id;
+          suggestImsf = true;
+
+          await prisma.mrfLine.update({
+            where: { id: result.lineId },
+            data: { source: 'available_other_project' },
+          });
+          break; // found stock in another project for this line
+        }
+      }
+    }
+  }
+
   const updated = await prisma.materialRequisition.update({
     where: { id: mr.id },
     data: { status: 'checking_stock' },
   });
 
-  return { id: mr.id, status: updated.status, stockResults };
+  return { id: mr.id, status: updated.status, stockResults, suggestImsf };
+}
+
+export async function convertToImsf(id: string, userId: string, receiverProjectId: string) {
+  const mr = await prisma.materialRequisition.findUnique({
+    where: { id },
+    include: {
+      mrfLines: {
+        include: {
+          item: { select: { id: true, itemCode: true, itemDescription: true } },
+          uom: { select: { id: true } },
+        },
+      },
+    },
+  });
+  if (!mr) throw new NotFoundError('MR', id);
+  if (mr.status !== 'checking_stock' && mr.status !== 'not_available_locally') {
+    throw new BusinessRuleError('MR must be in checking_stock or not_available_locally status to convert to IMSF');
+  }
+
+  // Get lines that need procurement (purchase_required or available_other_project)
+  const eligibleLines = mr.mrfLines.filter(
+    l => l.source === 'purchase_required' || l.source === 'available_other_project' || !l.source || l.source === 'tbd',
+  );
+
+  if (eligibleLines.length === 0) {
+    throw new BusinessRuleError('No lines eligible for IMSF conversion');
+  }
+
+  // Filter to lines with valid itemId and uomId (required for IMSF lines)
+  const validLines = eligibleLines.filter(l => l.itemId && l.uomId);
+  if (validLines.length === 0) {
+    throw new BusinessRuleError('No lines with valid item and UOM for IMSF conversion');
+  }
+
+  const result = await prisma.$transaction(async tx => {
+    const imsfNumber = await generateDocumentNumber('imsf');
+    const imsf = await tx.imsf.create({
+      data: {
+        imsfNumber,
+        senderProjectId: mr.projectId,
+        receiverProjectId,
+        materialType: 'normal',
+        status: 'created',
+        originMrId: mr.id,
+        notes: `Auto-created from MR ${mr.mrfNumber}`,
+        createdById: userId,
+        imsfLines: {
+          create: validLines.map(line => ({
+            itemId: line.itemId!,
+            description: line.item?.itemDescription ?? line.itemDescription ?? null,
+            qty: line.qtyRequested,
+            uomId: line.uomId!,
+            mrfNumber: mr.mrfNumber,
+          })),
+        },
+      },
+      include: {
+        imsfLines: true,
+        senderProject: { select: { id: true, projectName: true } },
+        receiverProject: { select: { id: true, projectName: true } },
+      },
+    });
+
+    await tx.materialRequisition.update({
+      where: { id: mr.id },
+      data: { status: 'not_available_locally', convertedToImsfId: imsf.id },
+    });
+
+    return imsf;
+  });
+
+  return result;
 }
 
 export async function convertToMirv(id: string, userId: string, warehouseIdOverride?: string) {

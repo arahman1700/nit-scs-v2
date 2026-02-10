@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendCreated } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
@@ -8,9 +8,9 @@ import { NotFoundError } from '@nit-scs-v2/shared';
 const router = Router();
 
 // GET /api/v1/views/:entityType — List user's saved views
-router.get('/:entityType', authenticate, async (req: Request, res: Response) => {
+router.get('/:entityType', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
     const { entityType } = req.params;
 
     const views = await prisma.userView.findMany({
@@ -29,14 +29,14 @@ router.get('/:entityType', authenticate, async (req: Request, res: Response) => 
 
     sendSuccess(res, views);
   } catch (err) {
-    sendError(res, 500, (err as Error).message);
+    next(err);
   }
 });
 
 // POST /api/v1/views — Save a new view
-router.post('/', authenticate, async (req: Request, res: Response) => {
+router.post('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
     const { entityType, name, viewType, config, isDefault } = req.body;
 
     if (!entityType || !config) {
@@ -65,14 +65,14 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
     sendCreated(res, view);
   } catch (err) {
-    sendError(res, 500, (err as Error).message);
+    next(err);
   }
 });
 
 // PATCH /api/v1/views/:id — Update a view
-router.patch('/:id', authenticate, async (req: Request, res: Response) => {
+router.patch('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
     const { id } = req.params;
     const { name, viewType, config, isDefault } = req.body;
 
@@ -101,15 +101,14 @@ router.patch('/:id', authenticate, async (req: Request, res: Response) => {
 
     sendSuccess(res, updated);
   } catch (err) {
-    const status = (err as any).statusCode ?? 500;
-    sendError(res, status, (err as Error).message);
+    next(err);
   }
 });
 
 // DELETE /api/v1/views/:id — Delete a view
-router.delete('/:id', authenticate, async (req: Request, res: Response) => {
+router.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user.id;
+    const userId = req.user!.userId;
     const { id } = req.params;
 
     const existing = await prisma.userView.findFirst({
@@ -120,8 +119,7 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
     await prisma.userView.delete({ where: { id: id as string } });
     sendSuccess(res, { deleted: true });
   } catch (err) {
-    const status = (err as any).statusCode ?? 500;
-    sendError(res, status, (err as Error).message);
+    next(err);
   }
 });
 

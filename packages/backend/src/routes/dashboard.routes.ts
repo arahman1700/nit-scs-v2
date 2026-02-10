@@ -4,6 +4,7 @@ import { prisma } from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess } from '../utils/response.js';
 import { cached, CacheTTL } from '../utils/cache.js';
+import { getProductivitySummary } from '../services/labor-productivity.service.js';
 
 const router = Router();
 
@@ -12,9 +13,10 @@ router.use(authenticate);
 
 // ── GET /stats — Overall dashboard statistics ───────────────────────────
 
-router.get('/stats', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/stats', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:stats', CacheTTL.DASHBOARD_STATS, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:stats:${role}`, CacheTTL.DASHBOARD_STATS, async () => {
       const [totalProjects, totalItems, totalWarehouses, totalEmployees, pendingMirv, pendingJo, lowStockAlerts] =
         await Promise.all([
           prisma.project.count({ where: { status: 'active' } }),
@@ -52,9 +54,10 @@ router.get('/stats', async (_req: Request, res: Response, next: NextFunction) =>
 
 // ── GET /recent-activity — Recent audit log entries grouped by day ──────
 
-router.get('/recent-activity', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/recent-activity', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:recent-activity', CacheTTL.RECENT_ACTIVITY, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:recent-activity:${role}`, CacheTTL.RECENT_ACTIVITY, async () => {
       const recentLogs = await prisma.auditLog.findMany({
         orderBy: { performedAt: 'desc' },
         take: 20,
@@ -85,9 +88,10 @@ router.get('/recent-activity', async (_req: Request, res: Response, next: NextFu
 
 // ── GET /inventory-summary — Inventory overview stats ───────────────────
 
-router.get('/inventory-summary', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/inventory-summary', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:inventory-summary', CacheTTL.INVENTORY_SUMMARY, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:inventory-summary:${role}`, CacheTTL.INVENTORY_SUMMARY, async () => {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
@@ -133,9 +137,10 @@ router.get('/inventory-summary', async (_req: Request, res: Response, next: Next
 
 // ── GET /document-counts — Document stats with status breakdowns ────────
 
-router.get('/document-counts', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/document-counts', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:document-counts', CacheTTL.DOCUMENT_COUNTS, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:document-counts:${role}`, CacheTTL.DOCUMENT_COUNTS, async () => {
       const [mrrvData, mirvData, mrvData, joData] = await Promise.all([
         prisma.mrrv.groupBy({ by: ['status'], _count: true }),
         prisma.mirv.groupBy({ by: ['status'], _count: true }),
@@ -169,9 +174,10 @@ router.get('/document-counts', async (_req: Request, res: Response, next: NextFu
 
 // ── GET /sla-compliance — SLA metrics per document type ─────────────────
 
-router.get('/sla-compliance', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/sla-compliance', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:sla-compliance', CacheTTL.SLA_COMPLIANCE, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:sla-compliance:${role}`, CacheTTL.SLA_COMPLIANCE, async () => {
       const now = new Date();
 
       // MIRV SLA compliance (uses slaDueDate on mirv table)
@@ -245,9 +251,10 @@ router.get('/sla-compliance', async (_req: Request, res: Response, next: NextFun
 
 // ── GET /top-projects — Top 5 projects by active documents ──────────────
 
-router.get('/top-projects', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/top-projects', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await cached('dashboard:top-projects', CacheTTL.TOP_PROJECTS, async () => {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:top-projects:${role}`, CacheTTL.TOP_PROJECTS, async () => {
       const topProjects = await prisma.$queryRaw<
         { id: string; project_code: string; project_name: string; doc_count: bigint }[]
       >`
@@ -283,6 +290,25 @@ router.get('/top-projects', async (_req: Request, res: Response, next: NextFunct
         activeDocuments: Number(p.doc_count),
       }));
     });
+
+    sendSuccess(res, data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /labor-productivity — Worker productivity metrics ─────────────
+
+router.get('/labor-productivity', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const days = req.query.days ? Number(req.query.days) : 30;
+    const warehouseId = req.query.warehouseId as string | undefined;
+
+    const data = await cached(
+      `dashboard:labor-productivity:${days}:${warehouseId ?? 'all'}`,
+      CacheTTL.LABOR_PRODUCTIVITY,
+      () => getProductivitySummary(days, warehouseId),
+    );
 
     sendSuccess(res, data);
   } catch (err) {
