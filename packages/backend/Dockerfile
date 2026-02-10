@@ -43,7 +43,16 @@ COPY packages/backend/data packages/backend/data
 # Copy startup script
 COPY packages/backend/start.sh packages/backend/start.sh
 
+# Security: run as non-root
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+USER nodejs
+
 WORKDIR /app/packages/backend
 ENV NODE_ENV=production
 EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://localhost:4000/api/health || exit 1
+
 CMD ["sh", "start.sh"]

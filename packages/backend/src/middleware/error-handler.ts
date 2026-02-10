@@ -2,12 +2,19 @@ import type { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { AppError, RequestValidationError } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
+import { Sentry } from '../config/sentry.js';
 
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
   log('error', err.message, { stack: err.stack });
 
+  // ── Sentry context ──────────────────────────────────────────────────
+  Sentry.setContext('request', { method: _req.method, url: _req.url, params: _req.params });
+
   // ── Custom AppError subclasses ────────────────────────────────────────
   if (err instanceof AppError) {
+    if (err.statusCode >= 500) {
+      Sentry.captureException(err);
+    }
     const body: Record<string, unknown> = {
       success: false,
       message: err.message,
@@ -60,6 +67,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   }
 
   // ── Default 500 ───────────────────────────────────────────────────────
+  Sentry.captureException(err);
   res.status(500).json({
     success: false,
     message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,

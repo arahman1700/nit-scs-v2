@@ -276,6 +276,24 @@ async function main() {
       role: 'Manager',
       sysRole: 'manager',
     },
+    {
+      id: 'EMP-007',
+      name: 'Fahad Al-Otaibi',
+      nameAr: 'فهد العتيبي',
+      email: 'fahad@nit.sa',
+      dept: 'transport',
+      role: 'Transport Supervisor',
+      sysRole: 'transport_supervisor',
+    },
+    {
+      id: 'EMP-008',
+      name: 'Nasser Al-Qahtani',
+      nameAr: 'ناصر القحطاني',
+      email: 'nasser@nit.sa',
+      dept: 'warehouse',
+      role: 'Scrap Committee Member',
+      sysRole: 'scrap_committee_member',
+    },
   ];
   for (const emp of sampleEmployees) {
     await prisma.employee
@@ -295,6 +313,49 @@ async function main() {
       .catch(() => null);
   }
   console.log(`  Sample Employees: ${sampleEmployees.length}`);
+
+  // ── Default Warehouse + Zones ─────────────────────────────────────────
+  const mainWhType = await prisma.warehouseType.findFirst({ where: { typeName: 'Main Warehouse' } });
+  const riyadhRegion = regions.find(r => r.regionName === 'Riyadh')!;
+
+  if (mainWhType) {
+    const warehouse = await prisma.warehouse
+      .create({
+        data: {
+          warehouseCode: 'WH-MAIN',
+          warehouseName: 'NIT Main Warehouse',
+          warehouseNameAr: 'مستودع نسما الرئيسي',
+          warehouseTypeId: mainWhType.id,
+          regionId: riyadhRegion.id,
+          status: 'active',
+        },
+      })
+      .catch(() => prisma.warehouse.findFirst({ where: { warehouseCode: 'WH-MAIN' } }).then(r => r!));
+
+    if (warehouse) {
+      const defaultZones = [
+        { zoneCode: 'A', zoneName: 'Zone A - Civil', zoneType: 'civil' },
+        { zoneCode: 'B', zoneName: 'Zone B - Mechanical', zoneType: 'mechanical' },
+        { zoneCode: 'C', zoneName: 'Zone C - Electrical', zoneType: 'electrical' },
+        { zoneCode: 'CONTAINER', zoneName: 'Container Storage', zoneType: 'container' },
+        { zoneCode: 'OPEN_YARD', zoneName: 'Open Yard', zoneType: 'open_yard' },
+        { zoneCode: 'HAZARDOUS', zoneName: 'Hazardous Materials', zoneType: 'hazardous' },
+      ];
+      for (const z of defaultZones) {
+        await prisma.warehouseZone
+          .create({
+            data: {
+              warehouseId: warehouse.id,
+              zoneCode: z.zoneCode,
+              zoneName: z.zoneName,
+              zoneType: z.zoneType,
+            },
+          })
+          .catch(() => null);
+      }
+      console.log(`  Warehouse Zones: ${defaultZones.length} (in ${warehouse.warehouseName})`);
+    }
+  }
 
   console.log('\nSeed completed successfully.');
 }

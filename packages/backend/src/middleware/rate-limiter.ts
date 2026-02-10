@@ -28,7 +28,20 @@ function inMemoryLimiter(
   return { allowed: true, remaining: maxRequests - entry.count, retryAfterSec: 0 };
 }
 
-// ── Redis-backed limiter ────────────────────────────────────────────────
+// ── Redis-backed limiter (atomic Lua script) ────────────────────────────
+
+/**
+ * Lua script: INCR + EXPIRE in a single atomic operation.
+ * Returns [current_count, ttl_remaining].
+ */
+const RATE_LIMIT_LUA = `
+  local current = redis.call('INCR', KEYS[1])
+  if current == 1 then
+    redis.call('EXPIRE', KEYS[1], ARGV[1])
+  end
+  local ttl = redis.call('TTL', KEYS[1])
+  return {current, ttl}
+`;
 
 async function redisLimiter(
   key: string,
@@ -41,11 +54,9 @@ async function redisLimiter(
   }
 
   try {
-    const current = await redis.incr(key);
-    if (current === 1) {
-      await redis.expire(key, windowSec);
-    }
-    const ttl = await redis.ttl(key);
+    const result = (await redis.eval(RATE_LIMIT_LUA, 1, key, windowSec)) as [number, number];
+    const current = result[0];
+    const ttl = result[1];
 
     if (current > maxRequests) {
       return { allowed: false, remaining: 0, retryAfterSec: ttl > 0 ? ttl : windowSec };

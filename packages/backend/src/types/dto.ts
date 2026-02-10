@@ -38,6 +38,8 @@ import type {
   generatorMaintenanceUpdateSchema,
   warehouseZoneCreateSchema,
   warehouseZoneUpdateSchema,
+  handoverCreateSchema,
+  handoverUpdateSchema,
   approvalActionSchema,
 } from '../schemas/document.schema.js';
 
@@ -175,6 +177,10 @@ export type GeneratorMaintenanceUpdateDto = z.infer<typeof generatorMaintenanceU
 // Warehouse Zone
 export type WarehouseZoneCreateDto = z.infer<typeof warehouseZoneCreateSchema>;
 export type WarehouseZoneUpdateDto = z.infer<typeof warehouseZoneUpdateSchema>;
+
+// Storekeeper Handover
+export type HandoverCreateDto = z.infer<typeof handoverCreateSchema>;
+export type HandoverUpdateDto = z.infer<typeof handoverUpdateSchema>;
 
 // ═══════════════════════════════════════════════════════════════════════
 // Logistics DTOs

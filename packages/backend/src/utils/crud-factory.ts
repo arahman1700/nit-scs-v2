@@ -9,7 +9,7 @@ import { requireRole } from '../middleware/rbac.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validate.js';
 import { createAuditLog } from '../services/audit.service.js';
-import { emitToAll } from '../socket/setup.js';
+import { emitEntityEvent } from '../socket/setup.js';
 import { clientIp } from './helpers.js';
 import { buildScopeFilter, canAccessRecord, type ScopeFieldMapping } from './scope-filter.js';
 
@@ -94,6 +94,11 @@ export function createCrudRouter(config: CrudConfig): Router {
 
         const where: Record<string, unknown> = {};
 
+        // Filter out soft-deleted records
+        if (softDelete) {
+          where.deletedAt = null;
+        }
+
         // Row-level security: inject scope filter if configured
         if (config.scopeMapping) {
           Object.assign(where, buildScopeFilter(req.user!, config.scopeMapping));
@@ -139,8 +144,13 @@ export function createCrudRouter(config: CrudConfig): Router {
   router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const detailInclude = config.detailIncludes ?? config.includes;
+      const findWhere: Record<string, unknown> = { id: req.params.id as string };
+      // Filter out soft-deleted records by ID
+      if (softDelete) {
+        findWhere.deletedAt = null;
+      }
       const record = await delegate.findUnique({
-        where: { id: req.params.id as string },
+        where: findWhere,
         ...(detailInclude ? { include: detailInclude } : {}),
       });
       if (!record) {
@@ -180,7 +190,7 @@ export function createCrudRouter(config: CrudConfig): Router {
         });
 
         const io = req.app.get('io') as SocketIOServer | undefined;
-        if (io) emitToAll(io, 'entity:created', { entity: entityFromUrl(req) });
+        if (io) emitEntityEvent(io, 'entity:created', { entity: entityFromUrl(req) });
 
         sendCreated(res, record);
       } catch (err) {
@@ -223,7 +233,7 @@ export function createCrudRouter(config: CrudConfig): Router {
         });
 
         const io = req.app.get('io') as SocketIOServer | undefined;
-        if (io) emitToAll(io, 'entity:updated', { entity: entityFromUrl(req) });
+        if (io) emitEntityEvent(io, 'entity:updated', { entity: entityFromUrl(req) });
 
         sendSuccess(res, record);
       } catch (err) {
@@ -269,7 +279,7 @@ export function createCrudRouter(config: CrudConfig): Router {
       });
 
       const io = req.app.get('io') as SocketIOServer | undefined;
-      if (io) emitToAll(io, 'entity:deleted', { entity: entityFromUrl(req) });
+      if (io) emitEntityEvent(io, 'entity:deleted', { entity: entityFromUrl(req) });
 
       sendNoContent(res);
     } catch (err) {

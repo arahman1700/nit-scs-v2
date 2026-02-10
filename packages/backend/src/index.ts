@@ -2,9 +2,11 @@
 import { Sentry } from './config/sentry.js';
 
 import express from 'express';
+import compression from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { dirname, join } from 'path';
@@ -21,6 +23,7 @@ import { swaggerSpec } from './config/swagger.js';
 import { requestId } from './middleware/request-id.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { sanitizeInput } from './middleware/sanitize.js';
 import { setupSocketIO } from './socket/setup.js';
 import { startRuleEngine } from './events/rule-engine.js';
 import { startScheduler, stopScheduler } from './services/scheduler.service.js';
@@ -42,7 +45,10 @@ app.set('trust proxy', 1);
 // ── Global Middleware ─────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(compression());
+app.use(cookieParser());
+app.use(sanitizeInput());
 app.use(requestId);
 // Structured request logging (replaces morgan in production, used alongside in dev)
 if (process.env.NODE_ENV !== 'production') {
@@ -73,7 +79,7 @@ app.use('/api', (req, res, _next) => {
     healthCheck(req, res);
     return;
   }
-  res.redirect(301, `/api/v1${req.url}`);
+  res.redirect(302, `/api/v1${req.url}`);
 });
 
 // ── Socket.IO ─────────────────────────────────────────────────────────────

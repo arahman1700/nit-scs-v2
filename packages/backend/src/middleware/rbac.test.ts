@@ -80,8 +80,8 @@ describe('requireRole middleware', () => {
 
 describe('requirePermission middleware', () => {
   it('allows user with the required permission', () => {
-    // admin has all permissions on mrrv including 'create'
-    const middleware = requirePermission('mrrv', 'create');
+    // admin has all permissions on grn including 'create'
+    const middleware = requirePermission('grn', 'create');
     const req = mockReq({ user: { systemRole: 'admin', userId: 'u1' } });
     const res = mockRes();
 
@@ -91,8 +91,8 @@ describe('requirePermission middleware', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it('allows warehouse_supervisor to read mrrv', () => {
-    const middleware = requirePermission('mrrv', 'read');
+  it('allows warehouse_supervisor to read grn', () => {
+    const middleware = requirePermission('grn', 'read');
     const req = mockReq({ user: { systemRole: 'warehouse_supervisor', userId: 'u1' } });
     const res = mockRes();
 
@@ -120,7 +120,7 @@ describe('requirePermission middleware', () => {
   });
 
   it('rejects unknown role without permissions', () => {
-    const middleware = requirePermission('mrrv', 'create');
+    const middleware = requirePermission('grn', 'create');
     const req = mockReq({ user: { systemRole: 'unknown_role', userId: 'u1' } });
     const res = mockRes();
 
@@ -131,7 +131,7 @@ describe('requirePermission middleware', () => {
   });
 
   it('rejects unauthenticated request (401)', () => {
-    const middleware = requirePermission('mrrv', 'read');
+    const middleware = requirePermission('grn', 'read');
     const req = mockReq(); // no user
     const res = mockRes();
 

@@ -85,10 +85,23 @@ export interface PrismaMock {
   emailLog: PrismaModelMock;
   approvalWorkflow: PrismaModelMock;
   approvalStep: PrismaModelMock;
+  imsf: PrismaModelMock;
+  imsfLine: PrismaModelMock;
+  scrapItem: PrismaModelMock;
+  sscBid: PrismaModelMock;
+  surplusItem: PrismaModelMock;
   item: PrismaModelMock;
   warehouse: PrismaModelMock;
   project: PrismaModelMock;
   supplier: PrismaModelMock;
+  rentalContract: PrismaModelMock;
+  rentalContractLine: PrismaModelMock;
+  generatorFuelLog: PrismaModelMock;
+  generatorMaintenance: PrismaModelMock;
+  generator: PrismaModelMock;
+  tool: PrismaModelMock;
+  toolIssue: PrismaModelMock;
+  storekeeperHandover: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -147,10 +160,23 @@ export function createPrismaMock(): PrismaMock {
     emailLog: createModelMock(),
     approvalWorkflow: createModelMock(),
     approvalStep: createModelMock(),
+    imsf: createModelMock(),
+    imsfLine: createModelMock(),
+    scrapItem: createModelMock(),
+    sscBid: createModelMock(),
+    surplusItem: createModelMock(),
     item: createModelMock(),
     warehouse: createModelMock(),
     project: createModelMock(),
     supplier: createModelMock(),
+    rentalContract: createModelMock(),
+    rentalContractLine: createModelMock(),
+    generatorFuelLog: createModelMock(),
+    generatorMaintenance: createModelMock(),
+    generator: createModelMock(),
+    tool: createModelMock(),
+    toolIssue: createModelMock(),
+    storekeeperHandover: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
