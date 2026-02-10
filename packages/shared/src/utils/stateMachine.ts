@@ -31,7 +31,8 @@ const TRANSITION_MAP: Record<string, Record<string, string[]>> = {
   },
   qci: {
     pending: ['in_progress'],
-    in_progress: ['completed'],
+    in_progress: ['completed', 'completed_conditional'],
+    completed_conditional: ['completed'], // PM approval upgrades conditional → completed
     completed: [],
   },
   dr: {
@@ -74,7 +75,9 @@ const TRANSITION_MAP: Record<string, Record<string, string[]>> = {
     assigned: ['in_progress'],
     in_progress: ['on_hold', 'completed'],
     on_hold: ['in_progress', 'cancelled'],
-    completed: ['invoiced'],
+    completed: ['invoiced', 'closure_pending'],
+    closure_pending: ['closure_approved'],
+    closure_approved: ['invoiced'],
     invoiced: [],
     rejected: ['draft'],
     cancelled: [],
@@ -141,18 +144,34 @@ const TRANSITION_MAP: Record<string, Record<string, string[]>> = {
     overdue: ['returned'],
     returned: [],
   },
+  generator_maintenance: {
+    scheduled: ['in_progress', 'overdue'],
+    in_progress: ['completed'],
+    overdue: ['in_progress'],
+    completed: [],
+  },
+  storekeeper_handover: {
+    initiated: ['in_progress'],
+    in_progress: ['completed'],
+    completed: [],
+  },
 };
 
-// V1 backward-compatibility aliases — allows V1 services to use old DOC_TYPE values
-// while the TRANSITION_MAP keys have been renamed to V2 names.
-TRANSITION_MAP['mrrv'] = TRANSITION_MAP['grn'];
-TRANSITION_MAP['rfim'] = TRANSITION_MAP['qci'];
-TRANSITION_MAP['osd'] = TRANSITION_MAP['dr'];
-TRANSITION_MAP['mirv'] = TRANSITION_MAP['mi'];
-TRANSITION_MAP['mrv'] = TRANSITION_MAP['mrn'];
-TRANSITION_MAP['mrf'] = TRANSITION_MAP['mr'];
-TRANSITION_MAP['stock_transfer'] = TRANSITION_MAP['wt'];
-TRANSITION_MAP['stock-transfers'] = TRANSITION_MAP['wt'];
+// V1 backward-compatibility aliases — shallow copies to prevent mutation cross-contamination
+TRANSITION_MAP['mrrv'] = { ...TRANSITION_MAP['grn'] };
+TRANSITION_MAP['rfim'] = { ...TRANSITION_MAP['qci'] };
+TRANSITION_MAP['osd'] = { ...TRANSITION_MAP['dr'] };
+TRANSITION_MAP['mirv'] = { ...TRANSITION_MAP['mi'] };
+TRANSITION_MAP['mrv'] = { ...TRANSITION_MAP['mrn'] };
+TRANSITION_MAP['mrf'] = { ...TRANSITION_MAP['mr'] };
+TRANSITION_MAP['stock_transfer'] = { ...TRANSITION_MAP['wt'] };
+TRANSITION_MAP['stock-transfers'] = { ...TRANSITION_MAP['wt'] };
+
+// Freeze to prevent accidental mutation
+Object.freeze(TRANSITION_MAP);
+for (const key of Object.keys(TRANSITION_MAP)) {
+  Object.freeze(TRANSITION_MAP[key]);
+}
 
 /**
  * Check if a status transition is valid for a given document type.

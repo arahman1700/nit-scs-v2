@@ -32,6 +32,8 @@ export const DOC_PREFIXES: Record<string, string> = {
   shipment: 'SH',
   lot: 'LOT',
   leftover: 'LO',
+  cycle_count: 'CC',
+  asn: 'ASN',
 };
 
 // ── Approval Levels ──────────────────────────────────────────────────────
@@ -104,7 +106,7 @@ export const JO_APPROVAL_LEVELS: ApprovalLevel[] = [
 
 export const STATUS_FLOWS: Record<string, string[]> = {
   grn: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
-  qci: ['pending', 'in_progress', 'completed'],
+  qci: ['pending', 'in_progress', 'completed_conditional', 'completed'],
   dr: ['draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed'],
   mi: ['draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled'],
   mrn: ['draft', 'pending', 'received', 'completed', 'rejected'],
@@ -133,6 +135,8 @@ export const STATUS_FLOWS: Record<string, string[]> = {
     'in_progress',
     'on_hold',
     'completed',
+    'closure_pending',
+    'closure_approved',
     'invoiced',
     'rejected',
     'cancelled',
@@ -155,10 +159,12 @@ export const STATUS_FLOWS: Record<string, string[]> = {
   scrap: ['identified', 'reported', 'approved', 'in_ssc', 'sold', 'disposed', 'closed', 'rejected'],
   rental_contract: ['draft', 'pending_approval', 'active', 'extended', 'terminated', 'rejected'],
   tool_issue: ['issued', 'overdue', 'returned'],
+  generator_maintenance: ['scheduled', 'in_progress', 'completed', 'overdue'],
+  storekeeper_handover: ['initiated', 'in_progress', 'completed'],
 
   // V1 backward-compatibility aliases
   mrrv: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
-  rfim: ['pending', 'in_progress', 'completed'],
+  rfim: ['pending', 'in_progress', 'completed_conditional', 'completed'],
   osd: ['draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed'],
   mirv: ['draft', 'pending_approval', 'approved', 'partially_issued', 'issued', 'completed', 'rejected', 'cancelled'],
   mrv: ['draft', 'pending', 'received', 'completed', 'rejected'],
@@ -198,6 +204,16 @@ export const INSURANCE_THRESHOLD_SAR = 7_000_000;
 // ── Warehouse Zones ──────────────────────────────────────────────────────
 
 export const WAREHOUSE_ZONES = ['A', 'B', 'C', 'D', 'CONTAINER', 'OPEN_YARD', 'HAZARDOUS'] as const;
+
+export const ZONE_TYPES: Record<string, string> = {
+  A: 'Civil',
+  B: 'Mechanical / Scrap',
+  C: 'Electrical',
+  D: 'General',
+  CONTAINER: 'Container Storage',
+  OPEN_YARD: 'Open Yard',
+  HAZARDOUS: 'Hazardous Materials',
+};
 
 // ── Scrap Material Types ─────────────────────────────────────────────────
 
@@ -258,4 +274,20 @@ export const JO_TYPES = [
   'scrap',
   'generator_rental',
   'generator_maintenance',
+] as const;
+
+// ── Shipping Milestone Types ─────────────────────────────────────────────
+
+export const SHIPPING_MILESTONE_TYPES = [
+  'booking_confirmed',
+  'cargo_loaded',
+  'vessel_departed',
+  'in_transit',
+  'arrived_at_port',
+  'customs_clearance',
+  'saber_registration',
+  'fasah_customs',
+  'sadad_payment',
+  'delivered_to_warehouse',
+  'advance_shipment_notification',
 ] as const;

@@ -538,7 +538,7 @@ describe('validateIMSF', () => {
 describe('validateScrap', () => {
   it('errors on missing photos', () => {
     const result = validateScrap({ materialType: 'cable', warehouseId: 'WH-A', estimatedWeight: 100 });
-    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SCRAP-V001' })]));
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SCRAP-V004' })]));
   });
 
   it('returns valid with all required fields', () => {

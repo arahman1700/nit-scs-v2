@@ -397,7 +397,7 @@ export function validateScrap(data: Record<string, unknown>): ValidationResult {
   }
 
   if (!data.photos || !(data.photos as string[]).length) {
-    errors.push({ field: 'photos', rule: 'SCRAP-V001', message: 'Photos are required for scrap identification' });
+    errors.push({ field: 'photos', rule: 'SCRAP-V004', message: 'Photos are required for scrap identification' });
   }
 
   if (data.buyerPickupDate) {
@@ -407,7 +407,7 @@ export function validateScrap(data: Record<string, unknown>): ValidationResult {
     if (daysDiff > SLA_HOURS.scrap_buyer_pickup / 24) {
       warnings.push({
         field: 'buyerPickupDate',
-        rule: 'SCRAP-V002',
+        rule: 'SCRAP-W001',
         message: `Buyer pickup date exceeds ${SLA_HOURS.scrap_buyer_pickup / 24}-day SLA`,
       });
     }

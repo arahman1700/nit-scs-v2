@@ -10,7 +10,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     mi: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     mrn: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     qci: ['create', 'read', 'update', 'delete', 'approve', 'export'],
-    dr: ['create', 'read', 'update', 'delete', 'export'],
+    dr: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     jo: ['create', 'read', 'update', 'delete', 'approve', 'export'],
     gatepass: ['create', 'read', 'update', 'delete', 'export'],
     wt: ['create', 'read', 'update', 'delete', 'approve', 'export'],
@@ -73,6 +73,13 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     items: ['read', 'update'],
     projects: ['read'],
     warehouses: ['read'],
+    imsf: ['create', 'read', 'update'],
+    surplus: ['create', 'read', 'update'],
+    scrap: ['create', 'read'],
+    bin_card: ['read', 'update'],
+    warehouse_zone: ['read'],
+    tool: ['read', 'update'],
+    tool_issue: ['create', 'read', 'update'],
   },
   [UserRole.WAREHOUSE_STAFF]: {
     grn: ['create', 'read', 'update'],
@@ -85,6 +92,9 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     inventory: ['read', 'update'],
     items: ['read'],
     projects: ['read'],
+    imsf: ['read'],
+    bin_card: ['read', 'update'],
+    tool_issue: ['create', 'read'],
   },
   [UserRole.LOGISTICS_COORDINATOR]: {
     grn: ['create', 'read', 'update'],
@@ -97,6 +107,10 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     wt: ['create', 'read', 'update'],
     inventory: ['read', 'export'],
     suppliers: ['read'],
+    imsf: ['create', 'read', 'update'],
+    rental_contract: ['read'],
+    generator_fuel: ['create', 'read'],
+    generator_maintenance: ['read'],
   },
   [UserRole.SITE_ENGINEER]: {
     mi: ['create', 'read'],
@@ -110,6 +124,8 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     dr: ['create', 'read', 'update'],
     grn: ['read'],
     inventory: ['read'],
+    scrap: ['read', 'approve'],
+    surplus: ['read'],
   },
   [UserRole.FREIGHT_FORWARDER]: {
     shipment: ['read', 'update'],
@@ -118,13 +134,22 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
   },
   [UserRole.TRANSPORT_SUPERVISOR]: {
     jo: ['create', 'read', 'update', 'approve'],
-    wt: ['create', 'read', 'update'],
     gatepass: ['create', 'read', 'update'],
+    wt: ['create', 'read', 'update', 'approve'],
+    imsf: ['create', 'read', 'update'],
+    mr: ['read'],
+    mi: ['read'],
+    grn: ['read'],
+    inventory: ['read'],
     fleet: ['read', 'update'],
+    generators: ['read'],
+    shipment: ['read'],
   },
   [UserRole.SCRAP_COMMITTEE_MEMBER]: {
-    scrap: ['read', 'update', 'approve'],
+    scrap: ['read', 'approve'],
     ssc: ['create', 'read', 'update', 'approve'],
+    surplus: ['read'],
+    inventory: ['read'],
   },
 };
 
@@ -173,6 +198,10 @@ export function getMaxApprovalLevel(role: UserRole | string): number {
     case UserRole.WAREHOUSE_STAFF:
       return 1;
     case UserRole.QC_OFFICER:
+      return 1;
+    case UserRole.TRANSPORT_SUPERVISOR:
+      return 1;
+    case UserRole.SCRAP_COMMITTEE_MEMBER:
       return 1;
     default:
       return 0;

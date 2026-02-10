@@ -13,30 +13,77 @@ export enum UserRole {
   SCRAP_COMMITTEE_MEMBER = 'scrap_committee_member',
 }
 
+/**
+ * Job order statuses — values match the database (snake_case).
+ * Display labels should be derived via i18n or a lookup map, not from enum values.
+ */
 export enum JobStatus {
-  NEW = 'New',
-  ASSIGNING = 'Assigning',
-  QUOTE_REQUESTED = 'Quote Requested',
-  QUOTE_RECEIVED = 'Quote Received',
-  PENDING_APPROVAL = 'Pending Approval',
-  APPROVED = 'Approved',
-  IN_PROGRESS = 'In Progress',
-  COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
+  DRAFT = 'draft',
+  PENDING_APPROVAL = 'pending_approval',
+  QUOTED = 'quoted',
+  APPROVED = 'approved',
+  ASSIGNED = 'assigned',
+  IN_PROGRESS = 'in_progress',
+  ON_HOLD = 'on_hold',
+  COMPLETED = 'completed',
+  INVOICED = 'invoiced',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
 }
 
+/**
+ * Display labels for JobStatus (English). Use i18n for Arabic.
+ */
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  [JobStatus.DRAFT]: 'Draft',
+  [JobStatus.PENDING_APPROVAL]: 'Pending Approval',
+  [JobStatus.QUOTED]: 'Quoted',
+  [JobStatus.APPROVED]: 'Approved',
+  [JobStatus.ASSIGNED]: 'Assigned',
+  [JobStatus.IN_PROGRESS]: 'In Progress',
+  [JobStatus.ON_HOLD]: 'On Hold',
+  [JobStatus.COMPLETED]: 'Completed',
+  [JobStatus.INVOICED]: 'Invoiced',
+  [JobStatus.REJECTED]: 'Rejected',
+  [JobStatus.CANCELLED]: 'Cancelled',
+};
+
+/**
+ * Document statuses — values match the database (snake_case).
+ */
 export type DocumentStatus =
-  | 'Draft'
-  | 'Pending Approval'
-  | 'Approved'
-  | 'Rejected'
-  | 'Issued'
-  | 'Completed'
-  | 'Cancelled'
-  | 'Inspected'
-  | 'Pending QC'
-  | 'In Transit'
-  | 'Stored';
+  | 'draft'
+  | 'pending_approval'
+  | 'pending_qc'
+  | 'qc_approved'
+  | 'approved'
+  | 'rejected'
+  | 'issued'
+  | 'partially_issued'
+  | 'completed'
+  | 'cancelled'
+  | 'received'
+  | 'stored'
+  | 'in_transit';
+
+/**
+ * Display labels for document statuses (English). Use i18n for Arabic.
+ */
+export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  pending_approval: 'Pending Approval',
+  pending_qc: 'Pending QC',
+  qc_approved: 'QC Approved',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  issued: 'Issued',
+  partially_issued: 'Partially Issued',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  received: 'Received',
+  stored: 'Stored',
+  in_transit: 'In Transit',
+};
 
 export type ApprovalAction = 'approve' | 'reject' | 'escalate' | 'return';
 

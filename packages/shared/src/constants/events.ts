@@ -30,6 +30,7 @@ export const INVENTORY_EVENTS = {
 export const SLA_EVENTS = {
   AT_RISK: 'sla:at_risk',
   BREACHED: 'sla:breached',
+  WARNING: 'sla:warning',
 } as const;
 
 // ── Job Orders ──────────────────────────────────────────────────────────
@@ -77,6 +78,7 @@ export const EVENT_DESCRIPTIONS: Record<SystemEventType, string> = {
   'inventory:released': 'When reserved stock is released back',
   'sla:at_risk': 'When an approval or task is approaching its SLA deadline',
   'sla:breached': 'When an SLA deadline has been missed',
+  'sla:warning': 'When a document SLA deadline is within the next hour',
   'jo:assigned': 'When a job order is assigned to a supplier/team',
   'jo:completed': 'When a job order is marked completed',
   'user:login': 'When a user logs in',
