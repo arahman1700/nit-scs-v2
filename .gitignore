@@ -14,3 +14,13 @@ packages/backend/prisma/seed.js.map
 # Uploaded files
 uploads/*
 !uploads/.gitkeep
+
+# Screenshots (dev/debug artifacts)
+*.png
+
+# Playwright MCP
+.playwright-mcp/
+
+# IDE / Tool caches
+.claude/
+*.tsbuildinfo
