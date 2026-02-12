@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide covers deploying the NIT Supply Chain System to production.
+This guide covers deploying the NIT Supply Chain System V2 to production.
 
 ## Table of Contents
 
@@ -176,10 +176,10 @@ COPY tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
 COPY packages/backend/ packages/backend/
 COPY packages/frontend/ packages/frontend/
-RUN pnpm --filter @nit-scs/shared build
-RUN pnpm --filter @nit-scs/frontend build
+RUN pnpm --filter @nit-scs-v2/shared build
+RUN pnpm --filter @nit-scs-v2/frontend build
 RUN cd packages/backend && npx prisma generate
-RUN pnpm --filter @nit-scs/backend build
+RUN pnpm --filter @nit-scs-v2/backend build
 
 # Stage 3: Production runtime
 FROM node:20-alpine AS runtime
@@ -369,9 +369,9 @@ exit
 ```
 
 **Seed Creates:**
-- 8 default users (one per role)
+- 10 default users (one per role)
 - Master data (regions, warehouses, projects, items, etc.)
-- Sample documents (MRRV, MIRV, etc.)
+- Sample documents (GRN, MI, MRN, MR, QCI, DR, JO, etc.)
 
 **Default Admin Account:**
 - Email: `admin@nit.com.sa`
@@ -548,7 +548,7 @@ Run twice to generate both `JWT_SECRET` and `JWT_REFRESH_SECRET`.
 **Symptom:** API works but frontend shows 404
 
 **Solution:**
-- Ensure frontend was built: `pnpm --filter @nit-scs/frontend build`
+- Ensure frontend was built: `pnpm --filter @nit-scs-v2/frontend build`
 - Check `packages/frontend/dist` exists
 - Verify Dockerfile copies `frontend/dist` to runtime stage (already included)
 - In `packages/backend/src/index.ts`, ensure production static file serving is enabled (already included)
@@ -622,7 +622,7 @@ Before going live, verify:
 
 - [ ] Admin documentation is up to date
 - [ ] User guide is available (if needed)
-- [ ] API documentation is current (see `docs/ARCHITECTURE.md`)
+- [ ] API documentation is current (see `docs/NIT-SCS-V2-System-Documentation.md`)
 - [ ] Emergency contacts are documented
 
 ---
@@ -666,10 +666,10 @@ For deployment issues:
 - **Render Support:** https://render.com/docs
 - **Docker Support:** https://docs.docker.com
 - **PostgreSQL Docs:** https://www.postgresql.org/docs
-- **Project Documentation:** See `docs/README.md` and `docs/ARCHITECTURE.md`
+- **Project Documentation:** See `docs/README.md` and `docs/NIT-SCS-V2-System-Documentation.md`
 
 ---
 
-**Version:** 1.0.0
-**Last Updated:** 2026-02-08
+**Version:** 2.0.0
+**Last Updated:** 2026-02-12
 **Deployment Platforms:** Render (primary), Docker (alternative)

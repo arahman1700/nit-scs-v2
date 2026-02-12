@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIT SCS V2 — System Architecture Maps</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-dark: #0a1628;
+      --bg-surface: rgba(255,255,255,0.05);
+      --bg-surface-hover: rgba(255,255,255,0.10);
+      --border: rgba(255,255,255,0.10);
+      --border-active: rgba(255,255,255,0.25);
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --nesma-primary: #2E3192;
+      --nesma-secondary: #80D1E9;
+      --nesma-accent: #34d399;
+      --nesma-gold: #f59e0b;
+      --sidebar-w: 280px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans Arabic', system-ui, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ──────────────────────────────────────── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: rgba(5,16,32,0.95);
+      backdrop-filter: blur(24px);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      z-index: 100;
+      padding: 24px 0;
+    }
+
+    .sidebar-header {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-header h1 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--nesma-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-header p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .nav-section {
+      padding: 8px 16px;
+    }
+
+    .nav-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      padding: 8px 4px 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-link.active {
+      background: rgba(46,49,146,0.3);
+      color: var(--nesma-secondary);
+      border: 1px solid rgba(128,209,233,0.2);
+    }
+
+    .nav-link .num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--bg-surface);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .nav-link:hover .num,
+    .nav-link.active .num {
+      background: rgba(46,49,146,0.4);
+      color: var(--nesma-secondary);
+    }
+
+    /* ── Main Content ─────────────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 32px 40px;
+      max-width: 1200px;
+    }
+
+    .page-header {
+      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--nesma-secondary), var(--nesma-accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .page-header p {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    /* ── Section ──────────────────────────────────────── */
+    .section {
+      margin-bottom: 64px;
+      scroll-margin-top: 24px;
+    }
+
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .section-divider h2 {
+      font-size: 20px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    /* ── Diagram Card ─────────────────────────────────── */
+    .diagram-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+
+    .diagram-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+
+    .diagram-card .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .diagram-card .desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+    }
+
+    .mermaid svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ── Implementation Dashboard ─────────────────────── */
+    .impl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .impl-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .impl-card .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .impl-card .value {
+      font-size: 28px;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .impl-card .sub {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-bar .fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .fill-green { background: linear-gradient(90deg, #34d399, #10b981); }
+    .fill-blue { background: linear-gradient(90deg, #80D1E9, #2E3192); }
+    .fill-gold { background: linear-gradient(90deg, #f59e0b, #d97706); }
+
+    /* ── Remaining Work ───────────────────────────────── */
+    .remaining-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .remaining-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .remaining-list .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge-high { background: rgba(239,68,68,0.2); color: #f87171; }
+    .badge-med { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .badge-low { background: rgba(52,211,153,0.2); color: #6ee7b7; }
+
+    /* ── RBAC Table ───────────────────────────────────── */
+    .rbac-table-wrap {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .rbac-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      min-width: 900px;
+    }
+
+    .rbac-table th {
+      background: rgba(46,49,146,0.25);
+      padding: 10px 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--nesma-secondary);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+    }
+
+    .rbac-table th:first-child {
+      text-align: left;
+      padding-left: 16px;
+      min-width: 130px;
+    }
+
+    .rbac-table td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .rbac-table td:first-child {
+      text-align: left;
+      padding-left: 16px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .rbac-table tr:hover td {
+      background: var(--bg-surface-hover);
+    }
+
+    .perm-cell {
+      display: inline-flex;
+      gap: 2px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .perm-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+    }
+
+    .perm-c { background: #34d399; }  /* create */
+    .perm-r { background: #60a5fa; }  /* read */
+    .perm-u { background: #fbbf24; }  /* update */
+    .perm-d { background: #f87171; }  /* delete */
+    .perm-a { background: #a78bfa; }  /* approve */
+    .perm-e { background: #f472b6; }  /* export */
+
+    .perm-legend {
+      display: flex;
+      gap: 16px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .perm-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR NAVIGATION
+     ═══════════════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <h1>NIT SCS V2</h1>
+    <p>System Architecture Maps — 13 Diagrams</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 1 — Overall Architecture</div>
+    <a class="nav-link" href="#d1"><span class="num">1</span>System Architecture</a>
+    <a class="nav-link" href="#d2"><span class="num">2</span>Monorepo Structure</a>
+    <a class="nav-link" href="#d3"><span class="num">3</span>Database Entity Groups</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 2 — Document Flows</div>
+    <a class="nav-link" href="#d4"><span class="num">4</span>GRN Lifecycle</a>
+    <a class="nav-link" href="#d5"><span class="num">5</span>MI Lifecycle (FIFO)</a>
+    <a class="nav-link" href="#d6"><span class="num">6</span>MR Lifecycle</a>
+    <a class="nav-link" href="#d7"><span class="num">7</span>JO Lifecycle (13 states)</a>
+    <a class="nav-link" href="#d8"><span class="num">8</span>Complete Flow: MR → MRN</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 3 — Core Systems</div>
+    <a class="nav-link" href="#d9"><span class="num">9</span>FIFO Inventory</a>
+    <a class="nav-link" href="#d10"><span class="num">10</span>Approval Engine</a>
+    <a class="nav-link" href="#d11"><span class="num">11</span>RBAC Matrix</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 4 — Infrastructure</div>
+    <a class="nav-link" href="#d12"><span class="num">12</span>Real-Time + Notifications</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Section 5 — Implementation Status</div>
+    <a class="nav-link" href="#d13"><span class="num">13</span>Implementation Dashboard</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <div class="page-header">
+    <h1>System Architecture Maps</h1>
+    <p>NIT Supply Chain V2 — Interactive architecture diagrams & implementation status</p>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SECTION 1: OVERALL ARCHITECTURE
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="section-divider" id="d1">
+    <h2>Section 1 — Overall Architecture / البنية العامة</h2>
+  </div>
+
+  <!-- Diagram 1: System Architecture -->
+  <div class="diagram-card section" id="d1">
+    <h3>1. System Architecture — C4 Context</h3>
+    <div class="subtitle">هيكلة النظام العامة — من المتصفح إلى قاعدة البيانات</div>
+    <div class="desc">
+      The system follows a 3-tier architecture: React SPA communicates with Express REST API,
+      which manages PostgreSQL via Prisma ORM. Redis handles caching and Socket.IO pub/sub.
+      Real-time updates flow through Socket.IO WebSocket connections.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'primaryTextColor': '#fff', 'lineColor': '#80D1E9', 'secondaryColor': '#1e293b'}}}%%
+graph TB
+    subgraph Client["🖥️ Browser Client"]
+        REACT["React 19 SPA<br/>Vite 6 + TypeScript"]
+        RQ["React Query v5<br/>Server State Cache"]
+        ZS["Zustand<br/>Client State"]
+        SOCK_C["Socket.IO Client<br/>Real-time Events"]
+    end
+
+    subgraph API["⚡ Express 5 API Server"]
+        MW["Middleware Stack<br/>Auth · RBAC · Rate Limit · Validation"]
+        ROUTES["81 Route Handlers<br/>REST + Document Workflows"]
+        SERVICES["59 Service Layer<br/>Business Logic · State Machine"]
+        PRISMA["Prisma 6 ORM<br/>Type-safe DB Access"]
+        SOCK_S["Socket.IO Server<br/>Event Broadcasting"]
+    end
+
+    subgraph Data["💾 Data Layer"]
+        PG[("PostgreSQL 15<br/>103 Models · 294 Fields")]
+        REDIS[("Redis 7<br/>Cache · Sessions · Pub/Sub")]
+    end
+
+    subgraph External["🌐 External Services"]
+        EMAIL["Email Service<br/>SMTP Notifications"]
+        PUSH["Web Push<br/>Browser Notifications"]
+        S3["File Storage<br/>Attachments · PDFs"]
+    end
+
+    REACT -->|"HTTP/REST"| MW
+    REACT --- RQ
+    REACT --- ZS
+    SOCK_C <-->|"WebSocket"| SOCK_S
+
+    MW --> ROUTES
+    ROUTES --> SERVICES
+    SERVICES --> PRISMA
+    SERVICES --> SOCK_S
+
+    PRISMA -->|"SQL"| PG
+    SERVICES -->|"Cache/Pub-Sub"| REDIS
+
+    SERVICES --> EMAIL
+    SERVICES --> PUSH
+    SERVICES --> S3
+
+    classDef client fill:#1e3a5f,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef api fill:#2E3192,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef data fill:#1a3040,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef ext fill:#2d1b4e,stroke:#a78bfa,stroke-width:1px,color:#fff
+
+    class REACT,RQ,ZS,SOCK_C client
+    class MW,ROUTES,SERVICES,PRISMA,SOCK_S api
+    class PG,REDIS data
+    class EMAIL,PUSH,S3 ext
+    </pre>
+  </div>
+
+  <!-- Diagram 2: Monorepo Structure -->
+  <div class="diagram-card section" id="d2">
+    <h3>2. Monorepo Structure — pnpm Workspace</h3>
+    <div class="subtitle">هيكلة الحزم الثلاث ومساراتها</div>
+    <div class="desc">
+      The monorepo is organized as three pnpm workspace packages. The shared package provides types,
+      validators, and state machine logic consumed by both frontend and backend.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+graph LR
+    subgraph SHARED["📦 @nit-scs-v2/shared"]
+        S1["types/ — 22 type files"]
+        S2["validators/ — 13 schemas"]
+        S3["utils/stateMachine.ts"]
+        S4["constants/ — 2 files"]
+        S5["permissions.ts"]
+    end
+
+    subgraph BACKEND["📦 @nit-scs-v2/backend"]
+        B1["routes/ — 81 endpoints"]
+        B2["services/ — 59 services"]
+        B3["middleware/ — 12 files"]
+        B4["prisma/schema.prisma<br/>103 models"]
+        B5["socket/ — events"]
+    end
+
+    subgraph FRONTEND["📦 @nit-scs-v2/frontend"]
+        F1["pages/ — 88 pages"]
+        F2["components/ — 77 comps"]
+        F3["api/hooks/ — 69 hooks"]
+        F4["layouts/ — MainLayout"]
+        F5["config/ — nav + columns"]
+    end
+
+    SHARED -->|"imports"| BACKEND
+    SHARED -->|"imports"| FRONTEND
+
+    classDef shared fill:#1e3a5f,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef back fill:#2E3192,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef front fill:#1b3245,stroke:#f59e0b,stroke-width:2px,color:#fff
+
+    class S1,S2,S3,S4,S5 shared
+    class B1,B2,B3,B4,B5 back
+    class F1,F2,F3,F4,F5 front
+    </pre>
+  </div>
+
+  <!-- Diagram 3: Database Entity Groups -->
+  <div class="diagram-card section" id="d3">
+    <h3>3. Database Entity Groups — 103 Prisma Models</h3>
+    <div class="subtitle">تجميع النماذج في 8 مجموعات وظيفية</div>
+    <div class="desc">
+      The 103 Prisma models are organized into 8 logical domain groups. Core entities (Employee, Project, Item)
+      are referenced by documents and inventory across the entire system.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+graph TB
+    subgraph CORE["👤 Core Entities (11)"]
+        direction LR
+        CE1["Employee · Entity<br/>Project · Supplier<br/>Warehouse · Item"]
+        CE2["Region · City · Port<br/>UnitOfMeasure · WarehouseType"]
+    end
+
+    subgraph DOCS["📄 Documents (18)"]
+        direction LR
+        D1["Mrrv (GRN) · MrrvLine<br/>Mirv (MI) · MirvLine<br/>Mrv (MRN) · MrvLine"]
+        D2["MaterialRequisition · MrfLine<br/>Rfim (QCI) · OsdReport · OsdLine<br/>GatePass · GatePassItem"]
+        D3["StockTransfer · StockTransferLine<br/>Imsf · ImsfLine · CompanyDocument"]
+    end
+
+    subgraph INV["📦 Inventory (7)"]
+        direction LR
+        I1["InventoryLevel<br/>InventoryLot<br/>LotConsumption"]
+        I2["LeftoverMaterial<br/>BinCard · BinCardTransaction<br/>CycleCount · CycleCountLine"]
+    end
+
+    subgraph JOB["🔧 Job Orders (8)"]
+        direction LR
+        J1["JobOrder<br/>JoTransportDetail<br/>JoRentalDetail<br/>JoGeneratorDetail"]
+        J2["JoScrapDetail<br/>JoEquipmentLine<br/>JoSlaTracking<br/>JoPayment"]
+    end
+
+    subgraph APPROVAL["✅ Approvals (6)"]
+        direction LR
+        A1["ApprovalStep · ApprovalWorkflow<br/>DelegationRule · JoApproval"]
+        A2["ParallelApprovalGroup<br/>ParallelApprovalResponse"]
+    end
+
+    subgraph LOGISTICS["🚢 Logistics (9)"]
+        direction LR
+        L1["Shipment · ShipmentLine<br/>CustomsTracking · AdvanceShippingNotice · AsnLine"]
+        L2["CrossDock · DockDoor<br/>YardAppointment · TruckVisit"]
+    end
+
+    subgraph ASSETS["⚙️ Assets & Scrap (12)"]
+        direction LR
+        AS1["EquipmentCategory · EquipmentType<br/>EquipmentFleet · Generator<br/>SupplierEquipmentRate · DepreciationEntry"]
+        AS2["RentalContract · RentalContractLine<br/>SurplusItem · ScrapItem · SscBid<br/>Tool · ToolIssue"]
+    end
+
+    subgraph SYSTEM["🔧 System (20)"]
+        direction LR
+        SY1["AuditLog · Notification · PushSubscription<br/>DocumentCounter · SystemSetting<br/>RefreshToken · PasswordResetCode"]
+        SY2["Task · TaskComment · DocumentComment<br/>Attachment · UserView · Workflow<br/>WorkflowRule · WorkflowExecutionLog"]
+        SY3["EmailTemplate · EmailLog<br/>Dashboard · DashboardWidget<br/>SavedReport"]
+    end
+
+    subgraph WH["🏗️ Warehouse Ops (6)"]
+        direction LR
+        W1["WarehouseZone · PutAwayRule<br/>StorekeeperHandover<br/>GeneratorFuelLog<br/>GeneratorMaintenance"]
+        W2["Sensor · SensorReading<br/>SensorAlert<br/>InspectionChecklist<br/>InspectionChecklistItem"]
+    end
+
+    CORE --> DOCS
+    CORE --> INV
+    CORE --> JOB
+    DOCS --> APPROVAL
+    DOCS --> INV
+    JOB --> APPROVAL
+    CORE --> LOGISTICS
+    CORE --> ASSETS
+
+    classDef core fill:#1e3a5f,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef docs fill:#2E3192,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef inv fill:#1a3a2e,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef job fill:#3a2e1a,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef appr fill:#2e1a3a,stroke:#a78bfa,stroke-width:2px,color:#fff
+    classDef log fill:#1a2e3a,stroke:#60a5fa,stroke-width:2px,color:#fff
+    classDef asset fill:#3a1a2e,stroke:#f472b6,stroke-width:2px,color:#fff
+    classDef sys fill:#1e1e2e,stroke:#6b7280,stroke-width:1px,color:#9ca3af
+    classDef wh fill:#2e3a1a,stroke:#a3e635,stroke-width:2px,color:#fff
+    </pre>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SECTION 2: DOCUMENT STATE MACHINES
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="section-divider">
+    <h2>Section 2 — Document Flows / تدفقات المستندات</h2>
+  </div>
+
+  <!-- Diagram 4: GRN Lifecycle -->
+  <div class="diagram-card section" id="d4">
+    <h3>4. GRN Lifecycle (Goods Receiving Note)</h3>
+    <div class="subtitle">دورة حياة سند استلام البضائع — من المسودة إلى التخزين</div>
+    <div class="desc">
+      GRN tracks material receiving from suppliers. After QC inspection approval,
+      materials are received and then stored in warehouse locations. Rejection returns to draft for correction.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+stateDiagram-v2
+    [*] --> draft
+    draft --> pending_qc : Submit for QC
+    pending_qc --> qc_approved : QC Inspector Approves
+    pending_qc --> rejected : QC Inspector Rejects
+    qc_approved --> received : Confirm Receipt
+    received --> stored : Store in Warehouse
+    stored --> [*]
+    rejected --> draft : Revise & Resubmit
+
+    classDef active fill:#2E3192,color:#fff
+    classDef success fill:#065f46,color:#fff
+    classDef danger fill:#7f1d1d,color:#fff
+    classDef warning fill:#78350f,color:#fff
+
+    class draft active
+    class stored success
+    class rejected danger
+    class pending_qc,qc_approved,received warning
+    </pre>
+  </div>
+
+  <!-- Diagram 5: MI Lifecycle -->
+  <div class="diagram-card section" id="d5">
+    <h3>5. MI Lifecycle (Material Issue — FIFO)</h3>
+    <div class="subtitle">دورة حياة سند صرف المواد مع نظام FIFO</div>
+    <div class="desc">
+      MI handles material issuance from warehouse to site. Uses FIFO lot consumption to ensure
+      oldest inventory is issued first. Supports partial issuance for large requests.
+      Amount-based approval levels route to the correct authority.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+stateDiagram-v2
+    [*] --> draft
+    draft --> pending_approval : Submit
+    pending_approval --> approved : Approver Approves
+    pending_approval --> rejected : Approver Rejects
+    approved --> partially_issued : Issue Part
+    approved --> issued : Issue All
+    approved --> cancelled : Cancel
+    partially_issued --> issued : Issue Remaining
+    issued --> completed : Close
+    rejected --> draft : Revise
+    completed --> [*]
+    cancelled --> [*]
+
+    note right of pending_approval
+        5-Level Approval:
+        L1: <10K (Storekeeper)
+        L2: <50K (Logistics)
+        L3: <100K (Dept Head)
+        L4: <500K (Ops Director)
+        L5: >500K (CEO)
+    end note
+    </pre>
+  </div>
+
+  <!-- Diagram 6: MR Lifecycle -->
+  <div class="diagram-card section" id="d6">
+    <h3>6. MR Lifecycle (Material Requisition)</h3>
+    <div class="subtitle">دورة حياة طلب المواد — من الطلب إلى التوفير</div>
+    <div class="desc">
+      MR originates from Site Engineers requesting materials. After approval and stock check,
+      the system determines the fulfillment path: from existing stock, new purchase, or sourced elsewhere.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+stateDiagram-v2
+    [*] --> draft
+    draft --> submitted : Site Engineer Submits
+    submitted --> under_review : Reviewer Picks Up
+    submitted --> rejected : Reviewer Rejects
+    under_review --> approved : Approve
+    under_review --> rejected : Reject
+    approved --> checking_stock : Check Warehouse
+
+    checking_stock --> from_stock : Available in Stock
+    checking_stock --> needs_purchase : Must Purchase
+    checking_stock --> not_available_locally : Source Externally
+
+    from_stock --> partially_fulfilled : Partial Issue
+    from_stock --> fulfilled : Full Issue
+    needs_purchase --> partially_fulfilled : Partial Delivery
+    needs_purchase --> fulfilled : Full Delivery
+    not_available_locally --> partially_fulfilled : Partial
+    not_available_locally --> fulfilled : Full
+
+    partially_fulfilled --> fulfilled : Complete Remaining
+    fulfilled --> [*]
+    rejected --> draft : Revise
+    cancelled --> [*]
+    </pre>
+  </div>
+
+  <!-- Diagram 7: JO Lifecycle -->
+  <div class="diagram-card section" id="d7">
+    <h3>7. JO Lifecycle (Job Order — 13 States)</h3>
+    <div class="subtitle">دورة حياة أمر العمل — أكبر آلة حالة في النظام</div>
+    <div class="desc">
+      Job Orders are the most complex document with 13 states. They cover transport jobs, equipment rentals,
+      scrap disposal, and generator services. Includes quotation, assignment, SLA tracking,
+      closure approval, and payment/invoicing phases.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+stateDiagram-v2
+    [*] --> draft
+    draft --> pending_approval : Submit
+
+    pending_approval --> quoted : Vendor Quotes
+    pending_approval --> approved : Direct Approve
+    pending_approval --> rejected : Reject
+
+    quoted --> approved : Accept Quote
+    quoted --> rejected : Reject Quote
+
+    approved --> assigned : Assign Crew/Vendor
+    approved --> cancelled : Cancel
+
+    assigned --> in_progress : Start Work
+
+    in_progress --> on_hold : Pause
+    in_progress --> completed : Finish Work
+
+    on_hold --> in_progress : Resume
+    on_hold --> cancelled : Abandon
+
+    completed --> invoiced : Direct Invoice
+    completed --> closure_pending : Request Closure
+
+    closure_pending --> closure_approved : Approve Closure
+
+    closure_approved --> invoiced : Issue Invoice
+    invoiced --> [*]
+
+    rejected --> draft : Revise
+    cancelled --> [*]
+
+    note right of pending_approval
+        4-Level Approval:
+        L1: <5K (Logistics)
+        L2: <20K (Manager)
+        L3: <100K (Ops Dir)
+        L4: >100K (CEO)
+    end note
+
+    note left of in_progress
+        JO Types:
+        · Transport
+        · Equipment Rental
+        · Scrap Disposal
+        · Generator Services
+    end note
+    </pre>
+  </div>
+
+  <!-- Diagram 8: Complete Flow MR → MI → GatePass → MRN -->
+  <div class="diagram-card section" id="d8">
+    <h3>8. Complete Flow: MR → MI → GatePass → MRN</h3>
+    <div class="subtitle">التدفق المتكامل: من طلب المواد إلى استلامها في الموقع</div>
+    <div class="desc">
+      The end-to-end material flow: Site Engineer creates an MR (request), warehouse issues an MI
+      (material issue with FIFO), a GatePass authorizes exit from warehouse, and an MRN (Material Return Note)
+      confirms receipt at the site. Each step has its own approval chain.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+sequenceDiagram
+    participant SE as 🏗️ Site Engineer
+    participant MR as 📋 MR (Request)
+    participant MGR as 👔 Manager
+    participant WH as 🏭 Warehouse
+    participant MI as 📦 MI (Issue)
+    participant FIFO as 🔄 FIFO Engine
+    participant GP as 🚪 GatePass
+    participant MRN as ✅ MRN (Return Note)
+
+    SE->>MR: Create Material Request
+    MR->>MGR: Submit for Approval
+    MGR->>MR: Approve
+    MR->>WH: Notify: Check Stock
+
+    WH->>WH: checking_stock
+    alt Available in Stock
+        WH->>MI: Create Material Issue
+        MI->>FIFO: Reserve Lots (FIFO)
+        FIFO-->>MI: Oldest Lots Reserved
+        MI->>MI: approved → issued
+        MI->>GP: Create GatePass
+        GP->>GP: pending → approved → released
+        GP->>SE: Material Released
+        SE->>MRN: Confirm Receipt at Site
+        MRN->>MRN: received → completed
+    else Needs Purchase
+        WH->>MR: needs_purchase
+        Note over WH,MR: Triggers procurement flow
+    end
+    </pre>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SECTION 3: CORE SYSTEMS
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="section-divider">
+    <h2>Section 3 — Core Systems / الأنظمة الأساسية</h2>
+  </div>
+
+  <!-- Diagram 9: FIFO Inventory -->
+  <div class="diagram-card section" id="d9">
+    <h3>9. FIFO Inventory System</h3>
+    <div class="subtitle">نظام الجرد بطريقة الأول دخولاً أول خروجاً</div>
+    <div class="desc">
+      Inventory uses a FIFO (First-In-First-Out) lot-based system. Each GRN creates InventoryLots with
+      receivedAt timestamps. MI consumption always takes from the oldest available lot first.
+      LotConsumption records provide a complete audit trail of every unit consumed.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+graph TB
+    subgraph RECEIVE["📥 Receiving (GRN Stored)"]
+        GRN["GRN Stored Event"]
+        LOT["Create InventoryLot<br/>qty · receivedAt · expiresAt"]
+        LEVEL["Update InventoryLevel<br/>currentQty += received"]
+    end
+
+    subgraph FIFO["🔄 FIFO Consumption (MI Issue)"]
+        MI["MI Issue Request<br/>item + qty needed"]
+        SORT["Sort Lots by receivedAt ASC<br/>(oldest first)"]
+        CONSUME["Consume from Lot<br/>lot.availableQty -= consumed"]
+        AUDIT["Create LotConsumption<br/>lot · qty · miId · timestamp"]
+        CHECK{"More qty<br/>needed?"}
+        NEXT["Next oldest lot"]
+    end
+
+    subgraph STATE["📊 Inventory State"]
+        IL["InventoryLevel<br/>currentQty · reservedQty · reorderPoint"]
+        LOTS["InventoryLot[]<br/>Sorted by receivedAt"]
+        LC["LotConsumption[]<br/>Full audit trail"]
+    end
+
+    GRN --> LOT
+    LOT --> LEVEL
+    MI --> SORT
+    SORT --> CONSUME
+    CONSUME --> AUDIT
+    AUDIT --> CHECK
+    CHECK -->|Yes| NEXT
+    NEXT --> CONSUME
+    CHECK -->|No| DONE["✅ Issue Complete"]
+
+    LOT -.-> LOTS
+    CONSUME -.-> IL
+    AUDIT -.-> LC
+
+    classDef receive fill:#1a3a2e,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef fifo fill:#2E3192,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef state fill:#1e1e2e,stroke:#6b7280,stroke-width:1px,color:#9ca3af
+    classDef done fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
+
+    class GRN,LOT,LEVEL receive
+    class MI,SORT,CONSUME,AUDIT,CHECK,NEXT fifo
+    class IL,LOTS,LC state
+    class DONE done
+    </pre>
+  </div>
+
+  <!-- Diagram 10: Approval Engine -->
+  <div class="diagram-card section" id="d10">
+    <h3>10. Approval Engine — Multi-Level with SLA & Delegation</h3>
+    <div class="subtitle">محرك الاعتمادات — 5 مستويات مع SLA والتفويض والتصعيد</div>
+    <div class="desc">
+      The approval engine supports 5 hierarchical levels with amount-based routing, SLA deadlines,
+      automatic delegation, and escalation. Each approval step is recorded in ApprovalStep with timestamps.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+sequenceDiagram
+    participant DOC as 📄 Document
+    participant ENG as 🔧 Approval Engine
+    participant L1 as L1: Storekeeper<br/>< 10K · 4h SLA
+    participant L2 as L2: Logistics<br/>< 50K · 8h SLA
+    participant L3 as L3: Dept Head<br/>< 100K · 24h SLA
+    participant L4 as L4: Ops Director<br/>< 500K · 48h SLA
+    participant L5 as L5: CEO<br/>> 500K · 72h SLA
+    participant DEL as 🔄 Delegation
+    participant ESC as ⚠️ Escalation
+
+    DOC->>ENG: Submit (amount = 75,000 SAR)
+    ENG->>ENG: Determine Level → L3
+
+    ENG->>L3: Request Approval
+    Note over ENG,L3: ApprovalStep created<br/>SLA: 24 hours
+
+    alt Approved in Time
+        L3->>ENG: ✅ Approve
+        ENG->>DOC: Status → approved
+    else Rejected
+        L3->>ENG: ❌ Reject (reason)
+        ENG->>DOC: Status → rejected
+    else SLA Exceeded
+        ENG->>DEL: Check DelegationRule
+        alt Delegate Found
+            DEL->>L3: Delegate to Backup
+            L3->>ENG: Backup Approves
+        else No Delegate
+            DEL->>ESC: Escalate to L4
+            ESC->>L4: Escalated Approval
+            L4->>ENG: Approve/Reject
+        end
+    end
+
+    ENG->>DOC: Notify via Socket.IO + Email + Push
+    </pre>
+  </div>
+
+  <!-- Diagram 11: RBAC Matrix -->
+  <div class="diagram-card section" id="d11">
+    <h3>11. RBAC Permission Matrix — 10 Roles × Key Resources</h3>
+    <div class="subtitle">مصفوفة صلاحيات الأدوار — من يستطيع ماذا</div>
+    <div class="desc">
+      Role-Based Access Control with 10 system roles and 6 permission types (Create, Read, Update, Delete, Approve, Export).
+      Extracted from <code>packages/shared/src/permissions.ts</code>.
+    </div>
+
+    <div class="perm-legend">
+      <span><span class="perm-dot perm-c"></span> Create</span>
+      <span><span class="perm-dot perm-r"></span> Read</span>
+      <span><span class="perm-dot perm-u"></span> Update</span>
+      <span><span class="perm-dot perm-d"></span> Delete</span>
+      <span><span class="perm-dot perm-a"></span> Approve</span>
+      <span><span class="perm-dot perm-e"></span> Export</span>
+    </div>
+
+    <div class="rbac-table-wrap">
+      <table class="rbac-table">
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>Admin</th>
+            <th>Manager</th>
+            <th>WH Supervisor</th>
+            <th>WH Staff</th>
+            <th>Logistics</th>
+            <th>Site Engineer</th>
+            <th>QC Officer</th>
+            <th>Freight Fwd</th>
+            <th>Transport Sup</th>
+            <th>Scrap Committee</th>
+          </tr>
+        </thead>
+        <tbody id="rbac-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SECTION 4: INFRASTRUCTURE
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="section-divider">
+    <h2>Section 4 — Infrastructure / البنية التحتية</h2>
+  </div>
+
+  <!-- Diagram 12: Real-Time + Notifications -->
+  <div class="diagram-card section" id="d12">
+    <h3>12. Real-Time + Notification System (Triple Layer)</h3>
+    <div class="subtitle">نظام الإشعارات ثلاثي الطبقات — Socket.IO + Push + Email</div>
+    <div class="desc">
+      Notifications use a triple-layer delivery system: Socket.IO for instant in-app updates,
+      Web Push for browser notifications when offline, and Email for formal notifications.
+      Socket.IO uses rooms per user and per document for targeted broadcasting.
+    </div>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+graph TB
+    subgraph TRIGGER["⚡ Event Triggers"]
+        T1["Status Change"]
+        T2["Approval Request"]
+        T3["SLA Warning"]
+        T4["Comment Added"]
+    end
+
+    subgraph ENGINE["🔧 Notification Engine"]
+        NE["NotificationService<br/>Route to channels"]
+        DB["Save to Notification table<br/>userId · type · read · data"]
+    end
+
+    subgraph LAYER1["Layer 1: Socket.IO (Instant)"]
+        ROOMS["Room Strategy"]
+        R1["user:{userId} — Personal"]
+        R2["doc:{type}:{id} — Document"]
+        R3["role:{role} — Role-based"]
+        EMIT["socket.to(room).emit(event, data)"]
+    end
+
+    subgraph LAYER2["Layer 2: Web Push (Offline)"]
+        PS["PushSubscription table"]
+        VP["VAPID Key Pair"]
+        WP["webpush.sendNotification()"]
+    end
+
+    subgraph LAYER3["Layer 3: Email (Formal)"]
+        ET["EmailTemplate table<br/>subject · body · variables"]
+        ES["SMTP Transport"]
+        EL["EmailLog table<br/>to · status · sentAt"]
+    end
+
+    subgraph CLIENT["🖥️ React Client"]
+        SIO["useSocket() hook<br/>Auto-join rooms"]
+        RQI["React Query<br/>Cache invalidation"]
+        TOAST["Toast notification"]
+        BELL["🔔 Bell badge count"]
+    end
+
+    T1 & T2 & T3 & T4 --> NE
+    NE --> DB
+    NE --> ROOMS
+    ROOMS --> R1 & R2 & R3
+    R1 & R2 & R3 --> EMIT
+
+    NE --> PS
+    PS --> VP --> WP
+
+    NE --> ET
+    ET --> ES --> EL
+
+    EMIT --> SIO
+    SIO --> RQI
+    SIO --> TOAST
+    SIO --> BELL
+
+    classDef trigger fill:#3a2e1a,stroke:#f59e0b,stroke-width:2px,color:#fff
+    classDef engine fill:#2E3192,stroke:#80D1E9,stroke-width:2px,color:#fff
+    classDef socket fill:#1a3a2e,stroke:#34d399,stroke-width:2px,color:#fff
+    classDef push fill:#2e1a3a,stroke:#a78bfa,stroke-width:2px,color:#fff
+    classDef email fill:#3a1a2e,stroke:#f472b6,stroke-width:2px,color:#fff
+    classDef client fill:#1e3a5f,stroke:#80D1E9,stroke-width:2px,color:#fff
+
+    class T1,T2,T3,T4 trigger
+    class NE,DB engine
+    class ROOMS,R1,R2,R3,EMIT socket
+    class PS,VP,WP push
+    class ET,ES,EL email
+    class SIO,RQI,TOAST,BELL client
+    </pre>
+  </div>
+
+  <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       SECTION 5: IMPLEMENTATION STATUS
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+  <div class="section-divider">
+    <h2>Section 5 — Implementation Status / حالة التنفيذ</h2>
+  </div>
+
+  <div class="diagram-card section" id="d13">
+    <h3>13. Implementation Dashboard</h3>
+    <div class="subtitle">لوحة حالة التنفيذ — ما أُنجز وما تبقى</div>
+
+    <!-- KPI Cards -->
+    <div class="impl-grid">
+      <div class="impl-card">
+        <div class="label">Frontend</div>
+        <div class="value" style="color: #80D1E9;">~95%</div>
+        <div class="sub">88 pages · 69 hooks · 77 components</div>
+        <div class="progress-bar"><div class="fill fill-blue" style="width: 95%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">Backend</div>
+        <div class="value" style="color: #34d399;">~95%</div>
+        <div class="sub">81 routes · 59 services</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 95%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">Shared Package</div>
+        <div class="value" style="color: #34d399;">100%</div>
+        <div class="sub">22 types · 13 validators · state machine · permissions</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 100%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">Infrastructure</div>
+        <div class="value" style="color: #34d399;">100%</div>
+        <div class="sub">Prisma · Docker · CI/CD · Render</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 100%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">Tests</div>
+        <div class="value" style="color: #f59e0b;">1,063</div>
+        <div class="sub">782 backend · 240 shared · 41 frontend</div>
+        <div class="progress-bar"><div class="fill fill-gold" style="width: 82%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">Prisma Models</div>
+        <div class="value" style="color: #a78bfa;">103</div>
+        <div class="sub">8 domain groups · 294+ fields</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 100%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">State Machines</div>
+        <div class="value" style="color: #f472b6;">17</div>
+        <div class="sub">Document lifecycle flows with V1 aliases</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 100%"></div></div>
+      </div>
+      <div class="impl-card">
+        <div class="label">RBAC Roles</div>
+        <div class="value" style="color: #fbbf24;">10</div>
+        <div class="sub">With override support · per-resource perms</div>
+        <div class="progress-bar"><div class="fill fill-green" style="width: 100%"></div></div>
+      </div>
+    </div>
+
+    <!-- Module Breakdown -->
+    <h3 style="margin: 32px 0 16px; font-size: 15px;">Module Breakdown — تفصيل الوحدات</h3>
+    <pre class="mermaid">
+%%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#2E3192', 'lineColor': '#80D1E9'}}}%%
+pie title Implementation Completeness by Module
+    "Shared (100%)" : 100
+    "Backend Routes (95%)" : 95
+    "Backend Services (95%)" : 95
+    "Frontend Pages (95%)" : 95
+    "Frontend Hooks (95%)" : 95
+    "Frontend Components (95%)" : 95
+    "Tests — Backend (90%)" : 90
+    "Tests — Frontend (40%)" : 40
+    </pre>
+
+    <!-- Remaining Work -->
+    <h3 style="margin: 32px 0 16px; font-size: 15px;">Remaining Work — المتبقي</h3>
+    <ul class="remaining-list">
+      <li>
+        <span class="badge badge-high">HIGH</span>
+        <div>
+          <strong>Integration Tests</strong> — End-to-end document workflow tests (MR→MI→GatePass→MRN flow, JO full lifecycle). Currently unit tests only.
+          <br/><span style="color: var(--text-muted);">اختبارات تكامل تدفقات المستندات الكاملة</span>
+        </div>
+      </li>
+      <li>
+        <span class="badge badge-high">HIGH</span>
+        <div>
+          <strong>Frontend Test Coverage</strong> — Currently 41 tests. Need component tests for forms, state machine UI, and RBAC-gated views (target: ~200+).
+          <br/><span style="color: var(--text-muted);">تغطية اختبارية للواجهة الأمامية — حالياً 41 فقط</span>
+        </div>
+      </li>
+      <li>
+        <span class="badge badge-med">MED</span>
+        <div>
+          <strong>MapDashboard Component</strong> — Interactive warehouse zone map with live inventory levels per zone, drag-and-drop zone management.
+          <br/><span style="color: var(--text-muted);">لوحة الخريطة التفاعلية للمستودعات</span>
+        </div>
+      </li>
+      <li>
+        <span class="badge badge-med">MED</span>
+        <div>
+          <strong>Real-time Dashboard Updates</strong> — Socket.IO integration for live KPI updates on dashboard pages (currently polling via React Query refetchInterval).
+          <br/><span style="color: var(--text-muted);">تحديثات لحظية للوحات المعلومات عبر Socket.IO</span>
+        </div>
+      </li>
+      <li>
+        <span class="badge badge-low">LOW</span>
+        <div>
+          <strong>PDF Export Enhancements</strong> — Arabic RTL layout improvements, company letterhead template, QR code stamping on GRN/MI documents.
+          <br/><span style="color: var(--text-muted);">تحسينات تصدير PDF — دعم RTL والقوالب الرسمية</span>
+        </div>
+      </li>
+      <li>
+        <span class="badge badge-low">LOW</span>
+        <div>
+          <strong>Performance Optimization</strong> — Database query optimization for large inventory queries, Redis cache warm-up strategy, pagination for 10K+ records.
+          <br/><span style="color: var(--text-muted);">تحسين الأداء — استعلامات قاعدة البيانات والتخزين المؤقت</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════ -->
+<script>
+// ── RBAC Table Generation ──────────────────────────────
+const ROLES = [
+  { key: 'admin', label: 'Admin' },
+  { key: 'manager', label: 'Manager' },
+  { key: 'warehouse_supervisor', label: 'WH Sup' },
+  { key: 'warehouse_staff', label: 'WH Staff' },
+  { key: 'logistics_coordinator', label: 'Logistics' },
+  { key: 'site_engineer', label: 'Site Eng' },
+  { key: 'qc_officer', label: 'QC Officer' },
+  { key: 'freight_forwarder', label: 'Freight' },
+  { key: 'transport_supervisor', label: 'Transport' },
+  { key: 'scrap_committee_member', label: 'Scrap Com' },
+];
+
+const PERMS = {
+  admin: {
+    grn:'cruade', mi:'cruade', mrn:'cruade', qci:'cruade', dr:'cruade',
+    jo:'cruade', gatepass:'crude', wt:'cruade', mr:'cruade',
+    shipment:'crude', customs:'crude', inventory:'rue',
+    items:'crude', projects:'crude', suppliers:'crude',
+    imsf:'cruade', surplus:'cruade', scrap:'cruade',
+  },
+  manager: {
+    grn:'rae', mi:'rae', mrn:'rae', qci:'rae', dr:'re',
+    jo:'crae', gatepass:'re', wt:'rae', mr:'rae',
+    shipment:'re', customs:'re', inventory:'re',
+  },
+  warehouse_supervisor: {
+    grn:'crua', mi:'rua', mrn:'cru', qci:'cr', dr:'cru',
+    gatepass:'cru', wt:'cru', inventory:'rue',
+    imsf:'cru', surplus:'cru', scrap:'cr',
+  },
+  warehouse_staff: {
+    grn:'cru', mi:'ru', mrn:'cru', qci:'cr', dr:'cr',
+    gatepass:'cru', wt:'cr', inventory:'ru',
+  },
+  logistics_coordinator: {
+    grn:'cru', mi:'crua', mrn:'cru', jo:'crua',
+    shipment:'cru', customs:'cru', gatepass:'cru', wt:'cru',
+    inventory:'re', imsf:'cru',
+  },
+  site_engineer: {
+    mi:'cr', mr:'cr', jo:'cr', inventory:'r', projects:'r',
+  },
+  qc_officer: {
+    qci:'crua', dr:'cru', grn:'r', inventory:'r', scrap:'ra', surplus:'r',
+  },
+  freight_forwarder: {
+    shipment:'ru', customs:'r', gatepass:'r',
+  },
+  transport_supervisor: {
+    jo:'crua', gatepass:'cru', wt:'crua', imsf:'cru',
+    mr:'r', mi:'r', grn:'r', inventory:'r', fleet:'ru', shipment:'r',
+  },
+  scrap_committee_member: {
+    scrap:'ra', ssc:'crua', surplus:'r', inventory:'r',
+  },
+};
+
+const RESOURCES = [
+  'grn','mi','mrn','mr','qci','dr','jo','wt','gatepass',
+  'shipment','customs','inventory','items','projects','suppliers',
+  'imsf','surplus','scrap','ssc','fleet',
+];
+
+const PERM_MAP = { c:'perm-c', r:'perm-r', u:'perm-u', d:'perm-d', a:'perm-a', e:'perm-e' };
+
+const tbody = document.getElementById('rbac-body');
+RESOURCES.forEach(res => {
+  const tr = document.createElement('tr');
+  const tdName = document.createElement('td');
+  tdName.textContent = res.toUpperCase();
+  tr.appendChild(tdName);
+
+  ROLES.forEach(role => {
+    const td = document.createElement('td');
+    const perms = (PERMS[role.key] && PERMS[role.key][res]) || '';
+    if (perms) {
+      const span = document.createElement('span');
+      span.className = 'perm-cell';
+      perms.split('').forEach(p => {
+        const dot = document.createElement('span');
+        dot.className = 'perm-dot ' + (PERM_MAP[p] || '');
+        dot.title = {c:'Create',r:'Read',u:'Update',d:'Delete',a:'Approve',e:'Export'}[p] || p;
+        span.appendChild(dot);
+      });
+      td.appendChild(span);
+    } else {
+      td.textContent = '—';
+      td.style.color = 'rgba(255,255,255,0.15)';
+    }
+    tr.appendChild(td);
+  });
+  tbody.appendChild(tr);
+});
+
+// ── Sidebar Active State ──────────────────────────────
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => link.classList.remove('active'));
+      const activeLink = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(section => {
+  if (section.id) observer.observe(section);
+});
+
+// ── Mermaid Init ──────────────────────────────────────
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  themeVariables: {
+    darkMode: true,
+    primaryColor: '#2E3192',
+    primaryTextColor: '#ffffff',
+    primaryBorderColor: '#80D1E9',
+    lineColor: '#80D1E9',
+    secondaryColor: '#1e293b',
+    tertiaryColor: '#0a1628',
+    background: '#0a1628',
+    mainBkg: '#1e293b',
+    nodeBorder: '#80D1E9',
+    clusterBkg: 'rgba(255,255,255,0.05)',
+    clusterBorder: 'rgba(255,255,255,0.1)',
+    titleColor: '#80D1E9',
+    edgeLabelBackground: '#0a1628',
+    noteTextColor: '#e2e8f0',
+    noteBkgColor: '#1e293b',
+    noteBorderColor: '#80D1E9',
+  },
+  flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+  sequence: { useMaxWidth: true, actorMargin: 50 },
+  pie: { useMaxWidth: true },
+  stateDiagram: { useMaxWidth: true },
+  securityLevel: 'loose',
+});
+</script>
+
+</body>
+</html>
