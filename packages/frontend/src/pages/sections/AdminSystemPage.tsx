@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Shield, Settings as SettingsIcon, Zap, Mail, ArrowRightLeft } from 'lucide-react';
+import { Shield, Settings as SettingsIcon, Zap, Mail, ArrowRightLeft, GitBranch } from 'lucide-react';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
@@ -18,6 +18,9 @@ const EmailTemplatesPage = React.lazy(() =>
 );
 const EmailLogsPage = React.lazy(() => import('@/pages/EmailLogsPage').then(m => ({ default: m.EmailLogsPage })));
 const DelegationsPage = React.lazy(() => import('@/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })));
+const ApprovalLevelsPage = React.lazy(() =>
+  import('@/pages/admin/ApprovalLevelsPage').then(m => ({ default: m.ApprovalLevelsPage })),
+);
 
 const Spinner: React.FC = () => (
   <div className="flex items-center justify-center py-20">
@@ -57,6 +60,12 @@ const kpis: KpiCardProps[] = [
     icon: ArrowRightLeft,
     color: 'bg-purple-500',
   },
+  {
+    title: 'Approval Levels',
+    value: 'Configure',
+    icon: GitBranch,
+    color: 'bg-cyan-500',
+  },
 ];
 
 const tabs: TabDef[] = [
@@ -68,6 +77,7 @@ const tabs: TabDef[] = [
   { key: 'email-templates', label: 'Email Templates' },
   { key: 'email-logs', label: 'Email Logs' },
   { key: 'delegations', label: 'Delegations' },
+  { key: 'approval-levels', label: 'Approval Levels' },
 ];
 
 export const AdminSystemPage: React.FC = () => {
@@ -132,6 +142,13 @@ export const AdminSystemPage: React.FC = () => {
           <RouteErrorBoundary label="Delegations">
             <Suspense fallback={<Spinner />}>
               <DelegationsPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'approval-levels': (
+          <RouteErrorBoundary label="Approval Levels">
+            <Suspense fallback={<Spinner />}>
+              <ApprovalLevelsPage />
             </Suspense>
           </RouteErrorBoundary>
         ),

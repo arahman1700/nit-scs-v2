@@ -1,17 +1,6 @@
 import React, { Suspense, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Truck,
-  Target,
-  Bus,
-  AlertTriangle,
-  FileText,
-  ShieldCheck,
-  ArrowRightLeft,
-  FileSignature,
-  Zap,
-  Ship,
-} from 'lucide-react';
+import { Truck, Target, Bus, AlertTriangle, FileText, ShieldCheck, FileSignature, Zap, Ship } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -25,8 +14,6 @@ import {
   useSLACompliance,
   useJobOrders,
   useFleet,
-  useImsfList,
-  useWtList,
   useGatePassList,
   useRentalContractList,
   useShipmentList,
@@ -57,8 +44,6 @@ export const LogisticsSectionPage: React.FC = () => {
   const slaQuery = useSLACompliance();
   const joQuery = useJobOrders({ pageSize: 50 });
   const fleetQuery = useFleet({ pageSize: 50 });
-  const imsfQuery = useImsfList({ pageSize: 50 });
-  const wtQuery = useWtList({ pageSize: 50 });
   const gpQuery = useGatePassList({ pageSize: 50 });
   const rcQuery = useRentalContractList({ pageSize: 50 });
   const shipQuery = useShipmentList({ pageSize: 50 });
@@ -104,8 +89,6 @@ export const LogisticsSectionPage: React.FC = () => {
     { key: 'sla', label: 'SLA' },
     { key: 'payments', label: 'Payments' },
     { key: 'map', label: 'Map' },
-    { key: 'imsf', label: 'IMSF' },
-    { key: 'wt', label: 'WT' },
     { key: 'gate-passes', label: 'Gate Passes' },
     { key: 'rental-contracts', label: 'Rental Contracts' },
     { key: 'generators', label: 'Generators' },
@@ -142,13 +125,6 @@ export const LogisticsSectionPage: React.FC = () => {
       label: 'Gate Pass',
       icon: ShieldCheck,
       onClick: () => navigate('/admin/forms/gatepass'),
-      variant: 'secondary' as const,
-    },
-    { label: 'New IMSF', icon: Truck, onClick: () => navigate('/admin/forms/imsf'), variant: 'secondary' as const },
-    {
-      label: 'New WT',
-      icon: ArrowRightLeft,
-      onClick: () => navigate('/admin/forms/wt'),
       variant: 'secondary' as const,
     },
   ];
@@ -378,30 +354,6 @@ export const LogisticsSectionPage: React.FC = () => {
           <LazyMap />
         </Suspense>
       </RouteErrorBoundary>
-    ),
-
-    imsf: (
-      <DocumentListPanel
-        title="Internal Material Shifting"
-        icon={Truck}
-        columns={RESOURCE_COLUMNS.imsf.columns}
-        rows={(imsfQuery.data?.data ?? []) as Record<string, unknown>[]}
-        loading={imsfQuery.isLoading}
-        createLabel="New IMSF"
-        createUrl="/admin/forms/imsf"
-      />
-    ),
-
-    wt: (
-      <DocumentListPanel
-        title="Warehouse Transfers"
-        icon={ArrowRightLeft}
-        columns={RESOURCE_COLUMNS.wt.columns}
-        rows={(wtQuery.data?.data ?? []) as Record<string, unknown>[]}
-        loading={wtQuery.isLoading}
-        createLabel="New WT"
-        createUrl="/admin/forms/wt"
-      />
     ),
 
     'gate-passes': (

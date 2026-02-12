@@ -8,6 +8,9 @@ import {
   ClipboardCheck,
   AlertTriangle,
   FileText,
+  Truck,
+  ArrowRightLeft,
+  Recycle,
 } from 'lucide-react';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { DocumentListPanel } from '@/components/DocumentListPanel';
@@ -25,6 +28,9 @@ import {
   useMrnList,
   useMrList,
   useBinCardList,
+  useImsfList,
+  useWtList,
+  useScrapList,
 } from '@/api/hooks';
 import { useInventory, useItems } from '@/api/hooks/useMasterData';
 import type { ColumnDef } from '@/config/resourceColumns';
@@ -45,6 +51,9 @@ export const MaterialSectionPage: React.FC = () => {
   const inventoryQuery = useInventory({ pageSize: 100 });
   const itemsQuery = useItems({ pageSize: 100 });
   const binCardQuery = useBinCardList({ pageSize: 100 });
+  const imsfQuery = useImsfList({ pageSize: 50 });
+  const wtQuery = useWtList({ pageSize: 50 });
+  const scrapQuery = useScrapList({ pageSize: 50 });
 
   const itemColumns: ColumnDef[] = [
     { key: 'itemCode', label: 'Item Code' },
@@ -81,6 +90,9 @@ export const MaterialSectionPage: React.FC = () => {
     { key: 'bin-cards', label: 'Bin Cards' },
     { key: 'non-moving', label: 'Non-Moving' },
     { key: 'items', label: 'Item Master' },
+    { key: 'imsf', label: 'IMSF' },
+    { key: 'wt', label: 'WT' },
+    { key: 'scrap', label: 'Scrap' },
   ];
 
   return (
@@ -96,6 +108,9 @@ export const MaterialSectionPage: React.FC = () => {
         { label: 'New MR', icon: FileText, onClick: () => navigate('/admin/forms/mr'), variant: 'secondary' },
         { label: 'New MRN', icon: RotateCcw, onClick: () => navigate('/admin/forms/mrn'), variant: 'secondary' },
         { label: 'New DR', icon: AlertTriangle, onClick: () => navigate('/admin/forms/dr'), variant: 'secondary' },
+        { label: 'New IMSF', icon: Truck, onClick: () => navigate('/admin/forms/imsf'), variant: 'secondary' },
+        { label: 'New WT', icon: ArrowRightLeft, onClick: () => navigate('/admin/forms/wt'), variant: 'secondary' },
+        { label: 'Report Scrap', icon: Recycle, onClick: () => navigate('/admin/forms/scrap'), variant: 'secondary' },
       ]}
       children={{
         overview: (
@@ -294,6 +309,39 @@ export const MaterialSectionPage: React.FC = () => {
             columns={itemColumns}
             rows={(itemsQuery.data?.data ?? []) as Record<string, unknown>[]}
             loading={itemsQuery.isLoading}
+          />
+        ),
+        imsf: (
+          <DocumentListPanel
+            title="Internal Material Shifting"
+            icon={Truck}
+            columns={RESOURCE_COLUMNS.imsf.columns}
+            rows={(imsfQuery.data?.data ?? []) as Record<string, unknown>[]}
+            loading={imsfQuery.isLoading}
+            createLabel="New IMSF"
+            createUrl="/admin/forms/imsf"
+          />
+        ),
+        wt: (
+          <DocumentListPanel
+            title="Warehouse Transfers"
+            icon={ArrowRightLeft}
+            columns={RESOURCE_COLUMNS.wt.columns}
+            rows={(wtQuery.data?.data ?? []) as Record<string, unknown>[]}
+            loading={wtQuery.isLoading}
+            createLabel="New WT"
+            createUrl="/admin/forms/wt"
+          />
+        ),
+        scrap: (
+          <DocumentListPanel
+            title="Scrap Items"
+            icon={Recycle}
+            columns={RESOURCE_COLUMNS.scrap.columns}
+            rows={(scrapQuery.data?.data ?? []) as Record<string, unknown>[]}
+            loading={scrapQuery.isLoading}
+            createLabel="Report Scrap"
+            createUrl="/admin/forms/scrap"
           />
         ),
       }}

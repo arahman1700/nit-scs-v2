@@ -1,12 +1,12 @@
 import React, { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Recycle, TrendingDown, Wrench, Building, Gavel, Package, Loader2 } from 'lucide-react';
+import { TrendingDown, Wrench, Building, Gavel, Package, Loader2 } from 'lucide-react';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { DocumentListPanel } from '@/components/DocumentListPanel';
 import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import { useSurplusList, useScrapList, useToolList } from '@/api/hooks';
+import { useSurplusList, useToolList } from '@/api/hooks';
 
 const SscDashboard = lazy(() => import('@/pages/dashboards/SscDashboard').then(m => ({ default: m.SscDashboard })));
 const DepreciationDashboard = lazy(() =>
@@ -16,12 +16,10 @@ const DepreciationDashboard = lazy(() =>
 export const AssetSectionPage: React.FC = () => {
   const navigate = useNavigate();
   const surplusQuery = useSurplusList({ pageSize: 50 });
-  const scrapQuery = useScrapList({ pageSize: 50 });
   const toolQuery = useToolList({ pageSize: 50 });
 
   const kpis: KpiCardProps[] = [
     { title: 'Active Surplus', value: surplusQuery.data?.meta?.total ?? 0, icon: TrendingDown, color: 'bg-amber-500' },
-    { title: 'Scrap Pending', value: scrapQuery.data?.meta?.total ?? 0, icon: Recycle, color: 'bg-red-500' },
     { title: 'SSC Bids', value: 0, icon: Gavel, color: 'bg-purple-500' },
     { title: 'Tools Registered', value: toolQuery.data?.meta?.total ?? 0, icon: Wrench, color: 'bg-blue-500' },
   ];
@@ -29,7 +27,6 @@ export const AssetSectionPage: React.FC = () => {
   const tabs: TabDef[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'surplus', label: 'Surplus' },
-    { key: 'scrap', label: 'Scrap' },
     { key: 'ssc', label: 'SSC' },
     { key: 'tools', label: 'Tools' },
     { key: 'fixed-assets', label: 'Fixed Assets' },
@@ -39,19 +36,18 @@ export const AssetSectionPage: React.FC = () => {
   return (
     <SectionLandingPage
       title="Asset Lifecycle"
-      subtitle="Surplus, scrap, tools, fixed assets, and depreciation management"
+      subtitle="Surplus, tools, fixed assets, and depreciation management"
       kpis={kpis}
       tabs={tabs}
-      loading={surplusQuery.isLoading || scrapQuery.isLoading || toolQuery.isLoading}
+      loading={surplusQuery.isLoading || toolQuery.isLoading}
       quickActions={[
         { label: 'Report Surplus', icon: TrendingDown, onClick: () => navigate('/admin/forms/surplus') },
-        { label: 'Report Scrap', icon: Recycle, onClick: () => navigate('/admin/forms/scrap'), variant: 'secondary' },
         { label: 'New Tool', icon: Wrench, onClick: () => navigate('/admin/forms/tool'), variant: 'secondary' },
       ]}
       children={{
         overview: (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="glass-card rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <TrendingDown className="w-6 h-6 text-amber-400" />
@@ -65,19 +61,6 @@ export const AssetSectionPage: React.FC = () => {
                   className="text-nesma-secondary text-xs hover:underline mt-3 block"
                 >
                   View Surplus Items
-                </button>
-              </div>
-              <div className="glass-card rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <Recycle className="w-6 h-6 text-red-400" />
-                  <h3 className="text-white font-semibold">Scrap Management</h3>
-                </div>
-                <p className="text-gray-400 text-sm">Monthly identification, SSC bidding, buyer pickup tracking.</p>
-                <button
-                  onClick={() => navigate('/admin/assets?tab=scrap')}
-                  className="text-nesma-secondary text-xs hover:underline mt-3 block"
-                >
-                  View Scrap Items
                 </button>
               </div>
               <div className="glass-card rounded-2xl p-6">
@@ -105,17 +88,6 @@ export const AssetSectionPage: React.FC = () => {
             loading={surplusQuery.isLoading}
             createLabel="Report Surplus"
             createUrl="/admin/forms/surplus"
-          />
-        ),
-        scrap: (
-          <DocumentListPanel
-            title="Scrap Items"
-            icon={Recycle}
-            columns={RESOURCE_COLUMNS.scrap.columns}
-            rows={(scrapQuery.data?.data ?? []) as Record<string, unknown>[]}
-            loading={scrapQuery.isLoading}
-            createLabel="Report Scrap"
-            createUrl="/admin/forms/scrap"
           />
         ),
         ssc: (

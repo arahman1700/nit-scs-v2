@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
-import { hasPermission, type Permission } from '@nit-scs-v2/shared';
+import type { Permission } from '@nit-scs-v2/shared';
 import { sendError } from '../utils/response.js';
+import { hasPermissionDB } from '../services/permission.service.js';
 
 /**
  * Require user to have one of the listed roles (admin always passes).
@@ -23,21 +24,26 @@ export function requireRole(...allowedRoles: string[]) {
 }
 
 /**
- * Permission-based middleware using the shared ROLE_PERMISSIONS matrix.
- * Checks if the user's role has the specified permission on the given resource.
+ * Permission-based middleware — checks DB-backed permissions (with in-memory cache).
+ * Falls back to hardcoded ROLE_PERMISSIONS if DB table is empty.
  */
 export function requirePermission(resource: string, action: Permission) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       sendError(res, 401, 'Authentication required');
       return;
     }
 
-    if (!hasPermission(req.user.systemRole, resource, action)) {
-      sendError(res, 403, `Access denied. Required permission: ${action} on ${resource}`);
-      return;
+    try {
+      const allowed = await hasPermissionDB(req.user.systemRole, resource, action);
+      if (!allowed) {
+        sendError(res, 403, `Access denied. Required permission: ${action} on ${resource}`);
+        return;
+      }
+      next();
+    } catch {
+      // If DB is unreachable, deny access rather than allowing
+      sendError(res, 500, 'Permission check failed');
     }
-
-    next();
   };
 }

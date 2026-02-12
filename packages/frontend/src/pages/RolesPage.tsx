@@ -1,22 +1,23 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Shield, Check, X, Eye, Edit, Lock, Save } from 'lucide-react';
+import { Shield, Check, X, Eye, Edit, Lock, Save, RotateCcw } from 'lucide-react';
 import { UserRole } from '@nit-scs-v2/shared/types';
-import { getPermissionMatrix, getEffectivePermissions } from '@nit-scs-v2/shared/permissions';
-import type { PermissionOverrides, Permission } from '@nit-scs-v2/shared/permissions';
-import { usePermissions, useUpdatePermissions } from '@/api/hooks/usePermissions';
+import { ROLE_PERMISSIONS } from '@nit-scs-v2/shared/permissions';
+import type { Permission } from '@nit-scs-v2/shared/permissions';
+import { usePermissions, useUpdateRolePermissions, useResetPermissions } from '@/api/hooks/usePermissions';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const ALL_RESOURCES = [
-  'mrrv',
-  'mirv',
-  'mrv',
-  'rfim',
-  'osd',
+  'grn',
+  'mi',
+  'mrn',
+  'qci',
+  'dr',
+  'mr',
   'jo',
   'gatepass',
-  'stock-transfer',
-  'mrf',
+  'wt',
+  'imsf',
   'shipment',
   'customs',
   'inventory',
@@ -25,21 +26,35 @@ const ALL_RESOURCES = [
   'suppliers',
   'employees',
   'warehouses',
+  'fleet',
+  'generators',
+  'surplus',
+  'scrap',
+  'ssc',
+  'rental_contract',
+  'tool',
+  'tool_issue',
+  'bin_card',
+  'warehouse_zone',
+  'generator_fuel',
+  'generator_maintenance',
   'reports',
   'audit-log',
   'settings',
+  'roles',
 ];
 
 const RESOURCE_LABELS: Record<string, string> = {
-  mrrv: 'GRN',
-  mirv: 'MI',
-  mrv: 'MRN',
-  rfim: 'QCI',
-  osd: 'DR',
+  grn: 'GRN',
+  mi: 'MI',
+  mrn: 'MRN',
+  qci: 'QCI',
+  dr: 'DR',
+  mr: 'MR',
   jo: 'Job Orders',
   gatepass: 'Gate Pass',
-  'stock-transfer': 'Stock Transfer',
-  mrf: 'MR',
+  wt: 'Warehouse Transfer',
+  imsf: 'Material Shifting',
   shipment: 'Shipments',
   customs: 'Customs',
   inventory: 'Inventory',
@@ -48,9 +63,22 @@ const RESOURCE_LABELS: Record<string, string> = {
   suppliers: 'Suppliers',
   employees: 'Employees',
   warehouses: 'Warehouses',
+  fleet: 'Fleet',
+  generators: 'Generators',
+  surplus: 'Surplus',
+  scrap: 'Scrap',
+  ssc: 'SSC',
+  rental_contract: 'Rental Contracts',
+  tool: 'Tools',
+  tool_issue: 'Tool Issues',
+  bin_card: 'Bin Cards',
+  warehouse_zone: 'Warehouse Zones',
+  generator_fuel: 'Generator Fuel',
+  generator_maintenance: 'Gen. Maintenance',
   reports: 'Reports',
   'audit-log': 'Audit Log',
   settings: 'Settings',
+  roles: 'Roles',
 };
 
 const ROLES: UserRole[] = [
@@ -62,46 +90,51 @@ const ROLES: UserRole[] = [
   UserRole.SITE_ENGINEER,
   UserRole.QC_OFFICER,
   UserRole.FREIGHT_FORWARDER,
+  UserRole.TRANSPORT_SUPERVISOR,
+  UserRole.SCRAP_COMMITTEE_MEMBER,
 ];
 const PERMISSIONS = ['create', 'read', 'update', 'delete', 'approve', 'export'];
 
-type PermState = PermissionOverrides;
+type PermMatrix = Record<string, Record<string, string[]>>;
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export const RolesPage: React.FC = () => {
   const { data: permData } = usePermissions();
-  const updateMutation = useUpdatePermissions();
+  const updateMutation = useUpdateRolePermissions();
+  const resetMutation = useResetPermissions();
 
-  const overrides = (permData?.data ?? {}) as PermissionOverrides;
+  // DB-backed matrix: { role: { resource: actions[] } }
+  const dbMatrix = (permData?.data ?? {}) as PermMatrix;
 
   const [editMode, setEditMode] = useState(false);
-  const [local, setLocal] = useState<PermState>({});
+  const [local, setLocal] = useState<PermMatrix>({});
   const [dirty, setDirty] = useState(false);
 
-  // Build the effective matrix per role using API overrides (view mode) or local edits (edit mode)
+  // Resolve permissions: DB matrix when viewing, local state when editing
+  // Falls back to ROLE_PERMISSIONS if DB is empty
   const effectiveForRole = useCallback(
     (role: UserRole): Record<string, string[]> => {
-      if (editMode) return local[role] ?? getPermissionMatrix(role);
-      return getEffectivePermissions(role, overrides);
+      if (editMode) return local[role] ?? {};
+      return dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
     },
-    [editMode, local, overrides],
+    [editMode, local, dbMatrix],
   );
 
-  // Enter edit mode — clone current effective permissions into local state
+  // Enter edit mode — clone current DB matrix
   const enterEditMode = useCallback(() => {
-    const snapshot: PermState = {};
+    const snapshot: PermMatrix = {};
     for (const role of ROLES) {
-      snapshot[role] = { ...getEffectivePermissions(role, overrides) };
-      // Deep-clone each array
-      for (const res of Object.keys(snapshot[role])) {
-        snapshot[role][res] = [...snapshot[role][res]];
+      const source = dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
+      snapshot[role] = {};
+      for (const [res, perms] of Object.entries(source)) {
+        snapshot[role][res] = [...(perms as string[])];
       }
     }
     setLocal(snapshot);
     setDirty(false);
     setEditMode(true);
-  }, [overrides]);
+  }, [dbMatrix]);
 
   const exitEditMode = useCallback(() => {
     setEditMode(false);
@@ -124,51 +157,41 @@ export const RolesPage: React.FC = () => {
     setDirty(true);
   }, []);
 
-  // Compute diff: only include overrides that differ from defaults
-  const computeOverrides = useCallback((): Record<string, Record<string, string[]>> => {
-    const result: Record<string, Record<string, string[]>> = {};
+  // Save all changed roles to DB
+  const handleSave = useCallback(async () => {
     for (const role of ROLES) {
-      if (role === UserRole.ADMIN) continue; // Never override admin
-      const defaults = getPermissionMatrix(role);
-      const edited = local[role] ?? {};
-      const roleDiff: Record<string, string[]> = {};
-      let hasDiff = false;
-      for (const resource of ALL_RESOURCES) {
-        const defaultPerms = (defaults[resource] ?? []).slice().sort();
-        const editedPerms = (edited[resource] ?? []).slice().sort();
-        if (JSON.stringify(defaultPerms) !== JSON.stringify(editedPerms)) {
-          roleDiff[resource] = edited[resource] ?? [];
-          hasDiff = true;
-        }
-      }
-      if (hasDiff) result[role] = roleDiff;
+      if (role === UserRole.ADMIN) continue;
+      const edited = local[role];
+      if (!edited) continue;
+      await updateMutation.mutateAsync({ role, permissions: edited });
     }
-    return result;
-  }, [local]);
+    setEditMode(false);
+    setDirty(false);
+    setLocal({});
+  }, [local, updateMutation]);
 
-  const handleSave = useCallback(() => {
-    const diff = computeOverrides();
-    updateMutation.mutate(diff as Record<string, unknown>, {
+  const handleDiscard = useCallback(() => {
+    const snapshot: PermMatrix = {};
+    for (const role of ROLES) {
+      const source = dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
+      snapshot[role] = {};
+      for (const [res, perms] of Object.entries(source)) {
+        snapshot[role][res] = [...(perms as string[])];
+      }
+    }
+    setLocal(snapshot);
+    setDirty(false);
+  }, [dbMatrix]);
+
+  const handleReset = useCallback(() => {
+    resetMutation.mutate(undefined, {
       onSuccess: () => {
         setEditMode(false);
         setDirty(false);
         setLocal({});
       },
     });
-  }, [computeOverrides, updateMutation]);
-
-  const handleDiscard = useCallback(() => {
-    // Reset local state from loaded API overrides
-    const snapshot: PermState = {};
-    for (const role of ROLES) {
-      snapshot[role] = { ...getEffectivePermissions(role, overrides) };
-      for (const res of Object.keys(snapshot[role])) {
-        snapshot[role][res] = [...snapshot[role][res]];
-      }
-    }
-    setLocal(snapshot);
-    setDirty(false);
-  }, [overrides]);
+  }, [resetMutation]);
 
   // Role cards: total permission count
   const roleStats = useMemo(
@@ -200,12 +223,21 @@ export const RolesPage: React.FC = () => {
           </button>
         )}
         {editMode && (
-          <button
-            onClick={exitEditMode}
-            className="px-4 py-2 bg-white/5 text-gray-300 rounded-lg text-sm hover:bg-white/10 border border-white/10 flex items-center gap-2 transition-colors"
-          >
-            <Eye size={14} /> View Mode
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleReset}
+              disabled={resetMutation.isPending}
+              className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg text-sm hover:bg-red-500/20 border border-red-500/20 flex items-center gap-2 transition-colors disabled:opacity-50"
+            >
+              <RotateCcw size={14} /> Reset to Defaults
+            </button>
+            <button
+              onClick={exitEditMode}
+              className="px-4 py-2 bg-white/5 text-gray-300 rounded-lg text-sm hover:bg-white/10 border border-white/10 flex items-center gap-2 transition-colors"
+            >
+              <Eye size={14} /> View Mode
+            </button>
+          </div>
         )}
       </div>
 

@@ -2944,3 +2944,24 @@ model SensorAlert {
   @@index([acknowledged], map: "idx_sensor_alerts_ack")
   @@map("sensor_alerts")
 }
+
+// ############################################################################
+// SECTION: ROLE-BASED ACCESS CONTROL
+// ############################################################################
+
+/// Dynamic role-permission overrides stored in DB (replaces file-based permissions.json)
+model RolePermission {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Role key matching UserRole enum (e.g. 'admin', 'manager')
+  role      String   @db.VarChar(50)
+  /// Resource key (e.g. 'grn', 'mi', 'inventory')
+  resource  String   @db.VarChar(50)
+  /// Array of allowed actions: ["create","read","update","delete","approve","export"]
+  actions   Json     @default("[]")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  updatedBy String?  @map("updated_by") @db.VarChar(100)
+
+  @@unique([role, resource], map: "uq_role_permission")
+  @@index([role], map: "idx_role_permissions_role")
+  @@map("role_permissions")
+}

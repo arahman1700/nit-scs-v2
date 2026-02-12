@@ -14,6 +14,7 @@ export * from './useAuditLog';
 export * from './useSettings';
 export * from './useUpload';
 export * from './usePermissions';
+export * from './useApprovalWorkflows';
 export * from './useTasks';
 export * from './useDocuments';
 export * from './useReports';
