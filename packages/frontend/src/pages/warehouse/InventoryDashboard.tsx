@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Search, Package, MapPin, Layers, BarChart3, X, Eye } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
-import { generateInventoryReportPdf } from '@/lib/pdfExport';
+import { generateInventoryReportPdf } from '@/utils/pdfExport';
 import { exportToExcel } from '@/lib/excelExport';
 
 // Real data from Inventory.ods (Dammam Warehouse - Wadi Dhahran & Qalah projects)

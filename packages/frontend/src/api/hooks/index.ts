@@ -359,28 +359,9 @@ export {
   useAsnVariance,
 } from './useAsn';
 
-// Inspection Tools (AQL Calculator & Checklists)
-export {
-  useAqlCalculation,
-  useAqlTable,
-  useChecklistList,
-  useChecklist,
-  useCreateChecklist,
-  useUpdateChecklist,
-  useDeleteChecklist,
-  useAddChecklistItem,
-  useUpdateChecklistItem,
-  useDeleteChecklistItem,
-  useReorderChecklistItems,
-} from './useInspection';
-export type { InspectionLevel, AqlSample, AqlTableRow, AqlTable, ChecklistItem, Checklist } from './useInspection';
-
 // Slotting Optimization
 export { useSlottingAnalysis, usePickFrequencies, useApplySlotting } from './useSlotting';
 export type { SlottingSuggestion, SlottingAnalysis, ItemPickFrequency } from './useSlotting';
-
-// Push Notifications — web push subscription management
-export { useVapidKey, useSubscribePush, useUnsubscribePush, useTestPush } from './usePush';
 
 // Demand Forecasting — statistical demand prediction
 export { useDemandForecast, useTopDemandItems, useReorderAlerts, useSeasonalPatterns } from './useDemandForecast';
@@ -399,6 +380,22 @@ export {
   useCancelCrossDock,
 } from './useCrossDock';
 export type { CrossDock, CrossDockOpportunity, CrossDockStats } from './useCrossDock';
+
+// Inspection Tools (AQL Calculator & Checklists)
+export {
+  useAqlCalculation,
+  useAqlTable,
+  useChecklistList,
+  useChecklist,
+  useCreateChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useAddChecklistItem,
+  useUpdateChecklistItem,
+  useDeleteChecklistItem,
+  useReorderChecklistItems,
+} from './useInspection';
+export type { InspectionLevel, AqlSample, AqlTableRow, AqlTable, ChecklistItem, Checklist } from './useInspection';
 
 // Parallel Approvals — multi-approver groups
 export {

@@ -21,6 +21,9 @@ uploads/*
 # Playwright MCP
 .playwright-mcp/
 
+# Firebase debug logs
+firebase-debug.log
+
 # IDE / Tool caches
 .claude/
 *.tsbuildinfo
