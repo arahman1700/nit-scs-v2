@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Shield, Settings as SettingsIcon, Zap, Mail, ArrowRightLeft, GitBranch } from 'lucide-react';
+import { Shield, Settings as SettingsIcon, Zap, Mail } from 'lucide-react';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
@@ -17,9 +17,31 @@ const EmailTemplatesPage = React.lazy(() =>
   import('@/pages/EmailTemplatesPage').then(m => ({ default: m.EmailTemplatesPage })),
 );
 const EmailLogsPage = React.lazy(() => import('@/pages/EmailLogsPage').then(m => ({ default: m.EmailLogsPage })));
-const DelegationsPage = React.lazy(() => import('@/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })));
 const ApprovalLevelsPage = React.lazy(() =>
   import('@/pages/admin/ApprovalLevelsPage').then(m => ({ default: m.ApprovalLevelsPage })),
+);
+
+// Platform tools — lazy loaded
+const DashboardBuilderPage = React.lazy(() =>
+  import('@/pages/DashboardBuilderPage').then(m => ({ default: m.DashboardBuilderPage })),
+);
+const ReportBuilderPage = React.lazy(() =>
+  import('@/pages/ReportBuilderPage').then(m => ({ default: m.ReportBuilderPage })),
+);
+const DynamicTypeListPage = React.lazy(() =>
+  import('@/pages/admin/DynamicTypeListPage').then(m => ({ default: m.DynamicTypeListPage })),
+);
+const CustomDataSourcePage = React.lazy(() =>
+  import('@/pages/admin/CustomDataSourcePage').then(m => ({ default: m.CustomDataSourcePage })),
+);
+const CustomFieldsPage = React.lazy(() =>
+  import('@/pages/admin/CustomFieldsPage').then(m => ({ default: m.CustomFieldsPage })),
+);
+const WorkflowTemplatesPage = React.lazy(() =>
+  import('@/pages/admin/WorkflowTemplatesPage').then(m => ({ default: m.WorkflowTemplatesPage })),
+);
+const AiInsightsPage = React.lazy(() =>
+  import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
 );
 
 const Spinner: React.FC = () => (
@@ -54,18 +76,6 @@ const kpis: KpiCardProps[] = [
     icon: SettingsIcon,
     color: 'bg-emerald-500',
   },
-  {
-    title: 'Delegations',
-    value: 'Manage',
-    icon: ArrowRightLeft,
-    color: 'bg-purple-500',
-  },
-  {
-    title: 'Approval Levels',
-    value: 'Configure',
-    icon: GitBranch,
-    color: 'bg-cyan-500',
-  },
 ];
 
 const tabs: TabDef[] = [
@@ -73,18 +83,27 @@ const tabs: TabDef[] = [
   { key: 'audit', label: 'Audit Log' },
   { key: 'settings', label: 'Settings' },
   { key: 'reports', label: 'Reports' },
+  { key: 'approval-levels', label: 'Approval Levels' },
   { key: 'workflows', label: 'Workflows' },
   { key: 'email-templates', label: 'Email Templates' },
   { key: 'email-logs', label: 'Email Logs' },
-  { key: 'delegations', label: 'Delegations' },
-  { key: 'approval-levels', label: 'Approval Levels' },
+  { key: 'dashboard-builder', label: 'Dashboard Builder' },
+  { key: 'report-builder', label: 'Report Builder' },
+  { key: 'document-types', label: 'Document Types' },
+  { key: 'data-sources', label: 'Data Sources' },
+  { key: 'custom-fields', label: 'Custom Fields' },
+  { key: 'workflow-templates', label: 'Workflow Templates' },
+  { key: 'ai-insights', label: 'AI Insights' },
 ];
+
+// Backward-compatible alias
+export { AdminSystemPage as SettingsSectionPage };
 
 export const AdminSystemPage: React.FC = () => {
   return (
     <SectionLandingPage
-      title="System Administration"
-      subtitle="Roles, audit trail, system settings, and reports"
+      title="Settings"
+      subtitle="Roles, audit trail, system settings, platform tools, and reports"
       kpis={kpis}
       tabs={tabs}
       defaultTab="roles"
@@ -117,6 +136,13 @@ export const AdminSystemPage: React.FC = () => {
             </Suspense>
           </RouteErrorBoundary>
         ),
+        'approval-levels': (
+          <RouteErrorBoundary label="Approval Levels">
+            <Suspense fallback={<Spinner />}>
+              <ApprovalLevelsPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
         workflows: (
           <RouteErrorBoundary label="Workflows">
             <Suspense fallback={<Spinner />}>
@@ -138,17 +164,52 @@ export const AdminSystemPage: React.FC = () => {
             </Suspense>
           </RouteErrorBoundary>
         ),
-        delegations: (
-          <RouteErrorBoundary label="Delegations">
+        'dashboard-builder': (
+          <RouteErrorBoundary label="Dashboard Builder">
             <Suspense fallback={<Spinner />}>
-              <DelegationsPage />
+              <DashboardBuilderPage />
             </Suspense>
           </RouteErrorBoundary>
         ),
-        'approval-levels': (
-          <RouteErrorBoundary label="Approval Levels">
+        'report-builder': (
+          <RouteErrorBoundary label="Report Builder">
             <Suspense fallback={<Spinner />}>
-              <ApprovalLevelsPage />
+              <ReportBuilderPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'document-types': (
+          <RouteErrorBoundary label="Document Types">
+            <Suspense fallback={<Spinner />}>
+              <DynamicTypeListPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'data-sources': (
+          <RouteErrorBoundary label="Data Sources">
+            <Suspense fallback={<Spinner />}>
+              <CustomDataSourcePage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'custom-fields': (
+          <RouteErrorBoundary label="Custom Fields">
+            <Suspense fallback={<Spinner />}>
+              <CustomFieldsPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'workflow-templates': (
+          <RouteErrorBoundary label="Workflow Templates">
+            <Suspense fallback={<Spinner />}>
+              <WorkflowTemplatesPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'ai-insights': (
+          <RouteErrorBoundary label="AI Insights">
+            <Suspense fallback={<Spinner />}>
+              <AiInsightsPage />
             </Suspense>
           </RouteErrorBoundary>
         ),

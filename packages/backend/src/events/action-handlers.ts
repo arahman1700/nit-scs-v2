@@ -18,6 +18,7 @@ const handlers: Record<string, ActionHandler> = {
   reserve_stock: handleReserveStock,
   assign_task: handleAssignTask,
   webhook: handleWebhook,
+  conditional_branch: handleConditionalBranch,
 };
 
 /**
@@ -423,4 +424,84 @@ async function handleWebhook(params: Record<string, unknown>, event: SystemEvent
   }
 
   log('info', `[Action:webhook] POST ${url} → ${response.status}`);
+}
+
+/**
+ * Conditional branch: evaluate a condition and execute different actions.
+ * Params: { condition: LeafCondition, trueActions: Action[], falseActions: Action[] }
+ *
+ * Example:
+ * {
+ *   "type": "conditional_branch",
+ *   "params": {
+ *     "condition": { "field": "payload.to", "op": "eq", "value": "approved" },
+ *     "trueActions": [{ "type": "send_email", "params": {...} }],
+ *     "falseActions": [{ "type": "create_notification", "params": {...} }]
+ *   }
+ * }
+ */
+async function handleConditionalBranch(params: Record<string, unknown>, event: SystemEvent): Promise<void> {
+  const condition = params.condition as { field: string; op: string; value: unknown } | undefined;
+  if (!condition) {
+    throw new Error('conditional_branch requires a condition');
+  }
+
+  // Evaluate condition against event
+  const fieldValue = getNestedValue(event as unknown as Record<string, unknown>, condition.field);
+  let result = false;
+
+  switch (condition.op) {
+    case 'eq':
+      result = fieldValue === condition.value || String(fieldValue) === String(condition.value);
+      break;
+    case 'ne':
+      result = fieldValue !== condition.value && String(fieldValue) !== String(condition.value);
+      break;
+    case 'gt':
+      result = Number(fieldValue) > Number(condition.value);
+      break;
+    case 'gte':
+      result = Number(fieldValue) >= Number(condition.value);
+      break;
+    case 'lt':
+      result = Number(fieldValue) < Number(condition.value);
+      break;
+    case 'lte':
+      result = Number(fieldValue) <= Number(condition.value);
+      break;
+    case 'in':
+      result = Array.isArray(condition.value) && condition.value.includes(fieldValue);
+      break;
+    case 'contains':
+      result =
+        typeof fieldValue === 'string' &&
+        typeof condition.value === 'string' &&
+        fieldValue.toLowerCase().includes(condition.value.toLowerCase());
+      break;
+  }
+
+  const actionsToRun = result
+    ? ((params.trueActions as Array<{ type: string; params: Record<string, unknown> }>) ?? [])
+    : ((params.falseActions as Array<{ type: string; params: Record<string, unknown> }>) ?? []);
+
+  log(
+    'info',
+    `[Action:conditional_branch] Condition ${condition.field} ${condition.op} ${JSON.stringify(condition.value)} → ${result} (${actionsToRun.length} actions)`,
+  );
+
+  for (const action of actionsToRun) {
+    await executeActions(action.type, action.params, event);
+  }
+}
+
+// ── Helper ──────────────────────────────────────────────────────────────
+
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  const parts = path.split('.');
+  let current: unknown = obj;
+  for (const part of parts) {
+    if (current == null || typeof current !== 'object') return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
 }

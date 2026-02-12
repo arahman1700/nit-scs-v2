@@ -3,102 +3,136 @@ import { UserRole } from '@nit-scs-v2/shared/types';
 
 export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
   [UserRole.ADMIN]: [
-    // Dashboard
+    // ── 1. Dashboard ──
     { label: 'Dashboard', path: '/admin' },
 
-    // ── Section 1: Material Management ──
+    // ── 2. Warehouses & Stores ──
     {
-      label: 'Material Management',
-      path: '/admin/material',
+      label: 'Warehouses & Stores',
+      path: '/admin/warehouses',
       children: [
-        { label: 'Overview', path: '/admin/material' },
-        { label: 'GRN - Goods Receipt', path: '/admin/material?tab=grn' },
-        { label: 'QCI - Quality Inspection', path: '/admin/material?tab=qci' },
-        { label: 'DR - Discrepancy Report', path: '/admin/material?tab=dr' },
-        { label: 'MI - Material Issuance', path: '/admin/material?tab=mi' },
-        { label: 'MRN - Material Return', path: '/admin/material?tab=mrn' },
-        { label: 'MR - Material Request', path: '/admin/material?tab=mr' },
+        { label: 'Overview', path: '/admin/warehouses' },
         { label: '---', type: 'divider' },
-        { label: 'Inventory', path: '/admin/material?tab=inventory' },
-        { label: 'Bin Cards', path: '/admin/material?tab=bin-cards' },
-        { label: 'Non-Moving Materials', path: '/admin/material?tab=non-moving' },
-        { label: 'Item Master', path: '/admin/material?tab=items' },
+        { label: 'GRN - Goods Receipt', path: '/admin/warehouses?tab=grn' },
+        { label: 'MI - Material Issuance', path: '/admin/warehouses?tab=mi' },
+        { label: 'MRN - Material Return', path: '/admin/warehouses?tab=mrn' },
+        { label: 'MR - Material Request', path: '/admin/warehouses?tab=mr' },
         { label: '---', type: 'divider' },
-        { label: 'IMSF - Material Shifting', path: '/admin/material?tab=imsf' },
-        { label: 'WT - Warehouse Transfer', path: '/admin/material?tab=wt' },
-        { label: 'Scrap Management', path: '/admin/material?tab=scrap' },
+        { label: 'QCI - Quality Inspection', path: '/admin/warehouses?tab=qci' },
+        { label: 'DR - Discrepancy Report', path: '/admin/warehouses?tab=dr' },
+        { label: '---', type: 'divider' },
+        { label: 'Inventory', path: '/admin/warehouses?tab=inventory' },
+        { label: 'Bin Cards', path: '/admin/warehouses?tab=bin-cards' },
+        { label: 'Non-Moving Materials', path: '/admin/warehouses?tab=non-moving' },
+        { label: '---', type: 'divider' },
+        { label: 'IMSF - Material Shifting', path: '/admin/warehouses?tab=imsf' },
+        { label: 'WT - Warehouse Transfer', path: '/admin/warehouses?tab=wt' },
       ],
     },
 
-    // ── Section 2: Logistics & Fleet ──
+    // ── 3. Equipment & Transport ──
     {
-      label: 'Logistics & Fleet',
-      path: '/admin/logistics',
+      label: 'Equipment & Transport',
+      path: '/admin/equipment',
       children: [
-        { label: 'Overview', path: '/admin/logistics' },
-        { label: 'Job Orders Board', path: '/admin/logistics?tab=kanban' },
-        { label: 'All Job Orders', path: '/admin/logistics?tab=all-jobs' },
+        { label: 'Overview', path: '/admin/equipment' },
         { label: '---', type: 'divider' },
-        { label: 'Gate Passes', path: '/admin/logistics?tab=gate-passes' },
+        { label: 'Job Orders Board', path: '/admin/equipment?tab=kanban' },
+        { label: 'All Job Orders', path: '/admin/equipment?tab=all-jobs' },
         { label: '---', type: 'divider' },
-        { label: 'Fleet Management', path: '/admin/logistics?tab=fleet' },
-        { label: 'Rental Contracts', path: '/admin/logistics?tab=rental-contracts' },
-        { label: 'Generators', path: '/admin/logistics?tab=generators' },
+        { label: 'Gate Passes', path: '/admin/equipment?tab=gate-passes' },
         { label: '---', type: 'divider' },
-        { label: 'Shipments', path: '/admin/logistics?tab=shipments' },
-        { label: 'SLA Dashboard', path: '/admin/logistics?tab=sla' },
+        { label: 'Fleet Management', path: '/admin/equipment?tab=fleet' },
+        { label: 'Rental Contracts', path: '/admin/equipment?tab=rental-contracts' },
+        { label: '---', type: 'divider' },
+        { label: 'Generators', path: '/admin/equipment?tab=generators' },
+        { label: 'Generator Fuel', path: '/admin/equipment?tab=generator-fuel' },
+        { label: 'Generator Maintenance', path: '/admin/equipment?tab=generator-maintenance' },
+        { label: '---', type: 'divider' },
+        { label: 'Tools Management', path: '/admin/equipment?tab=tools' },
+        { label: 'Tool Issues', path: '/admin/equipment?tab=tool-issues' },
       ],
     },
 
-    // ── Section 3: Asset Lifecycle ──
+    // ── 4. Scrap & Surplus ──
     {
-      label: 'Asset Lifecycle',
-      path: '/admin/assets',
+      label: 'Scrap & Surplus',
+      path: '/admin/scrap',
       children: [
-        { label: 'Overview', path: '/admin/assets' },
-        { label: 'Surplus Management', path: '/admin/assets?tab=surplus' },
-        { label: 'SSC Dashboard', path: '/admin/assets?tab=ssc' },
-        { label: '---', type: 'divider' },
-        { label: 'Tools Management', path: '/admin/assets?tab=tools' },
-        { label: 'Fixed Assets', path: '/admin/assets?tab=fixed-assets' },
-        { label: 'Depreciation', path: '/admin/assets?tab=depreciation' },
+        { label: 'Overview', path: '/admin/scrap' },
+        { label: 'Scrap Management', path: '/admin/scrap?tab=scrap' },
+        { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
+        { label: 'Surplus Items', path: '/admin/scrap?tab=surplus' },
       ],
     },
 
-    // ── Master Data ──
+    // ── 5. Shipping & Customs ──
+    {
+      label: 'Shipping & Customs',
+      path: '/admin/shipping',
+      children: [
+        { label: 'Overview', path: '/admin/shipping' },
+        { label: 'Shipments', path: '/admin/shipping?tab=shipments' },
+        { label: 'Customs Clearance', path: '/admin/shipping?tab=customs' },
+        { label: 'SLA Performance', path: '/admin/shipping?tab=sla' },
+      ],
+    },
+
+    // ── 6. Interactive Map ──
+    { label: 'Interactive Map', path: '/admin/map' },
+
+    // ── 7. Documents ──
+    { label: 'Documents', path: '/admin/documents' },
+
+    // ── 8. Master Data ──
     {
       label: 'Master Data',
       path: '/admin/master',
       children: [
         { label: 'Overview', path: '/admin/master' },
-        { label: 'Suppliers', path: '/admin/master?tab=suppliers' },
         { label: 'Items', path: '/admin/master?tab=items' },
+        { label: 'Suppliers', path: '/admin/master?tab=suppliers' },
         { label: 'Projects', path: '/admin/master?tab=projects' },
-        { label: 'Employees', path: '/admin/master?tab=employees' },
-        { label: '---', type: 'divider' },
         { label: 'Warehouses', path: '/admin/master?tab=warehouses' },
-        { label: 'Warehouse Zones', path: '/admin/master?tab=warehouse-zones' },
         { label: 'Equipment', path: '/admin/master?tab=equipment' },
       ],
     },
 
-    // ── System ──
+    // ── 9. Employees & Org ──
     {
-      label: 'Admin & Settings',
-      path: '/admin/system',
+      label: 'Employees & Org',
+      path: '/admin/employees',
       children: [
-        { label: 'Roles & Permissions', path: '/admin/system?tab=roles' },
-        { label: 'Audit Log', path: '/admin/system?tab=audit' },
-        { label: 'Settings', path: '/admin/system?tab=settings' },
-        { label: 'Reports', path: '/admin/system?tab=reports' },
+        { label: 'Employees', path: '/admin/employees?tab=employees' },
+        { label: 'Departments', path: '/admin/employees?tab=departments' },
+        { label: 'Org Chart', path: '/admin/employees?tab=org-chart' },
+        { label: 'Delegations', path: '/admin/employees?tab=delegations' },
+      ],
+    },
+
+    // ── 10. Settings ──
+    {
+      label: 'Settings',
+      path: '/admin/settings',
+      children: [
+        { label: 'Roles & Permissions', path: '/admin/settings?tab=roles' },
+        { label: 'Audit Log', path: '/admin/settings?tab=audit' },
+        { label: 'System Settings', path: '/admin/settings?tab=settings' },
+        { label: 'Reports', path: '/admin/settings?tab=reports' },
         { label: '---', type: 'divider' },
-        { label: 'Approval Levels', path: '/admin/system?tab=approval-levels' },
-        { label: 'Workflows', path: '/admin/system?tab=workflows' },
-        { label: 'Email Templates', path: '/admin/system?tab=email-templates' },
-        { label: 'Email Logs', path: '/admin/system?tab=email-logs' },
+        { label: 'Approval Levels', path: '/admin/settings?tab=approval-levels' },
+        { label: 'Workflows', path: '/admin/settings?tab=workflows' },
         { label: '---', type: 'divider' },
-        { label: 'Dashboard Builder', path: '/admin/system/dashboards' },
-        { label: 'Report Builder', path: '/admin/system/reports' },
+        { label: 'Email Templates', path: '/admin/settings?tab=email-templates' },
+        { label: 'Email Logs', path: '/admin/settings?tab=email-logs' },
+        { label: '---', type: 'divider' },
+        { label: 'Dashboard Builder', path: '/admin/settings/dashboards' },
+        { label: 'Report Builder', path: '/admin/settings/reports' },
+        { label: 'Document Type Builder', path: '/admin/dynamic-types' },
+        { label: 'Custom Data Sources', path: '/admin/custom-data-sources' },
+        { label: 'Custom Fields', path: '/admin/custom-fields' },
+        { label: 'Workflow Templates', path: '/admin/workflow-templates' },
+        { label: 'AI Insights', path: '/admin/ai-insights' },
       ],
     },
   ],
@@ -160,9 +194,9 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
     { label: 'Tasks', path: '/logistics/tasks' },
   ],
   [UserRole.SCRAP_COMMITTEE_MEMBER]: [
-    { label: 'Dashboard', path: '/assets/scrap' },
-    { label: 'SSC Dashboard', path: '/assets?tab=ssc' },
-    { label: 'Scrap Items', path: '/assets?tab=scrap' },
-    { label: 'Tasks', path: '/assets/tasks' },
+    { label: 'Dashboard', path: '/admin/scrap' },
+    { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
+    { label: 'Scrap Items', path: '/admin/scrap?tab=scrap' },
+    { label: 'Surplus', path: '/admin/scrap?tab=surplus' },
   ],
 };

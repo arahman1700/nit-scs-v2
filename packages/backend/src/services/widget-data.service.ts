@@ -21,7 +21,7 @@ type DataSourceFn = (config: QueryConfig) => Promise<DataSourceResult>;
 
 const dataSources = new Map<string, DataSourceFn>();
 
-function register(key: string, fn: DataSourceFn) {
+export function register(key: string, fn: DataSourceFn) {
   dataSources.set(key, fn);
 }
 
@@ -367,6 +367,62 @@ register('cross-department/pending_by_department', async () => {
     label: 'Pending Items by Department',
   };
 });
+
+// ── Dynamic Document Data Sources ────────────────────────────────────
+
+/**
+ * Register data sources for all active dynamic document types.
+ * Called once at startup — adds stats/grouped/table sources per type.
+ */
+export async function registerDynamicDataSources(): Promise<void> {
+  const types = await prisma.dynamicDocumentType.findMany({
+    where: { isActive: true },
+    select: { id: true, code: true, name: true, statusFlow: true },
+  });
+
+  for (const dt of types) {
+    const prefix = `dyn/${dt.code}`;
+
+    // Stats: total count
+    register(`${prefix}/stats`, async () => {
+      const count = await prisma.dynamicDocument.count({ where: { documentTypeId: dt.id } });
+      return { type: 'number', data: count, label: `${dt.name} — Total` };
+    });
+
+    // Grouped: by status
+    register(`${prefix}/by_status`, async () => {
+      const result = await prisma.dynamicDocument.groupBy({
+        by: ['status'],
+        where: { documentTypeId: dt.id },
+        _count: { id: true },
+      });
+      return {
+        type: 'grouped',
+        data: result.map(r => ({ label: r.status, value: r._count.id })),
+        label: `${dt.name} by Status`,
+      };
+    });
+
+    // Table: recent documents
+    register(`${prefix}/recent`, async config => {
+      const limit = config.limit ?? 10;
+      const rows = await prisma.dynamicDocument.findMany({
+        where: { documentTypeId: dt.id },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          documentNumber: true,
+          status: true,
+          createdAt: true,
+          project: { select: { projectCode: true, projectName: true } },
+          createdBy: { select: { fullName: true } },
+        },
+      });
+      return { type: 'table', data: rows, label: `Recent ${dt.name}` };
+    });
+  }
+}
 
 // ── Public API ─────────────────────────────────────────────────────────
 

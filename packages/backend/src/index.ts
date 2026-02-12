@@ -28,6 +28,8 @@ import { setupSocketIO } from './socket/setup.js';
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startScheduler, stopScheduler } from './services/scheduler.service.js';
+import { registerDynamicDataSources, register as registerDataSource } from './services/widget-data.service.js';
+import { loadCustomDataSources } from './services/custom-data-source.service.js';
 import apiRoutes from './routes/index.js';
 import { healthCheck } from './routes/health.routes.js';
 
@@ -116,6 +118,17 @@ httpServer.listen(PORT, () => {
   startRuleEngine();
   startChainNotifications();
   startScheduler(io);
+  registerDynamicDataSources().catch(err => logger.error({ err }, 'Failed to register dynamic data sources'));
+  loadCustomDataSources(registerDataSource as (key: string, fn: (config: unknown) => Promise<unknown>) => void).catch(
+    err => logger.error({ err }, 'Failed to load custom data sources'),
+  );
+
+  // ── AI Module (optional — behind AI_ENABLED flag) ──────────────
+  if (process.env.AI_ENABLED === 'true') {
+    import('./modules/ai/index.js')
+      .then(({ initAiModule }) => initAiModule(app))
+      .catch(err => logger.error({ err }, 'Failed to initialize AI module'));
+  }
 });
 
 // ── Graceful Shutdown ─────────────────────────────────────────────────────

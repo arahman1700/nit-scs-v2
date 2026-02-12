@@ -85,6 +85,17 @@ import demandForecastRoutes from './demand-forecast.routes.js';
 import sensorRoutes from './sensor.routes.js';
 import yardRoutes from './yard.routes.js';
 
+// ── Dynamic Documents ───────────────────────────────────────────────────
+import dynamicDocTypeRoutes from './dynamic-document-type.routes.js';
+import dynamicDocRoutes from './dynamic-document.routes.js';
+
+// ── Custom Data Sources & Custom Fields ─────────────────────────────────
+import customDataSourceRoutes from './custom-data-source.routes.js';
+import customFieldRoutes from './custom-fields.routes.js';
+
+// ── Workflow Templates (Marketplace) ────────────────────────────────────
+import workflowTemplateRoutes from './workflow-template.routes.js';
+
 const router = Router();
 
 // ── Rate limiter (applied to all /api/v1 routes) ─────────────────────────
@@ -222,5 +233,16 @@ router.use('/sensors', sensorRoutes);
 
 // ── Yard Management ─────────────────────────────────────────────────
 router.use('/yard', yardRoutes);
+
+// ── Dynamic Document System ─────────────────────────────────────────────
+router.use('/dynamic-types', dynamicDocTypeRoutes);
+router.use('/dynamic', dynamicDocRoutes);
+
+// ── Custom Data Sources & Custom Fields ─────────────────────────────────
+router.use('/custom-data-sources', customDataSourceRoutes);
+router.use('/custom-fields', customFieldRoutes);
+
+// ── Workflow Templates (Marketplace) ────────────────────────────────────
+router.use('/workflow-templates', workflowTemplateRoutes);
 
 export default router;

@@ -20,6 +20,7 @@ import { createNotification } from './notification.service.js';
 import { cleanupExpiredTokens } from './auth.service.js';
 import { calculateABCClassification, applyABCClassification } from './abc-analysis.service.js';
 import { autoCreateCycleCounts } from './cycle-count.service.js';
+import { processScheduledRules, initializeScheduledRules } from '../events/scheduled-rule-runner.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 import { emitToRole } from '../socket/setup.js';
@@ -90,7 +91,7 @@ function slaHoursToMs(hours: number): number {
  * Compute the SLA deadline from a reference date and SLA key.
  * Returns null if SLA key not found.
  */
-function computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date | null {
+function _computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date | null {
   const hours = SLA_HOURS[slaKey];
   if (!hours) return null;
   const ref = typeof referenceDate === 'string' ? new Date(referenceDate) : referenceDate;
@@ -1155,6 +1156,14 @@ export function startScheduler(socketIo?: SocketIOServer): void {
 
   // Cycle count auto-creation — daily (lock: 23 hours)
   scheduleLoop('cycle_count_auto', runCycleCountAutoCreate, 24 * 60 * 60 * 1000, 82800);
+
+  // Scheduled workflow rules — every 60 seconds (lock: 50 sec)
+  scheduleLoop('scheduled_rules', processScheduledRules, 60 * 1000, 50);
+
+  // Initialize nextRunAt for any scheduled rules that don't have one
+  initializeScheduledRules().catch(err =>
+    log('error', `[Scheduler] Failed to initialize scheduled rules: ${(err as Error).message}`),
+  );
 
   // Run initial checks after a short delay (let server finish starting up)
   const initTimer = setTimeout(async () => {

@@ -10,7 +10,6 @@ import {
   FileText,
   Truck,
   ArrowRightLeft,
-  Recycle,
 } from 'lucide-react';
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { DocumentListPanel } from '@/components/DocumentListPanel';
@@ -30,10 +29,11 @@ import {
   useBinCardList,
   useImsfList,
   useWtList,
-  useScrapList,
 } from '@/api/hooks';
-import { useInventory, useItems } from '@/api/hooks/useMasterData';
-import type { ColumnDef } from '@/config/resourceColumns';
+import { useInventory } from '@/api/hooks/useMasterData';
+
+// Backward-compatible alias
+export { MaterialSectionPage as WarehouseSectionPage };
 
 export const MaterialSectionPage: React.FC = () => {
   const navigate = useNavigate();
@@ -49,17 +49,9 @@ export const MaterialSectionPage: React.FC = () => {
   const mrQuery = useMrList({ pageSize: 50 });
 
   const inventoryQuery = useInventory({ pageSize: 100 });
-  const itemsQuery = useItems({ pageSize: 100 });
   const binCardQuery = useBinCardList({ pageSize: 100 });
   const imsfQuery = useImsfList({ pageSize: 50 });
   const wtQuery = useWtList({ pageSize: 50 });
-  const scrapQuery = useScrapList({ pageSize: 50 });
-
-  const itemColumns: ColumnDef[] = [
-    { key: 'itemCode', label: 'Item Code' },
-    { key: 'itemDescription', label: 'Description' },
-    { key: 'category', label: 'Category' },
-  ];
 
   const grnRows = (grnAll?.data ?? []) as Record<string, unknown>[];
 
@@ -81,24 +73,22 @@ export const MaterialSectionPage: React.FC = () => {
   const tabs: TabDef[] = [
     { key: 'overview', label: 'Overview' },
     { key: 'grn', label: 'GRN', badge: grnPending?.meta?.total },
-    { key: 'qci', label: 'QCI', badge: qciPending?.meta?.total },
-    { key: 'dr', label: 'DR' },
     { key: 'mi', label: 'MI' },
     { key: 'mrn', label: 'MRN' },
     { key: 'mr', label: 'MR' },
+    { key: 'qci', label: 'QCI', badge: qciPending?.meta?.total },
+    { key: 'dr', label: 'DR' },
     { key: 'inventory', label: 'Inventory' },
     { key: 'bin-cards', label: 'Bin Cards' },
     { key: 'non-moving', label: 'Non-Moving' },
-    { key: 'items', label: 'Item Master' },
     { key: 'imsf', label: 'IMSF' },
     { key: 'wt', label: 'WT' },
-    { key: 'scrap', label: 'Scrap' },
   ];
 
   return (
     <SectionLandingPage
-      title="Material Management"
-      subtitle="Goods receipt, quality inspection, issuance, returns, and inventory"
+      title="Warehouses & Stores"
+      subtitle="Goods receipt, issuance, returns, quality inspection, and inventory"
       kpis={kpis}
       tabs={tabs}
       loading={isLoading}
@@ -110,7 +100,6 @@ export const MaterialSectionPage: React.FC = () => {
         { label: 'New DR', icon: AlertTriangle, onClick: () => navigate('/admin/forms/dr'), variant: 'secondary' },
         { label: 'New IMSF', icon: Truck, onClick: () => navigate('/admin/forms/imsf'), variant: 'secondary' },
         { label: 'New WT', icon: ArrowRightLeft, onClick: () => navigate('/admin/forms/wt'), variant: 'secondary' },
-        { label: 'Report Scrap', icon: Recycle, onClick: () => navigate('/admin/forms/scrap'), variant: 'secondary' },
       ]}
       children={{
         overview: (
@@ -129,7 +118,7 @@ export const MaterialSectionPage: React.FC = () => {
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h3 className="text-white font-semibold">Recent GRN Queue</h3>
                 <button
-                  onClick={() => navigate('/admin/material?tab=grn')}
+                  onClick={() => navigate('/admin/warehouses?tab=grn')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   View All
@@ -302,15 +291,6 @@ export const MaterialSectionPage: React.FC = () => {
             </div>
           </div>
         ),
-        items: (
-          <DocumentListPanel
-            title="Item Master Catalog"
-            icon={Package}
-            columns={itemColumns}
-            rows={(itemsQuery.data?.data ?? []) as Record<string, unknown>[]}
-            loading={itemsQuery.isLoading}
-          />
-        ),
         imsf: (
           <DocumentListPanel
             title="Internal Material Shifting"
@@ -331,17 +311,6 @@ export const MaterialSectionPage: React.FC = () => {
             loading={wtQuery.isLoading}
             createLabel="New WT"
             createUrl="/admin/forms/wt"
-          />
-        ),
-        scrap: (
-          <DocumentListPanel
-            title="Scrap Items"
-            icon={Recycle}
-            columns={RESOURCE_COLUMNS.scrap.columns}
-            rows={(scrapQuery.data?.data ?? []) as Record<string, unknown>[]}
-            loading={scrapQuery.isLoading}
-            createLabel="Report Scrap"
-            createUrl="/admin/forms/scrap"
           />
         ),
       }}

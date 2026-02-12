@@ -4,7 +4,6 @@ import {
   Building2,
   Package,
   FolderOpen,
-  Users,
   Warehouse as WarehouseIcon,
   Wrench,
   ArrowRight,
@@ -14,15 +13,7 @@ import {
 import { SectionLandingPage } from '@/components/SectionLandingPage';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import {
-  useSuppliers,
-  useItems,
-  useProjects,
-  useEmployees,
-  useWarehouses,
-  useFleet,
-  useGenerators,
-} from '@/api/hooks';
+import { useSuppliers, useItems, useProjects, useEmployees, useWarehouses, useFleet, useGenerators } from '@/api/hooks';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -66,7 +57,11 @@ function ResourceCard({ label, icon: Icon, count, loading, link, color }: Resour
         <ArrowRight size={16} className="text-gray-500 group-hover:text-nesma-secondary transition-colors" />
       </div>
       <p className="text-2xl font-bold text-white mb-1">
-        {loading ? <span className="inline-block w-10 h-6 bg-white/10 rounded animate-pulse" /> : count.toLocaleString()}
+        {loading ? (
+          <span className="inline-block w-10 h-6 bg-white/10 rounded animate-pulse" />
+        ) : (
+          count.toLocaleString()
+        )}
       </p>
       <p className="text-gray-400 text-sm">{label}</p>
       <p className="text-nesma-secondary text-xs mt-2 group-hover:underline">Manage</p>
@@ -96,7 +91,8 @@ export const MasterDataSectionPage: React.FC = () => {
   const generatorsData = generatorsQuery.data?.data ?? [];
   const warehousesTotal = warehousesQuery.data?.meta?.total ?? warehousesData.length;
 
-  const loading = suppliersQuery.isLoading || itemsQuery.isLoading || projectsQuery.isLoading || employeesQuery.isLoading;
+  const loading =
+    suppliersQuery.isLoading || itemsQuery.isLoading || projectsQuery.isLoading || employeesQuery.isLoading;
 
   // For full tables we need more data
   const suppliersFullQuery = useSuppliers({ pageSize: 15 });
@@ -112,20 +108,19 @@ export const MasterDataSectionPage: React.FC = () => {
   // ── KPIs ──────────────────────────────────────────────────────────────────
 
   const kpis: KpiCardProps[] = [
-    { title: 'Suppliers', value: suppliersTotal, icon: Building2, color: 'bg-nesma-primary' },
     { title: 'Items', value: itemsTotal, icon: Package, color: 'bg-emerald-500' },
+    { title: 'Suppliers', value: suppliersTotal, icon: Building2, color: 'bg-nesma-primary' },
     { title: 'Projects', value: projectsTotal, icon: FolderOpen, color: 'bg-blue-500' },
-    { title: 'Employees', value: employeesTotal, icon: Users, color: 'bg-amber-500' },
+    { title: 'Warehouses', value: warehousesTotal, icon: WarehouseIcon, color: 'bg-purple-500' },
   ];
 
   // ── Tab definitions ───────────────────────────────────────────────────────
 
   const tabs: TabDef[] = [
     { key: 'overview', label: 'Overview' },
-    { key: 'suppliers', label: 'Suppliers' },
     { key: 'items', label: 'Items' },
+    { key: 'suppliers', label: 'Suppliers' },
     { key: 'projects', label: 'Projects' },
-    { key: 'employees', label: 'Employees' },
     { key: 'warehouses', label: 'Warehouses' },
     { key: 'equipment', label: 'Equipment' },
   ];
@@ -134,14 +129,60 @@ export const MasterDataSectionPage: React.FC = () => {
 
   const resourceCards: ResourceCardInfo[] = useMemo(
     () => [
-      { label: 'Suppliers', icon: Building2, count: suppliersTotal, loading: suppliersQuery.isLoading, link: '/admin/sections/master-data?tab=suppliers', color: 'bg-nesma-primary' },
-      { label: 'Items', icon: Package, count: itemsTotal, loading: itemsQuery.isLoading, link: '/admin/sections/master-data?tab=items', color: 'bg-emerald-500' },
-      { label: 'Projects', icon: FolderOpen, count: projectsTotal, loading: projectsQuery.isLoading, link: '/admin/sections/master-data?tab=projects', color: 'bg-blue-500' },
-      { label: 'Employees', icon: Users, count: employeesTotal, loading: employeesQuery.isLoading, link: '/admin/sections/master-data?tab=employees', color: 'bg-amber-500' },
-      { label: 'Warehouses', icon: WarehouseIcon, count: warehousesTotal, loading: warehousesQuery.isLoading, link: '/admin/sections/master-data?tab=warehouses', color: 'bg-purple-500' },
-      { label: 'Equipment', icon: Wrench, count: fleetData.length + generatorsData.length, loading: fleetQuery.isLoading, link: '/admin/sections/master-data?tab=equipment', color: 'bg-orange-500' },
+      {
+        label: 'Items',
+        icon: Package,
+        count: itemsTotal,
+        loading: itemsQuery.isLoading,
+        link: '/admin/master?tab=items',
+        color: 'bg-emerald-500',
+      },
+      {
+        label: 'Suppliers',
+        icon: Building2,
+        count: suppliersTotal,
+        loading: suppliersQuery.isLoading,
+        link: '/admin/master?tab=suppliers',
+        color: 'bg-nesma-primary',
+      },
+      {
+        label: 'Projects',
+        icon: FolderOpen,
+        count: projectsTotal,
+        loading: projectsQuery.isLoading,
+        link: '/admin/master?tab=projects',
+        color: 'bg-blue-500',
+      },
+      {
+        label: 'Warehouses',
+        icon: WarehouseIcon,
+        count: warehousesTotal,
+        loading: warehousesQuery.isLoading,
+        link: '/admin/master?tab=warehouses',
+        color: 'bg-purple-500',
+      },
+      {
+        label: 'Equipment',
+        icon: Wrench,
+        count: fleetData.length + generatorsData.length,
+        loading: fleetQuery.isLoading,
+        link: '/admin/master?tab=equipment',
+        color: 'bg-orange-500',
+      },
     ],
-    [suppliersTotal, itemsTotal, projectsTotal, employeesTotal, warehousesTotal, fleetData.length, generatorsData.length, suppliersQuery.isLoading, itemsQuery.isLoading, projectsQuery.isLoading, employeesQuery.isLoading, warehousesQuery.isLoading, fleetQuery.isLoading],
+    [
+      suppliersTotal,
+      itemsTotal,
+      projectsTotal,
+      warehousesTotal,
+      fleetData.length,
+      generatorsData.length,
+      suppliersQuery.isLoading,
+      itemsQuery.isLoading,
+      projectsQuery.isLoading,
+      warehousesQuery.isLoading,
+      fleetQuery.isLoading,
+    ],
   );
 
   // ── Tab content ───────────────────────────────────────────────────────────
@@ -149,7 +190,7 @@ export const MasterDataSectionPage: React.FC = () => {
   const children: Record<string, React.ReactNode> = {
     overview: (
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {resourceCards.map((rc) => (
+        {resourceCards.map(rc => (
           <ResourceCard key={rc.label} {...rc} />
         ))}
       </div>
@@ -167,22 +208,31 @@ export const MasterDataSectionPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {suppliersData.slice(0, 15).map((s) => (
+            {suppliersData.slice(0, 15).map(s => (
               <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{s.name || '-'}</td>
                 <td className="p-4 text-gray-300">{s.city || '-'}</td>
                 <td className="p-4 text-gray-300">{s.type || '-'}</td>
-                <td className="p-4"><StatusBadge status={s.status || 'Active'} /></td>
+                <td className="p-4">
+                  <StatusBadge status={s.status || 'Active'} />
+                </td>
               </tr>
             ))}
             {suppliersData.length === 0 && (
-              <tr><td colSpan={4} className="p-8 text-center text-gray-500">No suppliers found</td></tr>
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-gray-500">
+                  No suppliers found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
         {suppliersTotal > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button onClick={() => navigate('/admin/list/suppliers')} className="text-nesma-secondary text-sm hover:underline">
+            <button
+              onClick={() => navigate('/admin/list/suppliers')}
+              className="text-nesma-secondary text-sm hover:underline"
+            >
               View All {suppliersTotal} Suppliers
             </button>
           </div>
@@ -201,7 +251,7 @@ export const MasterDataSectionPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {itemsData.slice(0, 15).map((item) => (
+            {itemsData.slice(0, 15).map(item => (
               <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{item.code || '-'}</td>
                 <td className="p-4 text-gray-300">{item.name || '-'}</td>
@@ -209,13 +259,20 @@ export const MasterDataSectionPage: React.FC = () => {
               </tr>
             ))}
             {itemsData.length === 0 && (
-              <tr><td colSpan={3} className="p-8 text-center text-gray-500">No items found</td></tr>
+              <tr>
+                <td colSpan={3} className="p-8 text-center text-gray-500">
+                  No items found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
         {itemsTotal > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button onClick={() => navigate('/admin/list/items')} className="text-nesma-secondary text-sm hover:underline">
+            <button
+              onClick={() => navigate('/admin/list/items')}
+              className="text-nesma-secondary text-sm hover:underline"
+            >
               View All {itemsTotal} Items
             </button>
           </div>
@@ -236,23 +293,32 @@ export const MasterDataSectionPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {projectsData.slice(0, 15).map((p) => (
+            {projectsData.slice(0, 15).map(p => (
               <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{p.name || '-'}</td>
                 <td className="p-4 text-gray-300">{p.client || '-'}</td>
                 <td className="p-4 text-gray-300">{p.region || '-'}</td>
                 <td className="p-4 text-gray-300">{p.manager || '-'}</td>
-                <td className="p-4"><StatusBadge status={p.status || 'Active'} /></td>
+                <td className="p-4">
+                  <StatusBadge status={p.status || 'Active'} />
+                </td>
               </tr>
             ))}
             {projectsData.length === 0 && (
-              <tr><td colSpan={5} className="p-8 text-center text-gray-500">No projects found</td></tr>
+              <tr>
+                <td colSpan={5} className="p-8 text-center text-gray-500">
+                  No projects found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
         {projectsTotal > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button onClick={() => navigate('/admin/list/projects')} className="text-nesma-secondary text-sm hover:underline">
+            <button
+              onClick={() => navigate('/admin/list/projects')}
+              className="text-nesma-secondary text-sm hover:underline"
+            >
               View All {projectsTotal} Projects
             </button>
           </div>
@@ -272,7 +338,7 @@ export const MasterDataSectionPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {employeesData.slice(0, 15).map((e) => (
+            {employeesData.slice(0, 15).map(e => (
               <tr key={e.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{e.name || '-'}</td>
                 <td className="p-4 text-gray-300">{e.department || '-'}</td>
@@ -281,13 +347,20 @@ export const MasterDataSectionPage: React.FC = () => {
               </tr>
             ))}
             {employeesData.length === 0 && (
-              <tr><td colSpan={4} className="p-8 text-center text-gray-500">No employees found</td></tr>
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-gray-500">
+                  No employees found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
         {employeesTotal > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button onClick={() => navigate('/admin/list/employees')} className="text-nesma-secondary text-sm hover:underline">
+            <button
+              onClick={() => navigate('/admin/list/employees')}
+              className="text-nesma-secondary text-sm hover:underline"
+            >
               View All {employeesTotal} Employees
             </button>
           </div>
@@ -306,7 +379,7 @@ export const MasterDataSectionPage: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {warehousesData.slice(0, 15).map((w) => (
+            {warehousesData.slice(0, 15).map(w => (
               <tr key={w.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{w.id}</td>
                 <td className="p-4 text-gray-300">{w.name || '-'}</td>
@@ -314,13 +387,20 @@ export const MasterDataSectionPage: React.FC = () => {
               </tr>
             ))}
             {warehousesData.length === 0 && (
-              <tr><td colSpan={3} className="p-8 text-center text-gray-500">No warehouses found</td></tr>
+              <tr>
+                <td colSpan={3} className="p-8 text-center text-gray-500">
+                  No warehouses found
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
         {warehousesTotal > 15 && (
           <div className="p-3 text-center border-t border-white/10">
-            <button onClick={() => navigate('/admin/list/warehouses')} className="text-nesma-secondary text-sm hover:underline">
+            <button
+              onClick={() => navigate('/admin/list/warehouses')}
+              className="text-nesma-secondary text-sm hover:underline"
+            >
               View All {warehousesTotal} Warehouses
             </button>
           </div>
@@ -346,16 +426,22 @@ export const MasterDataSectionPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {fleetData.slice(0, 10).map((f) => (
+                {fleetData.slice(0, 10).map(f => (
                   <tr key={f.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="p-4 text-white font-medium">{f.plateNumber || '-'}</td>
                     <td className="p-4 text-gray-300">{f.type || '-'}</td>
                     <td className="p-4 text-gray-300">{f.category || '-'}</td>
-                    <td className="p-4"><StatusBadge status={f.status || 'Active'} /></td>
+                    <td className="p-4">
+                      <StatusBadge status={f.status || 'Active'} />
+                    </td>
                   </tr>
                 ))}
                 {fleetData.length === 0 && (
-                  <tr><td colSpan={4} className="p-8 text-center text-gray-500">No fleet records</td></tr>
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                      No fleet records
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -378,16 +464,22 @@ export const MasterDataSectionPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {generatorsData.slice(0, 10).map((g) => (
+                {generatorsData.slice(0, 10).map(g => (
                   <tr key={g.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="p-4 text-white font-medium">{g.assetId || '-'}</td>
                     <td className="p-4 text-gray-300">{g.model || '-'}</td>
                     <td className="p-4 text-gray-300">{g.capacityKva ?? '-'}</td>
-                    <td className="p-4"><StatusBadge status={g.status || 'Active'} /></td>
+                    <td className="p-4">
+                      <StatusBadge status={g.status || 'Active'} />
+                    </td>
                   </tr>
                 ))}
                 {generatorsData.length === 0 && (
-                  <tr><td colSpan={4} className="p-8 text-center text-gray-500">No generators found</td></tr>
+                  <tr>
+                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                      No generators found
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>

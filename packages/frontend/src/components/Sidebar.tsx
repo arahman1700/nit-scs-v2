@@ -28,19 +28,35 @@ import {
   DoorOpen,
   Search,
   AlertTriangle,
+  Map,
+  Recycle,
 } from 'lucide-react';
 import { NesmaLogo } from '@/components/NesmaLogo';
 
 // Map nav item labels to lucide icons (icons can't live in shared config since they're React components)
 const ICON_MAP: Record<string, LucideIcon> = {
+  // ── Top-level sections ──
   Dashboard: LayoutDashboard,
+  'Warehouses & Stores': Warehouse,
+  'Equipment & Transport': Truck,
+  'Scrap & Surplus': Recycle,
+  'Shipping & Customs': Ship,
+  'Interactive Map': Map,
+  Documents: FileText,
+  'Master Data': Database,
+  'Employees & Org': Users,
+  Settings: Settings,
+  // ── Legacy section labels (backward compat) ──
   'Inventory & Warehouses': Warehouse,
+  'Material Management': Warehouse,
+  'Logistics & Fleet': Truck,
+  'Asset Lifecycle': Recycle,
+  'Admin & Settings': Settings,
   'Receiving & Inbound': PackageCheck,
   'Issuing & Outbound': Send,
   'Returns & Quality': ShieldCheck,
   'Logistics & Jobs': Truck,
-  'Master Data': Database,
-  'Admin & Settings': Settings,
+  // ── Child / role-specific items ──
   'Receive (MRRV)': PackageCheck,
   'GRN - Goods Receipt': PackageCheck,
   'Issue (MIRV)': Send,
@@ -58,7 +74,6 @@ const ICON_MAP: Record<string, LucideIcon> = {
   'My Requests': FileText,
   'My Project': Briefcase,
   'Approval Queue': CheckSquare,
-  Documents: FileText,
   Projects: Briefcase,
   Tasks: ListTodo,
   Inspections: Search,
@@ -197,7 +212,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
     if (
       !queryPart &&
       pathPart !== '/' &&
-      !['/admin', '/warehouse', '/transport', '/engineer'].includes(pathPart) &&
+      !['/admin', '/warehouse', '/transport', '/engineer', '/logistics', '/manager', '/qc', '/site-engineer'].includes(
+        pathPart,
+      ) &&
       location.pathname.startsWith(pathPart)
     )
       return true;

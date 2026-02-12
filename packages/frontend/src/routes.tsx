@@ -15,7 +15,6 @@ const RoleGuard: React.FC<{
 };
 
 // ── Role groups ──────────────────────────────────────────────────────────
-const ADMIN_ROLES = [UserRole.ADMIN];
 const ADMIN_MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER, UserRole.SCRAP_COMMITTEE_MEMBER];
 const WAREHOUSE_ROLES = [UserRole.ADMIN, UserRole.WAREHOUSE_SUPERVISOR, UserRole.WAREHOUSE_STAFF];
 const TRANSPORT_ROLES = [UserRole.ADMIN, UserRole.FREIGHT_FORWARDER, UserRole.TRANSPORT_SUPERVISOR];
@@ -79,7 +78,6 @@ const ShipmentForm = React.lazy(() => import('@/pages/ShipmentForm').then(m => (
 const CustomsForm = React.lazy(() => import('@/pages/CustomsForm').then(m => ({ default: m.CustomsForm })));
 
 // V2 Form imports
-const WtForm = React.lazy(() => import('@/pages/WtForm').then(m => ({ default: m.WtForm })));
 const ImsfForm = React.lazy(() => import('@/pages/ImsfForm').then(m => ({ default: m.ImsfForm })));
 const ScrapForm = React.lazy(() => import('@/pages/ScrapForm').then(m => ({ default: m.ScrapForm })));
 const SurplusForm = React.lazy(() => import('@/pages/SurplusForm').then(m => ({ default: m.SurplusForm })));
@@ -207,17 +205,8 @@ const WorkflowBuilderPage = React.lazy(() =>
 const InventorySectionPage = React.lazy(() =>
   import('@/pages/sections/InventorySectionPage').then(m => ({ default: m.InventorySectionPage })),
 );
-const ReceivingSectionPage = React.lazy(() =>
-  import('@/pages/sections/ReceivingSectionPage').then(m => ({ default: m.ReceivingSectionPage })),
-);
-const IssuingSectionPage = React.lazy(() =>
-  import('@/pages/sections/IssuingSectionPage').then(m => ({ default: m.IssuingSectionPage })),
-);
 const QualitySectionPage = React.lazy(() =>
   import('@/pages/sections/QualitySectionPage').then(m => ({ default: m.QualitySectionPage })),
-);
-const LogisticsSectionPage = React.lazy(() =>
-  import('@/pages/sections/LogisticsSectionPage').then(m => ({ default: m.LogisticsSectionPage })),
 );
 const MasterDataSectionPage = React.lazy(() =>
   import('@/pages/sections/MasterDataSectionPage').then(m => ({ default: m.MasterDataSectionPage })),
@@ -235,8 +224,21 @@ const InspectionToolsPage = React.lazy(() =>
 const MaterialSectionPage = React.lazy(() =>
   import('@/pages/sections/MaterialSectionPage').then(m => ({ default: m.MaterialSectionPage })),
 );
-const AssetSectionPage = React.lazy(() =>
-  import('@/pages/sections/AssetSectionPage').then(m => ({ default: m.AssetSectionPage })),
+// Map Dashboard (standalone page)
+const MapDashboard = React.lazy(() => import('@/pages/MapDashboard').then(m => ({ default: m.MapDashboard })));
+
+// Section Landing Pages (V3 - Reorganized)
+const EquipmentSectionPage = React.lazy(() =>
+  import('@/pages/sections/EquipmentSectionPage').then(m => ({ default: m.EquipmentSectionPage })),
+);
+const ScrapSectionPage = React.lazy(() =>
+  import('@/pages/sections/ScrapSectionPage').then(m => ({ default: m.ScrapSectionPage })),
+);
+const ShippingSectionPage = React.lazy(() =>
+  import('@/pages/sections/ShippingSectionPage').then(m => ({ default: m.ShippingSectionPage })),
+);
+const EmployeeSectionPage = React.lazy(() =>
+  import('@/pages/sections/EmployeeSectionPage').then(m => ({ default: m.EmployeeSectionPage })),
 );
 
 // Route Optimizer page
@@ -247,6 +249,38 @@ const RouteOptimizerPage = React.lazy(() =>
 // Pending Approvals page
 const PendingApprovalsPage = React.lazy(() =>
   import('@/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
+);
+
+// Dynamic Document Type Builder (Admin)
+const DynamicTypeListPage = React.lazy(() =>
+  import('@/pages/admin/DynamicTypeListPage').then(m => ({ default: m.DynamicTypeListPage })),
+);
+const DynamicTypeBuilderPage = React.lazy(() =>
+  import('@/pages/admin/DynamicTypeBuilderPage').then(m => ({ default: m.DynamicTypeBuilderPage })),
+);
+
+// Dynamic Document Runtime Pages
+const DynamicDocumentListPage = React.lazy(() =>
+  import('@/pages/dynamic/DynamicDocumentListPage').then(m => ({ default: m.DynamicDocumentListPage })),
+);
+const DynamicDocumentFormPage = React.lazy(() =>
+  import('@/pages/dynamic/DynamicDocumentFormPage').then(m => ({ default: m.DynamicDocumentFormPage })),
+);
+
+// Custom Data Sources, Custom Fields, Workflow Templates (Admin)
+const CustomDataSourcePage = React.lazy(() =>
+  import('@/pages/admin/CustomDataSourcePage').then(m => ({ default: m.CustomDataSourcePage })),
+);
+const CustomFieldsPage = React.lazy(() =>
+  import('@/pages/admin/CustomFieldsPage').then(m => ({ default: m.CustomFieldsPage })),
+);
+const WorkflowTemplatesPage = React.lazy(() =>
+  import('@/pages/admin/WorkflowTemplatesPage').then(m => ({ default: m.WorkflowTemplatesPage })),
+);
+
+// AI Insights (optional — behind AI_ENABLED flag)
+const AiInsightsPage = React.lazy(() =>
+  import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
 );
 
 export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ currentRole }) => (
@@ -267,18 +301,36 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/inventory" element={<InventorySectionPage />} />
     <Route path="/admin/quality" element={<QualitySectionPage />} />
 
-    {/* Section Landing Pages (V2) */}
-    <Route path="/admin/material" element={<MaterialSectionPage />} />
-    <Route path="/admin/material/:tab" element={<MaterialSectionPage />} />
-    <Route path="/admin/logistics" element={<LogisticsSectionPage />} />
-    <Route path="/admin/logistics/:tab" element={<LogisticsSectionPage />} />
-    <Route path="/admin/assets" element={<AssetSectionPage />} />
-    <Route path="/admin/assets/:tab" element={<AssetSectionPage />} />
+    {/* Section Landing Pages (V3 — Reorganized) */}
+    <Route path="/admin/warehouses" element={<MaterialSectionPage />} />
+    <Route path="/admin/warehouses/:tab" element={<MaterialSectionPage />} />
+    <Route path="/admin/equipment" element={<EquipmentSectionPage />} />
+    <Route path="/admin/equipment/:tab" element={<EquipmentSectionPage />} />
+    <Route path="/admin/scrap" element={<ScrapSectionPage />} />
+    <Route path="/admin/scrap/:tab" element={<ScrapSectionPage />} />
+    <Route path="/admin/shipping" element={<ShippingSectionPage />} />
+    <Route path="/admin/shipping/:tab" element={<ShippingSectionPage />} />
+    <Route path="/admin/employees" element={<EmployeeSectionPage />} />
+    <Route path="/admin/employees/:tab" element={<EmployeeSectionPage />} />
+    <Route path="/admin/settings" element={<AdminSystemPage />} />
+    <Route path="/admin/settings/workflows/:workflowId" element={<WorkflowBuilderPage />} />
+    <Route path="/admin/settings/dashboards" element={<DashboardBuilderPage />} />
+    <Route path="/admin/settings/reports" element={<ReportBuilderPage />} />
     <Route path="/admin/master" element={<MasterDataSectionPage />} />
-    <Route path="/admin/system" element={<AdminSystemPage />} />
+    <Route path="/admin/master/:tab" element={<MasterDataSectionPage />} />
+    <Route path="/admin/map" element={<MapDashboard />} />
+
+    {/* Backward-compatible redirects (V2 → V3 paths) */}
+    <Route path="/admin/material" element={<Navigate to="/admin/warehouses" replace />} />
+    <Route path="/admin/material/:tab" element={<Navigate to="/admin/warehouses" replace />} />
+    <Route path="/admin/logistics" element={<Navigate to="/admin/equipment" replace />} />
+    <Route path="/admin/logistics/:tab" element={<Navigate to="/admin/equipment" replace />} />
+    <Route path="/admin/assets" element={<Navigate to="/admin/scrap" replace />} />
+    <Route path="/admin/assets/:tab" element={<Navigate to="/admin/scrap" replace />} />
+    <Route path="/admin/system" element={<Navigate to="/admin/settings" replace />} />
     <Route path="/admin/system/workflows/:workflowId" element={<WorkflowBuilderPage />} />
-    <Route path="/admin/system/dashboards" element={<DashboardBuilderPage />} />
-    <Route path="/admin/system/reports" element={<ReportBuilderPage />} />
+    <Route path="/admin/system/dashboards" element={<Navigate to="/admin/settings?tab=dashboard-builder" replace />} />
+    <Route path="/admin/system/reports" element={<Navigate to="/admin/settings?tab=report-builder" replace />} />
 
     {/* V2 Form Routes */}
     <Route path="/admin/forms/grn" element={<ResourceForm />} />
@@ -335,6 +387,24 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/quality/inspection-tools" element={<InspectionToolsPage />} />
     <Route path="/admin/parallel-approvals" element={<PendingApprovalsPage />} />
 
+    {/* Dynamic Document Type Builder (Admin) */}
+    <Route path="/admin/dynamic-types" element={<DynamicTypeListPage />} />
+    <Route path="/admin/dynamic-types/new" element={<DynamicTypeBuilderPage />} />
+    <Route path="/admin/dynamic-types/:id" element={<DynamicTypeBuilderPage />} />
+
+    {/* Dynamic Document Runtime Pages */}
+    <Route path="/admin/dynamic/:typeCode" element={<DynamicDocumentListPage />} />
+    <Route path="/admin/dynamic/:typeCode/new" element={<DynamicDocumentFormPage />} />
+    <Route path="/admin/dynamic/:typeCode/:id" element={<DynamicDocumentFormPage />} />
+
+    {/* Custom Data Sources, Custom Fields, Workflow Templates (Admin) */}
+    <Route path="/admin/custom-data-sources" element={<CustomDataSourcePage />} />
+    <Route path="/admin/custom-fields" element={<CustomFieldsPage />} />
+    <Route path="/admin/workflow-templates" element={<WorkflowTemplatesPage />} />
+
+    {/* AI Insights (optional) */}
+    <Route path="/admin/ai-insights" element={<AiInsightsPage />} />
+
     {/* V1 Form Routes (kept for backward compatibility) */}
     <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
     <Route path="/admin/forms/stock-transfer" element={<StockTransferForm />} />
@@ -345,9 +415,9 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/forms/:formType/:id" element={<ResourceForm />} />
 
     {/* V2 redirects from old V1 section structure */}
-    <Route path="/admin/receiving" element={<Navigate to="/admin/material?tab=grn" replace />} />
-    <Route path="/admin/issuing" element={<Navigate to="/admin/material?tab=mi" replace />} />
-    <Route path="/admin/quality" element={<Navigate to="/admin/material?tab=qci" replace />} />
+    <Route path="/admin/receiving" element={<Navigate to="/admin/warehouses?tab=grn" replace />} />
+    <Route path="/admin/issuing" element={<Navigate to="/admin/warehouses?tab=mi" replace />} />
+    <Route path="/admin/quality" element={<Navigate to="/admin/warehouses?tab=qci" replace />} />
 
     {/* LEGACY REDIRECTS (V1) */}
     <Route path="/admin/warehouse/mrrv" element={<Navigate to="/admin/receiving?tab=mrrv" replace />} />
@@ -369,30 +439,29 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       element={<Navigate to="/admin/issuing?tab=stock-transfers" replace />}
     />
 
-    <Route path="/admin/transport/board" element={<Navigate to="/admin/logistics?tab=kanban" replace />} />
-    <Route path="/admin/transport/job-orders" element={<Navigate to="/admin/logistics?tab=all-jobs" replace />} />
-    <Route path="/admin/transport/fleet" element={<Navigate to="/admin/logistics?tab=fleet" replace />} />
+    <Route path="/admin/transport/board" element={<Navigate to="/admin/equipment?tab=kanban" replace />} />
+    <Route path="/admin/transport/job-orders" element={<Navigate to="/admin/equipment?tab=all-jobs" replace />} />
+    <Route path="/admin/transport/fleet" element={<Navigate to="/admin/equipment?tab=fleet" replace />} />
     <Route path="/admin/transport/suppliers" element={<Navigate to="/admin/master?tab=suppliers" replace />} />
 
-    <Route path="/admin/shipping/shipments" element={<Navigate to="/admin/receiving?tab=shipments" replace />} />
-    <Route path="/admin/shipping/customs" element={<Navigate to="/admin/receiving?tab=customs" replace />} />
-    <Route path="/admin/shipping/reports" element={<Navigate to="/admin/system?tab=reports" replace />} />
+    <Route path="/admin/shipping/shipments" element={<Navigate to="/admin/shipping?tab=shipments" replace />} />
+    <Route path="/admin/shipping/customs" element={<Navigate to="/admin/shipping?tab=customs" replace />} />
+    <Route path="/admin/shipping/reports" element={<Navigate to="/admin/settings?tab=reports" replace />} />
 
     <Route path="/admin/quality/rfim" element={<Navigate to="/admin/quality?tab=rfim" replace />} />
     <Route path="/admin/quality/osd" element={<Navigate to="/admin/quality?tab=osd" replace />} />
 
-    <Route path="/admin/management/employees" element={<Navigate to="/admin/master?tab=employees" replace />} />
+    <Route path="/admin/management/employees" element={<Navigate to="/admin/employees?tab=employees" replace />} />
     <Route path="/admin/management/projects" element={<Navigate to="/admin/master?tab=projects" replace />} />
-    <Route path="/admin/management/roles" element={<Navigate to="/admin/system?tab=roles" replace />} />
-    <Route path="/admin/audit-log" element={<Navigate to="/admin/system?tab=audit" replace />} />
-    <Route path="/admin/settings" element={<Navigate to="/admin/system?tab=settings" replace />} />
+    <Route path="/admin/management/roles" element={<Navigate to="/admin/settings?tab=roles" replace />} />
+    <Route path="/admin/audit-log" element={<Navigate to="/admin/settings?tab=audit" replace />} />
 
-    <Route path="/admin/sla" element={<Navigate to="/admin/logistics?tab=sla" replace />} />
-    <Route path="/admin/payments" element={<Navigate to="/admin/logistics?tab=payments" replace />} />
-    <Route path="/admin/map" element={<Navigate to="/admin/logistics?tab=map" replace />} />
+    <Route path="/admin/sla" element={<Navigate to="/admin/shipping?tab=sla" replace />} />
+    <Route path="/admin/payments" element={<Navigate to="/admin/equipment?tab=payments" replace />} />
+    {/* /admin/map is now a standalone route — no redirect needed */}
 
-    <Route path="/admin/reports" element={<Navigate to="/admin/system?tab=reports" replace />} />
-    <Route path="/admin/reports/:tab" element={<Navigate to="/admin/system?tab=reports" replace />} />
+    <Route path="/admin/reports" element={<Navigate to="/admin/settings?tab=reports" replace />} />
+    <Route path="/admin/reports/:tab" element={<Navigate to="/admin/settings?tab=reports" replace />} />
 
     {/* Generic resource routes */}
     <Route path="/admin/:section/:resource" element={<AdminResourceList />} />

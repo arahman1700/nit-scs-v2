@@ -224,6 +224,7 @@ model Project {
   imsfReceived         Imsf[]                @relation("ImsfReceiverProject")
   surplusItems         SurplusItem[]
   scrapItems           ScrapItem[]
+  dynamicDocuments     DynamicDocument[]     @relation("DynDocProject")
 
   @@map("projects")
 }
@@ -312,8 +313,8 @@ model Employee {
   auditLogs AuditLog[]
 
   // Reverse relations - Notifications
-  notifications      Notification[]
-  pushSubscriptions  PushSubscription[]
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
 
   // Reverse relations - Tasks
   tasksAssigned Task[]        @relation("TaskAssignee")
@@ -356,11 +357,19 @@ model Employee {
   handoversIncoming      StorekeeperHandover[]  @relation("HandoverIncoming")
 
   // Reverse relations — Cycle Counting
-  createdCycleCounts     CycleCount[]           @relation("CycleCountCreator")
-  countedLines           CycleCountLine[]       @relation("CycleCountLineCounter")
+  createdCycleCounts CycleCount[]     @relation("CycleCountCreator")
+  countedLines       CycleCountLine[] @relation("CycleCountLineCounter")
 
   // Reverse relations — Parallel Approvals
   parallelApprovalResponses ParallelApprovalResponse[] @relation("ParallelApprovalResponses")
+
+  // Reverse relations — Dynamic Documents & AI
+  dynTypesCreated   DynamicDocumentType[]    @relation("DynTypeCreatedBy")
+  dynDocsCreated    DynamicDocument[]        @relation("DynDocCreatedBy")
+  dynDocsUpdated    DynamicDocument[]        @relation("DynDocUpdatedBy")
+  dynHistoryActions DynamicDocumentHistory[] @relation("DynHistoryPerformedBy")
+  customDataSources CustomDataSource[]       @relation("DataSourceCreatedBy")
+  aiConversations   AiConversation[]         @relation("AiConvUser")
 
   @@index([systemRole], map: "idx_employees_system_role")
   @@index([isActive], map: "idx_employees_active")
@@ -441,34 +450,35 @@ model Warehouse {
   manager       Employee?     @relation("WarehouseManager", fields: [managerId], references: [id], onDelete: SetNull)
 
   // Reverse relations
-  assignedEmployees    Employee[]            @relation("EmployeeWarehouse")
-  generators           Generator[]
-  mrrv                 Mrrv[]
-  osdReports           OsdReport[]
-  mirv                 Mirv[]
-  mrvFrom              Mrv[]                 @relation("MrvFromWarehouse")
-  mrvTo                Mrv[]                 @relation("MrvToWarehouse")
-  gatePasses           GatePass[]
-  stockTransfersFrom   StockTransfer[]       @relation("StockTransferFromWarehouse")
-  stockTransfersTo     StockTransfer[]       @relation("StockTransferToWarehouse")
-  inventoryLevels      InventoryLevel[]
-  inventoryLots        InventoryLot[]
-  leftoverMaterials    LeftoverMaterial[]
-  shipmentsDestination Shipment[]
-  binCards             BinCard[]
-  warehouseZones       WarehouseZone[]
-  surplusItems         SurplusItem[]
-  scrapItems           ScrapItem[]
-  tools                Tool[]
-  handovers            StorekeeperHandover[]
-  putAwayRules         PutAwayRule[]
-  cycleCounts          CycleCount[]
+  assignedEmployees      Employee[]              @relation("EmployeeWarehouse")
+  generators             Generator[]
+  mrrv                   Mrrv[]
+  osdReports             OsdReport[]
+  mirv                   Mirv[]
+  mrvFrom                Mrv[]                   @relation("MrvFromWarehouse")
+  mrvTo                  Mrv[]                   @relation("MrvToWarehouse")
+  gatePasses             GatePass[]
+  stockTransfersFrom     StockTransfer[]         @relation("StockTransferFromWarehouse")
+  stockTransfersTo       StockTransfer[]         @relation("StockTransferToWarehouse")
+  inventoryLevels        InventoryLevel[]
+  inventoryLots          InventoryLot[]
+  leftoverMaterials      LeftoverMaterial[]
+  shipmentsDestination   Shipment[]
+  binCards               BinCard[]
+  warehouseZones         WarehouseZone[]
+  surplusItems           SurplusItem[]
+  scrapItems             ScrapItem[]
+  tools                  Tool[]
+  handovers              StorekeeperHandover[]
+  putAwayRules           PutAwayRule[]
+  cycleCounts            CycleCount[]
   advanceShippingNotices AdvanceShippingNotice[]
-  crossDocks           CrossDock[]
-  dockDoors            DockDoor[]
-  yardAppointments     YardAppointment[]
-  truckVisits          TruckVisit[]
-  sensors              Sensor[]
+  crossDocks             CrossDock[]
+  dockDoors              DockDoor[]
+  yardAppointments       YardAppointment[]
+  truckVisits            TruckVisit[]
+  sensors                Sensor[]
+  dynamicDocuments       DynamicDocument[]       @relation("DynDocWarehouse")
 
   @@index([warehouseTypeId], map: "idx_warehouses_type")
   @@index([projectId], map: "idx_warehouses_project")
@@ -480,30 +490,30 @@ model Warehouse {
 
 /// Material and item master catalog
 model Item {
-  id                String   @id @default(uuid()) @db.Uuid
-  itemCode          String   @unique @map("item_code") @db.VarChar(50)
-  itemDescription   String   @map("item_description") @db.VarChar(500)
-  itemDescriptionAr String?  @map("item_description_ar") @db.VarChar(500)
+  id                String    @id @default(uuid()) @db.Uuid
+  itemCode          String    @unique @map("item_code") @db.VarChar(50)
+  itemDescription   String    @map("item_description") @db.VarChar(500)
+  itemDescriptionAr String?   @map("item_description_ar") @db.VarChar(500)
   /// CHECK: category IN ('construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts')
-  category          String   @db.VarChar(50)
-  subCategory       String?  @map("sub_category") @db.VarChar(100)
-  uomId             String   @map("uom_id") @db.Uuid
-  minStock          Decimal? @default(0) @map("min_stock") @db.Decimal(12, 3)
-  reorderPoint      Decimal? @map("reorder_point") @db.Decimal(12, 3)
-  standardCost      Decimal? @map("standard_cost") @db.Decimal(15, 2)
-  barcode           String?  @unique @db.VarChar(100)
-  isSerialized      Boolean? @default(false) @map("is_serialized")
-  isExpirable       Boolean? @default(false) @map("is_expirable")
+  category          String    @db.VarChar(50)
+  subCategory       String?   @map("sub_category") @db.VarChar(100)
+  uomId             String    @map("uom_id") @db.Uuid
+  minStock          Decimal?  @default(0) @map("min_stock") @db.Decimal(12, 3)
+  reorderPoint      Decimal?  @map("reorder_point") @db.Decimal(12, 3)
+  standardCost      Decimal?  @map("standard_cost") @db.Decimal(15, 2)
+  barcode           String?   @unique @db.VarChar(100)
+  isSerialized      Boolean?  @default(false) @map("is_serialized")
+  isExpirable       Boolean?  @default(false) @map("is_expirable")
   /// CHECK: status IN ('active', 'inactive', 'discontinued')
-  status            String   @default("active") @map("status") @db.VarChar(20)
-  masterItemCode    String?  @unique @map("master_item_code") @db.VarChar(20)
-  mainCategory      String?  @map("main_category") @db.VarChar(50)
-  commodity         String?  @db.VarChar(100)
-  templateName      String?  @map("template_name") @db.VarChar(100)
-  abcClass          String?  @map("abc_class") @db.VarChar(1)
+  status            String    @default("active") @map("status") @db.VarChar(20)
+  masterItemCode    String?   @unique @map("master_item_code") @db.VarChar(20)
+  mainCategory      String?   @map("main_category") @db.VarChar(50)
+  commodity         String?   @db.VarChar(100)
+  templateName      String?   @map("template_name") @db.VarChar(100)
+  abcClass          String?   @map("abc_class") @db.VarChar(1)
   abcUpdatedAt      DateTime? @map("abc_updated_at") @db.Timestamptz
-  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   uom UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
@@ -1847,22 +1857,26 @@ model Workflow {
 
 /// IF-THEN rule within a workflow
 model WorkflowRule {
-  id           String   @id @default(uuid()) @db.Uuid
-  workflowId   String   @map("workflow_id") @db.Uuid
-  name         String   @db.VarChar(200)
+  id             String    @id @default(uuid()) @db.Uuid
+  workflowId     String    @map("workflow_id") @db.Uuid
+  name           String    @db.VarChar(200)
   /// Event that triggers this rule (e.g. 'document:status_changed')
-  triggerEvent String   @map("trigger_event") @db.VarChar(100)
+  triggerEvent   String    @map("trigger_event") @db.VarChar(100)
   /// JSON condition tree: { operator: 'AND'|'OR', conditions: [...] }
-  conditions   Json     @default("{}")
+  conditions     Json      @default("{}")
   /// JSON array of actions: [{ type: 'send_email', params: {...} }]
-  actions      Json     @default("[]")
-  isActive     Boolean  @default(true) @map("is_active")
+  actions        Json      @default("[]")
+  isActive       Boolean   @default(true) @map("is_active")
   /// Stop evaluating further rules if this one matches
-  stopOnMatch  Boolean  @default(false) @map("stop_on_match")
+  stopOnMatch    Boolean   @default(false) @map("stop_on_match")
   /// Order within workflow
-  sortOrder    Int      @default(0) @map("sort_order")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  sortOrder      Int       @default(0) @map("sort_order")
+  /// Cron expression for scheduled rules (standard 5-part cron format)
+  cronExpression String?   @map("cron_expression") @db.VarChar(50)
+  /// Next scheduled execution time (maintained by scheduler)
+  nextRunAt      DateTime? @map("next_run_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   workflow      Workflow               @relation(fields: [workflowId], references: [id], onDelete: Cascade)
@@ -2575,17 +2589,17 @@ model StorekeeperHandover {
 
 /// Put-away rules engine — determines optimal zone placement for incoming items
 model PutAwayRule {
-  id           String         @id @default(uuid()) @db.Uuid
-  name         String         @db.VarChar(200)
-  priority     Int            @default(100)
-  warehouseId  String         @map("warehouse_id") @db.Uuid
-  targetZoneId String?        @map("target_zone_id") @db.Uuid
-  itemCategory String?        @map("item_category") @db.VarChar(50)
-  isHazardous  Boolean        @default(false) @map("is_hazardous")
-  maxWeight    Float?         @map("max_weight")
-  isActive     Boolean        @default(true) @map("is_active")
-  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(200)
+  priority     Int      @default(100)
+  warehouseId  String   @map("warehouse_id") @db.Uuid
+  targetZoneId String?  @map("target_zone_id") @db.Uuid
+  itemCategory String?  @map("item_category") @db.VarChar(50)
+  isHazardous  Boolean  @default(false) @map("is_hazardous")
+  maxWeight    Float?   @map("max_weight")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   warehouse  Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
@@ -2601,25 +2615,25 @@ model PutAwayRule {
 
 /// Cycle count header — scheduled physical inventory counts
 model CycleCount {
-  id             String    @id @default(uuid()) @db.Uuid
-  countNumber    String    @unique @map("count_number") @db.VarChar(30)
-  status         String    @default("scheduled") @map("status") @db.VarChar(20)
+  id            String    @id @default(uuid()) @db.Uuid
+  countNumber   String    @unique @map("count_number") @db.VarChar(30)
+  status        String    @default("scheduled") @map("status") @db.VarChar(20)
   /// CHECK: status IN ('scheduled', 'in_progress', 'completed', 'cancelled')
-  countType      String    @map("count_type") @db.VarChar(20)
+  countType     String    @map("count_type") @db.VarChar(20)
   /// CHECK: count_type IN ('full', 'abc_based', 'zone', 'random')
-  warehouseId    String    @map("warehouse_id") @db.Uuid
-  zoneId         String?   @map("zone_id") @db.Uuid
-  scheduledDate  DateTime  @map("scheduled_date") @db.Date
-  startedAt      DateTime? @map("started_at") @db.Timestamptz
-  completedAt    DateTime? @map("completed_at") @db.Timestamptz
-  createdById    String    @map("created_by_id") @db.Uuid
-  notes          String?
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  zoneId        String?   @map("zone_id") @db.Uuid
+  scheduledDate DateTime  @map("scheduled_date") @db.Date
+  startedAt     DateTime? @map("started_at") @db.Timestamptz
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  createdById   String    @map("created_by_id") @db.Uuid
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  warehouse Warehouse      @relation(fields: [warehouseId], references: [id])
-  zone      WarehouseZone? @relation(fields: [zoneId], references: [id])
-  createdBy Employee       @relation("CycleCountCreator", fields: [createdById], references: [id])
+  warehouse Warehouse        @relation(fields: [warehouseId], references: [id])
+  zone      WarehouseZone?   @relation(fields: [zoneId], references: [id])
+  createdBy Employee         @relation("CycleCountCreator", fields: [createdById], references: [id])
   lines     CycleCountLine[]
 
   @@index([status], map: "idx_cycle_count_status")
@@ -2695,18 +2709,18 @@ model AsnLine {
 
 /// Cross-docking — bypass put-away by routing inbound items directly to outbound
 model CrossDock {
-  id             String    @id @default(uuid()) @db.Uuid
-  warehouseId    String    @map("warehouse_id") @db.Uuid
-  itemId         String    @map("item_id") @db.Uuid
-  sourceGrnId    String?   @map("source_grn_id") @db.Uuid
-  targetMiId     String?   @map("target_mi_id") @db.Uuid
-  targetWtId     String?   @map("target_wt_id") @db.Uuid
-  quantity       Decimal   @map("quantity") @db.Decimal(12, 3)
+  id          String    @id @default(uuid()) @db.Uuid
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  itemId      String    @map("item_id") @db.Uuid
+  sourceGrnId String?   @map("source_grn_id") @db.Uuid
+  targetMiId  String?   @map("target_mi_id") @db.Uuid
+  targetWtId  String?   @map("target_wt_id") @db.Uuid
+  quantity    Decimal   @map("quantity") @db.Decimal(12, 3)
   /// CHECK: status IN ('identified', 'approved', 'in_progress', 'completed', 'cancelled')
-  status         String    @default("identified") @map("status") @db.VarChar(20)
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  completedAt    DateTime? @map("completed_at") @db.Timestamptz
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  status      String    @default("identified") @map("status") @db.VarChar(20)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
@@ -2811,7 +2825,7 @@ model DockDoor {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  warehouse    Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  warehouse    Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   appointments YardAppointment[]
   truckVisits  TruckVisit[]
 
@@ -2822,24 +2836,24 @@ model DockDoor {
 
 /// Yard appointment — scheduled delivery/pickup at a dock
 model YardAppointment {
-  id              String    @id @default(uuid()) @db.Uuid
-  warehouseId     String    @map("warehouse_id") @db.Uuid
-  dockDoorId      String?   @map("dock_door_id") @db.Uuid
-  appointmentType String    @map("appointment_type") @db.VarChar(20)
+  id              String   @id @default(uuid()) @db.Uuid
+  warehouseId     String   @map("warehouse_id") @db.Uuid
+  dockDoorId      String?  @map("dock_door_id") @db.Uuid
+  appointmentType String   @map("appointment_type") @db.VarChar(20)
   /// CHECK: appointment_type IN ('delivery', 'pickup', 'transfer')
-  scheduledStart  DateTime  @map("scheduled_start") @db.Timestamptz
-  scheduledEnd    DateTime  @map("scheduled_end") @db.Timestamptz
-  carrierName     String?   @map("carrier_name") @db.VarChar(200)
-  driverName      String?   @map("driver_name") @db.VarChar(200)
-  vehiclePlate    String?   @map("vehicle_plate") @db.VarChar(20)
-  referenceType   String?   @map("reference_type") @db.VarChar(20)
+  scheduledStart  DateTime @map("scheduled_start") @db.Timestamptz
+  scheduledEnd    DateTime @map("scheduled_end") @db.Timestamptz
+  carrierName     String?  @map("carrier_name") @db.VarChar(200)
+  driverName      String?  @map("driver_name") @db.VarChar(200)
+  vehiclePlate    String?  @map("vehicle_plate") @db.VarChar(20)
+  referenceType   String?  @map("reference_type") @db.VarChar(20)
   /// CHECK: reference_type IN ('asn', 'grn', 'mi', 'wt')
-  referenceId     String?   @map("reference_id") @db.Uuid
-  status          String    @default("scheduled") @map("status") @db.VarChar(20)
+  referenceId     String?  @map("reference_id") @db.Uuid
+  status          String   @default("scheduled") @map("status") @db.VarChar(20)
   /// CHECK: status IN ('scheduled', 'checked_in', 'loading', 'completed', 'cancelled', 'no_show')
   notes           String?
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   dockDoor  DockDoor? @relation(fields: [dockDoorId], references: [id], onDelete: SetNull)
@@ -2966,4 +2980,300 @@ model RolePermission {
   @@unique([role, resource], map: "uq_role_permission")
   @@index([role], map: "idx_role_permissions_role")
   @@map("role_permissions")
+}
+
+// ############################################################################
+// SECTION: DYNAMIC DOCUMENT SYSTEM (5 models)
+// ############################################################################
+
+/// Custom document type definition — created by admin via UI
+model DynamicDocumentType {
+  id               String   @id @default(uuid()) @db.Uuid
+  /// Unique code slug (e.g. 'safety_inspection', 'vehicle_checklist')
+  code             String   @unique @db.VarChar(50)
+  name             String   @db.VarChar(200)
+  nameAr           String?  @map("name_ar") @db.VarChar(200)
+  description      String?
+  icon             String?  @db.VarChar(50)
+  /// Grouping category (e.g. 'safety', 'quality', 'hr', 'custom')
+  category         String   @default("custom") @db.VarChar(50)
+  /// Status flow config: { initialStatus, statuses: [{key,label,color}], transitions: {from: [to...]} }
+  statusFlow       Json     @default("{}") @map("status_flow") @db.JsonB
+  /// Approval config: { levels: [{role, level}], amountField? }
+  approvalConfig   Json?    @map("approval_config") @db.JsonB
+  /// Permission config: { createRoles, viewRoles, approveRoles }
+  permissionConfig Json?    @map("permission_config") @db.JsonB
+  /// Extra settings: { requireLineItems, autoNumber, numberPrefix }
+  settings         Json     @default("{}") @db.JsonB
+  isActive         Boolean  @default(true) @map("is_active")
+  /// Roles that can see this document type in navigation
+  visibleToRoles   Json     @default("[]") @map("visible_to_roles") @db.JsonB
+  version          Int      @default(1)
+  createdById      String?  @map("created_by_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  createdBy Employee?                @relation("DynTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  fields    DynamicFieldDefinition[]
+  documents DynamicDocument[]
+
+  @@index([category, isActive], map: "idx_dyn_types_category_active")
+  @@map("dynamic_document_types")
+}
+
+/// Field definition for a dynamic document type
+model DynamicFieldDefinition {
+  id                 String  @id @default(uuid()) @db.Uuid
+  documentTypeId     String  @map("document_type_id") @db.Uuid
+  fieldKey           String  @map("field_key") @db.VarChar(50)
+  label              String  @db.VarChar(200)
+  labelAr            String? @map("label_ar") @db.VarChar(200)
+  /// text|number|date|datetime|select|multiselect|textarea|checkbox|file
+  /// |lookup_project|lookup_warehouse|lookup_supplier|lookup_employee|lookup_item
+  /// |signature|currency|email|phone|url
+  fieldType          String  @map("field_type") @db.VarChar(30)
+  /// Options for select/multiselect: [{ value, label, labelAr? }]
+  options            Json?   @db.JsonB
+  isRequired         Boolean @default(false) @map("is_required")
+  showInGrid         Boolean @default(false) @map("show_in_grid")
+  showInForm         Boolean @default(true) @map("show_in_form")
+  /// Section grouping within the form
+  sectionName        String? @map("section_name") @db.VarChar(100)
+  sortOrder          Int     @default(0) @map("sort_order")
+  /// Validation rules: { min?, max?, minLength?, maxLength?, pattern? }
+  validationRules    Json?   @map("validation_rules") @db.JsonB
+  defaultValue       String? @map("default_value")
+  /// Grid column span (1-4)
+  colSpan            Int     @default(2) @map("col_span")
+  /// Whether this field belongs to line items instead of header
+  isLineItem         Boolean @default(false) @map("is_line_item")
+  isReadOnly         Boolean @default(false) @map("is_read_only")
+  /// Conditional display: { dependsOn: 'fieldKey', operator: 'eq', value: 'x' }
+  conditionalDisplay Json?   @map("conditional_display") @db.JsonB
+
+  // Relations
+  documentType DynamicDocumentType @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([documentTypeId, fieldKey], map: "uq_dyn_field_type_key")
+  @@index([documentTypeId, sortOrder], map: "idx_dyn_fields_type_order")
+  @@map("dynamic_field_definitions")
+}
+
+/// Instance of a dynamic document
+model DynamicDocument {
+  id             String   @id @default(uuid()) @db.Uuid
+  documentTypeId String   @map("document_type_id") @db.Uuid
+  /// Auto-generated document number (e.g. 'SAFETY-INS-0001')
+  documentNumber String   @unique @map("document_number") @db.VarChar(50)
+  status         String   @default("draft") @db.VarChar(30)
+  /// All header field values stored as JSONB
+  data           Json     @default("{}") @db.JsonB
+  projectId      String?  @map("project_id") @db.Uuid
+  warehouseId    String?  @map("warehouse_id") @db.Uuid
+  createdById    String?  @map("created_by_id") @db.Uuid
+  updatedById    String?  @map("updated_by_id") @db.Uuid
+  version        Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  documentType DynamicDocumentType      @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  project      Project?                 @relation("DynDocProject", fields: [projectId], references: [id], onDelete: SetNull)
+  warehouse    Warehouse?               @relation("DynDocWarehouse", fields: [warehouseId], references: [id], onDelete: SetNull)
+  createdBy    Employee?                @relation("DynDocCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    Employee?                @relation("DynDocUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  lines        DynamicDocumentLine[]
+  history      DynamicDocumentHistory[]
+
+  @@index([documentTypeId, status], map: "idx_dyn_docs_type_status")
+  @@index([projectId], map: "idx_dyn_docs_project")
+  @@index([warehouseId], map: "idx_dyn_docs_warehouse")
+  @@index([createdById], map: "idx_dyn_docs_created_by")
+  @@map("dynamic_documents")
+}
+
+/// Line item for a dynamic document
+model DynamicDocumentLine {
+  id         String @id @default(uuid()) @db.Uuid
+  documentId String @map("document_id") @db.Uuid
+  lineNumber Int    @map("line_number")
+  /// Line item field values stored as JSONB
+  data       Json   @default("{}") @db.JsonB
+
+  // Relations
+  document DynamicDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, lineNumber], map: "uq_dyn_line_doc_num")
+  @@map("dynamic_document_lines")
+}
+
+/// Status change history for dynamic documents
+model DynamicDocumentHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentId    String   @map("document_id") @db.Uuid
+  fromStatus    String?  @map("from_status") @db.VarChar(30)
+  toStatus      String   @map("to_status") @db.VarChar(30)
+  performedById String?  @map("performed_by_id") @db.Uuid
+  comment       String?
+  performedAt   DateTime @default(now()) @map("performed_at") @db.Timestamptz
+
+  // Relations
+  document    DynamicDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  performedBy Employee?       @relation("DynHistoryPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId], map: "idx_dyn_history_doc")
+  @@map("dynamic_document_history")
+}
+
+// ############################################################################
+// SECTION: CUSTOM DATA SOURCES & CUSTOM FIELDS (3 models)
+// ############################################################################
+
+/// User-defined data sources for dashboard/report builders
+model CustomDataSource {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(200)
+  /// Unique key for registry (e.g. 'custom/weekly_grn_count')
+  sourceKey     String   @unique @map("source_key") @db.VarChar(100)
+  /// Target entity (e.g. 'mrrv', 'mirv', 'dyn:safety_inspection', or '*')
+  entityType    String   @map("entity_type") @db.VarChar(50)
+  /// count|sum|avg|group_by|timeseries
+  aggregation   String   @db.VarChar(20)
+  /// Query template: { filters, groupBy, dateField, dateRange }
+  queryTemplate Json     @map("query_template") @db.JsonB
+  /// number|grouped|timeseries|table
+  outputType    String   @map("output_type") @db.VarChar(20)
+  createdById   String?  @map("created_by_id") @db.Uuid
+  isPublic      Boolean  @default(true) @map("is_public")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  createdBy Employee? @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("custom_data_sources")
+}
+
+/// Custom field definition for extending existing document types
+model CustomFieldDefinition {
+  id         String   @id @default(uuid()) @db.Uuid
+  /// Existing entity type to extend (e.g. 'mrrv', 'mirv', 'jo')
+  entityType String   @map("entity_type") @db.VarChar(50)
+  fieldKey   String   @map("field_key") @db.VarChar(50)
+  label      String   @db.VarChar(200)
+  labelAr    String?  @map("label_ar") @db.VarChar(200)
+  fieldType  String   @map("field_type") @db.VarChar(30)
+  options    Json?    @db.JsonB
+  isRequired Boolean  @default(false) @map("is_required")
+  showInGrid Boolean  @default(false) @map("show_in_grid")
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  values CustomFieldValue[]
+
+  @@unique([entityType, fieldKey], map: "uq_custom_field_entity_key")
+  @@map("custom_field_definitions")
+}
+
+/// Custom field value for an entity instance
+model CustomFieldValue {
+  id           String @id @default(uuid()) @db.Uuid
+  definitionId String @map("definition_id") @db.Uuid
+  entityType   String @map("entity_type") @db.VarChar(50)
+  entityId     String @map("entity_id") @db.Uuid
+  value        Json   @db.JsonB
+
+  // Relations
+  definition CustomFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@unique([definitionId, entityId], map: "uq_custom_field_value")
+  @@index([entityType, entityId], map: "idx_custom_field_values_entity")
+  @@map("custom_field_values")
+}
+
+// ############################################################################
+// SECTION: WORKFLOW TEMPLATES (1 model)
+// ############################################################################
+
+/// Pre-built automation templates for the workflow marketplace
+model WorkflowTemplate {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(200)
+  nameAr       String?  @map("name_ar") @db.VarChar(200)
+  description  String?
+  category     String   @default("general") @db.VarChar(50)
+  /// Full template: { workflow: {...}, rules: [...] }
+  template     Json     @db.JsonB
+  /// 'system' | 'community'
+  source       String   @default("system") @db.VarChar(20)
+  installCount Int      @default(0) @map("install_count")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("workflow_templates")
+}
+
+// ############################################################################
+// SECTION: AI MODULE (3 models — optional, behind AI_ENABLED flag)
+// ############################################################################
+
+/// AI chat conversation
+model AiConversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String?  @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user     Employee    @relation("AiConvUser", fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId], map: "idx_ai_conv_user")
+  @@map("ai_conversations")
+}
+
+/// AI chat message within a conversation
+model AiMessage {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  /// 'user' | 'assistant'
+  role           String   @db.VarChar(20)
+  content        String
+  /// SQL query generated by AI (if applicable)
+  generatedQuery String?  @map("generated_query")
+  /// Result data from query execution
+  resultData     Json?    @map("result_data") @db.JsonB
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId], map: "idx_ai_msg_conv")
+  @@map("ai_messages")
+}
+
+/// AI-generated suggestion for system optimization
+model AiSuggestion {
+  id             String    @id @default(uuid()) @db.Uuid
+  /// slow_moving|delay|cost_anomaly|automation|supplier_rating|reorder|sla
+  suggestionType String    @map("suggestion_type") @db.VarChar(30)
+  /// 1=critical, 2=high, 3=medium, 4=low
+  priority       Int       @default(3)
+  title          String    @db.VarChar(300)
+  titleAr        String?   @map("title_ar") @db.VarChar(300)
+  description    String?
+  /// Action payload for one-click apply: { type, params }
+  actionPayload  Json?     @map("action_payload") @db.JsonB
+  /// pending|applied|dismissed
+  status         String    @default("pending") @db.VarChar(20)
+  /// Dedup fingerprint to avoid duplicates
+  fingerprint    String    @unique @db.VarChar(200)
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status, priority], map: "idx_ai_suggestions_status")
+  @@map("ai_suggestions")
 }

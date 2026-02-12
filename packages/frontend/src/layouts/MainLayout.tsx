@@ -9,6 +9,11 @@ import { PwaUpdatePrompt } from '@/components/PwaUpdatePrompt';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useRealtimeSync } from '@/socket/useRealtimeSync';
 import { useCurrentUser } from '@/api/hooks/useAuth';
+import { AI_ENABLED } from '@/modules/ai/index';
+
+const AiChatWidget = AI_ENABLED
+  ? React.lazy(() => import('@/modules/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
+  : () => null;
 
 export const MainLayout: React.FC<{
   children: React.ReactNode;
@@ -70,7 +75,7 @@ export const MainLayout: React.FC<{
       [UserRole.QC_OFFICER]: 'qc',
       [UserRole.FREIGHT_FORWARDER]: 'transport',
       [UserRole.TRANSPORT_SUPERVISOR]: 'logistics',
-      [UserRole.SCRAP_COMMITTEE_MEMBER]: 'assets',
+      [UserRole.SCRAP_COMMITTEE_MEMBER]: 'admin',
     };
     const expectedPath = roleBasePaths[role] || 'admin';
 
@@ -145,6 +150,11 @@ export const MainLayout: React.FC<{
       <PwaInstallPrompt />
       <PwaUpdatePrompt />
       <OfflineIndicator />
+      {AI_ENABLED && (
+        <React.Suspense fallback={null}>
+          <AiChatWidget />
+        </React.Suspense>
+      )}
     </div>
   );
 };
