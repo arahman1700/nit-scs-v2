@@ -96,6 +96,9 @@ import customFieldRoutes from './custom-fields.routes.js';
 // ── Workflow Templates (Marketplace) ────────────────────────────────────
 import workflowTemplateRoutes from './workflow-template.routes.js';
 
+// ── ROI Calculator ──────────────────────────────────────────────────────
+import roiCalculatorRoutes from './roi-calculator.routes.js';
+
 const router = Router();
 
 // ── Rate limiter (applied to all /api/v1 routes) ─────────────────────────
@@ -244,5 +247,8 @@ router.use('/custom-fields', customFieldRoutes);
 
 // ── Workflow Templates (Marketplace) ────────────────────────────────────
 router.use('/workflow-templates', workflowTemplateRoutes);
+
+// ── ROI Calculator ──────────────────────────────────────────────────────
+router.use('/roi-calculator', roiCalculatorRoutes);
 
 export default router;

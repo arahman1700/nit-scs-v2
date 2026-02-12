@@ -36,6 +36,53 @@ export interface ItemPickFrequency {
   pickFrequency: number;
 }
 
+// ── AI Slotting Types ──────────────────────────────────────────────────
+
+export interface CoLocationPair {
+  itemA: { id: string; code: string; name: string };
+  itemB: { id: string; code: string; name: string };
+  coOccurrences: number;
+  itemABin: string | null;
+  itemBBin: string | null;
+  binDistance: number;
+  suggestion: string;
+}
+
+export interface CoLocationAnalysis {
+  warehouseId: string;
+  pairs: CoLocationPair[];
+  potentialTimeSavingMinutes: number;
+}
+
+export interface SeasonalItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  currentBin: string | null;
+  abcClass: string;
+  monthlyVolumes: Record<string, number>;
+  avgMonthlyVolume: number;
+  peakMonth: string;
+  peakVolume: number;
+  seasonalityIndex: number;
+  recommendation: string;
+}
+
+export interface SeasonalAnalysis {
+  warehouseId: string;
+  items: SeasonalItem[];
+  seasonalAlertCount: number;
+}
+
+export interface AiSlottingSummary {
+  warehouseId: string;
+  standardAnalysis: SlottingAnalysis;
+  coLocation: CoLocationAnalysis;
+  seasonal: SeasonalAnalysis;
+  aiConfidence: number;
+  topRecommendations: string[];
+}
+
 // ── Hooks ───────────────────────────────────────────────────────────────
 
 export function useSlottingAnalysis(warehouseId?: string) {
@@ -58,6 +105,41 @@ export function usePickFrequencies(warehouseId?: string) {
       const { data } = await apiClient.get<ApiResponse<ItemPickFrequency[]>>('/slotting/frequencies', {
         params: { warehouseId },
       });
+      return data;
+    },
+    enabled: !!warehouseId,
+  });
+}
+
+// ── AI Slotting Hooks ─────────────────────────────────────────────────
+
+export function useCoLocation(warehouseId?: string) {
+  return useQuery({
+    queryKey: ['slotting', 'co-location', warehouseId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<CoLocationAnalysis>>(`/slotting/${warehouseId}/co-location`);
+      return data;
+    },
+    enabled: !!warehouseId,
+  });
+}
+
+export function useSeasonalTrends(warehouseId?: string) {
+  return useQuery({
+    queryKey: ['slotting', 'seasonal', warehouseId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<SeasonalAnalysis>>(`/slotting/${warehouseId}/seasonal`);
+      return data;
+    },
+    enabled: !!warehouseId,
+  });
+}
+
+export function useAiSlottingSummary(warehouseId?: string) {
+  return useQuery({
+    queryKey: ['slotting', 'ai-summary', warehouseId],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<AiSlottingSummary>>(`/slotting/${warehouseId}/ai-summary`);
       return data;
     },
     enabled: !!warehouseId,

@@ -12,6 +12,11 @@ import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { createAuditLog } from '../services/audit.service.js';
 import { analyzeSlotting, getItemPickFrequencies, applySuggestion } from '../services/slotting-optimizer.service.js';
+import {
+  analyzeCoLocation,
+  analyzeSeasonalTrends,
+  generateAiSlottingSummary,
+} from '../services/ai-slotting.service.js';
 
 const router = Router();
 
@@ -86,6 +91,51 @@ router.post('/apply', async (req: Request, res: Response, next: NextFunction) =>
       performedById: req.user!.userId,
     });
 
+    sendSuccess(res, result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /slotting/:warehouseId/co-location — Co-location analysis ──────
+
+router.get('/:warehouseId/co-location', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const warehouseId = req.params.warehouseId as string;
+    if (!warehouseId) {
+      return sendError(res, 400, 'warehouseId is required');
+    }
+    const result = await analyzeCoLocation(warehouseId);
+    sendSuccess(res, result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /slotting/:warehouseId/seasonal — Seasonal trend analysis ──────
+
+router.get('/:warehouseId/seasonal', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const warehouseId = req.params.warehouseId as string;
+    if (!warehouseId) {
+      return sendError(res, 400, 'warehouseId is required');
+    }
+    const result = await analyzeSeasonalTrends(warehouseId);
+    sendSuccess(res, result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /slotting/:warehouseId/ai-summary — Combined AI analysis ──────
+
+router.get('/:warehouseId/ai-summary', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const warehouseId = req.params.warehouseId as string;
+    if (!warehouseId) {
+      return sendError(res, 400, 'warehouseId is required');
+    }
+    const result = await generateAiSlottingSummary(warehouseId);
     sendSuccess(res, result);
   } catch (err) {
     next(err);

@@ -283,6 +283,14 @@ const AiInsightsPage = React.lazy(() =>
   import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
 );
 
+// Features Showcase & ROI Calculator (Admin)
+const FeaturesShowcasePage = React.lazy(() =>
+  import('@/pages/admin/FeaturesShowcasePage').then(m => ({ default: m.FeaturesShowcasePage })),
+);
+const RoiCalculatorPage = React.lazy(() =>
+  import('@/pages/admin/RoiCalculatorPage').then(m => ({ default: m.RoiCalculatorPage })),
+);
+
 export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ currentRole }) => (
   <Routes>
     <Route path="/" element={<Navigate to={ROLE_REDIRECT[currentRole] || '/warehouse'} />} />
@@ -404,6 +412,10 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
 
     {/* AI Insights (optional) */}
     <Route path="/admin/ai-insights" element={<AiInsightsPage />} />
+
+    {/* Features Showcase & ROI Calculator */}
+    <Route path="/admin/features" element={<FeaturesShowcasePage />} />
+    <Route path="/admin/roi-calculator" element={<RoiCalculatorPage />} />
 
     {/* V1 Form Routes (kept for backward compatibility) */}
     <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
