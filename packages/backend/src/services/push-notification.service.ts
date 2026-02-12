@@ -21,7 +21,7 @@ function ensureVapidConfigured(): void {
   const env = getEnv();
   let publicKey = env.VAPID_PUBLIC_KEY;
   let privateKey = env.VAPID_PRIVATE_KEY;
-  const subject = env.VAPID_SUBJECT || 'mailto:admin@nit-scs.com';
+  const subject: string = env.VAPID_SUBJECT ?? 'mailto:admin@nit-scs.com';
 
   if (!publicKey || !privateKey) {
     console.warn('⚠  VAPID keys not found in environment — generating new keys.');
@@ -33,7 +33,7 @@ function ensureVapidConfigured(): void {
     console.warn(`   VAPID_PRIVATE_KEY=${privateKey}`);
   }
 
-  webPush.setVapidDetails(subject, publicKey, privateKey);
+  webPush.setVapidDetails(subject, publicKey!, privateKey!);
   cachedPublicKey = publicKey;
   vapidConfigured = true;
 }

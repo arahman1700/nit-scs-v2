@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma.js';
 export interface AuditEntry {
   tableName: string;
   recordId: string;
-  action: 'create' | 'update' | 'delete';
+  action: 'create' | 'update' | 'delete' | 'approve' | 'reject' | 'execute' | 'complete' | 'cancel';
   changedFields?: Record<string, unknown>;
   oldValues?: Record<string, unknown>;
   newValues?: Record<string, unknown>;

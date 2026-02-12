@@ -310,7 +310,7 @@ export const SlottingPage: React.FC = () => {
                         color: '#fff',
                         fontSize: '12px',
                       }}
-                      formatter={(value: number) => [`${value} picks/mo`, 'Frequency']}
+                      formatter={value => [`${value} picks/mo`, 'Frequency']}
                     />
                     <Bar dataKey="frequency" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>

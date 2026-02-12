@@ -1,6 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
 import { requireRole, requirePermission } from './rbac.js';
 
+// Mock the permission service (DB-backed, async)
+vi.mock('../services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn(),
+}));
+
+import { hasPermissionDB } from '../services/permission.service.js';
+const mockedHasPermissionDB = vi.mocked(hasPermissionDB);
+
 const mockReq = (overrides = {}) => ({ headers: {}, query: {}, body: {}, ...overrides }) as unknown as Request;
 
 const mockRes = () => {
@@ -18,6 +26,7 @@ let nextFn: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   nextFn = vi.fn();
+  vi.clearAllMocks();
 });
 
 describe('requireRole middleware', () => {
@@ -79,35 +88,43 @@ describe('requireRole middleware', () => {
 });
 
 describe('requirePermission middleware', () => {
-  it('allows user with the required permission', () => {
+  it('allows user with the required permission', async () => {
     // admin has all permissions on grn including 'create'
+    mockedHasPermissionDB.mockResolvedValue(true);
+
     const middleware = requirePermission('grn', 'create');
     const req = mockReq({ user: { systemRole: 'admin', userId: 'u1' } });
     const res = mockRes();
 
-    middleware(req, res, nextFn as unknown as NextFunction);
+    await middleware(req, res, nextFn as unknown as NextFunction);
 
     expect(nextFn).toHaveBeenCalledOnce();
     expect(res.status).not.toHaveBeenCalled();
+    expect(mockedHasPermissionDB).toHaveBeenCalledWith('admin', 'grn', 'create');
   });
 
-  it('allows warehouse_supervisor to read grn', () => {
+  it('allows warehouse_supervisor to read grn', async () => {
+    mockedHasPermissionDB.mockResolvedValue(true);
+
     const middleware = requirePermission('grn', 'read');
     const req = mockReq({ user: { systemRole: 'warehouse_supervisor', userId: 'u1' } });
     const res = mockRes();
 
-    middleware(req, res, nextFn as unknown as NextFunction);
+    await middleware(req, res, nextFn as unknown as NextFunction);
 
     expect(nextFn).toHaveBeenCalledOnce();
+    expect(mockedHasPermissionDB).toHaveBeenCalledWith('warehouse_supervisor', 'grn', 'read');
   });
 
-  it('rejects user without the required permission (403)', () => {
+  it('rejects user without the required permission (403)', async () => {
     // freight_forwarder cannot delete shipments
+    mockedHasPermissionDB.mockResolvedValue(false);
+
     const middleware = requirePermission('shipment', 'delete');
     const req = mockReq({ user: { systemRole: 'freight_forwarder', userId: 'u1' } });
     const res = mockRes();
 
-    middleware(req, res, nextFn as unknown as NextFunction);
+    await middleware(req, res, nextFn as unknown as NextFunction);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith(
@@ -119,23 +136,25 @@ describe('requirePermission middleware', () => {
     expect(nextFn).not.toHaveBeenCalled();
   });
 
-  it('rejects unknown role without permissions', () => {
+  it('rejects unknown role without permissions', async () => {
+    mockedHasPermissionDB.mockResolvedValue(false);
+
     const middleware = requirePermission('grn', 'create');
     const req = mockReq({ user: { systemRole: 'unknown_role', userId: 'u1' } });
     const res = mockRes();
 
-    middleware(req, res, nextFn as unknown as NextFunction);
+    await middleware(req, res, nextFn as unknown as NextFunction);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(nextFn).not.toHaveBeenCalled();
   });
 
-  it('rejects unauthenticated request (401)', () => {
+  it('rejects unauthenticated request (401)', async () => {
     const middleware = requirePermission('grn', 'read');
     const req = mockReq(); // no user
     const res = mockRes();
 
-    middleware(req, res, nextFn as unknown as NextFunction);
+    await middleware(req, res, nextFn as unknown as NextFunction);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith(

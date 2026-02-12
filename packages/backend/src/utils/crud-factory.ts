@@ -81,7 +81,7 @@ function entityFromUrl(req: Request): string {
 export function createCrudRouter(config: CrudConfig): Router {
   const router = Router();
   const delegate = getDelegate(config.modelName);
-  const softDelete = config.softDelete !== false; // default true
+  const softDelete = config.softDelete === true; // default false — only enable for models with deletedAt column
 
   // ── GET / — List with pagination, search, sort, filter ──────────────
   router.get(

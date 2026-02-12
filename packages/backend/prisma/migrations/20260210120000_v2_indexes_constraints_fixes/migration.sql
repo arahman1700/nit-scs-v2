@@ -119,13 +119,13 @@ ALTER TABLE "lot_consumptions"
 -- ─── 5. ADD CHECK CONSTRAINTS FOR DATA INTEGRITY ────────────────────────────
 
 -- Document status constraints
-ALTER TABLE "mrrvs" ADD CONSTRAINT "chk_mrrv_status"
+ALTER TABLE "mrrv" ADD CONSTRAINT "chk_mrrv_status"
   CHECK ("status" IN ('draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'));
 
-ALTER TABLE "mirvs" ADD CONSTRAINT "chk_mirv_status"
+ALTER TABLE "mirv" ADD CONSTRAINT "chk_mirv_status"
   CHECK ("status" IN ('draft', 'pending_approval', 'approved', 'rejected', 'partially_issued', 'issued', 'completed', 'cancelled'));
 
-ALTER TABLE "mrvs" ADD CONSTRAINT "chk_mrv_status"
+ALTER TABLE "mrv" ADD CONSTRAINT "chk_mrv_status"
   CHECK ("status" IN ('draft', 'pending', 'received', 'rejected', 'completed'));
 
 ALTER TABLE "job_orders" ADD CONSTRAINT "chk_jo_status"

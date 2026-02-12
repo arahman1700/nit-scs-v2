@@ -69,7 +69,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
     select: {
       id: true,
       mrrvNumber: true,
-      lines: {
+      mrrvLines: {
         select: {
           itemId: true,
           qtyReceived: true,
@@ -88,7 +88,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
     select: {
       id: true,
       mirvNumber: true,
-      lines: {
+      mirvLines: {
         select: {
           itemId: true,
           qtyRequested: true,
@@ -107,7 +107,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
     select: {
       id: true,
       transferNumber: true,
-      lines: {
+      stockTransferLines: {
         select: {
           itemId: true,
           quantity: true,
@@ -123,7 +123,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
   >();
 
   for (const mi of mis) {
-    for (const line of mi.lines) {
+    for (const line of mi.mirvLines) {
       const remaining = Number(line.qtyRequested) - Number(line.qtyIssued ?? 0);
       if (remaining <= 0) continue;
 
@@ -138,7 +138,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
   }
 
   for (const wt of wts) {
-    for (const line of wt.lines) {
+    for (const line of wt.stockTransferLines) {
       const qty = Number(line.quantity);
       if (qty <= 0) continue;
 
@@ -156,7 +156,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
   const opportunities: CrossDockOpportunity[] = [];
 
   for (const grn of grns) {
-    for (const line of grn.lines) {
+    for (const line of grn.mrrvLines) {
       const targets = demandMap.get(line.itemId);
       if (!targets || targets.length === 0) continue;
 
