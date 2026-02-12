@@ -300,6 +300,74 @@ register('inventory/value', async () => {
   };
 });
 
+// ── Cross-Department ──────────────────────────────────────────────────
+
+register('cross-department/inventory_by_warehouse', async () => {
+  const result = await prisma.$queryRaw<{ warehouse_name: string; total_value: number; item_count: bigint }[]>`
+    SELECT
+      w.warehouse_name,
+      COALESCE(SUM(lot.available_qty * lot.unit_cost), 0)::float as total_value,
+      COUNT(DISTINCT il.item_id)::bigint as item_count
+    FROM warehouses w
+    LEFT JOIN inventory_levels il ON il.warehouse_id = w.id
+    LEFT JOIN inventory_lots lot ON lot.warehouse_id = w.id AND lot.status = 'active'
+    WHERE w.status = 'active'
+    GROUP BY w.id, w.warehouse_name
+    ORDER BY total_value DESC
+  `;
+  return {
+    type: 'grouped',
+    data: result.map(r => ({ label: r.warehouse_name, value: r.total_value, itemCount: Number(r.item_count) })),
+    label: 'Inventory Value by Warehouse',
+  };
+});
+
+register('cross-department/document_pipeline', async () => {
+  const [grn, mi, mrn, jo, mr] = await Promise.all([
+    prisma.mrrv.count({ where: { status: { notIn: ['completed', 'cancelled', 'rejected'] } } }),
+    prisma.mirv.count({ where: { status: { notIn: ['completed', 'cancelled', 'rejected', 'issued'] } } }),
+    prisma.mrv.count({ where: { status: { notIn: ['completed', 'cancelled'] } } }),
+    prisma.jobOrder.count({ where: { status: { notIn: ['completed', 'invoiced', 'cancelled', 'rejected'] } } }),
+    prisma.materialRequisition.count({ where: { status: { notIn: ['completed', 'cancelled', 'rejected'] } } }),
+  ]);
+  return {
+    type: 'grouped',
+    data: [
+      { label: 'GRN', value: grn },
+      { label: 'MI', value: mi },
+      { label: 'MRN', value: mrn },
+      { label: 'JO', value: jo },
+      { label: 'MR', value: mr },
+    ],
+    label: 'Active Documents by Type',
+  };
+});
+
+register('cross-department/pending_by_department', async () => {
+  const [warehouse, logistics, transport, quality] = await Promise.all([
+    Promise.all([
+      prisma.mrrv.count({ where: { status: 'pending_approval' } }),
+      prisma.mirv.count({ where: { status: 'pending_approval' } }),
+    ]).then(([a, b]) => a + b),
+    Promise.all([
+      prisma.materialRequisition.count({ where: { status: { in: ['submitted', 'pending_approval'] } } }),
+      prisma.shipment.count({ where: { status: { in: ['pending', 'at_port'] } } }),
+    ]).then(([a, b]) => a + b),
+    prisma.jobOrder.count({ where: { status: 'pending_approval' } }),
+    prisma.rfim.count({ where: { status: 'pending' } }),
+  ]);
+  return {
+    type: 'grouped',
+    data: [
+      { label: 'Warehouse', value: warehouse },
+      { label: 'Logistics', value: logistics },
+      { label: 'Transport', value: transport },
+      { label: 'Quality', value: quality },
+    ],
+    label: 'Pending Items by Department',
+  };
+});
+
 // ── Public API ─────────────────────────────────────────────────────────
 
 export function getDataSource(key: string): DataSourceFn | undefined {

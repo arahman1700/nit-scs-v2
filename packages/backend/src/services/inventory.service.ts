@@ -20,6 +20,8 @@ export interface AddStockParams {
   mrrvLineId?: string;
   expiryDate?: Date;
   performedById?: string;
+  /** Override lot status (default: 'active'). Use 'blocked' for damaged returns. */
+  lotStatus?: 'active' | 'blocked';
 }
 
 export interface StockLevel {
@@ -86,6 +88,27 @@ async function updateLevelWithVersion(
   }
 }
 
+/**
+ * Update InventoryLot with optimistic locking using the `version` field.
+ * Unlike level updates, lot conflicts throw immediately — the FIFO selection
+ * may be stale, so the entire transaction should restart.
+ */
+async function updateLotWithVersion(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
+  lotId: string,
+  currentVersion: number,
+  data: Record<string, unknown>,
+): Promise<void> {
+  const result = await tx.inventoryLot.updateMany({
+    where: { id: lotId, version: currentVersion },
+    data: { ...data, version: { increment: 1 } },
+  });
+
+  if (result.count === 0) {
+    throw new Error(`Optimistic lock conflict on InventoryLot ${lotId} — retry the operation`);
+  }
+}
+
 // ── Low-Stock Alert Check ────────────────────────────────────────────────
 
 /**
@@ -137,7 +160,7 @@ async function checkLowStockAlert(
 // ── Add Stock ───────────────────────────────────────────────────────────
 
 export async function addStock(params: AddStockParams): Promise<void> {
-  const { itemId, warehouseId, qty, unitCost, supplierId, mrrvLineId, expiryDate, performedById } = params;
+  const { itemId, warehouseId, qty, unitCost, supplierId, mrrvLineId, expiryDate, performedById, lotStatus } = params;
 
   await prisma.$transaction(async tx => {
     // 1. Upsert InventoryLevel - increment qtyOnHand with version bump
@@ -179,7 +202,7 @@ export async function addStock(params: AddStockParams): Promise<void> {
         reservedQty: 0,
         unitCost: unitCost ?? null,
         supplierId: supplierId ?? null,
-        status: 'active',
+        status: lotStatus ?? 'active',
       },
     });
 
@@ -246,11 +269,8 @@ export async function reserveStock(itemId: string, warehouseId: string, qty: num
 
       const toReserve = Math.min(remaining, lotAvailable);
 
-      await tx.inventoryLot.update({
-        where: { id: lot.id },
-        data: {
-          reservedQty: { increment: toReserve },
-        },
+      await updateLotWithVersion(tx, lot.id, lot.version, {
+        reservedQty: { increment: toReserve },
       });
 
       remaining -= toReserve;
@@ -293,11 +313,8 @@ export async function releaseReservation(itemId: string, warehouseId: string, qt
 
       const toRelease = Math.min(remaining, lotReserved);
 
-      await tx.inventoryLot.update({
-        where: { id: lot.id },
-        data: {
-          reservedQty: { decrement: toRelease },
-        },
+      await updateLotWithVersion(tx, lot.id, lot.version, {
+        reservedQty: { decrement: toRelease },
       });
 
       remaining -= toRelease;
@@ -350,13 +367,10 @@ export async function consumeReservation(
       const newAvailable = lotAvailable - toConsume;
       const newReserved = Math.max(0, Number(lot.reservedQty ?? 0) - toConsume);
 
-      await tx.inventoryLot.update({
-        where: { id: lot.id },
-        data: {
-          availableQty: newAvailable,
-          reservedQty: newReserved,
-          status: newAvailable <= 0 ? 'depleted' : 'active',
-        },
+      await updateLotWithVersion(tx, lot.id, lot.version, {
+        availableQty: newAvailable,
+        reservedQty: newReserved,
+        status: newAvailable <= 0 ? 'depleted' : 'active',
       });
 
       // 3. Create LotConsumption record
@@ -434,12 +448,9 @@ export async function deductStock(
 
       const newAvailable = lotAvailable - toConsume;
 
-      await tx.inventoryLot.update({
-        where: { id: lot.id },
-        data: {
-          availableQty: newAvailable,
-          status: newAvailable <= 0 ? 'depleted' : 'active',
-        },
+      await updateLotWithVersion(tx, lot.id, lot.version, {
+        availableQty: newAvailable,
+        status: newAvailable <= 0 ? 'depleted' : 'active',
       });
 
       // Create LotConsumption record with proper reference
@@ -482,7 +493,8 @@ export async function addStockBatch(items: AddStockParams[]): Promise<void> {
 
   await prisma.$transaction(async tx => {
     for (const params of items) {
-      const { itemId, warehouseId, qty, unitCost, supplierId, mrrvLineId, expiryDate, performedById } = params;
+      const { itemId, warehouseId, qty, unitCost, supplierId, mrrvLineId, expiryDate, performedById, lotStatus } =
+        params;
 
       // Upsert InventoryLevel
       const existing = await tx.inventoryLevel.findUnique({
@@ -516,7 +528,7 @@ export async function addStockBatch(items: AddStockParams[]): Promise<void> {
           reservedQty: 0,
           unitCost: unitCost ?? null,
           supplierId: supplierId ?? null,
-          status: 'active',
+          status: lotStatus ?? 'active',
         },
       });
 
@@ -589,9 +601,8 @@ export async function reserveStockBatch(
         const lotAvailable = Number(lot.availableQty) - Number(lot.reservedQty ?? 0);
         if (lotAvailable <= 0) continue;
         const toReserve = Math.min(remaining, lotAvailable);
-        await tx.inventoryLot.update({
-          where: { id: lot.id },
-          data: { reservedQty: { increment: toReserve } },
+        await updateLotWithVersion(tx, lot.id, lot.version, {
+          reservedQty: { increment: toReserve },
         });
         remaining -= toReserve;
       }
@@ -648,13 +659,10 @@ export async function consumeReservationBatch(
         const newAvailable = lotAvailable - toConsume;
         const newReserved = Math.max(0, Number(lot.reservedQty ?? 0) - toConsume);
 
-        await tx.inventoryLot.update({
-          where: { id: lot.id },
-          data: {
-            availableQty: newAvailable,
-            reservedQty: newReserved,
-            status: newAvailable <= 0 ? 'depleted' : 'active',
-          },
+        await updateLotWithVersion(tx, lot.id, lot.version, {
+          availableQty: newAvailable,
+          reservedQty: newReserved,
+          status: newAvailable <= 0 ? 'depleted' : 'active',
         });
 
         await tx.lotConsumption.create({
@@ -723,12 +731,9 @@ export async function deductStockBatch(
         totalCost += toConsume * unitCost;
 
         const newAvailable = lotAvailable - toConsume;
-        await tx.inventoryLot.update({
-          where: { id: lot.id },
-          data: {
-            availableQty: newAvailable,
-            status: newAvailable <= 0 ? 'depleted' : 'active',
-          },
+        await updateLotWithVersion(tx, lot.id, lot.version, {
+          availableQty: newAvailable,
+          status: newAvailable <= 0 ? 'depleted' : 'active',
         });
 
         await tx.lotConsumption.create({
@@ -772,5 +777,84 @@ export async function getStockLevel(itemId: string, warehouseId: string): Promis
     onHand,
     reserved,
     available: onHand - reserved,
+  };
+}
+
+/**
+ * Get stock levels for a single item across ALL warehouses.
+ * Used by the cross-department dashboard.
+ */
+export async function getStockLevelAllWarehouses(itemId: string) {
+  const levels = await prisma.inventoryLevel.findMany({
+    where: { itemId },
+    include: {
+      warehouse: { select: { id: true, warehouseCode: true, warehouseName: true } },
+    },
+  });
+
+  return levels.map(l => ({
+    warehouseId: l.warehouseId,
+    warehouseCode: l.warehouse.warehouseCode,
+    warehouseName: l.warehouse.warehouseName,
+    onHand: Number(l.qtyOnHand),
+    reserved: Number(l.qtyReserved),
+    available: Number(l.qtyOnHand) - Number(l.qtyReserved),
+  }));
+}
+
+/**
+ * Cross-department inventory summary — value and counts per warehouse.
+ */
+export async function getCrossDepartmentInventorySummary() {
+  const [warehouseBreakdown, totalValue, lowStockCount, blockedLotCount] = await Promise.all([
+    prisma.$queryRaw<
+      {
+        warehouse_id: string;
+        warehouse_name: string;
+        warehouse_code: string;
+        item_count: bigint;
+        total_qty: number;
+        total_value: number;
+      }[]
+    >`
+      SELECT
+        w.id as warehouse_id,
+        w.warehouse_name,
+        w.warehouse_code,
+        COUNT(DISTINCT il.item_id)::bigint as item_count,
+        COALESCE(SUM(il.qty_on_hand), 0)::float as total_qty,
+        COALESCE(SUM(lot.available_qty * lot.unit_cost), 0)::float as total_value
+      FROM warehouses w
+      LEFT JOIN inventory_levels il ON il.warehouse_id = w.id
+      LEFT JOIN inventory_lots lot ON lot.warehouse_id = w.id AND lot.status = 'active'
+      WHERE w.status = 'active'
+      GROUP BY w.id, w.warehouse_name, w.warehouse_code
+      ORDER BY total_value DESC
+    `,
+    prisma.$queryRaw<{ total: number }[]>`
+      SELECT COALESCE(SUM(available_qty * unit_cost), 0)::float as total
+      FROM inventory_lots WHERE status = 'active'
+    `,
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM inventory_levels
+      WHERE qty_on_hand <= COALESCE(min_level, 0) AND min_level IS NOT NULL AND min_level > 0
+    `,
+    prisma.$queryRaw<{ count: bigint }[]>`
+      SELECT COUNT(*) as count FROM inventory_lots WHERE status = 'blocked'
+    `,
+  ]);
+
+  return {
+    totalInventoryValue: totalValue[0]?.total ?? 0,
+    lowStockAlerts: Number(lowStockCount[0]?.count ?? 0),
+    blockedLots: Number(blockedLotCount[0]?.count ?? 0),
+    warehouses: warehouseBreakdown.map(w => ({
+      warehouseId: w.warehouse_id,
+      warehouseName: w.warehouse_name,
+      warehouseCode: w.warehouse_code,
+      itemCount: Number(w.item_count),
+      totalQty: w.total_qty,
+      totalValue: w.total_value,
+    })),
   };
 }

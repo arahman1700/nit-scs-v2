@@ -52,6 +52,7 @@ function makeLotRow(overrides: Record<string, unknown> = {}) {
     reservedQty: 0,
     unitCost: 10,
     status: 'active',
+    version: 0,
     receiptDate: new Date('2025-01-01'),
     ...overrides,
   };
@@ -223,7 +224,7 @@ describe('inventory.service', () => {
         .mockResolvedValueOnce(level); // optimistic lock read
       mockPrisma.inventoryLevel.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.inventoryLot.findMany.mockResolvedValue([makeLotRow({ availableQty: 100, reservedQty: 0 })]);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await reserveStock('item-1', 'wh-1', 10);
 
@@ -252,7 +253,7 @@ describe('inventory.service', () => {
       mockPrisma.inventoryLevel.findUnique.mockResolvedValueOnce(level).mockResolvedValueOnce(level);
       mockPrisma.inventoryLevel.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.inventoryLot.findMany.mockResolvedValue([makeLotRow({ availableQty: 100, reservedQty: 0 })]);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
 
       await reserveStock('item-1', 'wh-1', 25);
 
@@ -277,22 +278,22 @@ describe('inventory.service', () => {
         makeLotRow({ id: 'lot-new', availableQty: 30, reservedQty: 0, receiptDate: new Date('2025-06-01') }),
       ];
       mockPrisma.inventoryLot.findMany.mockResolvedValue(lots);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
 
       await reserveStock('item-1', 'wh-1', 20);
 
       // First lot: reserve all 15, second lot: reserve remaining 5
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledWith(
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'lot-old' },
-          data: { reservedQty: { increment: 15 } },
+          where: { id: 'lot-old', version: 0 },
+          data: expect.objectContaining({ reservedQty: { increment: 15 }, version: { increment: 1 } }),
         }),
       );
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledWith(
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'lot-new' },
-          data: { reservedQty: { increment: 5 } },
+          where: { id: 'lot-new', version: 0 },
+          data: expect.objectContaining({ reservedQty: { increment: 5 }, version: { increment: 1 } }),
         }),
       );
     });
@@ -324,21 +325,21 @@ describe('inventory.service', () => {
         makeLotRow({ id: 'lot-b', reservedQty: 12, receiptDate: new Date('2025-03-01') }),
       ];
       mockPrisma.inventoryLot.findMany.mockResolvedValue(lots);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
 
       await releaseReservation('item-1', 'wh-1', 15);
 
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledTimes(2);
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledWith(
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledTimes(2);
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'lot-a' },
-          data: { reservedQty: { decrement: 8 } },
+          where: { id: 'lot-a', version: 0 },
+          data: expect.objectContaining({ reservedQty: { decrement: 8 }, version: { increment: 1 } }),
         }),
       );
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledWith(
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'lot-b' },
-          data: { reservedQty: { decrement: 7 } },
+          where: { id: 'lot-b', version: 0 },
+          data: expect.objectContaining({ reservedQty: { decrement: 7 }, version: { increment: 1 } }),
         }),
       );
     });
@@ -372,7 +373,7 @@ describe('inventory.service', () => {
       stubOptimisticLockSuccess({ version: 1 });
       const lot = makeLotRow({ id: 'lot-c', availableQty: 30, unitCost: 5 });
       mockPrisma.inventoryLot.findMany.mockResolvedValue([lot]);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.lotConsumption.create.mockResolvedValue({});
       // low-stock alert check
       mockPrisma.inventoryLevel.findUnique
@@ -400,7 +401,7 @@ describe('inventory.service', () => {
         makeLotRow({ id: 'lot-2', availableQty: 20, unitCost: 15 }),
       ];
       mockPrisma.inventoryLot.findMany.mockResolvedValue(lots);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.lotConsumption.create.mockResolvedValue({});
       mockPrisma.inventoryLevel.findUnique
         .mockResolvedValueOnce(makeLevelRow({ version: 1 }))
@@ -416,7 +417,7 @@ describe('inventory.service', () => {
       stubOptimisticLockSuccess({ version: 1 });
       const lot = makeLotRow({ id: 'lot-x', availableQty: 10, reservedQty: 5, unitCost: 2 });
       mockPrisma.inventoryLot.findMany.mockResolvedValue([lot]);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.lotConsumption.create.mockResolvedValue({});
       mockPrisma.inventoryLevel.findUnique
         .mockResolvedValueOnce(makeLevelRow({ version: 1 }))
@@ -424,12 +425,13 @@ describe('inventory.service', () => {
 
       await consumeReservation('item-1', 'wh-1', 10, 'mirv-line-1');
 
-      expect(mockPrisma.inventoryLot.update).toHaveBeenCalledWith(
+      expect(mockPrisma.inventoryLot.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'lot-x' },
+          where: { id: 'lot-x', version: 0 },
           data: expect.objectContaining({
             availableQty: 0,
             status: 'depleted',
+            version: { increment: 1 },
           }),
         }),
       );
@@ -508,7 +510,7 @@ describe('inventory.service', () => {
       mockPrisma.inventoryLevel.updateMany.mockResolvedValue({ count: 1 });
       const lot = makeLotRow({ id: 'lot-d', availableQty: 50, unitCost: 8 });
       mockPrisma.inventoryLot.findMany.mockResolvedValue([lot]);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.lotConsumption.create.mockResolvedValue({});
 
       await deductStock('item-1', 'wh-1', 10, {
@@ -542,7 +544,7 @@ describe('inventory.service', () => {
         makeLotRow({ id: 'lot-f', availableQty: 10, unitCost: 30 }),
       ];
       mockPrisma.inventoryLot.findMany.mockResolvedValue(lots);
-      mockPrisma.inventoryLot.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.lotConsumption.create.mockResolvedValue({});
 
       const result = await deductStock('item-1', 'wh-1', 15, ref);

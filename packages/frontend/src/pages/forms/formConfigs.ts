@@ -1,4 +1,18 @@
-import { Package, Truck, Shield, AlertTriangle, RefreshCw, FileText } from 'lucide-react';
+import {
+  Package,
+  Truck,
+  Shield,
+  AlertTriangle,
+  RefreshCw,
+  FileText,
+  ArrowRightLeft,
+  Clipboard,
+  Ship,
+  Users,
+  Wrench,
+  Fuel,
+  Settings,
+} from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import {
   validateGRN,
@@ -7,6 +21,15 @@ import {
   validateJO,
   validateQCI,
   validateDR,
+  validateMR,
+  validateIMSF,
+  validateScrap,
+  validateSurplus,
+  validateRentalContract,
+  validateWT,
+  validateGatePass,
+  validateShipment,
+  validateHandover,
 } from '@nit-scs-v2/shared/validators';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -40,21 +63,50 @@ export interface FormConfig {
 // ── Constants ──────────────────────────────────────────────────────────────
 
 export const STATUS_FLOWS: Record<string, string[]> = {
-  mrrv: ['Draft', 'Pending QC', 'Received', 'Stored'],
-  mirv: ['Draft', 'Pending Approval', 'Approved', 'Issued'],
-  mrv: ['Draft', 'Inspected', 'Accepted', 'Stored'],
-  jo: ['New', 'Quote', 'Approved', 'Assigned', 'In Progress', 'Completed'],
+  mrrv: ['Draft', 'Pending QC', 'QC Approved', 'Received', 'Stored'],
+  mirv: ['Draft', 'Pending Approval', 'Approved', 'Issued', 'Completed'],
+  mrv: ['Draft', 'Pending', 'Received', 'Completed'],
+  jo: ['Draft', 'Pending Approval', 'Quoted', 'Approved', 'Assigned', 'In Progress', 'Completed', 'Invoiced'],
   rfim: ['Pending', 'In Progress', 'Completed'],
-  osd: ['Open', 'Under Review', 'Resolved'],
+  osd: ['Draft', 'Under Review', 'Claim Sent', 'Resolved', 'Closed'],
+  mr: ['Draft', 'Submitted', 'Under Review', 'Approved', 'Checking Stock', 'Fulfilled'],
+  imsf: ['Created', 'Sent', 'Confirmed', 'In Transit', 'Delivered', 'Completed'],
+  scrap: ['Identified', 'Reported', 'Approved', 'In SSC', 'Sold', 'Closed'],
+  surplus: ['Identified', 'Evaluated', 'Approved', 'Actioned', 'Closed'],
+  wt: ['Draft', 'Pending', 'Approved', 'Shipped', 'Received', 'Completed'],
+  rental_contract: ['Draft', 'Pending Approval', 'Active', 'Extended', 'Terminated'],
+  gatepass: ['Draft', 'Pending', 'Approved', 'Released', 'Returned'],
+  shipment: [
+    'Draft',
+    'PO Issued',
+    'In Production',
+    'Ready to Ship',
+    'In Transit',
+    'At Port',
+    'Customs Clearing',
+    'Cleared',
+    'In Delivery',
+    'Delivered',
+  ],
+  handover: ['Initiated', 'In Progress', 'Completed'],
 };
 
 export const EDITABLE_STATUSES: Record<string, string[]> = {
   mrrv: ['Draft'],
   mirv: ['Draft'],
   mrv: ['Draft'],
-  jo: ['New', 'Draft'],
+  jo: ['Draft'],
   rfim: ['Pending'],
-  osd: ['Open'],
+  osd: ['Draft'],
+  mr: ['Draft'],
+  imsf: ['Created'],
+  scrap: ['Identified'],
+  surplus: ['Identified'],
+  wt: ['Draft'],
+  rental_contract: ['Draft'],
+  gatepass: ['Draft'],
+  shipment: ['Draft'],
+  handover: ['Initiated'],
 };
 
 export const VALIDATOR_MAP: Record<
@@ -74,6 +126,57 @@ export const VALIDATOR_MAP: Record<
   jo: validateJO,
   rfim: validateQCI,
   osd: validateDR,
+  mr: validateMR,
+  imsf: validateIMSF,
+  scrap: validateScrap as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  surplus: validateSurplus as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  rental_contract: validateRentalContract as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  wt: validateWT,
+  gatepass: validateGatePass as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  shipment: validateShipment as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  handover: validateHandover as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -420,6 +523,355 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
               },
               { key: 'notes', label: 'Notes', type: 'textarea' },
               { key: 'attachments', label: 'Attachments', type: 'file' },
+            ],
+          },
+        ],
+      };
+    case 'mr':
+      return {
+        title: isEditMode ? 'Edit Material Request' : 'Material Request',
+        titleEn: 'Material Request',
+        code: 'MR',
+        subtitle: 'N-MS-NIT-LSS-FRM-0104',
+        icon: Clipboard,
+        sections: [
+          {
+            title: 'Request Information',
+            fields: [
+              {
+                key: 'requestDate',
+                label: 'Request Date',
+                type: 'date',
+                required: true,
+                defaultValue: new Date().toISOString().split('T')[0],
+              },
+              { key: 'project', label: 'Project', type: 'select', options: projectOptions, required: true },
+              {
+                key: 'priority',
+                label: 'Priority',
+                type: 'select',
+                options: ['Normal', 'Urgent', 'Critical'],
+                required: true,
+              },
+              {
+                key: 'requiredDate',
+                label: 'Required By Date',
+                type: 'date',
+                required: true,
+              },
+              {
+                key: 'requestedBy',
+                label: 'Requested By',
+                type: 'text',
+                defaultValue: currentUserName,
+                readOnly: true,
+              },
+            ],
+          },
+          {
+            title: 'Details',
+            fields: [
+              {
+                key: 'purpose',
+                label: 'Purpose',
+                type: 'textarea',
+                required: true,
+                placeholder: 'Describe the purpose of this material request...',
+              },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'imsf':
+      return {
+        title: isEditMode ? 'Edit Material Shifting Form' : 'Internal Material Shifting',
+        titleEn: 'Internal Material Shifting Form',
+        code: 'IMSF',
+        subtitle: 'N-MS-NIT-LSS-FRM-0201',
+        icon: ArrowRightLeft,
+        sections: [
+          {
+            title: 'Transfer Information',
+            fields: [
+              {
+                key: 'senderProject',
+                label: 'Sending Project',
+                type: 'select',
+                options: projectOptions,
+                required: true,
+              },
+              {
+                key: 'receiverProject',
+                label: 'Receiving Project',
+                type: 'select',
+                options: projectOptions,
+                required: true,
+              },
+              {
+                key: 'materialType',
+                label: 'Material Type',
+                type: 'select',
+                options: ['Raw Material', 'Consumable', 'Spare Part', 'Equipment'],
+                required: true,
+              },
+            ],
+          },
+          {
+            title: 'Details',
+            fields: [
+              {
+                key: 'reason',
+                label: 'Reason for Transfer',
+                type: 'textarea',
+                required: true,
+                placeholder: 'Project X has surplus cables needed by Project Y...',
+              },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'wt':
+      return {
+        title: isEditMode ? 'Edit Warehouse Transfer' : 'Warehouse Transfer',
+        titleEn: 'Warehouse Transfer',
+        code: 'WT',
+        subtitle: 'N-MS-NIT-LSS-FRM-0202',
+        icon: ArrowRightLeft,
+        sections: [
+          {
+            title: 'Transfer Details',
+            fields: [
+              {
+                key: 'sourceWarehouse',
+                label: 'Source Warehouse',
+                type: 'select',
+                options: warehouseOptions,
+                required: true,
+              },
+              {
+                key: 'destinationWarehouse',
+                label: 'Destination Warehouse',
+                type: 'select',
+                options: warehouseOptions,
+                required: true,
+              },
+              {
+                key: 'transferDate',
+                label: 'Transfer Date',
+                type: 'date',
+                required: true,
+                defaultValue: new Date().toISOString().split('T')[0],
+              },
+              {
+                key: 'requestedBy',
+                label: 'Requested By',
+                type: 'text',
+                defaultValue: currentUserName,
+                readOnly: true,
+              },
+            ],
+          },
+          {
+            title: 'Additional Information',
+            fields: [
+              {
+                key: 'reason',
+                label: 'Reason',
+                type: 'textarea',
+                placeholder: 'Material consolidation, project requirement...',
+              },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'shipment':
+      return {
+        title: isEditMode ? 'Edit Shipment' : 'New Shipment',
+        titleEn: 'Shipment Tracking',
+        code: 'SHIP',
+        subtitle: 'N-MS-NIT-LOG-FRM-0301',
+        icon: Ship,
+        sections: [
+          {
+            title: 'Shipment Information',
+            fields: [
+              { key: 'poNumber', label: 'PO Number', type: 'text', required: true, placeholder: 'PO-2026-XXXXX' },
+              { key: 'supplier', label: 'Supplier', type: 'select', options: supplierOptions, required: true },
+              { key: 'project', label: 'Project', type: 'select', options: projectOptions },
+              {
+                key: 'modeOfShipment',
+                label: 'Mode',
+                type: 'select',
+                options: ['Sea FCL', 'Sea LCL', 'Air', 'Land', 'Courier'],
+                required: true,
+              },
+            ],
+          },
+          {
+            title: 'Dates & Tracking',
+            fields: [
+              { key: 'orderDate', label: 'Order Date', type: 'date', required: true },
+              { key: 'expectedShipDate', label: 'Expected Ship Date', type: 'date' },
+              { key: 'awbBlNumber', label: 'AWB/BL Number', type: 'text', placeholder: 'Tracking number' },
+              { key: 'containerNumber', label: 'Container Number', type: 'text' },
+            ],
+          },
+          {
+            title: 'Financials',
+            fields: [
+              { key: 'commercialValue', label: 'Commercial Value (SAR)', type: 'number' },
+              { key: 'freightCost', label: 'Freight Cost (SAR)', type: 'number' },
+              { key: 'insuranceCost', label: 'Insurance Cost (SAR)', type: 'number' },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'scrap':
+      return {
+        title: isEditMode ? 'Edit Scrap Item' : 'Scrap Identification',
+        titleEn: 'Scrap Management',
+        code: 'SCRAP',
+        subtitle: 'N-MS-NIT-AST-FRM-0401',
+        icon: AlertTriangle,
+        sections: [
+          {
+            title: 'Scrap Details',
+            fields: [
+              {
+                key: 'materialType',
+                label: 'Material Type',
+                type: 'select',
+                options: ['Metal', 'Cable', 'Wood', 'Mixed', 'Electronic', 'Concrete'],
+                required: true,
+              },
+              { key: 'warehouse', label: 'Warehouse', type: 'select', options: warehouseOptions, required: true },
+              { key: 'estimatedWeight', label: 'Estimated Weight (Tons)', type: 'number', required: true },
+              { key: 'description', label: 'Description', type: 'textarea', required: true },
+              { key: 'photos', label: 'Photos (min. 3)', type: 'file', required: true },
+            ],
+          },
+        ],
+      };
+    case 'surplus':
+      return {
+        title: isEditMode ? 'Edit Surplus Item' : 'Surplus Identification',
+        titleEn: 'Surplus Management',
+        code: 'SURPLUS',
+        subtitle: 'N-MS-NIT-AST-FRM-0402',
+        icon: Package,
+        sections: [
+          {
+            title: 'Surplus Details',
+            fields: [
+              { key: 'item', label: 'Item', type: 'text', required: true },
+              { key: 'warehouse', label: 'Warehouse', type: 'select', options: warehouseOptions, required: true },
+              { key: 'qty', label: 'Quantity', type: 'number', required: true },
+              {
+                key: 'condition',
+                label: 'Condition',
+                type: 'select',
+                options: ['New', 'Good', 'Fair', 'Damaged'],
+                required: true,
+              },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'gatepass':
+      return {
+        title: isEditMode ? 'Edit Gate Pass' : 'Gate Pass',
+        titleEn: 'Gate Pass',
+        code: 'GP',
+        subtitle: 'N-MS-NIT-LSS-FRM-0105',
+        icon: Truck,
+        sections: [
+          {
+            title: 'Pass Details',
+            fields: [
+              { key: 'passType', label: 'Pass Type', type: 'select', options: ['Inbound', 'Outbound'], required: true },
+              { key: 'vehiclePlate', label: 'Vehicle Plate', type: 'text', required: true },
+              { key: 'driverName', label: 'Driver Name', type: 'text' },
+              { key: 'validFrom', label: 'Valid From', type: 'datetime-local', required: true },
+              { key: 'validUntil', label: 'Valid Until', type: 'datetime-local' },
+            ],
+          },
+          {
+            title: 'Reference',
+            fields: [
+              { key: 'miReference', label: 'MI Reference', type: 'text' },
+              { key: 'joReference', label: 'JO Reference', type: 'text' },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'rental_contract':
+      return {
+        title: isEditMode ? 'Edit Rental Contract' : 'Rental Contract',
+        titleEn: 'Rental Contract',
+        code: 'RC',
+        subtitle: 'N-MS-NIT-LOG-FRM-0302',
+        icon: FileText,
+        sections: [
+          {
+            title: 'Contract Information',
+            fields: [
+              { key: 'supplier', label: 'Supplier', type: 'select', options: supplierOptions, required: true },
+              { key: 'startDate', label: 'Start Date', type: 'date', required: true },
+              { key: 'endDate', label: 'End Date', type: 'date', required: true },
+              { key: 'monthlyRate', label: 'Monthly Rate (SAR)', type: 'number' },
+              { key: 'dailyRate', label: 'Daily Rate (SAR)', type: 'number' },
+            ],
+          },
+          {
+            title: 'Details',
+            fields: [
+              { key: 'equipmentDescription', label: 'Equipment Description', type: 'textarea', required: true },
+              { key: 'notes', label: 'Notes', type: 'textarea' },
+            ],
+          },
+        ],
+      };
+    case 'handover':
+      return {
+        title: isEditMode ? 'Edit Storekeeper Handover' : 'Storekeeper Handover',
+        titleEn: 'Storekeeper Handover',
+        code: 'HO',
+        subtitle: 'N-MS-NIT-WH-FRM-0501',
+        icon: Users,
+        sections: [
+          {
+            title: 'Handover Details',
+            fields: [
+              {
+                key: 'fromUser',
+                label: 'Handing Over (From)',
+                type: 'text',
+                defaultValue: currentUserName,
+                readOnly: true,
+              },
+              { key: 'toUser', label: 'Receiving (To)', type: 'select', options: inspectorOptions, required: true },
+              { key: 'warehouse', label: 'Warehouse', type: 'select', options: warehouseOptions, required: true },
+              {
+                key: 'handoverDate',
+                label: 'Handover Date',
+                type: 'date',
+                required: true,
+                defaultValue: new Date().toISOString().split('T')[0],
+              },
+            ],
+          },
+          {
+            title: 'Verification',
+            fields: [
+              { key: 'inventoryVerified', label: 'Inventory Verified?', type: 'checkbox' },
+              { key: 'discrepanciesFound', label: 'Discrepancies Found?', type: 'checkbox' },
+              { key: 'notes', label: 'Notes / Discrepancy Details', type: 'textarea' },
             ],
           },
         ],

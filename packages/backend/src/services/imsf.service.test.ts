@@ -8,6 +8,7 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../events/event-bus.js', () => ({ eventBus: { publish: vi.fn(), subscribe: vi.fn() } }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -192,15 +193,31 @@ describe('imsf.service', () => {
   // confirm (sent -> confirmed)
   // ─────────────────────────────────────────────────────────────────────────
   describe('confirm', () => {
-    it('should transition IMSF to confirmed', async () => {
-      const imsf = { id: 'imsf-1', status: 'sent' };
+    it('should transition IMSF to confirmed and auto-create WT', async () => {
+      const imsf = {
+        id: 'imsf-1',
+        status: 'sent',
+        imsfNumber: 'IMSF-0001',
+        senderProjectId: 'proj-1',
+        receiverProjectId: 'proj-2',
+        senderProject: { id: 'proj-1', warehouses: [{ id: 'wh-1' }] },
+        receiverProject: { id: 'proj-2', warehouses: [{ id: 'wh-2' }] },
+        imsfLines: [{ itemId: 'item-1', qty: 10, uomId: 'uom-1' }],
+      };
       mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
       mockedAssertTransition.mockReturnValue(undefined);
       mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'confirmed' });
+      mockPrisma.stockTransfer.create.mockResolvedValue({
+        id: 'wt-1',
+        transferNumber: 'WT-0001',
+        stockTransferLines: [],
+      });
+      mockedGenerateDocNumber.mockResolvedValue('WT-0001');
 
-      const result = await confirm('imsf-1');
+      const result = await confirm('imsf-1', 'user-1');
 
-      expect(result.status).toBe('confirmed');
+      expect(result.imsf.status).toBe('confirmed');
+      expect(result.wt.id).toBe('wt-1');
       expect(mockedAssertTransition).toHaveBeenCalledWith('imsf', 'sent', 'confirmed');
     });
 

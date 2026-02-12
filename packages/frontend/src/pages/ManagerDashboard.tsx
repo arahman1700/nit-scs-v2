@@ -1,11 +1,27 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle, XCircle, Clock, DollarSign, FileText, FolderOpen, Briefcase, Filter, Search } from 'lucide-react';
+import {
+  CheckCircle,
+  XCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  FolderOpen,
+  Briefcase,
+  Filter,
+  Search,
+  Package,
+  AlertTriangle,
+  Warehouse,
+  Ship,
+} from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useMrfList } from '@/api/hooks/useMrf';
 import { useStockTransferList } from '@/api/hooks/useStockTransfers';
 import { useProjects } from '@/api/hooks/useMasterData';
+import { useCrossDepartment } from '@/api/hooks/useDashboard';
+import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
@@ -27,6 +43,9 @@ export const ManagerDashboard: React.FC = () => {
   const mrfQuery = useMrfList({ pageSize: 200 });
   const stQuery = useStockTransferList({ pageSize: 200 });
   const projectsQuery = useProjects({ pageSize: 200 });
+
+  const crossDeptQuery = useCrossDepartment();
+  const crossDept = (crossDeptQuery.data as unknown as { data?: CrossDepartmentData } | undefined)?.data;
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
@@ -210,6 +229,52 @@ export const ManagerDashboard: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* Cross-Department Snapshot */}
+          {crossDept && (
+            <div className="glass-card rounded-2xl p-6 border border-white/10">
+              <h3 className="text-white font-bold mb-4 flex items-center gap-2">
+                <Warehouse size={18} className="text-nesma-secondary" />
+                Cross-Department Snapshot
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-2xl font-bold text-nesma-secondary">
+                    {crossDept.inventory.totalInventoryValue > 1_000_000
+                      ? `${(crossDept.inventory.totalInventoryValue / 1_000_000).toFixed(1)}M`
+                      : `${(crossDept.inventory.totalInventoryValue / 1_000).toFixed(0)}K`}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Inventory Value (SAR)</p>
+                </div>
+                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-2xl font-bold text-amber-400">{crossDept.inventory.lowStockAlerts}</p>
+                  <p className="text-xs text-gray-500 mt-1">Low Stock Alerts</p>
+                </div>
+                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-2xl font-bold text-red-400">{crossDept.inventory.blockedLots}</p>
+                  <p className="text-xs text-gray-500 mt-1">Blocked Lots</p>
+                </div>
+                <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-2xl font-bold text-emerald-400">{crossDept.inventory.warehouses.length}</p>
+                  <p className="text-xs text-gray-500 mt-1">Active Warehouses</p>
+                </div>
+              </div>
+
+              {/* Document Pipeline */}
+              <h4 className="text-sm font-medium text-gray-400 mb-3">Active Documents Pipeline</h4>
+              <div className="flex gap-2 flex-wrap">
+                {Object.entries(crossDept.documentPipeline).map(([docType, counts]) => (
+                  <div
+                    key={docType}
+                    className="px-3 py-2 bg-white/5 rounded-lg border border-white/5 text-center min-w-[70px]"
+                  >
+                    <p className="text-lg font-bold text-white">{counts.total}</p>
+                    <p className="text-[10px] text-gray-500 uppercase">{docType}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="glass-card rounded-2xl p-6 border border-white/10">
             <h3 className="text-white font-bold mb-4">Recent Activity</h3>

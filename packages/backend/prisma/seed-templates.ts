@@ -124,6 +124,90 @@ const EMAIL_TEMPLATES = [
 <p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
     variables: ['joNumber', 'joType', 'projectName', 'entityId'],
   },
+  {
+    code: 'shipment_delivered',
+    name: 'Shipment Delivered',
+    subject: '[NIT] Shipment Delivered: {{shipmentNumber}} — Ready for Receiving',
+    bodyHtml: `<h2>Shipment Delivered</h2>
+<p>A shipment has arrived and is ready for receiving.</p>
+<p><strong>Shipment Number:</strong> {{shipmentNumber}}</p>
+<p><strong>Delivery Date:</strong> {{deliveryDate}}</p>
+<p><strong>Destination:</strong> {{destination}}</p>
+<p><strong>Item Count:</strong> {{itemCount}}</p>
+<p>Please proceed with the receiving process and create the corresponding GRN.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['shipmentNumber', 'deliveryDate', 'destination', 'itemCount'],
+  },
+  {
+    code: 'qci_completed',
+    name: 'Quality Inspection Completed',
+    subject: '[NIT] Quality Inspection Completed: {{qciNumber}}',
+    bodyHtml: `<h2>Quality Inspection Completed</h2>
+<p>A quality inspection has been completed for a received shipment.</p>
+<p><strong>QCI Number:</strong> {{qciNumber}}</p>
+<p><strong>GRN Number:</strong> {{grnNumber}}</p>
+<p><strong>Result:</strong> {{result}}</p>
+<p><strong>Inspector:</strong> {{inspectorName}}</p>
+<p>Please review the inspection results and take any necessary follow-up action.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['qciNumber', 'grnNumber', 'result', 'inspectorName'],
+  },
+  {
+    code: 'mrn_completed',
+    name: 'Material Return Completed',
+    subject: '[NIT] Material Return Completed: {{mrnNumber}}',
+    bodyHtml: `<h2>Material Return Completed</h2>
+<p>A material return has been completed and inventory has been updated.</p>
+<p><strong>MRN Number:</strong> {{mrnNumber}}</p>
+<p><strong>Project:</strong> {{projectName}}</p>
+<p><strong>Item Count:</strong> {{itemCount}}</p>
+<p><strong>Returned By:</strong> {{returnedById}}</p>
+<p>Please verify the returned materials in the warehouse.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['mrnNumber', 'projectName', 'itemCount', 'returnedById'],
+  },
+  {
+    code: 'gate_pass_issued',
+    name: 'Gate Pass Issued',
+    subject: '[NIT] Gate Pass Issued: {{gatePassNumber}}',
+    bodyHtml: `<h2>Gate Pass Issued</h2>
+<p>A gate pass has been issued for an outgoing shipment.</p>
+<p><strong>Gate Pass Number:</strong> {{gatePassNumber}}</p>
+<p><strong>Vehicle Number:</strong> {{vehicleNumber}}</p>
+<p><strong>Destination:</strong> {{destination}}</p>
+<p><strong>Issue Date:</strong> {{issueDate}}</p>
+<p>Please ensure the vehicle is cleared for departure at the security gate.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['gatePassNumber', 'vehicleNumber', 'destination', 'issueDate'],
+  },
+  {
+    code: 'warehouse_transfer_created',
+    name: 'Warehouse Transfer Initiated',
+    subject: '[NIT] Warehouse Transfer Initiated: {{transferNumber}}',
+    bodyHtml: `<h2>Warehouse Transfer Initiated</h2>
+<p>A warehouse transfer has been created and requires your attention.</p>
+<p><strong>Transfer Number:</strong> {{transferNumber}}</p>
+<p><strong>From Warehouse:</strong> {{fromWarehouse}}</p>
+<p><strong>To Warehouse:</strong> {{toWarehouse}}</p>
+<p><strong>Item Count:</strong> {{itemCount}}</p>
+<p>Please prepare to receive the transferred materials at the destination warehouse.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['transferNumber', 'fromWarehouse', 'toWarehouse', 'itemCount'],
+  },
+  {
+    code: 'document_chain_created',
+    name: 'Follow-up Document Created',
+    subject: '[NIT] Follow-up Document Created: {{targetDocType}} from {{sourceDocType}} #{{sourceDocNumber}}',
+    bodyHtml: `<h2>Follow-up Document Created</h2>
+<p>A follow-up document has been automatically created as part of the document chain.</p>
+<p><strong>Source Document Type:</strong> {{sourceDocType}}</p>
+<p><strong>Source Document Number:</strong> {{sourceDocNumber}}</p>
+<p><strong>Target Document Type:</strong> {{targetDocType}}</p>
+<p><strong>Target Document Number:</strong> {{targetDocNumber}}</p>
+<p>Please review the newly created document and proceed with the required workflow.</p>
+<p style="color:#888;font-size:12px">This is an automated notification from NIT Logistics.</p>`,
+    variables: ['sourceDocType', 'sourceDocNumber', 'targetDocType', 'targetDocNumber'],
+  },
 ];
 
 const DEFAULT_WORKFLOWS = [

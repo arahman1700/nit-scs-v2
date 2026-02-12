@@ -3,6 +3,7 @@ import { canTransition } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
 import { sendTemplatedEmail } from '../services/email.service.js';
 import { reserveStock } from '../services/inventory.service.js';
+import { generateDocumentNumber } from '../services/document-number.service.js';
 import type { SystemEvent } from './event-bus.js';
 
 // ── Action Registry ─────────────────────────────────────────────────────
@@ -162,6 +163,13 @@ async function handleChangeStatus(params: Record<string, unknown>, event: System
 /**
  * Create a follow-up document automatically.
  * Params: { targetDocType, copyFields? }
+ *
+ * Supported chains:
+ *   mrrv → qci (rfim)     — GRN stored → create QCI for inspection
+ *   rfim → dr (osdReport)  — QCI failed → create Discrepancy Report
+ *   mirv → gate_pass       — MI issued → create Gate Pass
+ *   imsf → wt (stockTransfer) — IMSF confirmed → create Warehouse Transfer
+ *   mrrv → dr (osdReport)  — GRN with damage → create DR
  */
 async function handleCreateFollowUp(params: Record<string, unknown>, event: SystemEvent): Promise<void> {
   const targetDocType = params.targetDocType as string;
@@ -169,9 +177,171 @@ async function handleCreateFollowUp(params: Record<string, unknown>, event: Syst
     throw new Error('create_follow_up requires targetDocType');
   }
 
-  // This is a placeholder — actual implementation depends on the document creation logic
-  // which varies by document type and requires specific field mapping
-  log('info', `[Action:create_follow_up] Would create ${targetDocType} from ${event.entityType}:${event.entityId}`);
+  const sourceId = event.entityId;
+  const userId = event.performedById;
+
+  try {
+    switch (`${event.entityType}→${targetDocType}`) {
+      // GRN → QCI
+      case 'mrrv→qci':
+      case 'mrrv→rfim': {
+        const grn = await prisma.mrrv.findUnique({ where: { id: sourceId } });
+        if (!grn) throw new Error(`Source GRN ${sourceId} not found`);
+        const qciNumber = await generateDocumentNumber('qci');
+        const qci = await prisma.rfim.create({
+          data: {
+            rfimNumber: qciNumber,
+            mrrvId: grn.id,
+            requestDate: new Date(),
+            status: 'pending',
+            comments: `Auto-created from GRN ${grn.mrrvNumber} via workflow rule`,
+          } as any,
+        });
+        log('info', `[Action:create_follow_up] Created QCI ${qci.id} from GRN ${sourceId}`);
+        break;
+      }
+
+      // QCI → DR
+      case 'rfim→dr':
+      case 'rfim→osd': {
+        const qci = await prisma.rfim.findUnique({ where: { id: sourceId } });
+        if (!qci) throw new Error(`Source QCI ${sourceId} not found`);
+        if (!qci.mrrvId) throw new Error(`QCI ${sourceId} has no parent GRN`);
+        // Check if DR already exists for this GRN
+        const existingDr = await prisma.osdReport.findFirst({ where: { mrrvId: qci.mrrvId } });
+        if (existingDr) {
+          log('info', `[Action:create_follow_up] DR already exists for GRN ${qci.mrrvId}, skipping`);
+          break;
+        }
+        const drNumber = await generateDocumentNumber('dr');
+        const dr = await prisma.osdReport.create({
+          data: {
+            osdNumber: drNumber,
+            mrrvId: qci.mrrvId,
+            reportDate: new Date(),
+            reportTypes: ['quality_failure'],
+            status: 'draft',
+          },
+        });
+        log('info', `[Action:create_follow_up] Created DR ${dr.id} from QCI ${sourceId}`);
+        break;
+      }
+
+      // MI → GatePass
+      case 'mirv→gate_pass': {
+        const mi = await prisma.mirv.findUnique({
+          where: { id: sourceId },
+          include: { mirvLines: { include: { item: { select: { uomId: true } } } } },
+        });
+        if (!mi) throw new Error(`Source MI ${sourceId} not found`);
+        const gpNumber = await generateDocumentNumber('gate_pass');
+        const gp = await prisma.gatePass.create({
+          data: {
+            gatePassNumber: gpNumber,
+            passType: 'outbound',
+            mirvId: mi.id,
+            projectId: mi.projectId,
+            warehouseId: mi.warehouseId,
+            vehicleNumber: 'TBD',
+            driverName: 'TBD',
+            destination: 'Project Site',
+            issueDate: new Date(),
+            status: 'draft',
+            gatePassItems: {
+              create: mi.mirvLines.map(line => ({
+                itemId: line.itemId,
+                quantity: line.qtyIssued ?? line.qtyRequested,
+                uomId: line.item.uomId,
+              })),
+            },
+          },
+        });
+        log('info', `[Action:create_follow_up] Created GatePass ${gp.id} from MI ${sourceId}`);
+        break;
+      }
+
+      // IMSF → WT (Stock Transfer)
+      case 'imsf→wt':
+      case 'imsf→stock_transfer': {
+        const imsf = await prisma.imsf.findUnique({
+          where: { id: sourceId },
+          include: {
+            imsfLines: true,
+            senderProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
+            receiverProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
+          },
+        });
+        if (!imsf) throw new Error(`Source IMSF ${sourceId} not found`);
+        const fromWarehouseId = imsf.senderProject?.warehouses[0]?.id;
+        const toWarehouseId = imsf.receiverProject?.warehouses[0]?.id;
+        if (!fromWarehouseId || !toWarehouseId) {
+          throw new Error('Cannot create WT: sender or receiver project has no assigned warehouse');
+        }
+        const wtNumber = await generateDocumentNumber('wt');
+        const wt = await prisma.stockTransfer.create({
+          data: {
+            transferNumber: wtNumber,
+            transferType: 'project_to_project',
+            fromWarehouseId,
+            toWarehouseId,
+            fromProjectId: imsf.senderProjectId,
+            toProjectId: imsf.receiverProjectId,
+            requestedById: userId ?? imsf.createdById,
+            transferDate: new Date(),
+            status: 'draft',
+            notes: `Auto-created from IMSF ${imsf.imsfNumber} via workflow rule`,
+            stockTransferLines: {
+              create: imsf.imsfLines.map(line => ({
+                itemId: line.itemId,
+                quantity: line.qty,
+                uomId: line.uomId,
+              })),
+            },
+          },
+        });
+        log('info', `[Action:create_follow_up] Created WT ${wt.id} from IMSF ${sourceId}`);
+        break;
+      }
+
+      // GRN → DR (for damaged goods)
+      case 'mrrv→dr':
+      case 'mrrv→osd': {
+        const grn = await prisma.mrrv.findUnique({ where: { id: sourceId } });
+        if (!grn) throw new Error(`Source GRN ${sourceId} not found`);
+        const existingDr = await prisma.osdReport.findFirst({ where: { mrrvId: sourceId } });
+        if (existingDr) {
+          log('info', `[Action:create_follow_up] DR already exists for GRN ${sourceId}, skipping`);
+          break;
+        }
+        const drNumber = await generateDocumentNumber('dr');
+        const dr = await prisma.osdReport.create({
+          data: {
+            osdNumber: drNumber,
+            mrrvId: grn.id,
+            reportDate: new Date(),
+            reportTypes: ['damage'],
+            status: 'draft',
+          },
+        });
+        log('info', `[Action:create_follow_up] Created DR ${dr.id} from GRN ${sourceId}`);
+        break;
+      }
+
+      default:
+        log(
+          'warn',
+          `[Action:create_follow_up] Unsupported chain: ${event.entityType}→${targetDocType}. ` +
+            `Supported: mrrv→qci, rfim→dr, mirv→gate_pass, imsf→wt, mrrv→dr`,
+        );
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    log(
+      'error',
+      `[Action:create_follow_up] Failed to create ${targetDocType} from ${event.entityType}:${sourceId}: ${msg}`,
+    );
+    throw err;
+  }
 }
 
 /**

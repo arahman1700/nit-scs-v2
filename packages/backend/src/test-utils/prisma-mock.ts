@@ -15,6 +15,7 @@ export interface PrismaModelMock {
   findFirst: MockFn;
   findMany: MockFn;
   create: MockFn;
+  createMany: MockFn;
   update: MockFn;
   updateMany: MockFn;
   delete: MockFn;
@@ -31,6 +32,7 @@ function createModelMock(): PrismaModelMock {
     findFirst: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
+    createMany: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),
     delete: vi.fn(),

@@ -1401,6 +1401,8 @@ model InventoryLot {
   binLocation  String?   @map("bin_location") @db.VarChar(50)
   /// CHECK: status IN ('active', 'depleted', 'expired', 'blocked')
   status       String    @default("active") @map("status") @db.VarChar(20)
+  /// Optimistic locking version for concurrent reservation safety
+  version      Int       @default(0)
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations

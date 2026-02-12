@@ -4,8 +4,10 @@
  */
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
+import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
-import { assertTransition } from '@nit-scs-v2/shared';
+import { assertTransition, canTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { RfimUpdateDto as QciUpdateDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'qci';
@@ -97,10 +99,66 @@ export async function complete(id: string, result: string, comments?: string) {
 
   assertTransition(DOC_TYPE, qci.status, 'completed');
 
-  const updated = await prisma.rfim.update({
-    where: { id: qci.id },
-    data: { status: 'completed', result, comments: comments ?? qci.comments },
+  const updated = await prisma.$transaction(async tx => {
+    const completedQci = await tx.rfim.update({
+      where: { id: qci.id },
+      data: { status: 'completed', result, comments: comments ?? qci.comments },
+    });
+
+    // Chain: QCI pass → update parent GRN to qc_approved
+    if (result === 'pass' && qci.mrrvId) {
+      const parentGrn = await tx.mrrv.findUnique({ where: { id: qci.mrrvId } });
+      if (parentGrn && canTransition('grn', parentGrn.status, 'qc_approved')) {
+        await tx.mrrv.update({
+          where: { id: parentGrn.id },
+          data: { status: 'qc_approved', qcApprovedDate: new Date() },
+        });
+      }
+    }
+
+    // Chain: QCI fail → auto-create DR if none exists for this GRN
+    if (result === 'fail' && qci.mrrvId) {
+      const existingDr = await tx.osdReport.findFirst({
+        where: { mrrvId: qci.mrrvId },
+      });
+      if (!existingDr) {
+        const drNumber = await generateDocumentNumber('dr');
+        await tx.osdReport.create({
+          data: {
+            osdNumber: drNumber,
+            mrrvId: qci.mrrvId,
+            reportDate: new Date(),
+            reportTypes: ['quality_failure'],
+            status: 'draft',
+          },
+        });
+      }
+    }
+
+    return completedQci;
   });
+
+  // Publish events
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'rfim',
+    entityId: qci.id,
+    action: 'status_change',
+    payload: { from: qci.status, to: 'completed', result, mrrvId: qci.mrrvId },
+    timestamp: new Date().toISOString(),
+  });
+
+  if (result === 'pass' && qci.mrrvId) {
+    eventBus.publish({
+      type: 'document:status_changed',
+      entityType: 'mrrv',
+      entityId: qci.mrrvId,
+      action: 'status_change',
+      payload: { from: 'pending_qc', to: 'qc_approved', triggeredByQci: qci.id },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   return { updated, mrrvId: qci.mrrvId };
 }
 

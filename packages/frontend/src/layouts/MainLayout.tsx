@@ -70,7 +70,7 @@ export const MainLayout: React.FC<{
       [UserRole.QC_OFFICER]: 'qc',
       [UserRole.FREIGHT_FORWARDER]: 'transport',
       [UserRole.TRANSPORT_SUPERVISOR]: 'logistics',
-      [UserRole.SCRAP_COMMITTEE_MEMBER]: 'assets/scrap',
+      [UserRole.SCRAP_COMMITTEE_MEMBER]: 'assets',
     };
     const expectedPath = roleBasePaths[role] || 'admin';
 

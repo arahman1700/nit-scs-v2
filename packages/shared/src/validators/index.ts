@@ -470,6 +470,257 @@ export function validateRentalContract(data: Record<string, unknown>): Validatio
   return { valid: errors.length === 0, errors, warnings };
 }
 
+// ── WT Validators (was StockTransfer) ───────────────────────────────────
+
+export function validateWT(data: Record<string, unknown>, lineItems: VoucherLineItem[]): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.sourceWarehouseId || !(data.sourceWarehouseId as string).trim()) {
+    errors.push({ field: 'sourceWarehouseId', rule: 'WT-V001', message: 'Source warehouse is required' });
+  }
+
+  if (!data.destinationWarehouseId || !(data.destinationWarehouseId as string).trim()) {
+    errors.push({ field: 'destinationWarehouseId', rule: 'WT-V002', message: 'Destination warehouse is required' });
+  }
+
+  if (data.sourceWarehouseId && data.destinationWarehouseId && data.sourceWarehouseId === data.destinationWarehouseId) {
+    errors.push({
+      field: 'destinationWarehouseId',
+      rule: 'WT-V003',
+      message: 'Source and destination warehouses must be different',
+    });
+  }
+
+  if (lineItems.length === 0) {
+    errors.push({ field: 'lineItems', rule: 'WT-V004', message: 'At least one line item is required' });
+  }
+
+  lineItems.forEach((item, idx) => {
+    if (!item.quantity || item.quantity <= 0) {
+      errors.push({
+        field: `lineItems[${idx}].quantity`,
+        rule: 'WT-V005',
+        message: `Quantity must be greater than zero for ${item.itemName}`,
+      });
+    }
+  });
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── GatePass Validators ────────────────────────────────────────────────
+
+export function validateGatePass(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.passType || !(data.passType as string).trim()) {
+    errors.push({ field: 'passType', rule: 'GP-V001', message: 'Pass type is required' });
+  }
+
+  if (!data.vehiclePlate || !(data.vehiclePlate as string).trim()) {
+    errors.push({ field: 'vehiclePlate', rule: 'GP-V002', message: 'Vehicle plate is required' });
+  }
+
+  if (data.passType === 'outbound' && !data.mirvId && !data.joId) {
+    errors.push({
+      field: 'passType',
+      rule: 'GP-V003',
+      message: 'Outbound gate pass requires MI or JO reference',
+    });
+  }
+
+  if (data.validFrom && data.validUntil) {
+    if (new Date(data.validFrom as string) >= new Date(data.validUntil as string)) {
+      errors.push({
+        field: 'validUntil',
+        rule: 'GP-V004',
+        message: 'Valid until must be after valid from',
+      });
+    }
+  }
+
+  if (!data.driverName || !(data.driverName as string).trim()) {
+    warnings.push({ field: 'driverName', rule: 'GP-W001', message: 'Driver name is recommended' });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── Shipment Validators ────────────────────────────────────────────────
+
+export function validateShipment(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.poNumber || !(data.poNumber as string).trim()) {
+    errors.push({ field: 'poNumber', rule: 'SHIP-V001', message: 'PO Number is required' });
+  }
+
+  if (!data.supplierId || !(data.supplierId as string).trim()) {
+    errors.push({ field: 'supplierId', rule: 'SHIP-V002', message: 'Supplier is required' });
+  }
+
+  if (!data.modeOfShipment || !(data.modeOfShipment as string).trim()) {
+    errors.push({ field: 'modeOfShipment', rule: 'SHIP-V003', message: 'Mode of shipment is required' });
+  }
+
+  if (data.expectedShipDate && data.orderDate) {
+    if (new Date(data.expectedShipDate as string) < new Date(data.orderDate as string)) {
+      errors.push({
+        field: 'expectedShipDate',
+        rule: 'SHIP-V004',
+        message: 'Expected ship date cannot be before order date',
+      });
+    }
+  }
+
+  if (Number(data.commercialValue || 0) > 100000 && !data.insuranceCost) {
+    warnings.push({
+      field: 'insuranceCost',
+      rule: 'SHIP-W001',
+      message: 'Insurance is recommended for shipments with commercial value exceeding 100,000',
+    });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── Handover Validators ────────────────────────────────────────────────
+
+export function validateHandover(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.fromUserId || !(data.fromUserId as string).trim()) {
+    errors.push({ field: 'fromUserId', rule: 'HO-V001', message: 'From user is required' });
+  }
+
+  if (!data.toUserId || !(data.toUserId as string).trim()) {
+    errors.push({ field: 'toUserId', rule: 'HO-V002', message: 'To user is required' });
+  }
+
+  if (!data.warehouseId || !(data.warehouseId as string).trim()) {
+    errors.push({ field: 'warehouseId', rule: 'HO-V003', message: 'Warehouse is required' });
+  }
+
+  if (data.fromUserId && data.toUserId && data.fromUserId === data.toUserId) {
+    errors.push({
+      field: 'toUserId',
+      rule: 'HO-V004',
+      message: 'Cannot handover to yourself',
+    });
+  }
+
+  if (!data.handoverDate) {
+    errors.push({ field: 'handoverDate', rule: 'HO-V005', message: 'Handover date is required' });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── ToolIssue Validators ───────────────────────────────────────────────
+
+export function validateToolIssue(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.toolId || !(data.toolId as string).trim()) {
+    errors.push({ field: 'toolId', rule: 'TI-V001', message: 'Tool is required' });
+  }
+
+  if (!data.issuedToId || !(data.issuedToId as string).trim()) {
+    errors.push({ field: 'issuedToId', rule: 'TI-V002', message: 'Issued to is required' });
+  }
+
+  if (!data.issueDate) {
+    errors.push({ field: 'issueDate', rule: 'TI-V003', message: 'Issue date is required' });
+  }
+
+  if (!data.expectedReturnDate) {
+    warnings.push({ field: 'expectedReturnDate', rule: 'TI-W001', message: 'Expected return date is recommended' });
+  }
+
+  if (data.returnDate && data.issueDate) {
+    if (new Date(data.returnDate as string) < new Date(data.issueDate as string)) {
+      errors.push({
+        field: 'returnDate',
+        rule: 'TI-V004',
+        message: 'Return date cannot be before issue date',
+      });
+    }
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── GeneratorFuel Validators ───────────────────────────────────────────
+
+export function validateGeneratorFuel(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.generatorId || !(data.generatorId as string).trim()) {
+    errors.push({ field: 'generatorId', rule: 'GF-V001', message: 'Generator is required' });
+  }
+
+  if (!data.date) {
+    errors.push({ field: 'date', rule: 'GF-V002', message: 'Date is required' });
+  }
+
+  if (!data.fuelQtyLiters || Number(data.fuelQtyLiters) <= 0) {
+    errors.push({ field: 'fuelQtyLiters', rule: 'GF-V003', message: 'Fuel quantity must be greater than zero' });
+  }
+
+  if (Number(data.fuelQtyLiters || 0) > 1000) {
+    warnings.push({
+      field: 'fuelQtyLiters',
+      rule: 'GF-W001',
+      message: 'Unusually high fuel quantity',
+    });
+  }
+
+  if (data.date && new Date(data.date as string) > new Date()) {
+    warnings.push({
+      field: 'date',
+      rule: 'GF-W002',
+      message: 'Fuel log date is in the future',
+    });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+// ── GeneratorMaintenance Validators ────────────────────────────────────
+
+export function validateGeneratorMaintenance(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.generatorId || !(data.generatorId as string).trim()) {
+    errors.push({ field: 'generatorId', rule: 'GM-V001', message: 'Generator is required' });
+  }
+
+  if (!data.maintenanceType || !(data.maintenanceType as string).trim()) {
+    errors.push({ field: 'maintenanceType', rule: 'GM-V002', message: 'Maintenance type is required' });
+  }
+
+  if (!data.scheduledDate) {
+    errors.push({ field: 'scheduledDate', rule: 'GM-V003', message: 'Scheduled date is required' });
+  }
+
+  if (data.maintenanceType === 'Emergency') {
+    warnings.push({
+      field: 'maintenanceType',
+      rule: 'GM-W001',
+      message: 'Emergency maintenance requires supervisor notification',
+    });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
 // ── Generic ─────────────────────────────────────────────────────────────
 
 export function validateRequired(

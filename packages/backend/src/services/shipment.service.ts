@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../types/dto.js';
 
 const LIST_INCLUDE = {
@@ -216,8 +217,14 @@ export async function updateCustomsStage(shipmentId: string, customsId: string, 
   return { existing, updated };
 }
 
-export async function deliver(id: string) {
-  const shipment = await prisma.shipment.findUnique({ where: { id } });
+export async function deliver(id: string, userId?: string) {
+  const shipment = await prisma.shipment.findUnique({
+    where: { id },
+    include: {
+      shipmentLines: true,
+      supplier: { select: { id: true } },
+    },
+  });
   if (!shipment) throw new NotFoundError('Shipment', id);
 
   const deliverable = ['cleared', 'in_delivery'];
@@ -225,22 +232,87 @@ export async function deliver(id: string) {
     throw new BusinessRuleError(`Shipment cannot be delivered from status: ${shipment.status}`);
   }
 
-  const updated = await prisma.shipment.update({
-    where: { id: shipment.id },
-    data: { status: 'delivered', deliveryDate: new Date() },
+  const result = await prisma.$transaction(async tx => {
+    const updated = await tx.shipment.update({
+      where: { id: shipment.id },
+      data: { status: 'delivered', deliveryDate: new Date() },
+    });
+
+    let grnId: string | null = null;
+
+    if (shipment.mrrvId) {
+      // Update existing linked GRN
+      grnId = shipment.mrrvId;
+      await tx.mrrv
+        .update({
+          where: { id: shipment.mrrvId },
+          data: { status: 'received' },
+        })
+        .catch(() => {});
+    } else if (shipment.destinationWarehouseId && shipment.shipmentLines.length > 0 && userId) {
+      // Auto-create draft GRN from shipment lines
+      const grnNumber = await generateDocumentNumber('grn');
+      const grn = await tx.mrrv.create({
+        data: {
+          mrrvNumber: grnNumber,
+          supplierId: shipment.supplierId,
+          poNumber: shipment.poNumber,
+          warehouseId: shipment.destinationWarehouseId,
+          projectId: shipment.projectId,
+          receivedById: userId,
+          receiveDate: new Date(),
+          deliveryNote: shipment.awbBlNumber ?? shipment.containerNumber ?? null,
+          rfimRequired: false,
+          totalValue: Number(shipment.commercialValue ?? 0),
+          status: 'draft',
+          notes: `Auto-created from shipment ${shipment.shipmentNumber}`,
+          mrrvLines: {
+            create: shipment.shipmentLines
+              .filter(line => line.itemId != null && line.uomId != null)
+              .map(line => ({
+                itemId: line.itemId!,
+                qtyReceived: line.quantity,
+                uomId: line.uomId!,
+                unitCost: line.unitValue,
+                condition: 'good',
+              })),
+          },
+        },
+      });
+      grnId = grn.id;
+
+      // Link shipment to the new GRN
+      await tx.shipment.update({
+        where: { id: shipment.id },
+        data: { mrrvId: grn.id },
+      });
+    }
+
+    return { updated, grnId };
   });
 
-  // Best-effort MRRV update
-  if (shipment.mrrvId) {
-    await prisma.mrrv
-      .update({
-        where: { id: shipment.mrrvId },
-        data: { status: 'received' },
-      })
-      .catch(() => {});
+  // Publish event for downstream listeners
+  if (result.grnId) {
+    eventBus.publish({
+      type: 'document:created',
+      entityType: 'mrrv',
+      entityId: result.grnId,
+      action: 'create',
+      payload: { sourceShipmentId: shipment.id, autoCreated: true },
+      timestamp: new Date().toISOString(),
+    });
   }
 
-  return updated;
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'shipment',
+    entityId: shipment.id,
+    action: 'status_change',
+    payload: { from: shipment.status, to: 'delivered', grnId: result.grnId },
+    timestamp: new Date().toISOString(),
+  });
+
+  return { ...result.updated, autoCreatedGrnId: result.grnId };
 }
 
 export async function cancel(id: string) {

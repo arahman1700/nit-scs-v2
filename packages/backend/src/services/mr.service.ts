@@ -8,6 +8,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { getStockLevel } from './inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type {
   MrfCreateDto as MrCreateDto,
   MrfUpdateDto as MrUpdateDto,
@@ -456,4 +457,60 @@ export async function cancel(id: string) {
   }
 
   return prisma.materialRequisition.update({ where: { id: mr.id }, data: { status: 'cancelled' } });
+}
+
+export async function convertToJo(id: string, userId: string, joType: string = 'transport') {
+  const mr = await prisma.materialRequisition.findUnique({
+    where: { id },
+    include: {
+      mrfLines: {
+        include: {
+          item: { select: { id: true, itemCode: true, itemDescription: true } },
+        },
+      },
+      project: { select: { id: true, projectName: true } },
+    },
+  });
+  if (!mr) throw new NotFoundError('MR', id);
+
+  const eligible = ['approved', 'checking_stock'];
+  if (!eligible.includes(mr.status)) {
+    throw new BusinessRuleError('MR must be in approved or checking_stock status to convert to JO');
+  }
+
+  const itemSummary = mr.mrfLines.map(l => l.item?.itemDescription ?? l.itemDescription ?? 'Unknown item').join(', ');
+
+  const result = await prisma.$transaction(async tx => {
+    const joNumber = await generateDocumentNumber('jo');
+    const jo = await tx.jobOrder.create({
+      data: {
+        joNumber,
+        joType,
+        projectId: mr.projectId,
+        requestedById: userId,
+        requestDate: new Date(),
+        requiredDate: mr.requiredDate,
+        priority: mr.priority === 'urgent' ? 'urgent' : 'normal',
+        status: 'draft',
+        description: `Transport for MR ${mr.mrfNumber}: ${itemSummary}`.slice(0, 500),
+        notes: `Auto-created from MR ${mr.mrfNumber}`,
+      },
+    });
+
+    return jo;
+  });
+
+  eventBus.publish({
+    type: 'document:created',
+    entityType: 'job_order',
+    entityId: result.id,
+    action: 'create',
+    payload: { sourceMrId: mr.id, autoCreated: true },
+    timestamp: new Date().toISOString(),
+  });
+
+  return {
+    id: mr.id,
+    jo: { id: result.id, joNumber: result.joNumber, joType: result.joType },
+  };
 }

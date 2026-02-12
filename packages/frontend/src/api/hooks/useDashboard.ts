@@ -55,6 +55,30 @@ export interface TopProject {
   pendingMirv: number;
 }
 
+export interface CrossDepartmentData {
+  inventory: {
+    totalInventoryValue: number;
+    lowStockAlerts: number;
+    blockedLots: number;
+    warehouses: {
+      warehouseId: string;
+      warehouseName: string;
+      warehouseCode: string;
+      itemCount: number;
+      totalQty: number;
+      totalValue: number;
+    }[];
+  };
+  documentPipeline: Record<string, { total: number; byStatus: Record<string, number> }>;
+  recentActivity: {
+    id: string;
+    tableName: string;
+    action: string;
+    performedAt: string;
+    performedBy: { fullName: string } | null;
+  }[];
+}
+
 import type { ApiResponse } from '../types';
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
@@ -128,5 +152,17 @@ export function useTopProjects(params?: { limit?: number }) {
       return data;
     },
     staleTime: 60_000,
+  });
+}
+
+/** GET /api/dashboard/cross-department */
+export function useCrossDepartment() {
+  return useQuery({
+    queryKey: ['dashboard', 'cross-department'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<CrossDepartmentData>>('/dashboard/cross-department');
+      return data;
+    },
+    staleTime: 30_000,
   });
 }

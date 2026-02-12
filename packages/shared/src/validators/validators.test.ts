@@ -11,6 +11,13 @@ import {
   validateScrap,
   validateSurplus,
   validateRentalContract,
+  validateWT,
+  validateGatePass,
+  validateShipment,
+  validateHandover,
+  validateToolIssue,
+  validateGeneratorFuel,
+  validateGeneratorMaintenance,
   validateRequired,
 } from '../validators/index.js';
 import type { VoucherLineItem } from '../types/materials.js';
@@ -659,5 +666,414 @@ describe('validateRequired', () => {
 
   it('returns empty for empty fields array', () => {
     expect(validateRequired({}, [])).toEqual([]);
+  });
+});
+
+// ── validateWT (was StockTransfer) ────────────────────────────────────
+
+describe('validateWT', () => {
+  const validData = {
+    sourceWarehouseId: 'WH-A',
+    destinationWarehouseId: 'WH-B',
+  };
+  const validItems = [makeLineItem()];
+
+  it('returns valid for correct data', () => {
+    const result = validateWT(validData, validItems);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('WT-V001: errors on missing sourceWarehouseId', () => {
+    const result = validateWT({ ...validData, sourceWarehouseId: '' }, validItems);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V001' })]));
+  });
+
+  it('WT-V002: errors on missing destinationWarehouseId', () => {
+    const result = validateWT({ ...validData, destinationWarehouseId: '  ' }, validItems);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V002' })]));
+  });
+
+  it('WT-V003: errors when source and destination are the same', () => {
+    const result = validateWT({ sourceWarehouseId: 'WH-A', destinationWarehouseId: 'WH-A' }, validItems);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V003' })]));
+  });
+
+  it('WT-V004: errors on empty lineItems', () => {
+    const result = validateWT(validData, []);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V004' })]));
+  });
+
+  it('WT-V005: errors on line item with zero quantity', () => {
+    const items = [makeLineItem({ quantity: 0 })];
+    const result = validateWT(validData, items);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V005' })]));
+  });
+
+  it('WT-V005: errors on line item with negative quantity', () => {
+    const items = [makeLineItem({ quantity: -5 })];
+    const result = validateWT(validData, items);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'WT-V005' })]));
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateWT({}, []);
+    // sourceWarehouseId + destinationWarehouseId + lineItems = 3 errors
+    expect(result.errors.length).toBe(3);
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ── validateGatePass ──────────────────────────────────────────────────
+
+describe('validateGatePass', () => {
+  const validData = {
+    passType: 'inbound',
+    vehiclePlate: 'ABC-1234',
+    driverName: 'Ali Khan',
+  };
+
+  it('returns valid for correct inbound data', () => {
+    const result = validateGatePass(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
+
+  it('GP-V001: errors on missing passType', () => {
+    const result = validateGatePass({ ...validData, passType: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GP-V001' })]));
+  });
+
+  it('GP-V002: errors on missing vehiclePlate', () => {
+    const result = validateGatePass({ ...validData, vehiclePlate: '   ' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GP-V002' })]));
+  });
+
+  it('GP-V003: errors on outbound without MI or JO reference', () => {
+    const result = validateGatePass({ ...validData, passType: 'outbound' });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GP-V003' })]));
+  });
+
+  it('GP-V003: no error on outbound with mirvId', () => {
+    const result = validateGatePass({ ...validData, passType: 'outbound', mirvId: 'MI-001' });
+    expect(result.errors.find(e => e.rule === 'GP-V003')).toBeUndefined();
+  });
+
+  it('GP-V003: no error on outbound with joId', () => {
+    const result = validateGatePass({ ...validData, passType: 'outbound', joId: 'JO-001' });
+    expect(result.errors.find(e => e.rule === 'GP-V003')).toBeUndefined();
+  });
+
+  it('GP-V004: errors when validUntil is before validFrom', () => {
+    const result = validateGatePass({
+      ...validData,
+      validFrom: '2026-06-01',
+      validUntil: '2026-05-01',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GP-V004' })]));
+  });
+
+  it('GP-W001: warns on missing driverName', () => {
+    const result = validateGatePass({ passType: 'inbound', vehiclePlate: 'ABC-1234' });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GP-W001' })]));
+  });
+
+  it('GP-W001: no warning when driverName is provided', () => {
+    const result = validateGatePass(validData);
+    expect(result.warnings.find(w => w.rule === 'GP-W001')).toBeUndefined();
+  });
+});
+
+// ── validateShipment ──────────────────────────────────────────────────
+
+describe('validateShipment', () => {
+  const validData = {
+    poNumber: 'PO-001',
+    supplierId: 'SUP-001',
+    modeOfShipment: 'Sea',
+  };
+
+  it('returns valid for correct data', () => {
+    const result = validateShipment(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('SHIP-V001: errors on missing poNumber', () => {
+    const result = validateShipment({ ...validData, poNumber: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SHIP-V001' })]));
+  });
+
+  it('SHIP-V002: errors on missing supplierId', () => {
+    const result = validateShipment({ ...validData, supplierId: '  ' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SHIP-V002' })]));
+  });
+
+  it('SHIP-V003: errors on missing modeOfShipment', () => {
+    const result = validateShipment({ ...validData, modeOfShipment: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SHIP-V003' })]));
+  });
+
+  it('SHIP-V004: errors when expectedShipDate is before orderDate', () => {
+    const result = validateShipment({
+      ...validData,
+      orderDate: '2026-06-01',
+      expectedShipDate: '2026-05-01',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SHIP-V004' })]));
+  });
+
+  it('SHIP-V004: no error when expectedShipDate is after orderDate', () => {
+    const result = validateShipment({
+      ...validData,
+      orderDate: '2026-05-01',
+      expectedShipDate: '2026-06-01',
+    });
+    expect(result.errors.find(e => e.rule === 'SHIP-V004')).toBeUndefined();
+  });
+
+  it('SHIP-W001: warns on high-value shipment without insurance', () => {
+    const result = validateShipment({ ...validData, commercialValue: 200000 });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'SHIP-W001' })]));
+  });
+
+  it('SHIP-W001: no warning when insurance is provided', () => {
+    const result = validateShipment({ ...validData, commercialValue: 200000, insuranceCost: 500 });
+    expect(result.warnings.find(w => w.rule === 'SHIP-W001')).toBeUndefined();
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateShipment({});
+    expect(result.errors.length).toBe(3);
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ── validateHandover ──────────────────────────────────────────────────
+
+describe('validateHandover', () => {
+  const validData = {
+    fromUserId: 'USER-A',
+    toUserId: 'USER-B',
+    warehouseId: 'WH-1',
+    handoverDate: '2026-03-01',
+  };
+
+  it('returns valid for correct data', () => {
+    const result = validateHandover(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('HO-V001: errors on missing fromUserId', () => {
+    const result = validateHandover({ ...validData, fromUserId: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'HO-V001' })]));
+  });
+
+  it('HO-V002: errors on missing toUserId', () => {
+    const result = validateHandover({ ...validData, toUserId: '   ' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'HO-V002' })]));
+  });
+
+  it('HO-V003: errors on missing warehouseId', () => {
+    const result = validateHandover({ ...validData, warehouseId: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'HO-V003' })]));
+  });
+
+  it('HO-V004: errors when from and to user are the same', () => {
+    const result = validateHandover({ ...validData, toUserId: 'USER-A' });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'HO-V004' })]));
+  });
+
+  it('HO-V005: errors on missing handoverDate', () => {
+    const result = validateHandover({ ...validData, handoverDate: undefined });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'HO-V005' })]));
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateHandover({});
+    // fromUserId + toUserId + warehouseId + handoverDate = 4 errors
+    expect(result.errors.length).toBe(4);
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ── validateToolIssue ─────────────────────────────────────────────────
+
+describe('validateToolIssue', () => {
+  const validData = {
+    toolId: 'TOOL-001',
+    issuedToId: 'USER-001',
+    issueDate: '2026-03-01',
+    expectedReturnDate: '2026-04-01',
+  };
+
+  it('returns valid for correct data', () => {
+    const result = validateToolIssue(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('TI-V001: errors on missing toolId', () => {
+    const result = validateToolIssue({ ...validData, toolId: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'TI-V001' })]));
+  });
+
+  it('TI-V002: errors on missing issuedToId', () => {
+    const result = validateToolIssue({ ...validData, issuedToId: '   ' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'TI-V002' })]));
+  });
+
+  it('TI-V003: errors on missing issueDate', () => {
+    const result = validateToolIssue({ ...validData, issueDate: undefined });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'TI-V003' })]));
+  });
+
+  it('TI-W001: warns on missing expectedReturnDate', () => {
+    const result = validateToolIssue({ toolId: 'TOOL-001', issuedToId: 'USER-001', issueDate: '2026-03-01' });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'TI-W001' })]));
+  });
+
+  it('TI-V004: errors when returnDate is before issueDate', () => {
+    const result = validateToolIssue({
+      ...validData,
+      returnDate: '2026-02-01',
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'TI-V004' })]));
+  });
+
+  it('TI-V004: no error when returnDate is after issueDate', () => {
+    const result = validateToolIssue({
+      ...validData,
+      returnDate: '2026-05-01',
+    });
+    expect(result.errors.find(e => e.rule === 'TI-V004')).toBeUndefined();
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateToolIssue({});
+    // toolId + issuedToId + issueDate = 3 errors
+    expect(result.errors.length).toBe(3);
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ── validateGeneratorFuel ─────────────────────────────────────────────
+
+describe('validateGeneratorFuel', () => {
+  const validData = {
+    generatorId: 'GEN-001',
+    date: pastDate(1),
+    fuelQtyLiters: 50,
+  };
+
+  it('returns valid for correct data', () => {
+    const result = validateGeneratorFuel(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('GF-V001: errors on missing generatorId', () => {
+    const result = validateGeneratorFuel({ ...validData, generatorId: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-V001' })]));
+  });
+
+  it('GF-V002: errors on missing date', () => {
+    const result = validateGeneratorFuel({ ...validData, date: undefined });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-V002' })]));
+  });
+
+  it('GF-V003: errors on zero fuel quantity', () => {
+    const result = validateGeneratorFuel({ ...validData, fuelQtyLiters: 0 });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-V003' })]));
+  });
+
+  it('GF-V003: errors on negative fuel quantity', () => {
+    const result = validateGeneratorFuel({ ...validData, fuelQtyLiters: -10 });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-V003' })]));
+  });
+
+  it('GF-W001: warns on unusually high fuel quantity (>1000)', () => {
+    const result = validateGeneratorFuel({ ...validData, fuelQtyLiters: 1500 });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-W001' })]));
+  });
+
+  it('GF-W001: no warning at exactly 1000', () => {
+    const result = validateGeneratorFuel({ ...validData, fuelQtyLiters: 1000 });
+    expect(result.warnings.find(w => w.rule === 'GF-W001')).toBeUndefined();
+  });
+
+  it('GF-W002: warns on future date', () => {
+    const result = validateGeneratorFuel({ ...validData, date: futureDate(3) });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GF-W002' })]));
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateGeneratorFuel({});
+    // generatorId + date + fuelQtyLiters = 3 errors
+    expect(result.errors.length).toBe(3);
+    expect(result.valid).toBe(false);
+  });
+});
+
+// ── validateGeneratorMaintenance ──────────────────────────────────────
+
+describe('validateGeneratorMaintenance', () => {
+  const validData = {
+    generatorId: 'GEN-001',
+    maintenanceType: 'Preventive',
+    scheduledDate: '2026-04-01',
+  };
+
+  it('returns valid for correct data', () => {
+    const result = validateGeneratorMaintenance(validData);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('GM-V001: errors on missing generatorId', () => {
+    const result = validateGeneratorMaintenance({ ...validData, generatorId: '' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GM-V001' })]));
+  });
+
+  it('GM-V002: errors on missing maintenanceType', () => {
+    const result = validateGeneratorMaintenance({ ...validData, maintenanceType: '  ' });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GM-V002' })]));
+  });
+
+  it('GM-V003: errors on missing scheduledDate', () => {
+    const result = validateGeneratorMaintenance({ ...validData, scheduledDate: undefined });
+    expect(result.errors).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GM-V003' })]));
+  });
+
+  it('GM-W001: warns on Emergency maintenance type', () => {
+    const result = validateGeneratorMaintenance({ ...validData, maintenanceType: 'Emergency' });
+    expect(result.warnings).toEqual(expect.arrayContaining([expect.objectContaining({ rule: 'GM-W001' })]));
+  });
+
+  it('GM-W001: no warning for non-Emergency types', () => {
+    const result = validateGeneratorMaintenance(validData);
+    expect(result.warnings.find(w => w.rule === 'GM-W001')).toBeUndefined();
+  });
+
+  it('accumulates all errors when everything is missing', () => {
+    const result = validateGeneratorMaintenance({});
+    // generatorId + maintenanceType + scheduledDate = 3 errors
+    expect(result.errors.length).toBe(3);
+    expect(result.valid).toBe(false);
   });
 });

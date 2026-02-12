@@ -26,6 +26,7 @@ import { errorHandler } from './middleware/error-handler.js';
 import { sanitizeInput } from './middleware/sanitize.js';
 import { setupSocketIO } from './socket/setup.js';
 import { startRuleEngine } from './events/rule-engine.js';
+import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startScheduler, stopScheduler } from './services/scheduler.service.js';
 import apiRoutes from './routes/index.js';
 import { healthCheck } from './routes/health.routes.js';
@@ -113,6 +114,7 @@ const PORT = parseInt(process.env.PORT || '4000', 10);
 httpServer.listen(PORT, () => {
   logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'NIT-SCS Backend started');
   startRuleEngine();
+  startChainNotifications();
   startScheduler(io);
 });
 

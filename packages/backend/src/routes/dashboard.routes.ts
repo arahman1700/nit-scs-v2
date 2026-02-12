@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { sendSuccess } from '../utils/response.js';
 import { cached, CacheTTL } from '../utils/cache.js';
 import { getProductivitySummary } from '../services/labor-productivity.service.js';
+import { getCrossDepartmentInventorySummary } from '../services/inventory.service.js';
 
 const router = Router();
 
@@ -309,6 +310,68 @@ router.get('/labor-productivity', async (req: Request, res: Response, next: Next
       CacheTTL.LABOR_PRODUCTIVITY,
       () => getProductivitySummary(days, warehouseId),
     );
+
+    sendSuccess(res, data);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── GET /cross-department — Cross-department unified KPIs ─────────────
+
+router.get('/cross-department', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:cross-department:${role}`, CacheTTL.DASHBOARD_STATS, async () => {
+      const [inventory, documentPipeline, departmentActivity] = await Promise.all([
+        getCrossDepartmentInventorySummary(),
+        // Document pipeline: counts by type and status
+        Promise.all([
+          prisma.mrrv.groupBy({ by: ['status'], _count: true }),
+          prisma.mirv.groupBy({ by: ['status'], _count: true }),
+          prisma.mrv.groupBy({ by: ['status'], _count: true }),
+          prisma.jobOrder.groupBy({ by: ['status'], _count: true }),
+          prisma.materialRequisition.groupBy({ by: ['status'], _count: true }),
+          prisma.shipment.groupBy({ by: ['status'], _count: true }),
+          prisma.rfim.groupBy({ by: ['status'], _count: true }),
+          prisma.osdReport.groupBy({ by: ['status'], _count: true }),
+        ]).then(([grn, mi, mrn, jo, mr, shipment, qci, dr]) => {
+          const buildCounts = (data: { status: string; _count: number }[]) => {
+            const result: Record<string, number> = {};
+            let total = 0;
+            for (const row of data) {
+              result[row.status] = row._count;
+              total += row._count;
+            }
+            return { total, byStatus: result };
+          };
+          return {
+            grn: buildCounts(grn),
+            mi: buildCounts(mi),
+            mrn: buildCounts(mrn),
+            jo: buildCounts(jo),
+            mr: buildCounts(mr),
+            shipment: buildCounts(shipment),
+            qci: buildCounts(qci),
+            dr: buildCounts(dr),
+          };
+        }),
+        // Recent cross-department activity
+        prisma.auditLog.findMany({
+          orderBy: { performedAt: 'desc' },
+          take: 15,
+          select: {
+            id: true,
+            tableName: true,
+            action: true,
+            performedAt: true,
+            performedBy: { select: { fullName: true } },
+          },
+        }),
+      ]);
+
+      return { inventory, documentPipeline, recentActivity: departmentActivity };
+    });
 
     sendSuccess(res, data);
   } catch (err) {

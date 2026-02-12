@@ -1,13 +1,36 @@
 import React, { useMemo } from 'react';
-import { Wrench, Calendar, Loader2 } from 'lucide-react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts';
+import { Wrench, Calendar, Loader2, AlertTriangle } from 'lucide-react';
 import { useGeneratorMaintenanceList } from '@/api/hooks';
 import { StatusBadge } from '@/components/StatusBadge';
 
 // ── Maintenance Schedule Dashboard ─────────────────────────────────────────
 // Rendered as tab content inside LogisticsSectionPage (Maintenance tab).
-// Shows generator maintenance records, status breakdown KPIs, and schedule.
+// Shows generator maintenance records, status breakdown, and schedule.
 
-/** Normalize raw status strings to display-friendly labels for StatusBadge */
+const STATUS_COLORS: Record<string, string> = {
+  Scheduled: '#6b7280', // gray-500
+  'In Progress': '#f59e0b', // amber-500
+  Completed: '#34d399', // emerald-400
+  Overdue: '#ef4444', // red-500
+  New: '#6b7280',
+};
+
+const CHART_GRID = 'rgba(255,255,255,0.06)';
+const CHART_TEXT = '#9ca3af';
+
+/** Normalize raw status strings to display-friendly labels */
 const normalizeStatus = (raw: unknown): string => {
   const s = String(raw ?? '')
     .toLowerCase()
@@ -27,7 +50,7 @@ const normalizeStatus = (raw: unknown): string => {
 };
 
 export const MaintenanceSchedule: React.FC = () => {
-  const { data: maintResponse, isLoading } = useGeneratorMaintenanceList({ pageSize: 20 });
+  const { data: maintResponse, isLoading } = useGeneratorMaintenanceList({ pageSize: 50 });
 
   const rows = (maintResponse?.data ?? []) as Record<string, unknown>[];
 
@@ -41,6 +64,48 @@ export const MaintenanceSchedule: React.FC = () => {
     const completed = rows.filter(r => String(r.status ?? '').toLowerCase() === 'completed').length;
     const overdue = rows.filter(r => String(r.status ?? '').toLowerCase() === 'overdue').length;
     return { scheduled, inProgress, completed, overdue };
+  }, [rows]);
+
+  // ── Pie chart data ───────────────────────────────────────────────────
+  const pieData = useMemo(() => {
+    const entries = [
+      { name: 'Scheduled', value: summary.scheduled },
+      { name: 'In Progress', value: summary.inProgress },
+      { name: 'Completed', value: summary.completed },
+      { name: 'Overdue', value: summary.overdue },
+    ];
+    return entries.filter(e => e.value > 0);
+  }, [summary]);
+
+  // ── Maintenance by type ─────────────────────────────────────────────
+  const byType = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of rows) {
+      const type = String(r.maintenanceType ?? r.type ?? 'Other');
+      map.set(type, (map.get(type) ?? 0) + 1);
+    }
+    return Array.from(map, ([type, count]) => ({ type, count })).sort((a, b) => b.count - a.count);
+  }, [rows]);
+
+  // ── Upcoming maintenance (next 7 days) ──────────────────────────────
+  const upcoming = useMemo(() => {
+    const now = new Date();
+    const weekAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return rows
+      .filter(r => {
+        const status = String(r.status ?? '').toLowerCase();
+        if (status === 'completed') return false;
+        const dateStr = r.scheduledDate ?? r.scheduledAt;
+        if (!dateStr || typeof dateStr !== 'string') return false;
+        const d = new Date(dateStr);
+        return d >= now && d <= weekAhead;
+      })
+      .sort((a, b) => {
+        const da = new Date(String(a.scheduledDate ?? a.scheduledAt ?? '')).getTime();
+        const db = new Date(String(b.scheduledDate ?? b.scheduledAt ?? '')).getTime();
+        return da - db;
+      })
+      .slice(0, 5);
   }, [rows]);
 
   const formatDate = (dateStr: unknown) => {
@@ -96,13 +161,118 @@ export const MaintenanceSchedule: React.FC = () => {
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center gap-2 mb-2">
             <div className="p-2 bg-red-500/20 rounded-lg text-red-400">
-              <Calendar className="w-4 h-4" />
+              <AlertTriangle className="w-4 h-4" />
             </div>
             <p className="text-xs text-gray-400">Overdue</p>
           </div>
           <p className="text-2xl font-bold text-red-400">{summary.overdue}</p>
         </div>
       </div>
+
+      {/* ── Charts + Upcoming Row ──────────────────────────────────────── */}
+      {rows.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Status distribution pie */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Status Distribution</h3>
+            {pieData.length > 0 ? (
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      innerRadius={45}
+                      paddingAngle={2}
+                    >
+                      {pieData.map(entry => (
+                        <Cell key={entry.name} fill={STATUS_COLORS[entry.name] ?? '#6b7280'} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(10,22,40,0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        color: '#fff',
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-12">No data</p>
+            )}
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mt-2 justify-center">
+              {pieData.map(entry => (
+                <div key={entry.name} className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[entry.name] }} />
+                  {entry.name} ({entry.value})
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* By type bar chart */}
+          {byType.length > 0 && (
+            <div className="glass-card rounded-2xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">By Maintenance Type</h3>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={byType} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
+                    <XAxis type="number" tick={{ fill: CHART_TEXT, fontSize: 11 }} />
+                    <YAxis dataKey="type" type="category" width={100} tick={{ fill: CHART_TEXT, fontSize: 11 }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(10,22,40,0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        color: '#fff',
+                      }}
+                    />
+                    <Bar dataKey="count" fill="#80D1E9" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming maintenance */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Upcoming (7 Days)</h3>
+            {upcoming.length > 0 ? (
+              <div className="space-y-3">
+                {upcoming.map((row, idx) => {
+                  const status = normalizeStatus(row.status);
+                  return (
+                    <div key={String(row.id ?? idx)} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+                      <div className="mt-0.5 w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-white truncate">
+                          {String(row.generatorName ?? row.generatorId ?? 'Generator')}
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          {String(row.maintenanceType ?? row.type ?? '--')} —{' '}
+                          {formatDate(row.scheduledDate ?? row.scheduledAt)}
+                        </p>
+                      </div>
+                      <StatusBadge status={status} />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm text-center py-8">No upcoming maintenance in the next 7 days</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Maintenance Table ──────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl overflow-hidden">

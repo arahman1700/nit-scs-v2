@@ -8,6 +8,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch } from './inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type {
   MrvCreateDto as MrnCreateDto,
   MrvUpdateDto as MrnUpdateDto,
@@ -149,14 +150,42 @@ export async function complete(id: string, userId: string) {
 
   await prisma.mrv.update({ where: { id: mrn.id }, data: { status: 'completed' } });
 
+  // Restock good-condition items as active lots
   const goodLines = mrn.mrvLines.filter(l => l.condition === 'good');
-  const stockItems = goodLines.map(line => ({
+  const goodStockItems = goodLines.map(line => ({
     itemId: line.itemId,
     warehouseId: mrn.toWarehouseId,
     qty: Number(line.qtyReturned),
     performedById: userId,
   }));
-  await addStockBatch(stockItems);
+
+  // Restock damaged/used items as blocked lots (need inspection before use)
+  const damagedLines = mrn.mrvLines.filter(l => l.condition === 'damaged' || l.condition === 'used');
+  const blockedStockItems = damagedLines.map(line => ({
+    itemId: line.itemId,
+    warehouseId: mrn.toWarehouseId,
+    qty: Number(line.qtyReturned),
+    performedById: userId,
+    lotStatus: 'blocked' as const,
+  }));
+
+  await addStockBatch([...goodStockItems, ...blockedStockItems]);
+
+  // Auto-create QCI for damaged items requiring inspection
+  let qciId: string | null = null;
+  if (damagedLines.length > 0 && mrn.returnType === 'Damaged') {
+    const qciNumber = await generateDocumentNumber('qci');
+    const qci = await prisma.rfim.create({
+      data: {
+        rfimNumber: qciNumber,
+        mrrvId: mrn.originalMirvId ?? mrn.id, // Link to original MI or use MRN id
+        requestDate: new Date(),
+        status: 'pending',
+        comments: `Auto-created from MRN ${mrn.mrvNumber} — damaged return inspection`,
+      } as any,
+    });
+    qciId = qci.id;
+  }
 
   // Auto-create SurplusItem when returnType is 'surplus'
   let surplusItemId: string | null = null;
@@ -172,18 +201,36 @@ export async function complete(id: string, userId: string) {
         qty: totalReturnQty,
         status: 'identified',
         createdById: userId,
-        // NOTE: mrvId field pending schema migration to link surplus back to MRN
-        // mrvId: mrn.id,
       } as any,
     });
     surplusItemId = surplus.id;
   }
 
+  // Publish event for downstream listeners
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mrv',
+    entityId: mrn.id,
+    action: 'status_change',
+    payload: {
+      from: mrn.status,
+      to: 'completed',
+      goodLinesRestocked: goodLines.length,
+      blockedLinesRestocked: damagedLines.length,
+      surplusItemId,
+      qciId,
+    },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return {
     id: mrn.id,
     toWarehouseId: mrn.toWarehouseId,
     goodLinesRestocked: goodLines.length,
+    blockedLinesRestocked: damagedLines.length,
     totalLines: mrn.mrvLines.length,
     surplusItemId,
+    qciId,
   };
 }

@@ -1,14 +1,22 @@
 import React, { useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Droplets, DollarSign, Loader2 } from 'lucide-react';
 import { useGeneratorFuelList } from '@/api/hooks';
 
 // ── Fuel Monitoring Dashboard ──────────────────────────────────────────────
 // Rendered as tab content inside LogisticsSectionPage (Fuel tab).
-// Shows generator fuel consumption logs, summary KPIs, and cost analysis.
+// Shows generator fuel consumption logs, trend charts, and cost analysis.
+
+const CHART_COLORS = {
+  fuel: '#22d3ee', // cyan-400
+  cost: '#34d399', // emerald-400
+  grid: 'rgba(255,255,255,0.06)',
+  text: '#9ca3af', // gray-400
+};
 
 export const FuelMonitoring: React.FC = () => {
   const { data: fuelResponse, isLoading } = useGeneratorFuelList({
-    pageSize: 20,
+    pageSize: 50,
     sortBy: 'fuelDate',
     sortDir: 'desc',
   });
@@ -22,6 +30,39 @@ export const FuelMonitoring: React.FC = () => {
     const avgCostPerLiter = totalFuel > 0 ? totalCost / totalFuel : 0;
     const logCount = rows.length;
     return { totalFuel, totalCost, avgCostPerLiter, logCount };
+  }, [rows]);
+
+  // ── Chart data: aggregate by date ────────────────────────────────────
+  const dailyData = useMemo(() => {
+    const byDate = new Map<string, { fuel: number; cost: number }>();
+    for (const r of rows) {
+      const raw = r.fuelDate ?? r.createdAt;
+      if (!raw || typeof raw !== 'string') continue;
+      const key = new Date(raw).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const entry = byDate.get(key) ?? { fuel: 0, cost: 0 };
+      entry.fuel += Number(r.quantity ?? r.fuelQuantity ?? 0);
+      entry.cost += Number(r.totalCost ?? 0);
+      byDate.set(key, entry);
+    }
+    // Return chronologically (rows are desc, so reverse)
+    return Array.from(byDate, ([date, vals]) => ({ date, ...vals }))
+      .reverse()
+      .slice(-14);
+  }, [rows]);
+
+  // ── Chart data: aggregate by generator ───────────────────────────────
+  const byGenerator = useMemo(() => {
+    const map = new Map<string, { fuel: number; cost: number }>();
+    for (const r of rows) {
+      const name = String(r.generatorName ?? r.generatorId ?? 'Unknown');
+      const entry = map.get(name) ?? { fuel: 0, cost: 0 };
+      entry.fuel += Number(r.quantity ?? r.fuelQuantity ?? 0);
+      entry.cost += Number(r.totalCost ?? 0);
+      map.set(name, entry);
+    }
+    return Array.from(map, ([name, vals]) => ({ name, ...vals }))
+      .sort((a, b) => b.fuel - a.fuel)
+      .slice(0, 8);
   }, [rows]);
 
   const formatAmount = (val: number) => {
@@ -95,6 +136,102 @@ export const FuelMonitoring: React.FC = () => {
           <p className="text-2xl font-bold text-white">{summary.logCount}</p>
         </div>
       </div>
+
+      {/* ── Charts Row ─────────────────────────────────────────────────── */}
+      {rows.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Daily consumption trend */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Daily Consumption Trend</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                  <XAxis dataKey="date" tick={{ fill: CHART_COLORS.text, fontSize: 11 }} />
+                  <YAxis tick={{ fill: CHART_COLORS.text, fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(10,22,40,0.95)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 8,
+                      color: '#fff',
+                    }}
+                    formatter={(value, name) => [
+                      `${Number(value ?? 0).toLocaleString()} ${name === 'fuel' ? 'L' : 'SAR'}`,
+                      name === 'fuel' ? 'Fuel' : 'Cost',
+                    ]}
+                  />
+                  <Bar dataKey="fuel" fill={CHART_COLORS.fuel} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Cost trend line */}
+          <div className="glass-card rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Cost Trend (SAR)</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                  <XAxis dataKey="date" tick={{ fill: CHART_COLORS.text, fontSize: 11 }} />
+                  <YAxis tick={{ fill: CHART_COLORS.text, fontSize: 11 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(10,22,40,0.95)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 8,
+                      color: '#fff',
+                    }}
+                    formatter={value => [`${Number(value ?? 0).toLocaleString()} SAR`, 'Cost']}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="cost"
+                    stroke={CHART_COLORS.cost}
+                    strokeWidth={2}
+                    dot={{ fill: CHART_COLORS.cost, r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Consumption by generator */}
+          {byGenerator.length > 1 && (
+            <div className="glass-card rounded-2xl p-6 lg:col-span-2">
+              <h3 className="text-lg font-semibold text-white mb-4">Consumption by Generator</h3>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={byGenerator} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke={CHART_COLORS.grid} />
+                    <XAxis type="number" tick={{ fill: CHART_COLORS.text, fontSize: 11 }} />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={120}
+                      tick={{ fill: CHART_COLORS.text, fontSize: 11 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(10,22,40,0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 8,
+                        color: '#fff',
+                      }}
+                      formatter={(value, name) => [
+                        `${Number(value ?? 0).toLocaleString()} ${name === 'fuel' ? 'L' : 'SAR'}`,
+                        name === 'fuel' ? 'Fuel' : 'Cost',
+                      ]}
+                    />
+                    <Bar dataKey="fuel" fill={CHART_COLORS.fuel} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Fuel Logs Table ────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl overflow-hidden">

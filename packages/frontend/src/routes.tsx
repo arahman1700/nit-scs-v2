@@ -98,6 +98,9 @@ const LaborDashboard = React.lazy(() =>
 const ForecastDashboard = React.lazy(() =>
   import('@/pages/dashboards/ForecastDashboard').then(m => ({ default: m.ForecastDashboard })),
 );
+const OperationsDashboard = React.lazy(() =>
+  import('@/pages/dashboards/OperationsDashboard').then(m => ({ default: m.OperationsDashboard })),
+);
 
 // V2 Form imports (additional)
 const HandoverForm = React.lazy(() => import('@/pages/forms/HandoverForm').then(m => ({ default: m.HandoverForm })));
@@ -318,6 +321,7 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/dashboards/labor" element={<LaborDashboard />} />
     <Route path="/admin/dashboards/abc-analysis" element={<AbcAnalysisPage />} />
     <Route path="/admin/dashboards/forecast" element={<ForecastDashboard />} />
+    <Route path="/admin/dashboards/operations" element={<OperationsDashboard />} />
     <Route path="/admin/warehouse/putaway-rules" element={<PutAwayRulesPage />} />
     <Route path="/admin/warehouse/cycle-counts" element={<CycleCountListPage />} />
     <Route path="/admin/warehouse/cycle-counts/:id" element={<CycleCountDetailPage />} />
@@ -605,6 +609,14 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       element={
         <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
           <DocumentsPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/manager/operations"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={MANAGER_ROLES}>
+          <OperationsDashboard />
         </RoleGuard>
       }
     />

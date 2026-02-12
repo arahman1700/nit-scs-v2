@@ -39,9 +39,12 @@ export default createDocumentRouter({
     {
       path: 'confirm',
       roles: APPROVE_ROLES,
-      handler: id => imsfService.confirm(id),
+      handler: (id, req) => imsfService.confirm(id, req.user!.userId),
       socketEvent: 'imsf:confirmed',
-      socketData: () => ({ status: 'confirmed' }),
+      socketData: r => {
+        const res = r as { imsf: unknown; wt: { id: string; transferNumber: string } };
+        return { status: 'confirmed', wt: res.wt };
+      },
     },
     {
       path: 'ship',

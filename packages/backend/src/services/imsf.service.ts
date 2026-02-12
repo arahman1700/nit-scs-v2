@@ -8,6 +8,7 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { ImsfCreateDto, ImsfUpdateDto, ImsfLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'imsf';
@@ -127,12 +128,69 @@ export async function send(id: string) {
   return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'sent' } });
 }
 
-export async function confirm(id: string) {
-  const imsf = await prisma.imsf.findUnique({ where: { id } });
+export async function confirm(id: string, userId: string) {
+  const imsf = await prisma.imsf.findUnique({
+    where: { id },
+    include: {
+      imsfLines: true,
+      senderProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
+      receiverProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
+    },
+  });
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'confirmed');
 
-  return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'confirmed' } });
+  const fromWarehouseId = imsf.senderProject?.warehouses[0]?.id;
+  const toWarehouseId = imsf.receiverProject?.warehouses[0]?.id;
+
+  if (!fromWarehouseId || !toWarehouseId) {
+    throw new BusinessRuleError(
+      'Cannot auto-create WT: both sender and receiver projects must have at least one warehouse',
+    );
+  }
+
+  return prisma.$transaction(async tx => {
+    const updated = await tx.imsf.update({
+      where: { id: imsf.id },
+      data: { status: 'confirmed' },
+    });
+
+    // Auto-create StockTransfer (WT) from confirmed IMSF
+    const transferNumber = await generateDocumentNumber('wt');
+    const wt = await tx.stockTransfer.create({
+      data: {
+        transferNumber,
+        transferType: 'project_to_project',
+        fromWarehouseId,
+        toWarehouseId,
+        fromProjectId: imsf.senderProjectId,
+        toProjectId: imsf.receiverProjectId,
+        requestedById: userId,
+        transferDate: new Date(),
+        status: 'draft',
+        notes: `Auto-created from IMSF ${imsf.imsfNumber}`,
+        stockTransferLines: {
+          create: imsf.imsfLines.map(line => ({
+            itemId: line.itemId,
+            quantity: line.qty,
+            uomId: line.uomId,
+          })),
+        },
+      },
+      include: { stockTransferLines: true },
+    });
+
+    eventBus.publish({
+      type: 'document:created',
+      entityType: 'stock_transfer',
+      entityId: wt.id,
+      action: 'create',
+      payload: { sourceImsfId: imsf.id, autoCreated: true },
+      timestamp: new Date().toISOString(),
+    });
+
+    return { imsf: updated, wt: { id: wt.id, transferNumber: wt.transferNumber } };
+  });
 }
 
 export async function ship(id: string) {

@@ -178,16 +178,25 @@ export async function submitForApproval(params: {
     },
   });
 
-  // Create ApprovalStep records for each level (batch insert)
-  await prisma.approvalStep.createMany({
-    data: chain.steps.map(step => ({
-      documentType,
-      documentId,
-      level: step.level,
-      approverRole: step.approverRole,
-      status: 'pending' as const,
-    })),
+  // Create ApprovalStep records — idempotent: skip levels that already exist
+  const existingSteps = await prisma.approvalStep.findMany({
+    where: { documentType, documentId },
+    select: { level: true },
   });
+  const existingLevels = new Set(existingSteps.map(s => s.level));
+
+  const newSteps = chain.steps.filter(step => !existingLevels.has(step.level));
+  if (newSteps.length > 0) {
+    await prisma.approvalStep.createMany({
+      data: newSteps.map(step => ({
+        documentType,
+        documentId,
+        level: step.level,
+        approverRole: step.approverRole,
+        status: 'pending' as const,
+      })),
+    });
+  }
 
   // Audit log
   await createAuditLog({

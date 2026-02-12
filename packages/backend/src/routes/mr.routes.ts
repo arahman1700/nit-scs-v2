@@ -104,6 +104,25 @@ export default createDocumentRouter({
       },
     },
     {
+      path: 'convert-to-jo',
+      roles: APPROVE_ROLES,
+      handler: async (id, req) => {
+        const { joType } = req.body as { joType?: string };
+        const result = await mrfService.convertToJo(id, req.user!.userId, joType);
+        const io = req.app.get('io') as SocketIOServer | undefined;
+        if (io) {
+          emitToAll(io, 'jo:created', { id: result.jo.id, joNumber: result.jo.joNumber });
+          emitToAll(io, 'entity:created', { entity: 'jo' });
+        }
+        return result;
+      },
+      socketEvent: 'mr:jo_created',
+      socketData: r => {
+        const res = r as { id: string; jo: { id: string; joNumber: string; joType: string } };
+        return { jo: res.jo };
+      },
+    },
+    {
       path: 'fulfill',
       roles: APPROVE_ROLES,
       handler: id => mrfService.fulfill(id),
