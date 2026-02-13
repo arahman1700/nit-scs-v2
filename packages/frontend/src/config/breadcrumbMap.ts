@@ -26,6 +26,7 @@ export const BREADCRUMB_LABELS: Record<string, string> = {
   documents: 'Documents',
   dashboards: 'Dashboards',
   operations: 'Operations',
+  exceptions: 'Exceptions',
 
   // Document form types (V2 display names)
   grn: 'GRN',

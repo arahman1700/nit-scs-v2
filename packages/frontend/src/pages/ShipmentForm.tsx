@@ -2,10 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, Ship, CheckCircle, Plus, Trash2 } from 'lucide-react';
 import type { ShipmentLine, ShipmentDocument } from '@nit-scs-v2/shared/types';
+import { ExportButton } from '@/components/ExportButton';
 import { useCreateShipment } from '@/api/hooks/useShipments';
 import { useSuppliers } from '@/api/hooks/useMasterData';
 import type { Supplier } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { generateShipmentPdf } from '@/utils/pdfExport';
 
 const PORTS = [
   'Dammam (King Abdulaziz Port)',
@@ -133,8 +135,34 @@ export const ShipmentForm: React.FC = () => {
               {nextNumber}
             </span>
           </div>
-          <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-            <Ship className="text-nesma-secondary" size={28} />
+          <div className="flex items-center gap-3">
+            {documentNumber && (
+              <ExportButton
+                onExportPdf={() =>
+                  generateShipmentPdf({
+                    documentNumber: documentNumber ?? nextNumber,
+                    supplier: String(formData.supplier ?? ''),
+                    poNumber: '',
+                    carrier: String(formData.agent ?? ''),
+                    etd: String(formData.etd ?? ''),
+                    eta: String(formData.eta ?? ''),
+                    port: String(formData.port ?? ''),
+                    status: 'New',
+                    items: shipmentLines.map(sl => ({
+                      itemCode: sl.itemCode ?? '',
+                      itemName: sl.itemName ?? '',
+                      unit: sl.unit ?? '',
+                      qty: sl.quantity ?? 0,
+                      weight: 0,
+                    })),
+                    notes: String(formData.description ?? ''),
+                  })
+                }
+              />
+            )}
+            <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+              <Ship className="text-nesma-secondary" size={28} />
+            </div>
           </div>
         </div>
 

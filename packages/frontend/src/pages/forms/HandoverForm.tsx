@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeftRight, CheckCircle, Loader2, PlayCircle } from 'lucide-react';
 import type { Warehouse, Employee } from '@nit-scs-v2/shared/types';
+import { ExportButton } from '@/components/ExportButton';
 import {
   useCreateHandover,
   useHandover,
@@ -11,6 +12,7 @@ import {
 } from '@/api/hooks';
 import { useWarehouses, useEmployees } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { generateHandoverPdf } from '@/utils/pdfExport';
 
 interface HandoverDoc {
   id?: string;
@@ -123,12 +125,32 @@ export const HandoverForm: React.FC = () => {
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 mb-6">
         <ArrowLeftRight className="w-8 h-8 text-nesma-secondary" />
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-white">Warehouse Handover Form</h1>
           <p className="text-gray-400 text-sm">
             Employee-to-employee warehouse handover -- #{isEditMode ? id : nextNumber}
           </p>
         </div>
+        {isEditMode && existingDoc && (
+          <ExportButton
+            onExportPdf={() => {
+              const warehouse = warehouses.find(w => w.id === formData.warehouseId);
+              const outgoing = employees.find(e => e.id === formData.outgoingEmployeeId);
+              const incoming = employees.find(e => e.id === formData.incomingEmployeeId);
+              generateHandoverPdf({
+                documentNumber: existingDoc.formNumber ?? id ?? '',
+                warehouse: warehouse?.name ?? String(formData.warehouseId ?? ''),
+                outgoingEmployee: outgoing?.name ?? String(formData.outgoingEmployeeId ?? ''),
+                incomingEmployee: incoming?.name ?? String(formData.incomingEmployeeId ?? ''),
+                handoverDate: String(formData.handoverDate ?? ''),
+                inventoryVerified: !!formData.inventoryVerified,
+                discrepanciesFound: String(formData.discrepancies ?? ''),
+                status: String(existingDoc.status ?? ''),
+                notes: String(formData.notes ?? ''),
+              });
+            }}
+          />
+        )}
       </div>
 
       {/* ── Handover Details ────────────────────────────────────────────── */}

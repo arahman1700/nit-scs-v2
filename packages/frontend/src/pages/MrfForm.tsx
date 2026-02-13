@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Save, ClipboardList, CheckCircle, AlertCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
+import { ExportButton } from '@/components/ExportButton';
 import { useCreateMrf } from '@/api/hooks/useMrf';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { useCurrentUser } from '@/api/hooks/useAuth';
 import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { getRequiredApprovalLevel } from '@nit-scs-v2/shared/permissions';
+import { generateMrPdf } from '@/utils/pdfExport';
 
 export const MrfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -101,11 +103,36 @@ export const MrfForm: React.FC = () => {
 
       <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/10">
         <div className="border-b border-white/10 p-8 bg-gradient-to-r from-nesma-primary/20 to-transparent">
-          <h1 className="text-3xl font-bold text-white mb-1">Material Request Form</h1>
-          <p className="text-gray-400 mb-2">Request materials for your project</p>
-          <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
-            {nextNumber}
-          </span>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-1">Material Request Form</h1>
+              <p className="text-gray-400 mb-2">Request materials for your project</p>
+              <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
+                {nextNumber}
+              </span>
+            </div>
+            {documentNumber && (
+              <ExportButton
+                onExportPdf={() =>
+                  generateMrPdf({
+                    documentNumber: documentNumber ?? nextNumber,
+                    project: String(formData.project ?? ''),
+                    requester: currentUserName,
+                    requiredDate: new Date().toISOString().split('T')[0],
+                    priority: String(formData.urgency ?? 'Normal'),
+                    status: 'submitted',
+                    items: lineItems.map(li => ({
+                      itemCode: li.itemCode ?? '',
+                      itemName: li.itemName ?? '',
+                      unit: li.unit ?? '',
+                      qtyRequested: li.quantity ?? 0,
+                    })),
+                    notes: String(formData.notes ?? ''),
+                  })
+                }
+              />
+            )}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">

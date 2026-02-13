@@ -62,6 +62,57 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+// ── GET /api/reports/saved/templates — list all public templates ──────
+
+router.get('/templates', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const templates = await prisma.savedReport.findMany({
+      where: { isTemplate: true },
+      orderBy: [{ category: 'asc' }, { name: 'asc' }],
+      include: { owner: { select: { fullName: true } } },
+    });
+
+    sendSuccess(res, templates);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/reports/saved/templates/:id/use — copy template to user's reports ──
+
+router.post('/templates/:id/use', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const templateId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    const template = await prisma.savedReport.findUnique({
+      where: { id: templateId },
+    });
+
+    if (!template || !template.isTemplate) {
+      sendError(res, 404, 'Template not found');
+      return;
+    }
+
+    const userReport = await prisma.savedReport.create({
+      data: {
+        name: `${template.name} (copy)`,
+        description: template.description,
+        dataSource: template.dataSource,
+        columns: template.columns as any,
+        filters: template.filters as any,
+        visualization: template.visualization,
+        ownerId: userId,
+        isPublic: false,
+      },
+    });
+
+    sendCreated(res, userReport);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── GET /api/reports/saved/:id — get report config ──────────────────────
 
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {

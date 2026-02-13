@@ -5,6 +5,7 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
   [UserRole.ADMIN]: [
     // ── 1. Dashboard ──
     { label: 'Dashboard', path: '/admin' },
+    { label: 'Exceptions', path: '/admin/dashboards/exceptions' },
 
     // ── 2. Warehouses & Stores ──
     {
@@ -27,6 +28,9 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: '---', type: 'divider' },
         { label: 'IMSF - Material Shifting', path: '/admin/warehouses?tab=imsf' },
         { label: 'WT - Warehouse Transfer', path: '/admin/warehouses?tab=wt' },
+        { label: '---', type: 'divider' },
+        { label: 'Packing Station', path: '/admin/warehouse/packing' },
+        { label: 'Staging Areas', path: '/admin/warehouse/staging' },
       ],
     },
 
@@ -148,6 +152,9 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Receive (GRN)', path: '/warehouse/receive' },
         { label: 'Issue (MI)', path: '/warehouse/issue' },
         { label: 'Returns (MRN)', path: '/warehouse/return' },
+        { label: 'Packing Station', path: '/warehouse/packing' },
+        { label: 'Staging Areas', path: '/warehouse/staging' },
+        { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
@@ -161,6 +168,9 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Receive (GRN)', path: '/warehouse/receive' },
         { label: 'Issue (MI)', path: '/warehouse/issue' },
         { label: 'Returns (MRN)', path: '/warehouse/return' },
+        { label: 'Packing Station', path: '/warehouse/packing' },
+        { label: 'Staging Areas', path: '/warehouse/staging' },
+        { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },

@@ -371,6 +371,10 @@ model Employee {
   customDataSources CustomDataSource[]       @relation("DataSourceCreatedBy")
   aiConversations   AiConversation[]         @relation("AiConvUser")
 
+  // Reverse relations — Packing & Staging
+  packingSessions    PackingSession[]    @relation("PackedBy")
+  stagingAssignments StagingAssignment[] @relation("StagingAssignedBy")
+
   @@index([systemRole], map: "idx_employees_system_role")
   @@index([isActive], map: "idx_employees_active")
   @@index([assignedProjectId], map: "idx_employees_project")
@@ -479,6 +483,8 @@ model Warehouse {
   truckVisits            TruckVisit[]
   sensors                Sensor[]
   dynamicDocuments       DynamicDocument[]       @relation("DynDocWarehouse")
+  packingSessions        PackingSession[]
+  stagingAssignments     StagingAssignment[]
 
   @@index([warehouseTypeId], map: "idx_warehouses_type")
   @@index([projectId], map: "idx_warehouses_project")
@@ -536,6 +542,8 @@ model Item {
   cycleCountLines    CycleCountLine[]
   asnLines           AsnLine[]
   crossDocks         CrossDock[]
+  packingLines       PackingLine[]
+  stagingAssignments StagingAssignment[]
 
   @@map("items")
 }
@@ -828,6 +836,7 @@ model Mirv {
   materialRequisitions MaterialRequisition[] @relation("MrfMirv")
   stockTransfersDest   StockTransfer[]       @relation("StockTransferDestMirv")
   leftoverMaterials    LeftoverMaterial[]
+  packingSessions      PackingSession[]
 
   @@index([status], map: "idx_mirv_status")
   @@index([projectId], map: "idx_mirv_project")
@@ -2034,6 +2043,8 @@ model SavedReport {
   /// Visualization type: 'table', 'bar', 'line', 'pie'
   visualization String   @default("table") @db.VarChar(20)
   isPublic      Boolean  @default(false) @map("is_public")
+  isTemplate    Boolean  @default(false) @map("is_template")
+  category      String?  @map("category") @db.VarChar(50)
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -2041,6 +2052,7 @@ model SavedReport {
   owner Employee @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId], map: "idx_reports_owner")
+  @@index([isTemplate, category], map: "idx_reports_template_category")
   @@map("saved_reports")
 }
 
@@ -2556,9 +2568,10 @@ model WarehouseZone {
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
 
   // Reverse relations
-  putAwayRules PutAwayRule[]
-  cycleCounts  CycleCount[]
-  sensors      Sensor[]
+  putAwayRules       PutAwayRule[]
+  cycleCounts        CycleCount[]
+  sensors            Sensor[]
+  stagingAssignments StagingAssignment[]
 
   @@unique([warehouseId, zoneCode])
   @@map("warehouse_zones")
@@ -3276,4 +3289,100 @@ model AiSuggestion {
 
   @@index([status, priority], map: "idx_ai_suggestions_status")
   @@map("ai_suggestions")
+}
+
+// ############################################################################
+// SECTION: PACKING STATION
+// ############################################################################
+
+/// Packing session — groups items from an MI into containers for dispatch
+model PackingSession {
+  id            String    @id @default(uuid()) @db.Uuid
+  sessionNumber String    @unique @map("session_number") @db.VarChar(30)
+  mirvId        String    @map("mirv_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  packedById    String    @map("packed_by_id") @db.Uuid
+  /// CHECK: status IN ('in_progress', 'completed', 'cancelled')
+  status        String    @default("in_progress") @db.VarChar(20)
+  totalWeight   Float?    @map("total_weight")
+  totalVolume   Float?    @map("total_volume")
+  cartonCount   Int       @default(0) @map("carton_count")
+  palletCount   Int       @default(0) @map("pallet_count")
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mirv      Mirv      @relation(fields: [mirvId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  packedBy  Employee  @relation("PackedBy", fields: [packedById], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  lines PackingLine[]
+
+  @@index([mirvId], map: "idx_packing_session_mirv")
+  @@index([warehouseId], map: "idx_packing_session_warehouse")
+  @@index([status], map: "idx_packing_session_status")
+  @@map("packing_sessions")
+}
+
+/// Packing line — one packed item within a packing session
+model PackingLine {
+  id               String   @id @default(uuid()) @db.Uuid
+  packingSessionId String   @map("packing_session_id") @db.Uuid
+  itemId           String   @map("item_id") @db.Uuid
+  qtyPacked        Float    @map("qty_packed")
+  /// CHECK: container_type IN ('carton', 'pallet', 'crate', 'loose')
+  containerType    String   @map("container_type") @db.VarChar(20)
+  containerLabel   String?  @map("container_label") @db.VarChar(50)
+  weight           Float?
+  volume           Float?
+  scannedBarcode   String?  @map("scanned_barcode") @db.VarChar(100)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  session PackingSession @relation(fields: [packingSessionId], references: [id], onDelete: Cascade)
+  item    Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([packingSessionId], map: "idx_packing_line_session")
+  @@map("packing_lines")
+}
+
+// ############################################################################
+// SECTION: STAGING AREA MANAGEMENT
+// ############################################################################
+
+/// Staging assignment — tracks items placed in staging zones before put-away or dispatch
+model StagingAssignment {
+  id            String    @id @default(uuid()) @db.Uuid
+  zoneId        String    @map("zone_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  itemId        String    @map("item_id") @db.Uuid
+  /// CHECK: source_doc_type IN ('grn', 'mi', 'wt', 'cross_dock')
+  sourceDocType String    @map("source_doc_type") @db.VarChar(20)
+  sourceDocId   String    @map("source_doc_id") @db.Uuid
+  quantity      Float
+  assignedById  String    @map("assigned_by_id") @db.Uuid
+  /// CHECK: direction IN ('inbound', 'outbound')
+  direction     String    @map("direction") @db.VarChar(10)
+  /// CHECK: status IN ('staged', 'moved', 'expired')
+  status        String    @default("staged") @db.VarChar(20)
+  stagedAt      DateTime  @default(now()) @map("staged_at") @db.Timestamptz
+  movedAt       DateTime? @map("moved_at") @db.Timestamptz
+  maxDwellHours Int?      @default(24) @map("max_dwell_hours")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  zone       WarehouseZone @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  item       Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  assignedBy Employee      @relation("StagingAssignedBy", fields: [assignedById], references: [id], onDelete: Restrict)
+
+  @@index([warehouseId, status], map: "idx_staging_warehouse_status")
+  @@index([zoneId], map: "idx_staging_zone")
+  @@index([direction], map: "idx_staging_direction")
+  @@map("staging_assignments")
 }

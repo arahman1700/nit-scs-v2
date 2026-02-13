@@ -84,4 +84,28 @@ router.post('/test', authenticate, requireRole('admin'), async (req: Request, re
   }
 });
 
+// ── POST /action — Handle push notification action (approve/reject) ─────
+
+router.post('/action', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { action, documentType, documentId } = req.body as {
+      action?: string;
+      documentType?: string;
+      documentId?: string;
+    };
+
+    if (!action || !documentType || !documentId) {
+      sendError(res, 400, 'Missing required fields: action, documentType, documentId');
+      return;
+    }
+
+    // Log the action — full approval integration can be added later
+    console.log(`[Push Action] ${action} on ${documentType}/${documentId} by user ${req.user!.userId}`);
+
+    sendSuccess(res, { message: `Action "${action}" received for ${documentType} ${documentId}` });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

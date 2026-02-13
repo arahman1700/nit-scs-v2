@@ -99,6 +99,9 @@ const ForecastDashboard = React.lazy(() =>
 const OperationsDashboard = React.lazy(() =>
   import('@/pages/dashboards/OperationsDashboard').then(m => ({ default: m.OperationsDashboard })),
 );
+const ExceptionDashboard = React.lazy(() =>
+  import('@/pages/dashboards/ExceptionDashboard').then(m => ({ default: m.ExceptionDashboard })),
+);
 
 // V2 Form imports (additional)
 const HandoverForm = React.lazy(() => import('@/pages/forms/HandoverForm').then(m => ({ default: m.HandoverForm })));
@@ -159,7 +162,20 @@ const YardDashboard = React.lazy(() =>
   import('@/pages/warehouse/YardDashboard').then(m => ({ default: m.YardDashboard })),
 );
 
+// Packing Station
+const PackingStationPage = React.lazy(() =>
+  import('@/pages/warehouse/PackingStationPage').then(m => ({ default: m.PackingStationPage })),
+);
+
+// Staging Area Management
+const StagingAreaPage = React.lazy(() =>
+  import('@/pages/warehouse/StagingAreaPage').then(m => ({ default: m.StagingAreaPage })),
+);
+
 // Mobile scan workflow pages
+const MobileDashboard = React.lazy(() =>
+  import('@/pages/warehouse/MobileDashboard').then(m => ({ default: m.MobileDashboard })),
+);
 const MobileGrnReceive = React.lazy(() =>
   import('@/pages/warehouse/MobileGrnReceive').then(m => ({ default: m.MobileGrnReceive })),
 );
@@ -382,6 +398,7 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/dashboards/abc-analysis" element={<AbcAnalysisPage />} />
     <Route path="/admin/dashboards/forecast" element={<ForecastDashboard />} />
     <Route path="/admin/dashboards/operations" element={<OperationsDashboard />} />
+    <Route path="/admin/dashboards/exceptions" element={<ExceptionDashboard />} />
     <Route path="/admin/warehouse/putaway-rules" element={<PutAwayRulesPage />} />
     <Route path="/admin/warehouse/cycle-counts" element={<CycleCountListPage />} />
     <Route path="/admin/warehouse/cycle-counts/:id" element={<CycleCountDetailPage />} />
@@ -391,6 +408,8 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/warehouse/cross-docking" element={<CrossDockDashboard />} />
     <Route path="/admin/warehouse/sensors" element={<SensorDashboard />} />
     <Route path="/admin/warehouse/yard" element={<YardDashboard />} />
+    <Route path="/admin/warehouse/packing" element={<PackingStationPage />} />
+    <Route path="/admin/warehouse/staging" element={<StagingAreaPage />} />
     <Route path="/admin/logistics/route-optimizer" element={<RouteOptimizerPage />} />
     <Route path="/admin/quality/inspection-tools" element={<InspectionToolsPage />} />
     <Route path="/admin/parallel-approvals" element={<PendingApprovalsPage />} />
@@ -580,6 +599,30 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       element={
         <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
           <YardDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/packing"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <PackingStationPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/staging"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <StagingAreaPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/mobile"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <MobileDashboard />
         </RoleGuard>
       }
     />

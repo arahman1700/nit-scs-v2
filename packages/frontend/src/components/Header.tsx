@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Menu, Search, Settings } from 'lucide-react';
 import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
+import { GlobalSearchDropdown } from '@/components/GlobalSearchDropdown';
+import { useGlobalSearch } from '@/api/hooks/useSearch';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -11,10 +14,25 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => {
+  const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
   void role; // role available for future use
+
+  // Debounce search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: searchResults = [], isLoading: searchLoading } = useGlobalSearch(debouncedQuery);
 
   // Close settings dropdown on outside click
   useEffect(() => {
@@ -26,6 +44,23 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
     if (settingsOpen) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [settingsOpen]);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    if (searchOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [searchOpen]);
+
+  const handleSearchSelect = (type: string, id: string) => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    navigate(`/admin/forms/${type}/${id}`);
+  };
 
   return (
     <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-6 z-30 border-b border-white/10 bg-nesma-dark/80 backdrop-blur-md sticky top-0 shadow-lg">
@@ -41,13 +76,27 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
         <span className="lg:hidden font-bold text-lg text-white tracking-wider">NESMA</span>
 
         {/* Desktop Search */}
-        <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 w-64 lg:w-96 focus-within:bg-white/10 focus-within:border-nesma-secondary/50 transition-all focus-within:w-full focus-within:max-w-md group">
-          <Search size={18} className="text-gray-400 group-focus-within:text-nesma-secondary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search assets, orders..."
-            className="bg-transparent border-none outline-none text-sm w-full px-3 placeholder-gray-500 text-white"
-          />
+        <div className="relative hidden md:block" ref={searchRef}>
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 w-64 lg:w-96 focus-within:bg-white/10 focus-within:border-nesma-secondary/50 transition-all focus-within:w-full focus-within:max-w-md group">
+            <Search size={18} className="text-gray-400 group-focus-within:text-nesma-secondary transition-colors" />
+            <input
+              type="text"
+              placeholder="Search assets, orders..."
+              className="bg-transparent border-none outline-none text-sm w-full px-3 placeholder-gray-500 text-white"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+            />
+          </div>
+          {searchOpen && (
+            <GlobalSearchDropdown
+              results={searchResults}
+              isLoading={searchLoading}
+              query={debouncedQuery}
+              onClose={() => setSearchOpen(false)}
+              onSelect={handleSearchSelect}
+            />
+          )}
         </div>
       </div>
 

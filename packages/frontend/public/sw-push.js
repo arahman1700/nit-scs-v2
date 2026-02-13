@@ -13,8 +13,9 @@ self.addEventListener('push', (event) => {
       body: data.body,
       icon: data.icon || '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
-      data: { url: data.url },
+      data: { url: data.url, documentType: data.documentType, documentId: data.documentId },
       tag: data.tag,
+      actions: data.actions || [],
     })
   );
 });
@@ -22,19 +23,31 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  const url = event.notification.data?.url || '/';
+  const { url, documentType, documentId } = event.notification.data || {};
 
+  // Handle action buttons (approve/reject from push notification)
+  if (event.action === 'approve' || event.action === 'reject') {
+    event.waitUntil(
+      fetch('/api/v1/push/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: event.action, documentType, documentId }),
+      }).then(() => {
+        if (url) return self.clients.openWindow(url);
+      })
+    );
+    return;
+  }
+
+  // Default: navigate to URL or focus existing window
   event.waitUntil(
-    // Try to focus an existing window, or open a new one
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there's already a window/tab open with this URL
       for (const client of windowClients) {
-        if (client.url.includes(url) && 'focus' in client) {
+        if (client.url.includes(url || '/') && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open a new window
-      return self.clients.openWindow(url);
+      return self.clients.openWindow(url || '/');
     })
   );
 });

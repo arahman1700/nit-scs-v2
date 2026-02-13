@@ -8,6 +8,8 @@ export interface UserViewConfig {
   columnState?: unknown[];
   viewMode?: string;
   filters?: Record<string, unknown>;
+  sortKey?: string;
+  sortDir?: string;
 }
 
 export interface UserView {

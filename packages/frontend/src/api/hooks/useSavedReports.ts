@@ -23,6 +23,9 @@ export interface SavedReport {
   columns: string[];
   filters: ReportFilter[];
   visualization: 'table' | 'bar' | 'line' | 'pie';
+  isTemplate?: boolean;
+  category?: string;
+  owner?: { fullName: string };
   createdAt: string;
   updatedAt: string;
 }
@@ -118,5 +121,30 @@ export function useRunReport() {
       const { data } = await apiClient.post<ApiResponse<ReportResult>>(`/reports/saved/${id}/run`);
       return data;
     },
+  });
+}
+
+// ── Templates ───────────────────────────────────────────────────────────────
+
+/** GET /api/reports/saved/templates — list all public report templates */
+export function useReportTemplates() {
+  return useQuery({
+    queryKey: ['report-templates'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<SavedReport[]>>('/reports/saved/templates');
+      return data;
+    },
+  });
+}
+
+/** POST /api/reports/saved/templates/:id/use — copy template to user's reports */
+export function useTemplateToReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      const { data } = await apiClient.post<ApiResponse<SavedReport>>(`/reports/saved/templates/${templateId}/use`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['saved-reports'] }),
   });
 }

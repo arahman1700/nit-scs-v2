@@ -137,6 +137,7 @@ export const ShippingSectionPage: React.FC = () => {
             loading={shipQuery.isLoading}
             createLabel="New Shipment"
             createUrl="/admin/forms/shipment"
+            entityType="shipment"
           />
         ),
         customs: (

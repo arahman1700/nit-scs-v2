@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeftRight, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
+import { ExportButton } from '@/components/ExportButton';
 import { useCreateStockTransfer } from '@/api/hooks/useStockTransfers';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { generateWtPdf } from '@/utils/pdfExport';
 
 export const StockTransferForm: React.FC = () => {
   const navigate = useNavigate();
@@ -98,11 +100,35 @@ export const StockTransferForm: React.FC = () => {
 
       <div className="glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/10">
         <div className="border-b border-white/10 p-8 bg-gradient-to-r from-nesma-primary/20 to-transparent">
-          <h1 className="text-3xl font-bold text-white mb-1">Stock Transfer</h1>
-          <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
-              {nextNumber}
-            </span>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-1">Stock Transfer</h1>
+              <div className="flex items-center gap-3 mt-2">
+                <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
+                  {nextNumber}
+                </span>
+              </div>
+            </div>
+            {documentNumber && (
+              <ExportButton
+                onExportPdf={() =>
+                  generateWtPdf({
+                    documentNumber: documentNumber ?? nextNumber,
+                    fromWarehouse: String(formData.fromWarehouse ?? ''),
+                    toWarehouse: String(formData.toWarehouse ?? ''),
+                    transferType: String(formData.transferType ?? 'inter_warehouse'),
+                    requestedBy: '',
+                    status: 'created',
+                    items: lineItems.map(li => ({
+                      itemCode: li.itemCode ?? '',
+                      itemName: li.itemName ?? '',
+                      unit: li.unit ?? '',
+                      qty: li.quantity ?? 0,
+                    })),
+                  })
+                }
+              />
+            )}
           </div>
         </div>
 

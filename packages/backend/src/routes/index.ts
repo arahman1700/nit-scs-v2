@@ -84,6 +84,8 @@ import crossDockRoutes from './cross-dock.routes.js';
 import demandForecastRoutes from './demand-forecast.routes.js';
 import sensorRoutes from './sensor.routes.js';
 import yardRoutes from './yard.routes.js';
+import packingRoutes from './packing.routes.js';
+import stagingRoutes from './staging.routes.js';
 
 // ── Dynamic Documents ───────────────────────────────────────────────────
 import dynamicDocTypeRoutes from './dynamic-document-type.routes.js';
@@ -98,6 +100,9 @@ import workflowTemplateRoutes from './workflow-template.routes.js';
 
 // ── ROI Calculator ──────────────────────────────────────────────────────
 import roiCalculatorRoutes from './roi-calculator.routes.js';
+
+// ── Global Search ───────────────────────────────────────────────────────
+import searchRoutes from './search.routes.js';
 
 const router = Router();
 
@@ -237,6 +242,12 @@ router.use('/sensors', sensorRoutes);
 // ── Yard Management ─────────────────────────────────────────────────
 router.use('/yard', yardRoutes);
 
+// ── Packing Station ─────────────────────────────────────────────────
+router.use('/packing', packingRoutes);
+
+// ── Staging Area Management ─────────────────────────────────────────
+router.use('/staging', stagingRoutes);
+
 // ── Dynamic Document System ─────────────────────────────────────────────
 router.use('/dynamic-types', dynamicDocTypeRoutes);
 router.use('/dynamic', dynamicDocRoutes);
@@ -250,5 +261,8 @@ router.use('/workflow-templates', workflowTemplateRoutes);
 
 // ── ROI Calculator ──────────────────────────────────────────────────────
 router.use('/roi-calculator', roiCalculatorRoutes);
+
+// ── Global Search ───────────────────────────────────────────────────────
+router.use('/search', searchRoutes);
 
 export default router;

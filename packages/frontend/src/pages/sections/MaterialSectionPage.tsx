@@ -205,6 +205,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={grnQuery.isLoading}
             createLabel="New GRN"
             createUrl="/admin/forms/grn"
+            entityType="mrrv"
           />
         ),
         qci: (
@@ -214,6 +215,7 @@ export const MaterialSectionPage: React.FC = () => {
             columns={RESOURCE_COLUMNS.qci.columns}
             rows={(qciQuery.data?.data ?? []) as Record<string, unknown>[]}
             loading={qciQuery.isLoading}
+            entityType="rfim"
           />
         ),
         dr: (
@@ -225,6 +227,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={drQuery.isLoading}
             createLabel="New DR"
             createUrl="/admin/forms/dr"
+            entityType="osd_report"
           />
         ),
         mi: (
@@ -236,6 +239,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={miQuery.isLoading}
             createLabel="New MI"
             createUrl="/admin/forms/mi"
+            entityType="mirv"
           />
         ),
         mrn: (
@@ -247,6 +251,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={mrnQuery.isLoading}
             createLabel="New MRN"
             createUrl="/admin/forms/mrn"
+            entityType="mrv"
           />
         ),
         mr: (
@@ -258,6 +263,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={mrQuery.isLoading}
             createLabel="New MR"
             createUrl="/admin/forms/mr"
+            entityType="mrf"
           />
         ),
         inventory: (
@@ -318,6 +324,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={imsfQuery.isLoading}
             createLabel="New IMSF"
             createUrl="/admin/forms/imsf"
+            entityType="imsf"
           />
         ),
         wt: (
@@ -329,6 +336,7 @@ export const MaterialSectionPage: React.FC = () => {
             loading={wtQuery.isLoading}
             createLabel="New WT"
             createUrl="/admin/forms/wt"
+            entityType="stock_transfer"
           />
         ),
       }}

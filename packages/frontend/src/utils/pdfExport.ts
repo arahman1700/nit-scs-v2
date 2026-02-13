@@ -893,3 +893,617 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
       };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Utility functions
+// ---------------------------------------------------------------------------
+
+/** Add a diagonal "DRAFT" watermark to the current page */
+export function addWatermark(doc: jsPDF, text = 'DRAFT'): void {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  doc.saveGraphicsState();
+  doc.setTextColor(200, 200, 200);
+  doc.setFontSize(60);
+  doc.setFont('helvetica', 'bold');
+
+  // Rotate and draw centered diagonal text
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+  doc.text(text, centerX, centerY, {
+    align: 'center',
+    angle: 45,
+  });
+
+  doc.restoreGraphicsState();
+}
+
+/** Check if we need a page break and add one if needed */
+export function addPageBreakIfNeeded(doc: jsPDF, requiredSpace: number): number {
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const currentY = ((doc as unknown as Record<string, unknown>).__nitCurrentY as number) ?? getStartY(doc);
+  const margin = 20;
+
+  if (currentY + requiredSpace > pageHeight - margin) {
+    doc.addPage();
+    return getStartY(doc);
+  }
+  return currentY;
+}
+
+// ---------------------------------------------------------------------------
+// Additional document-specific PDF generators
+// ---------------------------------------------------------------------------
+
+// ── MRN (Material Return Note) ───────────────────────────────────────────
+
+export interface MrnLineItem {
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  quantity: number;
+  condition: string;
+}
+
+export interface MrnData {
+  documentNumber: string;
+  returnType: string;
+  project: string;
+  warehouse: string;
+  returnedBy: string;
+  receivedBy: string;
+  status: string;
+  items: MrnLineItem[];
+  notes?: string;
+}
+
+export function generateMrnPdf(mrn: MrnData): void {
+  const doc = createNitPdf({
+    title: 'Material Return Note (MRN)',
+    documentNumber: mrn.documentNumber,
+    subtitle: `Return Type: ${mrn.returnType}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: mrn.documentNumber },
+      { label: 'Return Type', value: mrn.returnType },
+      { label: 'Project', value: mrn.project },
+      { label: 'Warehouse', value: mrn.warehouse },
+      { label: 'Returned By', value: mrn.returnedBy },
+      { label: 'Received By', value: mrn.receivedBy },
+      { label: 'Status', value: mrn.status },
+    ],
+    getStartY(doc),
+  );
+
+  y = addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 30 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Unit', dataKey: 'unit', width: 15 },
+      { header: 'Qty', dataKey: 'quantity', width: 15 },
+      { header: 'Condition', dataKey: 'condition', width: 25 },
+    ],
+    mrn.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  if (mrn.notes) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#666666');
+    doc.text(`Notes: ${mrn.notes}`, 14, y + 8);
+  }
+
+  downloadPdf(doc, `MRN_${mrn.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── MR (Material Request) ────────────────────────────────────────────────
+
+export interface MrLineItem {
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  qtyRequested: number;
+}
+
+export interface MrData {
+  documentNumber: string;
+  project: string;
+  requester: string;
+  requiredDate: string;
+  priority: string;
+  status: string;
+  items: MrLineItem[];
+  notes?: string;
+}
+
+export function generateMrPdf(mr: MrData): void {
+  const doc = createNitPdf({
+    title: 'Material Request (MR)',
+    documentNumber: mr.documentNumber,
+    subtitle: `Project: ${mr.project}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: mr.documentNumber },
+      { label: 'Project', value: mr.project },
+      { label: 'Requester', value: mr.requester },
+      { label: 'Required Date', value: mr.requiredDate },
+      { label: 'Priority', value: mr.priority },
+      { label: 'Status', value: mr.status },
+    ],
+    getStartY(doc),
+  );
+
+  y = addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 30 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Unit', dataKey: 'unit', width: 15 },
+      { header: 'Qty Requested', dataKey: 'qtyRequested', width: 25 },
+    ],
+    mr.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  if (mr.notes) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#666666');
+    doc.text(`Notes: ${mr.notes}`, 14, y + 8);
+  }
+
+  downloadPdf(doc, `MR_${mr.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── QCI (Quality Control Inspection) ─────────────────────────────────────
+
+export interface QciLineItem {
+  itemCode: string;
+  itemName: string;
+  inspectedQty: number;
+  passedQty: number;
+  failedQty: number;
+  remarks: string;
+}
+
+export interface QciData {
+  documentNumber: string;
+  linkedGrn: string;
+  inspector: string;
+  inspectionDate: string;
+  result: string;
+  status: string;
+  items: QciLineItem[];
+}
+
+export function generateQciPdf(qci: QciData): void {
+  const doc = createNitPdf({
+    title: 'Quality Control Inspection (QCI)',
+    documentNumber: qci.documentNumber,
+    subtitle: `Result: ${qci.result}`,
+  });
+
+  const y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: qci.documentNumber },
+      { label: 'Linked GRN', value: qci.linkedGrn },
+      { label: 'Inspector', value: qci.inspector },
+      { label: 'Inspection Date', value: qci.inspectionDate },
+      { label: 'Result', value: qci.result },
+      { label: 'Status', value: qci.status },
+    ],
+    getStartY(doc),
+  );
+
+  addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 25 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Inspected', dataKey: 'inspectedQty', width: 20 },
+      { header: 'Passed', dataKey: 'passedQty', width: 18 },
+      { header: 'Failed', dataKey: 'failedQty', width: 18 },
+      { header: 'Remarks', dataKey: 'remarks', width: 30 },
+    ],
+    qci.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  downloadPdf(doc, `QCI_${qci.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── DR (Discrepancy Report) ──────────────────────────────────────────────
+
+export interface DrLineItem {
+  itemCode: string;
+  itemName: string;
+  expectedQty: number;
+  receivedQty: number;
+  discrepancyQty: number;
+  remarks: string;
+}
+
+export interface DrData {
+  documentNumber: string;
+  linkedGrn: string;
+  discrepancyType: string;
+  reportedBy: string;
+  reportedDate: string;
+  status: string;
+  items: DrLineItem[];
+}
+
+export function generateDrPdf(dr: DrData): void {
+  const doc = createNitPdf({
+    title: 'Discrepancy Report (DR)',
+    documentNumber: dr.documentNumber,
+    subtitle: `Type: ${dr.discrepancyType}`,
+  });
+
+  const y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: dr.documentNumber },
+      { label: 'Linked GRN', value: dr.linkedGrn },
+      { label: 'Type', value: dr.discrepancyType },
+      { label: 'Reported By', value: dr.reportedBy },
+      { label: 'Date', value: dr.reportedDate },
+      { label: 'Status', value: dr.status },
+    ],
+    getStartY(doc),
+  );
+
+  addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 25 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Expected', dataKey: 'expectedQty', width: 20 },
+      { header: 'Received', dataKey: 'receivedQty', width: 20 },
+      { header: 'Discrepancy', dataKey: 'discrepancyQty', width: 22 },
+      { header: 'Remarks', dataKey: 'remarks', width: 30 },
+    ],
+    dr.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  downloadPdf(doc, `DR_${dr.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── IMSF (Inter-project Material Shifting Form) ──────────────────────────
+
+export interface ImsfLineItem {
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  qty: number;
+}
+
+export interface ImsfData {
+  documentNumber: string;
+  senderProject: string;
+  receiverProject: string;
+  requestedBy: string;
+  approvedBy: string;
+  status: string;
+  items: ImsfLineItem[];
+  notes?: string;
+}
+
+export function generateImsfPdf(imsf: ImsfData): void {
+  const doc = createNitPdf({
+    title: 'Inter-project Material Shifting Form (IMSF)',
+    documentNumber: imsf.documentNumber,
+    subtitle: `${imsf.senderProject} → ${imsf.receiverProject}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: imsf.documentNumber },
+      { label: 'Sender Project', value: imsf.senderProject },
+      { label: 'Receiver Project', value: imsf.receiverProject },
+      { label: 'Requested By', value: imsf.requestedBy },
+      { label: 'Approved By', value: imsf.approvedBy },
+      { label: 'Status', value: imsf.status },
+    ],
+    getStartY(doc),
+  );
+
+  y = addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 30 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Unit', dataKey: 'unit', width: 15 },
+      { header: 'Qty', dataKey: 'qty', width: 15 },
+    ],
+    imsf.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  if (imsf.notes) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#666666');
+    doc.text(`Notes: ${imsf.notes}`, 14, y + 8);
+  }
+
+  downloadPdf(doc, `IMSF_${imsf.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── WT (Warehouse Transfer) ──────────────────────────────────────────────
+
+export interface WtLineItem {
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  qty: number;
+}
+
+export interface WtData {
+  documentNumber: string;
+  fromWarehouse: string;
+  toWarehouse: string;
+  transferType: string;
+  requestedBy: string;
+  status: string;
+  items: WtLineItem[];
+  notes?: string;
+}
+
+export function generateWtPdf(wt: WtData): void {
+  const doc = createNitPdf({
+    title: 'Warehouse Transfer (WT)',
+    documentNumber: wt.documentNumber,
+    subtitle: `${wt.fromWarehouse} → ${wt.toWarehouse}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: wt.documentNumber },
+      { label: 'From Warehouse', value: wt.fromWarehouse },
+      { label: 'To Warehouse', value: wt.toWarehouse },
+      { label: 'Transfer Type', value: wt.transferType },
+      { label: 'Requested By', value: wt.requestedBy },
+      { label: 'Status', value: wt.status },
+    ],
+    getStartY(doc),
+  );
+
+  y = addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 30 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Unit', dataKey: 'unit', width: 15 },
+      { header: 'Qty', dataKey: 'qty', width: 15 },
+    ],
+    wt.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  if (wt.notes) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#666666');
+    doc.text(`Notes: ${wt.notes}`, 14, y + 8);
+  }
+
+  downloadPdf(doc, `WT_${wt.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── Shipment ─────────────────────────────────────────────────────────────
+
+export interface ShipmentLineItem {
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  qty: number;
+  weight: number;
+}
+
+export interface ShipmentPdfData {
+  documentNumber: string;
+  supplier: string;
+  poNumber: string;
+  carrier: string;
+  etd: string;
+  eta: string;
+  port: string;
+  status: string;
+  items: ShipmentLineItem[];
+  notes?: string;
+}
+
+export function generateShipmentPdf(shipment: ShipmentPdfData): void {
+  const doc = createNitPdf({
+    title: 'Shipment',
+    documentNumber: shipment.documentNumber,
+    subtitle: `Supplier: ${shipment.supplier}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: shipment.documentNumber },
+      { label: 'Supplier', value: shipment.supplier },
+      { label: 'PO Number', value: shipment.poNumber },
+      { label: 'Carrier', value: shipment.carrier },
+      { label: 'ETD', value: shipment.etd },
+      { label: 'ETA', value: shipment.eta },
+      { label: 'Port', value: shipment.port },
+      { label: 'Status', value: shipment.status },
+    ],
+    getStartY(doc),
+  );
+
+  y = addTable(
+    doc,
+    [
+      { header: '#', dataKey: '_index', width: 10 },
+      { header: 'Code', dataKey: 'itemCode', width: 25 },
+      { header: 'Description', dataKey: 'itemName' },
+      { header: 'Unit', dataKey: 'unit', width: 15 },
+      { header: 'Qty', dataKey: 'qty', width: 15 },
+      { header: 'Weight', dataKey: 'weight', width: 20 },
+    ],
+    shipment.items.map((item, i) => ({ ...item, _index: String(i + 1) })),
+    y + 4,
+  );
+
+  if (shipment.notes) {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#666666');
+    doc.text(`Notes: ${shipment.notes}`, 14, y + 8);
+  }
+
+  downloadPdf(doc, `SHIPMENT_${shipment.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── Scrap Report ─────────────────────────────────────────────────────────
+
+export interface ScrapPdfData {
+  documentNumber: string;
+  project: string;
+  warehouse: string;
+  itemDescription: string;
+  category: string;
+  estimatedValue: string;
+  disposalMethod: string;
+  condition: string;
+  status: string;
+  notes?: string;
+}
+
+export function generateScrapPdf(scrap: ScrapPdfData): void {
+  const doc = createNitPdf({
+    title: 'Scrap Report',
+    documentNumber: scrap.documentNumber,
+    subtitle: `Category: ${scrap.category}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: scrap.documentNumber },
+      { label: 'Project', value: scrap.project },
+      { label: 'Warehouse', value: scrap.warehouse },
+      { label: 'Item', value: scrap.itemDescription },
+      { label: 'Category', value: scrap.category },
+      { label: 'Estimated Value', value: scrap.estimatedValue },
+      { label: 'Disposal Method', value: scrap.disposalMethod },
+      { label: 'Condition', value: scrap.condition },
+      { label: 'Status', value: scrap.status },
+    ],
+    getStartY(doc),
+  );
+
+  if (scrap.notes) {
+    y += 4;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(PRIMARY_BLUE);
+    doc.text('Notes:', 14, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#333333');
+    const noteLines = doc.splitTextToSize(scrap.notes, doc.internal.pageSize.getWidth() - 28);
+    doc.setFontSize(8);
+    doc.text(noteLines, 14, y);
+  }
+
+  downloadPdf(doc, `SCRAP_${scrap.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}
+
+// ── Handover (Storekeeper Handover) ──────────────────────────────────────
+
+export interface HandoverPdfData {
+  documentNumber: string;
+  warehouse: string;
+  outgoingEmployee: string;
+  incomingEmployee: string;
+  handoverDate: string;
+  inventoryVerified: boolean;
+  discrepanciesFound: string;
+  status: string;
+  notes?: string;
+}
+
+export function generateHandoverPdf(handover: HandoverPdfData): void {
+  const doc = createNitPdf({
+    title: 'Storekeeper Handover',
+    documentNumber: handover.documentNumber,
+    subtitle: `Warehouse: ${handover.warehouse}`,
+  });
+
+  let y = addInfoSection(
+    doc,
+    [
+      { label: 'Document #', value: handover.documentNumber },
+      { label: 'Warehouse', value: handover.warehouse },
+      { label: 'Outgoing Employee', value: handover.outgoingEmployee },
+      { label: 'Incoming Employee', value: handover.incomingEmployee },
+      { label: 'Handover Date', value: handover.handoverDate },
+      { label: 'Inventory Verified', value: handover.inventoryVerified ? 'Yes' : 'No' },
+      { label: 'Discrepancies Found', value: handover.discrepanciesFound || 'None' },
+      { label: 'Status', value: handover.status },
+    ],
+    getStartY(doc),
+  );
+
+  if (handover.notes) {
+    y += 4;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(PRIMARY_BLUE);
+    doc.text('Notes:', 14, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor('#333333');
+    const noteLines = doc.splitTextToSize(handover.notes, doc.internal.pageSize.getWidth() - 28);
+    doc.setFontSize(8);
+    doc.text(noteLines, 14, y);
+    y += noteLines.length * 4 + 4;
+  } else {
+    y += 8;
+  }
+
+  // Signature lines for both employees
+  y += 16;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setDrawColor('#333333');
+  doc.setLineWidth(0.3);
+
+  // Outgoing employee signature
+  doc.line(14, y, 90, y);
+  doc.setFontSize(8);
+  doc.setTextColor('#666666');
+  doc.text('Outgoing Employee Signature', 14, y + 5);
+  doc.text('Date: _______________', 14, y + 11);
+
+  // Incoming employee signature
+  doc.line(pageWidth / 2 + 10, y, pageWidth - 14, y);
+  doc.text('Incoming Employee Signature', pageWidth / 2 + 10, y + 5);
+  doc.text('Date: _______________', pageWidth / 2 + 10, y + 11);
+
+  downloadPdf(doc, `HANDOVER_${handover.documentNumber}_${new Date().toISOString().slice(0, 10)}`);
+}

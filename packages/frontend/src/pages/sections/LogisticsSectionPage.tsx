@@ -379,6 +379,7 @@ export const LogisticsSectionPage: React.FC = () => {
         loading={gpQuery.isLoading}
         createLabel="New Gate Pass"
         createUrl="/admin/forms/gatepass"
+        entityType="gate_pass"
       />
     ),
 
@@ -391,6 +392,7 @@ export const LogisticsSectionPage: React.FC = () => {
         loading={rcQuery.isLoading}
         createLabel="New Rental Contract"
         createUrl="/admin/forms/rental-contract"
+        entityType="rental_contract"
       />
     ),
 
@@ -403,6 +405,7 @@ export const LogisticsSectionPage: React.FC = () => {
         loading={genQuery.isLoading}
         createLabel="New Maintenance"
         createUrl="/admin/forms/generator-maintenance"
+        entityType="generator_maintenance"
       />
     ),
 
@@ -413,6 +416,7 @@ export const LogisticsSectionPage: React.FC = () => {
         columns={RESOURCE_COLUMNS.shipments.columns}
         rows={(shipQuery.data?.data ?? []) as Record<string, unknown>[]}
         loading={shipQuery.isLoading}
+        entityType="shipment"
       />
     ),
   };

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FileBarChart, Save, Play, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { FileBarChart, Save, Play, Plus, Trash2, ChevronDown, LayoutTemplate } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -28,6 +28,7 @@ import { ReportDataSourceSelector } from '@/components/report-builder/ReportData
 import { ColumnSelector } from '@/components/report-builder/ColumnSelector';
 import { FilterBuilder } from '@/components/report-builder/FilterBuilder';
 import { VisualizationSelector } from '@/components/report-builder/VisualizationSelector';
+import { ReportTemplateGallery } from '@/components/report-builder/ReportTemplateGallery';
 
 const CHART_COLORS = ['#80D1E9', '#2E3A8C', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -35,6 +36,7 @@ export const ReportBuilderPage: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
   const [newName, setNewName] = useState('');
 
   // Local form state
@@ -239,6 +241,19 @@ export const ReportBuilderPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Templates toggle */}
+          <button
+            onClick={() => setShowTemplates(!showTemplates)}
+            className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors ${
+              showTemplates
+                ? 'bg-nesma-primary/20 border-nesma-primary/40 text-nesma-secondary'
+                : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
+            }`}
+          >
+            <LayoutTemplate size={14} />
+            Templates
+          </button>
+
           {/* Report selector */}
           <div className="relative">
             <button
@@ -348,6 +363,18 @@ export const ReportBuilderPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Template gallery */}
+      {showTemplates && (
+        <div className="px-6 py-4 border-b border-white/10">
+          <ReportTemplateGallery
+            onTemplateUsed={reportId => {
+              setSelectedId(reportId);
+              setShowTemplates(false);
+            }}
+          />
         </div>
       )}
 

@@ -301,6 +301,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={gpQuery.isLoading}
         createLabel="New Gate Pass"
         createUrl="/admin/forms/gatepass"
+        entityType="gate_pass"
       />
     ),
 
@@ -351,6 +352,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={rcQuery.isLoading}
         createLabel="New Rental Contract"
         createUrl="/admin/forms/rental-contract"
+        entityType="rental_contract"
       />
     ),
 
@@ -397,6 +399,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={genFuelQuery.isLoading}
         createLabel="Log Fuel"
         createUrl="/admin/forms/generator-fuel"
+        entityType="generator_fuel"
       />
     ),
 
@@ -409,6 +412,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={genMainQuery.isLoading}
         createLabel="New Maintenance"
         createUrl="/admin/forms/generator-maintenance"
+        entityType="generator_maintenance"
       />
     ),
 
@@ -421,6 +425,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={toolQuery.isLoading}
         createLabel="New Tool"
         createUrl="/admin/forms/tool"
+        entityType="tool"
       />
     ),
 
@@ -433,6 +438,7 @@ export const EquipmentSectionPage: React.FC = () => {
         loading={toolIssueQuery.isLoading}
         createLabel="Issue Tool"
         createUrl="/admin/forms/tool-issue"
+        entityType="tool_issue"
       />
     ),
   };

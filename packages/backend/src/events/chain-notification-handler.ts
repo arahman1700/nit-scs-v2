@@ -6,6 +6,7 @@
 import { eventBus, type SystemEvent } from './event-bus.js';
 import { prisma } from '../utils/prisma.js';
 import { log } from '../config/logger.js';
+import { sendTemplatedEmail } from '../services/email.service.js';
 
 // ── Notification Rule Definitions ──────────────────────────────────────
 
@@ -22,6 +23,8 @@ interface ChainNotificationRule {
   bodyTemplate?: string;
   /** Notification type for categorization */
   notificationType: string;
+  /** Optional email template code to fire off a templated email */
+  emailTemplateCode?: string;
 }
 
 const CHAIN_RULES: ChainNotificationRule[] = [
@@ -33,6 +36,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'GRN Stored — Materials Available',
     bodyTemplate: 'A GRN has been stored. Materials are now available in the warehouse.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'document_chain_created',
   },
   // GRN QC approved → notify warehouse supervisor to proceed with storage
   {
@@ -42,6 +46,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'GRN QC Approved — Ready for Storage',
     bodyTemplate: 'Quality inspection passed. Materials can now be stored.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'qci_completed',
   },
   // MI approved → notify warehouse staff to prepare materials
   {
@@ -69,6 +74,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'QCI Completed — Inspection Result Available',
     bodyTemplate: 'A Quality Control Inspection has been completed. Review the results.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'qci_completed',
   },
   // Shipment delivered → notify receiving team
   {
@@ -78,6 +84,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'Shipment Delivered — Ready for Receiving',
     bodyTemplate: 'A shipment has been delivered. Please process the goods receipt.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'shipment_delivered',
   },
   // Shipment in transit → notify logistics coordinator
   {
@@ -105,6 +112,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'MRN Completed — Materials Returned',
     bodyTemplate: 'A Material Return has been completed and stock has been updated.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'mrn_completed',
   },
   // JO approved → notify transport supervisor
   {
@@ -132,6 +140,7 @@ const CHAIN_RULES: ChainNotificationRule[] = [
     titleTemplate: 'IMSF Confirmed — Inter-Warehouse Transfer Initiated',
     bodyTemplate: 'An internal material shifting form has been confirmed. A warehouse transfer has been created.',
     notificationType: 'chain_update',
+    emailTemplateCode: 'warehouse_transfer_created',
   },
 ];
 
@@ -182,6 +191,23 @@ async function handleDocumentStatusChange(event: SystemEvent): Promise<void> {
           referenceId: event.entityId,
         })),
       });
+
+      // Fire-and-forget email for rules with templates
+      if (rule.emailTemplateCode) {
+        const roleRecipients = rule.recipientRoles.map(r => `role:${r}`);
+        sendTemplatedEmail({
+          templateCode: rule.emailTemplateCode,
+          to: roleRecipients,
+          variables: {
+            documentType: event.entityType,
+            documentId: event.entityId,
+            status: toStatus,
+            documentNumber: (event.payload.documentNumber as string) ?? event.entityId,
+          },
+          referenceTable: event.entityType,
+          referenceId: event.entityId,
+        }).catch(err => log('error', `[ChainNotification] Email failed: ${err}`));
+      }
 
       log(
         'info',

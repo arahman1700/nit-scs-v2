@@ -108,6 +108,7 @@ export const ScrapSectionPage: React.FC = () => {
             loading={scrapQuery.isLoading}
             createLabel="Report Scrap"
             createUrl="/admin/forms/scrap"
+            entityType="scrap_item"
           />
         ),
         ssc: (
@@ -131,6 +132,7 @@ export const ScrapSectionPage: React.FC = () => {
             loading={surplusQuery.isLoading}
             createLabel="Report Surplus"
             createUrl="/admin/forms/surplus"
+            entityType="surplus"
           />
         ),
       }}

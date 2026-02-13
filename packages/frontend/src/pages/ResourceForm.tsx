@@ -4,11 +4,13 @@ import { Save, AlertCircle, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { DocumentComments } from '@/components/DocumentComments';
 import { DocumentAttachments } from '@/components/DocumentAttachments';
+import { ExportButton } from '@/components/ExportButton';
 import { useDocumentForm } from './forms/useDocumentForm';
 import { FormFieldRenderer } from './forms/FormFieldRenderer';
 import { FormSuccessView } from './forms/FormSuccessView';
 import { StatusFlowIndicator, ApprovalLevelIndicator } from './forms/FormStatusFlow';
 import type { FormFieldDef } from './forms/formConfigs';
+import { generateGrnPdf, generateMiPdf, generateMrnPdf, generateQciPdf, generateDrPdf } from '@/utils/pdfExport';
 
 export const ResourceForm: React.FC = () => {
   const { formType, id } = useParams<{ formType: string; id: string }>();
@@ -52,6 +54,109 @@ export const ResourceForm: React.FC = () => {
   } = useDocumentForm(formType, id);
 
   const FormIcon = formConfig.icon;
+
+  const handleExportPdf = () => {
+    if (!isEditMode || !existingDoc) return;
+    const items = (lineItems ?? []).map(li => ({
+      itemCode: li.itemCode ?? '',
+      itemName: li.itemName ?? '',
+      unit: li.unit ?? '',
+      quantity: li.quantity ?? 0,
+      unitPrice: li.unitPrice ?? 0,
+      totalPrice: li.totalPrice ?? 0,
+      condition: li.condition ?? 'New',
+    }));
+    const docNum = String(
+      existingDoc.formNumber ??
+        existingDoc.mrrvNumber ??
+        existingDoc.mirvNumber ??
+        existingDoc.mrvNumber ??
+        existingDoc.rfimNumber ??
+        existingDoc.osdNumber ??
+        id ??
+        '',
+    );
+    const status = String(existingDoc.status ?? docStatus ?? '');
+
+    switch (formType) {
+      case 'mrrv':
+        generateGrnPdf({
+          documentNumber: docNum,
+          supplier: String(existingDoc.supplier ?? existingDoc.supplierId ?? ''),
+          warehouse: String(existingDoc.warehouse ?? existingDoc.warehouseId ?? ''),
+          receivedDate: String(existingDoc.receivedDate ?? existingDoc.createdAt ?? ''),
+          poNumber: String(existingDoc.poNumber ?? existingDoc.poReference ?? ''),
+          status,
+          items,
+        });
+        break;
+      case 'mirv':
+        generateMiPdf({
+          documentNumber: docNum,
+          project: String(existingDoc.project ?? existingDoc.projectId ?? ''),
+          requester: String(existingDoc.requester ?? existingDoc.requesterId ?? ''),
+          issuedDate: String(existingDoc.issuedDate ?? existingDoc.createdAt ?? ''),
+          warehouse: String(existingDoc.warehouse ?? existingDoc.warehouseId ?? ''),
+          status,
+          items,
+        });
+        break;
+      case 'mrv':
+        generateMrnPdf({
+          documentNumber: docNum,
+          returnType: String(existingDoc.returnType ?? ''),
+          project: String(existingDoc.project ?? existingDoc.projectId ?? ''),
+          warehouse: String(existingDoc.warehouse ?? existingDoc.warehouseId ?? ''),
+          returnedBy: String(existingDoc.returnedBy ?? existingDoc.returnedById ?? ''),
+          receivedBy: String(existingDoc.receivedBy ?? existingDoc.receivedById ?? ''),
+          status,
+          items: items.map(i => ({
+            itemCode: i.itemCode,
+            itemName: i.itemName,
+            unit: i.unit,
+            quantity: i.quantity,
+            condition: i.condition,
+          })),
+        });
+        break;
+      case 'rfim':
+        generateQciPdf({
+          documentNumber: docNum,
+          linkedGrn: String(existingDoc.mrrvId ?? existingDoc.linkedGrn ?? ''),
+          inspector: String(existingDoc.inspector ?? existingDoc.inspectorId ?? ''),
+          inspectionDate: String(existingDoc.inspectionDate ?? existingDoc.createdAt ?? ''),
+          result: String(existingDoc.result ?? ''),
+          status,
+          items: items.map(i => ({
+            itemCode: i.itemCode,
+            itemName: i.itemName,
+            inspectedQty: i.quantity,
+            passedQty: i.quantity,
+            failedQty: 0,
+            remarks: '',
+          })),
+        });
+        break;
+      case 'osd':
+        generateDrPdf({
+          documentNumber: docNum,
+          linkedGrn: String(existingDoc.mrrvId ?? existingDoc.linkedGrn ?? ''),
+          discrepancyType: String(existingDoc.reportType ?? existingDoc.discrepancyType ?? ''),
+          reportedBy: String(existingDoc.reportedBy ?? existingDoc.reportedById ?? ''),
+          reportedDate: String(existingDoc.reportedDate ?? existingDoc.createdAt ?? ''),
+          status,
+          items: items.map(i => ({
+            itemCode: i.itemCode,
+            itemName: i.itemName,
+            expectedQty: i.quantity,
+            receivedQty: 0,
+            discrepancyQty: i.quantity,
+            remarks: '',
+          })),
+        });
+        break;
+    }
+  };
 
   // Loading state for edit mode
   if (isLoadingDoc) {
@@ -167,8 +272,11 @@ export const ResourceForm: React.FC = () => {
                 )}
               </div>
             </div>
-            <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-              <FormIcon className="text-nesma-secondary" size={28} />
+            <div className="flex items-center gap-3">
+              {isEditMode && existingDoc && <ExportButton onExportPdf={handleExportPdf} />}
+              <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
+                <FormIcon className="text-nesma-secondary" size={28} />
+              </div>
             </div>
           </div>
         </div>

@@ -379,4 +379,125 @@ router.get('/cross-department', async (req: Request, res: Response, next: NextFu
   }
 });
 
+// ── GET /exceptions — Operational exception queues ──────────────────
+
+router.get('/exceptions', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const role = req.user!.systemRole;
+    const data = await cached(`dashboard:exceptions:${role}`, CacheTTL.DASHBOARD_STATS, async () => {
+      const now = new Date();
+      const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      const [overdueApprovals, slaBreaches, lowStock, stalledDocuments, expiringInventory] = await Promise.all([
+        // 1. Overdue Approvals — pending_approval for > 3 days
+        prisma.$queryRaw<{ type: string; id: string; status: string; created_at: Date }[]>`
+          SELECT 'mirv' as type, id, status, created_at FROM mirv
+          WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
+          UNION ALL
+          SELECT 'jo' as type, id, status, created_at FROM job_orders
+          WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
+          UNION ALL
+          SELECT 'mrf' as type, id, status, created_at FROM mrf
+          WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
+          LIMIT 50
+        `,
+
+        // 2. SLA Breaches — mirv/jo past slaDueDate
+        prisma.mirv.findMany({
+          where: {
+            slaDueDate: { lt: now },
+            status: { notIn: ['issued', 'completed', 'cancelled'] },
+          },
+          select: { id: true, mirvNumber: true, slaDueDate: true, status: true },
+          take: 20,
+        }),
+
+        // 3. Low Stock — items below minLevel
+        prisma.$queryRaw<
+          {
+            item_id: string;
+            item_code: string;
+            item_description: string;
+            qty_on_hand: number;
+            min_level: number;
+            warehouse_name: string;
+          }[]
+        >`
+          SELECT il.item_id, i.item_code, i.item_description, il.qty_on_hand::float, il.min_level::float, w.warehouse_name
+          FROM inventory_levels il
+          JOIN items i ON il.item_id = i.id
+          JOIN warehouses w ON il.warehouse_id = w.id
+          WHERE il.qty_on_hand <= COALESCE(il.min_level, 0) AND il.min_level > 0
+          LIMIT 20
+        `,
+
+        // 4. Stalled Documents — no status change in 7+ days
+        prisma.$queryRaw<{ type: string; id: string; status: string; updated_at: Date }[]>`
+          SELECT 'mrrv' as type, id, status, updated_at FROM mrrv
+          WHERE status NOT IN ('completed', 'cancelled', 'stored') AND updated_at < ${sevenDaysAgo}
+          UNION ALL
+          SELECT 'mirv' as type, id, status, updated_at FROM mirv
+          WHERE status NOT IN ('issued', 'completed', 'cancelled') AND updated_at < ${sevenDaysAgo}
+          LIMIT 20
+        `,
+
+        // 5. Expiring Inventory — lots expiring within 30 days
+        prisma.inventoryLot.findMany({
+          where: {
+            expiryDate: { lte: thirtyDaysFromNow, gte: now },
+            status: 'active',
+          },
+          include: { item: { select: { itemCode: true, itemDescription: true } } },
+          take: 20,
+        }),
+      ]);
+
+      return {
+        overdueApprovals: { count: overdueApprovals.length, items: overdueApprovals },
+        slaBreaches: {
+          count: slaBreaches.length,
+          items: slaBreaches.map(b => ({
+            id: b.id,
+            documentNumber: b.mirvNumber,
+            slaDueDate: b.slaDueDate,
+            status: b.status,
+          })),
+        },
+        lowStock: {
+          count: lowStock.length,
+          items: lowStock.map(ls => ({
+            item_id: ls.item_id,
+            item_code: ls.item_code,
+            item_name: ls.item_description,
+            qty_on_hand: ls.qty_on_hand,
+            min_level: ls.min_level,
+            warehouse_name: ls.warehouse_name,
+          })),
+        },
+        stalledDocuments: { count: stalledDocuments.length, items: stalledDocuments },
+        expiringInventory: {
+          count: expiringInventory.length,
+          items: expiringInventory.map(e => ({
+            id: e.id,
+            expiryDate: e.expiryDate,
+            item: { itemCode: e.item.itemCode, itemName: e.item.itemDescription },
+          })),
+        },
+        totalExceptions:
+          overdueApprovals.length +
+          slaBreaches.length +
+          lowStock.length +
+          stalledDocuments.length +
+          expiringInventory.length,
+      };
+    });
+
+    sendSuccess(res, data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

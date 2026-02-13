@@ -166,3 +166,40 @@ export function useCrossDepartment() {
     staleTime: 30_000,
   });
 }
+
+// ── Exception Dashboard Types & Hook ────────────────────────────────────
+
+export interface ExceptionData {
+  overdueApprovals: { count: number; items: { type: string; id: string; status: string; created_at: string }[] };
+  slaBreaches: { count: number; items: { id: string; documentNumber: string; slaDueDate: string; status: string }[] };
+  lowStock: {
+    count: number;
+    items: {
+      item_id: string;
+      item_code: string;
+      item_name: string;
+      qty_on_hand: number;
+      min_level: number;
+      warehouse_name: string;
+    }[];
+  };
+  stalledDocuments: { count: number; items: { type: string; id: string; status: string; updated_at: string }[] };
+  expiringInventory: {
+    count: number;
+    items: { id: string; expiryDate: string; item: { itemCode: string; itemName: string } }[];
+  };
+  totalExceptions: number;
+}
+
+/** GET /api/dashboard/exceptions */
+export function useExceptions() {
+  return useQuery({
+    queryKey: ['dashboard', 'exceptions'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<ExceptionData>>('/dashboard/exceptions');
+      return data;
+    },
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}

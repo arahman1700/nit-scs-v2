@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Save, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
+import { ExportButton } from '@/components/ExportButton';
 import { useProjects } from '@/api/hooks/useMasterData';
 import { useCreateImsf } from '@/api/hooks/useImsf';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { generateImsfPdf } from '@/utils/pdfExport';
 
 export const ImsfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -73,10 +75,33 @@ export const ImsfForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <Truck className="w-8 h-8 text-nesma-secondary" />
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-white">Internal Material Shifting Form</h1>
           <p className="text-gray-400 text-sm">Transfer materials between projects — #{nextNumber}</p>
         </div>
+        {documentNumber && (
+          <ExportButton
+            onExportPdf={() => {
+              const senderProject = projects.find(p => p.id === formData.senderProjectId);
+              const receiverProject = projects.find(p => p.id === formData.receiverProjectId);
+              generateImsfPdf({
+                documentNumber: documentNumber ?? nextNumber,
+                senderProject: senderProject?.name ?? String(formData.senderProjectId ?? ''),
+                receiverProject: receiverProject?.name ?? String(formData.receiverProjectId ?? ''),
+                requestedBy: '',
+                approvedBy: '',
+                status: 'created',
+                items: lineItems.map(li => ({
+                  itemCode: li.itemCode ?? '',
+                  itemName: li.itemName ?? '',
+                  unit: li.unit ?? '',
+                  qty: li.quantity ?? 0,
+                })),
+                notes: String(formData.notes ?? ''),
+              });
+            }}
+          />
+        )}
       </div>
 
       <div className="glass-card rounded-2xl p-6 space-y-4">
