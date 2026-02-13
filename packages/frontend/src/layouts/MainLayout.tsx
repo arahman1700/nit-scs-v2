@@ -9,6 +9,7 @@ import { PwaUpdatePrompt } from '@/components/PwaUpdatePrompt';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useRealtimeSync } from '@/socket/useRealtimeSync';
 import { useCurrentUser } from '@/api/hooks/useAuth';
+import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AI_ENABLED } from '@/modules/ai/index';
 
 const AiChatWidget = AI_ENABLED
@@ -143,7 +144,10 @@ export const MainLayout: React.FC<{
         >
           {/* Background texture (inline SVG noise — no external CDN) */}
           <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none fixed bg-[url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E&quot;)]"></div>
-          <div className="relative z-10 min-h-full pb-10">{children}</div>
+          <div className="relative z-10 min-h-full pb-10">
+            <Breadcrumbs />
+            {children}
+          </div>
         </main>
       </div>
 

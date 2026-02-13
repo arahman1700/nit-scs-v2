@@ -1,17 +1,29 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../middleware/auth.js';
 import { requireRole as _requireRole } from '../../middleware/rbac.js';
+import { aiRateLimiter } from '../../middleware/rate-limiter.js';
 import { chat, listConversations, getConversation, deleteConversation } from './ai-chat.service.js';
+
+const chatRequestSchema = z.object({
+  conversationId: z.string().uuid().optional().nullable(),
+  message: z.string().min(1).max(4000),
+});
 
 const router = Router();
 router.use(authenticate);
 
 // ── Chat ───────────────────────────────────────────────────────────────
 
-router.post('/chat', async (req, res, next) => {
+router.post('/chat', aiRateLimiter(30, 3600), async (req, res, next) => {
   try {
-    const { conversationId, message } = req.body;
-    const result = await chat(req.user!.userId, conversationId, message, req.user!.systemRole);
+    const parsed = chatRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ success: false, message: 'Invalid request', errors: parsed.error.flatten().fieldErrors });
+      return;
+    }
+    const { conversationId, message } = parsed.data;
+    const result = await chat(req.user!.userId, conversationId ?? undefined, message, req.user!.systemRole);
     res.json({ success: true, data: result });
   } catch (err) {
     next(err);

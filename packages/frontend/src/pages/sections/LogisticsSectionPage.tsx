@@ -61,21 +61,35 @@ export const LogisticsSectionPage: React.FC = () => {
   const activeFleetCount = useMemo(() => fleetData.filter(f => f.status === 'Active').length, [fleetData]);
 
   const kpis: KpiCardProps[] = [
-    { title: 'Active Jobs', value: stats?.activeJobs ?? 0, icon: Truck, color: 'bg-emerald-500' },
+    {
+      title: 'Active Jobs',
+      value: stats?.activeJobs ?? 0,
+      icon: Truck,
+      color: 'bg-emerald-500',
+      onClick: () => navigate('/admin/equipment?tab=all-jobs'),
+    },
     {
       title: 'SLA On-Track',
       value: `${sla?.compliancePct ?? 0}%`,
       icon: Target,
       color: 'bg-blue-500',
       sublabel: 'Compliance',
+      onClick: () => navigate('/admin/shipping?tab=sla'),
     },
-    { title: 'Fleet Active', value: activeFleetCount, icon: Bus, color: 'bg-nesma-primary' },
+    {
+      title: 'Fleet Active',
+      value: activeFleetCount,
+      icon: Bus,
+      color: 'bg-nesma-primary',
+      onClick: () => navigate('/admin/equipment?tab=fleet'),
+    },
     {
       title: 'Overdue Jobs',
       value: sla?.overdue ?? 0,
       icon: AlertTriangle,
       color: 'bg-red-500',
       alert: (sla?.overdue ?? 0) > 0,
+      onClick: () => navigate('/admin/equipment?tab=kanban'),
     },
   ];
 

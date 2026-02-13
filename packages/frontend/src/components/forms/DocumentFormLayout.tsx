@@ -37,26 +37,6 @@ export const DocumentFormLayout: React.FC<DocumentFormLayoutProps> = ({
 
   return (
     <div className="max-w-5xl mx-auto pb-10 animate-fade-in">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-8 text-sm text-gray-400">
-        <span
-          onClick={() => navigate('/admin')}
-          className="cursor-pointer hover:text-nesma-secondary transition-colors"
-        >
-          Dashboard
-        </span>
-        <span className="text-gray-600">/</span>
-        <span className="cursor-pointer hover:text-nesma-secondary transition-colors">Forms</span>
-        <span className="text-gray-600">/</span>
-        <span className="text-white font-medium">{code}</span>
-        {isEditMode && (
-          <>
-            <span className="text-gray-600">/</span>
-            <span className="text-nesma-secondary font-mono text-xs">{documentNumber}</span>
-          </>
-        )}
-      </div>
-
       {/* Non-editable warning */}
       {isEditMode && !isEditable && (
         <div className="flex items-center gap-3 px-5 py-4 mb-6 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">

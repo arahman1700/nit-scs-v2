@@ -91,8 +91,12 @@ const StatCard: React.FC<{
   icon: React.ElementType;
   color: string;
   label?: string;
-}> = ({ title, value, icon: Icon, color, label }) => (
-  <div className="glass-card p-6 rounded-xl flex items-start justify-between hover:border-nesma-secondary/30 transition-all duration-300 group">
+  onClick?: () => void;
+}> = ({ title, value, icon: Icon, color, label, onClick }) => (
+  <div
+    onClick={onClick}
+    className={`glass-card p-6 rounded-xl flex items-start justify-between hover:border-nesma-secondary/30 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+  >
     <div>
       <h3 className="text-3xl font-bold text-white mb-1 group-hover:text-nesma-secondary transition-colors">{value}</h3>
       <p className="text-gray-400 text-sm font-medium">{title}</p>
@@ -252,6 +256,7 @@ interface InventorySummary {
 // ── Main Component ─────────────────────────────────────────────────────────
 
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [selectedProject, setSelectedProject] = useState('All');
   const [timeRange, setTimeRange] = useState('30days');
 
@@ -361,6 +366,7 @@ export const AdminDashboard: React.FC = () => {
             icon={ClipboardList}
             color="bg-amber-500"
             label="Action Needed"
+            onClick={() => navigate('/admin/settings?tab=approval-levels')}
           />
           <StatCard
             title="Active Projects"
@@ -368,6 +374,7 @@ export const AdminDashboard: React.FC = () => {
             icon={Truck}
             color="bg-emerald-500"
             label="On Track"
+            onClick={() => navigate('/admin/master?tab=projects')}
           />
           <StatCard
             title="Total Items"
@@ -375,6 +382,7 @@ export const AdminDashboard: React.FC = () => {
             icon={Package}
             color="bg-nesma-secondary"
             label="Inventory"
+            onClick={() => navigate('/admin/warehouses?tab=inventory')}
           />
           <StatCard
             title="Low Stock Alerts"
@@ -382,6 +390,7 @@ export const AdminDashboard: React.FC = () => {
             icon={AlertTriangle}
             color="bg-red-500"
             label="Critical"
+            onClick={() => navigate('/admin/warehouses?tab=non-moving')}
           />
         </div>
       )}

@@ -141,65 +141,137 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
   ],
   [UserRole.WAREHOUSE_SUPERVISOR]: [
     { label: 'Dashboard', path: '/warehouse' },
-    { label: 'Receive (GRN)', path: '/warehouse/receive' },
-    { label: 'Issue (MI)', path: '/warehouse/issue' },
+    {
+      label: 'Operations',
+      path: '/warehouse/receive',
+      children: [
+        { label: 'Receive (GRN)', path: '/warehouse/receive' },
+        { label: 'Issue (MI)', path: '/warehouse/issue' },
+        { label: 'Returns (MRN)', path: '/warehouse/return' },
+      ],
+    },
     { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Returns (MRN)', path: '/warehouse/return' },
   ],
   [UserRole.WAREHOUSE_STAFF]: [
     { label: 'Dashboard', path: '/warehouse' },
-    { label: 'Receive (GRN)', path: '/warehouse/receive' },
-    { label: 'Issue (MI)', path: '/warehouse/issue' },
+    {
+      label: 'Operations',
+      path: '/warehouse/receive',
+      children: [
+        { label: 'Receive (GRN)', path: '/warehouse/receive' },
+        { label: 'Issue (MI)', path: '/warehouse/issue' },
+        { label: 'Returns (MRN)', path: '/warehouse/return' },
+      ],
+    },
     { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Returns (MRN)', path: '/warehouse/return' },
   ],
   [UserRole.FREIGHT_FORWARDER]: [
     { label: 'Dashboard', path: '/transport' },
-    { label: 'Shipments', path: '/transport/shipments' },
-    { label: 'Gate Passes', path: '/transport/gate-passes' },
+    {
+      label: 'Logistics',
+      path: '/transport/shipments',
+      children: [
+        { label: 'Shipments', path: '/transport/shipments' },
+        { label: 'Gate Passes', path: '/transport/gate-passes' },
+      ],
+    },
   ],
   [UserRole.MANAGER]: [
     { label: 'Dashboard', path: '/manager' },
-    { label: 'Approval Queue', path: '/manager/approvals' },
-    { label: 'Documents', path: '/manager/documents' },
-    { label: 'Projects', path: '/manager/projects' },
-    { label: 'Tasks', path: '/manager/tasks' },
+    {
+      label: 'Workflow',
+      path: '/manager/approvals',
+      children: [
+        { label: 'Approval Queue', path: '/manager/approvals' },
+        { label: 'Documents', path: '/manager/documents' },
+      ],
+    },
+    {
+      label: 'Oversight',
+      path: '/manager/projects',
+      children: [
+        { label: 'Projects', path: '/manager/projects' },
+        { label: 'Tasks', path: '/manager/tasks' },
+      ],
+    },
   ],
   [UserRole.QC_OFFICER]: [
     { label: 'Dashboard', path: '/qc' },
-    { label: 'Inspections (QCI)', path: '/qc/inspections' },
-    { label: 'Discrepancy Reports (DR)', path: '/qc/dr' },
-    { label: 'Incoming', path: '/qc/incoming' },
+    {
+      label: 'Inspections',
+      path: '/qc/inspections',
+      children: [
+        { label: 'Inspections (QCI)', path: '/qc/inspections' },
+        { label: 'Discrepancy Reports (DR)', path: '/qc/dr' },
+        { label: 'Incoming', path: '/qc/incoming' },
+      ],
+    },
     { label: 'Tasks', path: '/qc/tasks' },
   ],
   [UserRole.LOGISTICS_COORDINATOR]: [
     { label: 'Dashboard', path: '/logistics' },
-    { label: 'Job Orders', path: '/logistics/jobs' },
-    { label: 'IMSF', path: '/logistics/imsf' },
-    { label: 'Warehouse Transfers', path: '/logistics/wt' },
-    { label: 'Shipments', path: '/logistics/shipments' },
-    { label: 'Gate Passes', path: '/logistics/gate-passes' },
+    {
+      label: 'Operations',
+      path: '/logistics/jobs',
+      children: [
+        { label: 'Job Orders', path: '/logistics/jobs' },
+        { label: 'IMSF', path: '/logistics/imsf' },
+        { label: 'Warehouse Transfers', path: '/logistics/wt' },
+      ],
+    },
+    {
+      label: 'Shipping',
+      path: '/logistics/shipments',
+      children: [
+        { label: 'Shipments', path: '/logistics/shipments' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      ],
+    },
     { label: 'Tasks', path: '/logistics/tasks' },
   ],
   [UserRole.SITE_ENGINEER]: [
     { label: 'Dashboard', path: '/site-engineer' },
-    { label: 'New Request (MR)', path: '/site-engineer/new' },
-    { label: 'My Requests', path: '/site-engineer/my-requests' },
-    { label: 'My Project', path: '/site-engineer/project' },
-    { label: 'Site Inventory', path: '/site-engineer/inventory' },
+    {
+      label: 'Requests',
+      path: '/site-engineer/new',
+      children: [
+        { label: 'New Request (MR)', path: '/site-engineer/new' },
+        { label: 'My Requests', path: '/site-engineer/my-requests' },
+      ],
+    },
+    {
+      label: 'Project',
+      path: '/site-engineer/project',
+      children: [
+        { label: 'My Project', path: '/site-engineer/project' },
+        { label: 'Site Inventory', path: '/site-engineer/inventory' },
+      ],
+    },
     { label: 'Tasks', path: '/site-engineer/tasks' },
   ],
   [UserRole.TRANSPORT_SUPERVISOR]: [
     { label: 'Dashboard', path: '/logistics/transport' },
-    { label: 'Job Orders', path: '/logistics?tab=all-jobs' },
-    { label: 'Fleet', path: '/logistics?tab=fleet' },
-    { label: 'Rental Contracts', path: '/logistics?tab=rental-contracts' },
+    {
+      label: 'Operations',
+      path: '/logistics?tab=all-jobs',
+      children: [
+        { label: 'Job Orders', path: '/logistics?tab=all-jobs' },
+        { label: 'Fleet', path: '/logistics?tab=fleet' },
+        { label: 'Rental Contracts', path: '/logistics?tab=rental-contracts' },
+      ],
+    },
     { label: 'Tasks', path: '/logistics/tasks' },
   ],
   [UserRole.SCRAP_COMMITTEE_MEMBER]: [
     { label: 'Dashboard', path: '/admin/scrap' },
-    { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
-    { label: 'Scrap Items', path: '/admin/scrap?tab=scrap' },
-    { label: 'Surplus', path: '/admin/scrap?tab=surplus' },
+    {
+      label: 'Scrap & Surplus',
+      path: '/admin/scrap?tab=ssc',
+      children: [
+        { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
+        { label: 'Scrap Items', path: '/admin/scrap?tab=scrap' },
+        { label: 'Surplus', path: '/admin/scrap?tab=surplus' },
+      ],
+    },
   ],
 };

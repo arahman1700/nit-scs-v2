@@ -9,6 +9,7 @@ import {
   deleteCustomDataSource,
   executeCustomDataSource,
 } from '../services/custom-data-source.service.js';
+import { createAuditLog } from '../services/audit.service.js';
 
 const router = Router();
 
@@ -42,6 +43,14 @@ router.post('/', requireRole('admin'), async (req, res, next) => {
       ...req.body,
       createdById: req.user!.userId,
     });
+    createAuditLog({
+      tableName: 'CustomDataSource',
+      recordId: source.id,
+      action: 'create',
+      newValues: req.body,
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.status(201).json({ success: true, data: source });
   } catch (err) {
     next(err);
@@ -52,6 +61,14 @@ router.post('/', requireRole('admin'), async (req, res, next) => {
 router.put('/:id', requireRole('admin'), async (req, res, next) => {
   try {
     const source = await updateCustomDataSource(req.params.id as string, req.body);
+    createAuditLog({
+      tableName: 'CustomDataSource',
+      recordId: req.params.id as string,
+      action: 'update',
+      newValues: req.body,
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.json({ success: true, data: source });
   } catch (err) {
     next(err);
@@ -62,14 +79,21 @@ router.put('/:id', requireRole('admin'), async (req, res, next) => {
 router.delete('/:id', requireRole('admin'), async (req, res, next) => {
   try {
     await deleteCustomDataSource(req.params.id as string);
+    createAuditLog({
+      tableName: 'CustomDataSource',
+      recordId: req.params.id as string,
+      action: 'delete',
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.json({ success: true, message: 'Data source deleted' });
   } catch (err) {
     next(err);
   }
 });
 
-// POST /:id/test — Preview/test execution
-router.post('/:id/test', async (req, res, next) => {
+// POST /:id/test — Preview/test execution (admin only)
+router.post('/:id/test', requireRole('admin'), async (req, res, next) => {
   try {
     const source = await getCustomDataSource(req.params.id as string);
     const result = await executeCustomDataSource(source);

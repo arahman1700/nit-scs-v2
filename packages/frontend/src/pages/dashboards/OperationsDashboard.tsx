@@ -12,6 +12,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { Activity, Package, AlertTriangle, Warehouse, FileText, Clock, TrendingUp, Shield } from 'lucide-react';
 import { useCrossDepartment } from '@/api/hooks/useDashboard';
 import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
@@ -24,15 +25,20 @@ function StatCard({
   value,
   color,
   subtitle,
+  onClick,
 }: {
   icon: typeof Activity;
   label: string;
   value: string | number;
   color: string;
   subtitle?: string;
+  onClick?: () => void;
 }) {
   return (
-    <div className="glass-card rounded-2xl p-5 border border-white/10">
+    <div
+      onClick={onClick}
+      className={`glass-card rounded-2xl p-5 border border-white/10 ${onClick ? 'cursor-pointer hover:scale-[1.02] transition-transform duration-300' : ''}`}
+    >
       <div className="flex items-center gap-3 mb-2">
         <div className={`p-2 rounded-xl ${color}`}>
           <Icon size={18} className="text-white" />
@@ -46,6 +52,7 @@ function StatCard({
 }
 
 export function OperationsDashboard() {
+  const navigate = useNavigate();
   const query = useCrossDepartment();
   const data = (query.data as unknown as { data?: CrossDepartmentData } | undefined)?.data;
   const isLoading = query.isLoading;
@@ -100,6 +107,7 @@ export function OperationsDashboard() {
               : `${(data.inventory.totalInventoryValue / 1_000).toFixed(0)}K SAR`
           }
           color="bg-blue-600/20"
+          onClick={() => navigate('/admin/warehouses?tab=inventory')}
         />
         <StatCard
           icon={FileText}
@@ -107,12 +115,14 @@ export function OperationsDashboard() {
           value={totalActiveDocuments}
           color="bg-emerald-600/20"
           subtitle="Across all departments"
+          onClick={() => navigate('/admin/documents')}
         />
         <StatCard
           icon={AlertTriangle}
           label="Low Stock Alerts"
           value={data.inventory.lowStockAlerts}
           color="bg-amber-600/20"
+          onClick={() => navigate('/admin/warehouses?tab=non-moving')}
         />
         <StatCard
           icon={Shield}
@@ -120,6 +130,7 @@ export function OperationsDashboard() {
           value={data.inventory.blockedLots}
           color="bg-red-600/20"
           subtitle="Pending inspection"
+          onClick={() => navigate('/admin/warehouses?tab=inventory')}
         />
       </div>
 

@@ -122,6 +122,32 @@ export function authRateLimiter(maxAttempts = 5, windowSec = 900) {
   };
 }
 
+/**
+ * Per-user rate limiter for AI endpoints.
+ * Keys on userId (requires authenticate middleware to run first).
+ * Default: 30 requests per hour per user.
+ */
+export function aiRateLimiter(maxRequests = 30, windowSec = 3600) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req as unknown as { user?: { userId?: string } }).user?.userId || 'anon';
+    const key = `rl:ai:${userId}`;
+
+    redisLimiter(key, maxRequests, windowSec)
+      .then(({ allowed, remaining, retryAfterSec }) => {
+        res.setHeader('X-RateLimit-Limit', maxRequests);
+        res.setHeader('X-RateLimit-Remaining', Math.max(0, remaining));
+
+        if (!allowed) {
+          res.setHeader('Retry-After', retryAfterSec);
+          sendError(res, 429, 'AI chat rate limit exceeded. Please try again later.');
+          return;
+        }
+        next();
+      })
+      .catch(() => next());
+  };
+}
+
 // Periodic cleanup for in-memory fallback
 setInterval(() => {
   const now = Date.now();

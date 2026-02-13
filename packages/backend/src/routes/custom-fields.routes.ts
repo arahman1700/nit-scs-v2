@@ -10,6 +10,7 @@ import {
   getCustomFieldValues,
   setCustomFieldValues,
 } from '../services/custom-fields.service.js';
+import { createAuditLog } from '../services/audit.service.js';
 
 const router = Router();
 router.use(authenticate);
@@ -41,6 +42,14 @@ router.get('/definitions/:id', async (req, res, next) => {
 router.post('/definitions', requireRole('admin'), async (req, res, next) => {
   try {
     const def = await createFieldDefinition(req.body);
+    createAuditLog({
+      tableName: 'CustomFieldDefinition',
+      recordId: def.id,
+      action: 'create',
+      newValues: req.body,
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.status(201).json({ success: true, data: def });
   } catch (err) {
     next(err);
@@ -51,6 +60,14 @@ router.post('/definitions', requireRole('admin'), async (req, res, next) => {
 router.put('/definitions/:id', requireRole('admin'), async (req, res, next) => {
   try {
     const def = await updateFieldDefinition(req.params.id as string, req.body);
+    createAuditLog({
+      tableName: 'CustomFieldDefinition',
+      recordId: req.params.id as string,
+      action: 'update',
+      newValues: req.body,
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.json({ success: true, data: def });
   } catch (err) {
     next(err);
@@ -61,6 +78,13 @@ router.put('/definitions/:id', requireRole('admin'), async (req, res, next) => {
 router.delete('/definitions/:id', requireRole('admin'), async (req, res, next) => {
   try {
     await deleteFieldDefinition(req.params.id as string);
+    createAuditLog({
+      tableName: 'CustomFieldDefinition',
+      recordId: req.params.id as string,
+      action: 'delete',
+      performedById: req.user!.userId,
+      ipAddress: req.ip,
+    }).catch(() => {});
     res.json({ success: true, message: 'Field definition deleted' });
   } catch (err) {
     next(err);

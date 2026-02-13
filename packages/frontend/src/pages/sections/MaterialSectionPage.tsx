@@ -65,9 +65,27 @@ export const MaterialSectionPage: React.FC = () => {
   }, [grnRows]);
 
   const kpis: KpiCardProps[] = [
-    { title: 'Pending GRN', value: grnPending?.meta?.total ?? 0, icon: ArrowDownCircle, color: 'bg-amber-500' },
-    { title: 'Total Receipts', value: grnAll?.meta?.total ?? 0, icon: Package, color: 'bg-emerald-500' },
-    { title: 'Pending QCI', value: qciPending?.meta?.total ?? 0, icon: ClipboardCheck, color: 'bg-purple-500' },
+    {
+      title: 'Pending GRN',
+      value: grnPending?.meta?.total ?? 0,
+      icon: ArrowDownCircle,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/warehouses?tab=grn'),
+    },
+    {
+      title: 'Total Receipts',
+      value: grnAll?.meta?.total ?? 0,
+      icon: Package,
+      color: 'bg-emerald-500',
+      onClick: () => navigate('/admin/warehouses?tab=inventory'),
+    },
+    {
+      title: 'Pending QCI',
+      value: qciPending?.meta?.total ?? 0,
+      icon: ClipboardCheck,
+      color: 'bg-purple-500',
+      onClick: () => navigate('/admin/warehouses?tab=qci'),
+    },
   ];
 
   const tabs: TabDef[] = [

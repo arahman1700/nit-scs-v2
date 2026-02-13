@@ -164,6 +164,7 @@ export const ManagerDashboard: React.FC = () => {
           color="bg-amber-500"
           loading={isLoading}
           alert={totalPending > 10}
+          onClick={() => setTab('approvals')}
         />
         <KpiCard
           title="Approved Today"
@@ -171,6 +172,7 @@ export const ManagerDashboard: React.FC = () => {
           icon={CheckCircle}
           color="bg-emerald-500"
           loading={isLoading}
+          onClick={() => setTab('documents')}
         />
         <KpiCard
           title="Total Value Pending"
@@ -178,6 +180,7 @@ export const ManagerDashboard: React.FC = () => {
           icon={DollarSign}
           color="bg-nesma-primary"
           loading={isLoading}
+          onClick={() => setTab('approvals')}
         />
         <KpiCard
           title="Rejected This Week"
@@ -185,6 +188,7 @@ export const ManagerDashboard: React.FC = () => {
           icon={XCircle}
           color="bg-red-500"
           loading={isLoading}
+          onClick={() => setTab('documents')}
         />
       </div>
 

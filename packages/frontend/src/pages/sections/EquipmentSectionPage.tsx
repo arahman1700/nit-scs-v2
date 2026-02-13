@@ -71,16 +71,35 @@ export const EquipmentSectionPage: React.FC = () => {
   const activeFleetCount = useMemo(() => fleetData.filter(f => f.status === 'Active').length, [fleetData]);
 
   const kpis: KpiCardProps[] = [
-    { title: 'Active Jobs', value: stats?.activeJobs ?? 0, icon: Truck, color: 'bg-emerald-500' },
-    { title: 'Fleet Active', value: activeFleetCount, icon: Bus, color: 'bg-nesma-primary' },
+    {
+      title: 'Active Jobs',
+      value: stats?.activeJobs ?? 0,
+      icon: Truck,
+      color: 'bg-emerald-500',
+      onClick: () => navigate('/admin/equipment?tab=all-jobs'),
+    },
+    {
+      title: 'Fleet Active',
+      value: activeFleetCount,
+      icon: Bus,
+      color: 'bg-nesma-primary',
+      onClick: () => navigate('/admin/equipment?tab=fleet'),
+    },
     {
       title: 'Overdue Jobs',
       value: sla?.overdue ?? 0,
       icon: AlertTriangle,
       color: 'bg-red-500',
       alert: (sla?.overdue ?? 0) > 0,
+      onClick: () => navigate('/admin/equipment?tab=kanban'),
     },
-    { title: 'Generators', value: generatorsData.length, icon: Zap, color: 'bg-amber-500' },
+    {
+      title: 'Generators',
+      value: generatorsData.length,
+      icon: Zap,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/equipment?tab=generators'),
+    },
   ];
 
   const tabs: TabDef[] = [

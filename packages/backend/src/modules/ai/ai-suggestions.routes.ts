@@ -8,7 +8,7 @@ router.use(authenticate);
 
 // ── List Suggestions ───────────────────────────────────────────────────
 
-router.get('/', async (req, res, next) => {
+router.get('/', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
     const status = req.query.status as string | undefined;
     const suggestions = await listSuggestions(status);
@@ -20,7 +20,7 @@ router.get('/', async (req, res, next) => {
 
 // ── Dismiss a Suggestion ───────────────────────────────────────────────
 
-router.put('/:id/dismiss', async (req, res, next) => {
+router.put('/:id/dismiss', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
     const suggestion = await dismissSuggestion(req.params.id as string);
     res.json({ success: true, data: suggestion });
@@ -31,7 +31,7 @@ router.put('/:id/dismiss', async (req, res, next) => {
 
 // ── Apply a Suggestion ─────────────────────────────────────────────────
 
-router.put('/:id/apply', async (req, res, next) => {
+router.put('/:id/apply', requireRole('admin', 'manager'), async (req, res, next) => {
   try {
     const suggestion = await applySuggestion(req.params.id as string);
     res.json({ success: true, data: suggestion });

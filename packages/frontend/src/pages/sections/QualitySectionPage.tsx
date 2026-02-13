@@ -70,10 +70,34 @@ export const QualitySectionPage: React.FC = () => {
   }, [rfimData]);
 
   const kpis: KpiCardProps[] = [
-    { title: 'Pending Returns', value: pendingReturns, icon: RotateCcw, color: 'bg-amber-500' },
-    { title: 'Open Inspections', value: openInspections, icon: Search, color: 'bg-blue-500' },
-    { title: 'DR Reports', value: osdTotal, icon: AlertTriangle, color: 'bg-red-500' },
-    { title: 'QC Pass Rate', value: `${qcPassRate}%`, icon: CheckCircle, color: 'bg-emerald-500' },
+    {
+      title: 'Pending Returns',
+      value: pendingReturns,
+      icon: RotateCcw,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/warehouses?tab=mrn'),
+    },
+    {
+      title: 'Open Inspections',
+      value: openInspections,
+      icon: Search,
+      color: 'bg-blue-500',
+      onClick: () => navigate('/admin/warehouses?tab=qci'),
+    },
+    {
+      title: 'DR Reports',
+      value: osdTotal,
+      icon: AlertTriangle,
+      color: 'bg-red-500',
+      onClick: () => navigate('/admin/warehouses?tab=dr'),
+    },
+    {
+      title: 'QC Pass Rate',
+      value: `${qcPassRate}%`,
+      icon: CheckCircle,
+      color: 'bg-emerald-500',
+      onClick: () => navigate('/admin/warehouses?tab=qci'),
+    },
   ];
 
   // ── Tab definitions ───────────────────────────────────────────────────────

@@ -16,9 +16,27 @@ export const ScrapSectionPage: React.FC = () => {
   const surplusQuery = useSurplusList({ pageSize: 50 });
 
   const kpis: KpiCardProps[] = [
-    { title: 'Active Scrap', value: scrapQuery.data?.meta?.total ?? 0, icon: Recycle, color: 'bg-red-500' },
-    { title: 'SSC Bids', value: 0, icon: Gavel, color: 'bg-purple-500' },
-    { title: 'Surplus Items', value: surplusQuery.data?.meta?.total ?? 0, icon: TrendingDown, color: 'bg-amber-500' },
+    {
+      title: 'Active Scrap',
+      value: scrapQuery.data?.meta?.total ?? 0,
+      icon: Recycle,
+      color: 'bg-red-500',
+      onClick: () => navigate('/admin/scrap?tab=scrap'),
+    },
+    {
+      title: 'SSC Bids',
+      value: 0,
+      icon: Gavel,
+      color: 'bg-purple-500',
+      onClick: () => navigate('/admin/scrap?tab=ssc'),
+    },
+    {
+      title: 'Surplus Items',
+      value: surplusQuery.data?.meta?.total ?? 0,
+      icon: TrendingDown,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/scrap?tab=surplus'),
+    },
   ];
 
   const tabs: TabDef[] = [

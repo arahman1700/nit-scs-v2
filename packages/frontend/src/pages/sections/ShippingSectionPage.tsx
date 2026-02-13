@@ -25,15 +25,34 @@ export const ShippingSectionPage: React.FC = () => {
   const inTransitCount = shipData.filter(s => (s as Record<string, unknown>).status === 'in_transit').length;
 
   const kpis: KpiCardProps[] = [
-    { title: 'Active Shipments', value: shipQuery.data?.meta?.total ?? 0, icon: Ship, color: 'bg-blue-500' },
-    { title: 'In Transit', value: inTransitCount, icon: Ship, color: 'bg-emerald-500' },
+    {
+      title: 'Active Shipments',
+      value: shipQuery.data?.meta?.total ?? 0,
+      icon: Ship,
+      color: 'bg-blue-500',
+      onClick: () => navigate('/admin/shipping?tab=shipments'),
+    },
+    {
+      title: 'In Transit',
+      value: inTransitCount,
+      icon: Ship,
+      color: 'bg-emerald-500',
+      onClick: () => navigate('/admin/shipping?tab=shipments'),
+    },
     {
       title: 'SLA Compliance',
       value: `${sla?.compliancePct ?? 0}%`,
       icon: Target,
       color: 'bg-nesma-primary',
+      onClick: () => navigate('/admin/shipping?tab=sla'),
     },
-    { title: 'Customs Pending', value: 0, icon: Anchor, color: 'bg-amber-500' },
+    {
+      title: 'Customs Pending',
+      value: 0,
+      icon: Anchor,
+      color: 'bg-amber-500',
+      onClick: () => navigate('/admin/shipping?tab=customs'),
+    },
   ];
 
   const tabs: TabDef[] = [
