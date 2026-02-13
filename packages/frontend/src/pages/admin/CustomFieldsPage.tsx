@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   useCustomFieldDefinitions,
   useCreateCustomFieldDefinition,
@@ -51,7 +50,6 @@ const EMPTY_FIELD: CreateFieldDefinitionInput = {
 };
 
 export function CustomFieldsPage() {
-  const { t } = useTranslation();
   const [selectedEntityType, setSelectedEntityType] = useState('');
   const { data: listData, isLoading } = useCustomFieldDefinitions(selectedEntityType || undefined);
   const createMutation = useCreateCustomFieldDefinition();
@@ -107,7 +105,7 @@ export function CustomFieldsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
           <Settings2 size={24} className="text-nesma-secondary" />
-          <h1 className="text-2xl font-bold text-white">{t('Custom Fields', { defaultValue: 'Custom Fields' })}</h1>
+          <h1 className="text-2xl font-bold text-white">Custom Fields</h1>
         </div>
         <button
           onClick={handleNew}
@@ -115,7 +113,7 @@ export function CustomFieldsPage() {
           className="btn-primary flex items-center gap-2 disabled:opacity-50"
         >
           <Plus size={16} />
-          {t('Add Field', { defaultValue: 'Add Field' })}
+          Add Field
         </button>
       </div>
 

@@ -80,7 +80,7 @@ export function AiChatWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 end-6 z-50 w-14 h-14 rounded-full bg-nesma-primary shadow-lg shadow-nesma-primary/30 flex items-center justify-center hover:scale-110 transition-all duration-300"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-nesma-primary shadow-lg shadow-nesma-primary/30 flex items-center justify-center hover:scale-110 transition-all duration-300"
         aria-label="Open AI Chat"
       >
         <MessageCircle size={24} className="text-white" />
@@ -89,7 +89,7 @@ export function AiChatWidget() {
   }
 
   return (
-    <div className="fixed bottom-6 end-6 z-50 w-96 h-[32rem] glass-panel rounded-2xl border border-white/10 flex flex-col shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-50 w-96 h-[32rem] glass-panel rounded-2xl border border-white/10 flex flex-col shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ export function AiChatWidget() {
             <button
               key={conv.id}
               onClick={() => handleSelectConversation(conv.id)}
-              className="w-full text-start glass-card rounded-xl p-3 hover:bg-white/10 transition-all"
+              className="w-full text-left glass-card rounded-xl p-3 hover:bg-white/10 transition-all"
             >
               <p className="text-sm text-white truncate">{conv.title || 'Untitled'}</p>
               <p className="text-xs text-gray-500">{conv._count?.messages ?? 0} messages</p>

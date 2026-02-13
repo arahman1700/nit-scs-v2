@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useWorkflowTemplateList, useInstallWorkflowTemplate } from '@/api/hooks/useWorkflowTemplates';
 import type { WorkflowTemplate } from '@/api/hooks/useWorkflowTemplates';
@@ -15,7 +14,6 @@ const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 export function WorkflowTemplatesPage() {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: listData, isLoading } = useWorkflowTemplateList();
   const installMutation = useInstallWorkflowTemplate();
@@ -56,9 +54,7 @@ export function WorkflowTemplatesPage() {
         <div className="flex items-center gap-3">
           <Zap size={24} className="text-nesma-secondary" />
           <div>
-            <h1 className="text-2xl font-bold text-white">
-              {t('Workflow Templates', { defaultValue: 'Workflow Templates' })}
-            </h1>
+            <h1 className="text-2xl font-bold text-white">Workflow Templates</h1>
             <p className="text-sm text-gray-400 mt-1">Pre-built automation templates you can install with one click.</p>
           </div>
         </div>

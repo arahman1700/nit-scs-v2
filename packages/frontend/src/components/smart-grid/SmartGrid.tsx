@@ -9,7 +9,6 @@ import type {
   ColumnState,
 } from 'ag-grid-community';
 import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
-import { useDirection } from '@/contexts/DirectionProvider';
 import { EmptyState } from '@/components/EmptyState';
 import type { ColumnDef } from '@/config/resourceColumns';
 import { mapColumnsToAgGrid } from './useGridColumns';
@@ -64,7 +63,6 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
   initialColumnState,
   onColumnStateChanged,
 }) => {
-  const { dir } = useDirection();
   const gridRef = useRef<GridApi | null>(null);
 
   const agColumns = useMemo(() => mapColumnsToAgGrid(columns), [columns]);
@@ -157,7 +155,7 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
         columnDefs={agColumns}
         rowData={rowData}
         defaultColDef={defaultColDef}
-        enableRtl={dir === 'rtl'}
+        enableRtl={false}
         animateRows={false}
         rowSelection={isDocument ? 'multiple' : undefined}
         suppressRowClickSelection

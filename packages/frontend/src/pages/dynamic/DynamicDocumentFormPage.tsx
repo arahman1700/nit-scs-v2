@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   useDynamicDocument,
   useCreateDynamicDocument,
@@ -15,7 +14,6 @@ import { ArrowLeft, Save, Send, Clock } from 'lucide-react';
 export const DynamicDocumentFormPage: React.FC = () => {
   const { typeCode, id } = useParams<{ typeCode: string; id?: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const isNew = !id || id === 'new';
 
   // Fetch type definition (for fields + status flow)
@@ -137,7 +135,7 @@ export const DynamicDocumentFormPage: React.FC = () => {
             className="btn-primary flex items-center gap-2"
           >
             <Save size={16} />
-            {createMut.isPending || updateMut.isPending ? 'Saving...' : t('common.save', 'Save')}
+            {createMut.isPending || updateMut.isPending ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>

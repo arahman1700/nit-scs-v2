@@ -93,7 +93,7 @@ export default defineConfig({
           charts: ['recharts'],
           dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           socketio: ['socket.io-client'],
-          i18n: ['i18next', 'react-i18next'],
+
         },
       },
     },

@@ -8,7 +8,7 @@ Enterprise supply chain management system (monorepo) with dark glassmorphism the
 - **Stack**: React 19 + Vite 6 + Express 5 + Prisma 6 + TypeScript
 - **Styling**: Tailwind CSS 3.4 with custom Nesma dark theme
 - **State**: React Query v5 (server), Zustand (client), React Hook Form + Zod (forms)
-- **i18n**: i18next — English + Arabic with full RTL support
+
 - **Real-time**: Socket.IO for live updates + React Query cache invalidation
 
 ---
@@ -137,7 +137,7 @@ The core visual primitive is the glass-card — glassmorphism with backdrop blur
 ### Font Stack
 
 ```
-Inter + Noto Sans Arabic + system-ui + sans-serif
+Inter + system-ui + sans-serif
 ```
 
 ### Scale
@@ -213,7 +213,6 @@ import { Package, ArrowDownCircle, ClipboardCheck, AlertTriangle, Plus, Trash2, 
 import React, { useState, useEffect } from 'react';
 
 // 2. Third-party
-import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 
 // 3. Shared monorepo types
@@ -309,15 +308,6 @@ V1 Prisma model names are kept internally; V2 names are used at the API boundary
 - Skip navigation link is in MainLayout
 - Support keyboard navigation for all interactive elements
 - Maintain WCAG AA color contrast (dark theme tokens are pre-validated)
-
----
-
-## RTL / Bilingual Support
-
-- Always use logical properties when possible (`start`/`end` instead of `left`/`right`)
-- Use `useDirection()` hook for direction-dependent logic
-- Language toggle in Header switches between EN ↔ عر
-- All user-facing strings must use `t('key')` from i18next
 
 ---
 

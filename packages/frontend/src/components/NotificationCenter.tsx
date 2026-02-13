@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, CheckCircle, AlertTriangle, Package, Clock, Info, X, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useNotifications, useUnreadCount, useMarkRead, useMarkAllRead } from '@/api/hooks';
 import { formatRelativeTime } from '@nit-scs-v2/shared/formatters';
 import type { Notification } from '@nit-scs-v2/shared/types';
@@ -31,8 +30,6 @@ export const NotificationCenter: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { t } = useTranslation();
-
   // React Query hooks — backed by real API
   const { data: notificationsResponse, isLoading } = useNotifications({ pageSize: 30 });
   const { data: unreadResponse } = useUnreadCount();
@@ -95,7 +92,7 @@ export const NotificationCenter: React.FC = () => {
       >
         <Bell size={20} />
         {unreadCount > 0 && (
-          <span className="absolute top-1 end-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-nesma-dark flex items-center justify-center text-[10px] font-bold text-white animate-pulse">
+          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-nesma-dark flex items-center justify-center text-[10px] font-bold text-white animate-pulse">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -103,11 +100,11 @@ export const NotificationCenter: React.FC = () => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute end-0 top-full mt-2 w-96 max-h-[70vh] flex flex-col bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-96 max-h-[70vh] flex flex-col bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white">{t('common.notifications')}</h3>
+              <h3 className="text-sm font-bold text-white">Notifications</h3>
               {unreadCount > 0 && (
                 <span className="text-[10px] font-bold text-nesma-secondary bg-nesma-secondary/10 px-2 py-0.5 rounded-full">
                   {unreadCount} new
@@ -121,7 +118,7 @@ export const NotificationCenter: React.FC = () => {
                   disabled={markAllReadMutation.isPending}
                   className="text-[10px] font-medium text-nesma-secondary hover:text-white transition-colors disabled:opacity-50"
                 >
-                  {markAllReadMutation.isPending ? 'Marking...' : t('common.markAllRead')}
+                  {markAllReadMutation.isPending ? 'Marking...' : 'Mark all read'}
                 </button>
               )}
               <button
@@ -146,7 +143,7 @@ export const NotificationCenter: React.FC = () => {
                 <div className="p-4 rounded-full bg-white/5 mb-4">
                   <Bell size={28} className="text-gray-500" />
                 </div>
-                <p className="text-sm font-medium text-gray-400">{t('common.noNotifications')}</p>
+                <p className="text-sm font-medium text-gray-400">No notifications</p>
                 <p className="text-xs text-gray-600 mt-1">You're all caught up</p>
               </div>
             ) : (
@@ -205,7 +202,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-start gap-3 px-5 py-3.5 text-start transition-all hover:bg-white/5 group ${
+      className={`w-full flex items-start gap-3 px-5 py-3.5 text-left transition-all hover:bg-white/5 group ${
         !notification.read ? 'bg-nesma-primary/[0.05]' : ''
       }`}
     >

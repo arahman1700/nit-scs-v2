@@ -15,7 +15,7 @@ export enum UserRole {
 
 /**
  * Job order statuses — values match the database (snake_case).
- * Display labels should be derived via i18n or a lookup map, not from enum values.
+ * Display labels should be derived via a lookup map, not from enum values.
  */
 export enum JobStatus {
   DRAFT = 'draft',
@@ -32,7 +32,7 @@ export enum JobStatus {
 }
 
 /**
- * Display labels for JobStatus (English). Use i18n for Arabic.
+ * Display labels for JobStatus.
  */
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   [JobStatus.DRAFT]: 'Draft',
@@ -67,7 +67,7 @@ export type DocumentStatus =
   | 'in_transit';
 
 /**
- * Display labels for document statuses (English). Use i18n for Arabic.
+ * Display labels for document statuses.
  */
 export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',

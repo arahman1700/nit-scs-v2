@@ -134,7 +134,7 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
           `}
         >
           {active && (
-            <div className="absolute start-0 top-0 bottom-0 w-1 bg-nesma-secondary shadow-[0_0_10px_#80D1E9]"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-1 bg-nesma-secondary shadow-[0_0_10px_#80D1E9]"></div>
           )}
 
           {Icon && (
@@ -160,7 +160,7 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
 
         {/* Children */}
         {isOpen && hasChildren && isExpanded && (
-          <div className="mt-2 ms-4 ps-4 border-s border-white/10 space-y-1 animate-fade-in">
+          <div className="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-fade-in">
             {(item.children as NavItemWithIcon[])!.map((child, idx) =>
               child.type === 'divider' ? (
                 <div key={idx} className="h-px w-full bg-white/10 my-2"></div>
@@ -171,8 +171,8 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
                     ${
                       isActive(child.path)
-                        ? 'text-nesma-secondary bg-white/10 font-medium ltr:translate-x-1 rtl:-translate-x-1'
-                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 ltr:hover:translate-x-1 rtl:hover:-translate-x-1'
+                        ? 'text-nesma-secondary bg-white/10 font-medium translate-x-1'
+                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 hover:translate-x-1'
                     }
                   `}
                 >
@@ -223,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
 
   return (
     <aside
-      className={`${isOpen ? 'w-80' : 'w-24 hidden lg:flex'} glass-panel transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-e border-white/5 bg-[#051020]/95 backdrop-blur-xl shadow-2xl`}
+      className={`${isOpen ? 'w-80' : 'w-24 hidden lg:flex'} glass-panel transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-[#051020]/95 backdrop-blur-xl shadow-2xl`}
     >
       {/* Logo Area */}
       <div className="h-24 flex items-center justify-center p-6 relative overflow-hidden group border-b border-white/5">

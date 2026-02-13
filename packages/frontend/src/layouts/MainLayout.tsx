@@ -104,7 +104,7 @@ export const MainLayout: React.FC<{
       {/* Skip Navigation — Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:start-2 focus:px-4 focus:py-2 focus:bg-nesma-primary focus:text-white focus:rounded-lg focus:text-sm"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-nesma-primary focus:text-white focus:rounded-lg focus:text-sm"
       >
         Skip to main content
       </a>
@@ -129,7 +129,7 @@ export const MainLayout: React.FC<{
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 start-0 z-50 transform ${isSidebarOpen ? 'translate-x-0 rtl:-translate-x-0' : '-translate-x-full rtl:translate-x-full'} lg:relative lg:translate-x-0 rtl:lg:-translate-x-0 transition-transform duration-300 ease-in-out h-full`}
+        className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out h-full`}
       >
         <Sidebar role={role} isOpen={isSidebarOpen} setRole={setRole} isMobile={isMobile} onLogout={onLogout} />
       </div>
@@ -142,7 +142,7 @@ export const MainLayout: React.FC<{
           role="main"
         >
           {/* Background texture (inline SVG noise — no external CDN) */}
-          <div className="absolute top-0 start-0 w-full h-full opacity-20 pointer-events-none fixed bg-[url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E&quot;)]"></div>
+          <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none fixed bg-[url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E&quot;)]"></div>
           <div className="relative z-10 min-h-full pb-10">{children}</div>
         </main>
       </div>

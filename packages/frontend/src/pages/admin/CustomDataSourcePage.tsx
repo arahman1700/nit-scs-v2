@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   useCustomDataSourceList,
   useCreateCustomDataSource,
@@ -50,7 +49,6 @@ const EMPTY_FORM: CreateDataSourceInput = {
 };
 
 export function CustomDataSourcePage() {
-  const { t } = useTranslation();
   const { data: listData, isLoading } = useCustomDataSourceList();
   const createMutation = useCreateCustomDataSource();
   const updateMutation = useUpdateCustomDataSource();
@@ -122,13 +120,11 @@ export function CustomDataSourcePage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3">
           <Database size={24} className="text-nesma-secondary" />
-          <h1 className="text-2xl font-bold text-white">
-            {t('Custom Data Sources', { defaultValue: 'Custom Data Sources' })}
-          </h1>
+          <h1 className="text-2xl font-bold text-white">Custom Data Sources</h1>
         </div>
         <button onClick={handleNew} className="btn-primary flex items-center gap-2">
           <Plus size={16} />
-          {t('Add Data Source', { defaultValue: 'Add Data Source' })}
+          Add Data Source
         </button>
       </div>
 
@@ -142,9 +138,7 @@ export function CustomDataSourcePage() {
           </div>
         ) : sources.length === 0 ? (
           <p className="text-gray-400 text-center py-10">
-            {t('No custom data sources yet', {
-              defaultValue: 'No custom data sources yet. Create one to build custom KPIs.',
-            })}
+            No custom data sources yet. Create one to build custom KPIs.
           </p>
         ) : (
           <div className="space-y-3">

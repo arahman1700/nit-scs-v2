@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import {
   useDynamicType,
   useCreateDynamicType,
@@ -39,7 +38,6 @@ const TABS = ['General', 'Fields', 'Status Flow', 'Permissions', 'Preview'];
 export const DynamicTypeBuilderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const _t = useTranslation();
   const isNew = !id || id === 'new';
   const [activeTab, setActiveTab] = useState('General');
 

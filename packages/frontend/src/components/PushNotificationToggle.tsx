@@ -102,7 +102,7 @@ export const PushNotificationToggle: React.FC = () => {
         <BellOff size={16} className="text-gray-500 flex-shrink-0 group-hover:text-gray-300 transition-colors" />
       )}
 
-      <div className="flex-1 min-w-0 text-start">
+      <div className="flex-1 min-w-0 text-left">
         <p className="text-xs font-medium text-gray-300">Push Notifications</p>
         <p className="text-[10px] text-gray-500">{loading ? 'Updating...' : subscribed ? 'Enabled' : 'Disabled'}</p>
       </div>
@@ -115,7 +115,7 @@ export const PushNotificationToggle: React.FC = () => {
       >
         <div
           className={`absolute top-0.5 h-4 w-4 rounded-full transition-all shadow-sm ${
-            subscribed ? 'start-[calc(100%-1.125rem)] bg-nesma-secondary' : 'start-0.5 bg-gray-500'
+            subscribed ? 'left-[calc(100%-1.125rem)] bg-nesma-secondary' : 'left-0.5 bg-gray-500'
           }`}
         />
       </div>

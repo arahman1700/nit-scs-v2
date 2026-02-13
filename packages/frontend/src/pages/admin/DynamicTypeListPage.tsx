@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useDynamicTypeList, useDeleteDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
 import type { DynamicDocumentType } from '@/api/hooks/useDynamicDocumentTypes';
 import { Plus, Search, FileType2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export const DynamicTypeListPage: React.FC = () => {
   const navigate = useNavigate();
-  const _t = useTranslation();
   const [search, setSearch] = useState('');
 
   const { data, isLoading } = useDynamicTypeList({ search: search || undefined });

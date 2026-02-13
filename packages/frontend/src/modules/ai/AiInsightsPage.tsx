@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   useAiSuggestions,
   useDismissSuggestion,
@@ -27,7 +26,6 @@ const PRIORITY_LABELS: Record<number, { label: string; color: string }> = {
 };
 
 export function AiInsightsPage() {
-  const { t } = useTranslation();
   const { data: suggestionsData, isLoading, refetch } = useAiSuggestions();
   const dismissMutation = useDismissSuggestion();
   const applyMutation = useApplySuggestion();
@@ -54,7 +52,7 @@ export function AiInsightsPage() {
         <div className="flex items-center gap-3">
           <Lightbulb size={24} className="text-nesma-secondary" />
           <div>
-            <h1 className="text-2xl font-bold text-white">{t('AI Insights', { defaultValue: 'AI Insights' })}</h1>
+            <h1 className="text-2xl font-bold text-white">AI Insights</h1>
             <p className="text-sm text-gray-400 mt-1">
               {suggestions.length} active suggestion{suggestions.length !== 1 ? 's' : ''}
             </p>

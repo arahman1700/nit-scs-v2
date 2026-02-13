@@ -173,7 +173,7 @@ export const FEATURES_CATALOG: Feature[] = [
     title: 'Fleet Management',
     description: 'Track vehicles, maintenance schedules, and utilization rates',
     category: 'Equipment & Transport',
-    status: 'active',
+    status: 'coming-soon',
     iconName: 'Truck',
   },
   {
@@ -273,7 +273,7 @@ export const FEATURES_CATALOG: Feature[] = [
     title: 'Customs Clearance',
     description: 'Manage customs documentation and clearance status',
     category: 'Shipping & Customs',
-    status: 'active',
+    status: 'coming-soon',
     iconName: 'Shield',
   },
   {
@@ -281,7 +281,7 @@ export const FEATURES_CATALOG: Feature[] = [
     title: 'SLA Performance',
     description: 'Monitor supplier delivery SLAs with automated alerts',
     category: 'Shipping & Customs',
-    status: 'active',
+    status: 'coming-soon',
     iconName: 'Timer',
   },
   {

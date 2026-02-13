@@ -120,7 +120,7 @@ const ConditionGroup: React.FC<{
   };
 
   return (
-    <div className={`border border-white/10 rounded-xl p-3 ${depth > 0 ? 'ms-4 bg-white/[0.02]' : ''}`}>
+    <div className={`border border-white/10 rounded-xl p-3 ${depth > 0 ? 'ml-4 bg-white/[0.02]' : ''}`}>
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs text-gray-400 uppercase font-bold">Match</span>
         <button

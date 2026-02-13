@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useCustomFieldDefinitions, useCustomFieldValues, useSaveCustomFieldValues } from '@/api/hooks/useCustomFields';
 import type { CustomFieldDefinition } from '@/api/hooks/useCustomFields';
 import { Settings2 } from 'lucide-react';
@@ -13,7 +12,6 @@ interface CustomFieldsSectionProps {
 }
 
 export function CustomFieldsSection({ entityType, entityId, values, onChange, readOnly }: CustomFieldsSectionProps) {
-  const { t } = useTranslation();
   const { data: defsData } = useCustomFieldDefinitions(entityType);
   const { data: savedData } = useCustomFieldValues(entityType, entityId);
 
@@ -40,7 +38,7 @@ export function CustomFieldsSection({ entityType, entityId, values, onChange, re
     <div className="glass-card rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2">
         <Settings2 size={18} className="text-nesma-secondary" />
-        <h3 className="text-lg font-semibold text-white">{t('Custom Fields', { defaultValue: 'Custom Fields' })}</h3>
+        <h3 className="text-lg font-semibold text-white">Custom Fields</h3>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

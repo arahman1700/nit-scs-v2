@@ -105,7 +105,7 @@ export const Toaster: React.FC = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 end-4 z-[9999] flex flex-col gap-2 w-80" aria-live="polite" role="status">
+    <div className="fixed top-4 right-4 z-[9999] flex flex-col gap-2 w-80" aria-live="polite" role="status">
       {toasts.map(t => (
         <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
       ))}

@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, Search, Settings } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import type { User, UserRole } from '@nit-scs-v2/shared/types';
-import { useDirection } from '@/contexts/DirectionProvider';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 
@@ -13,8 +11,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => {
-  const { i18n, t } = useTranslation();
-  const { toggleDirection, isRtl } = useDirection();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -49,13 +45,13 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
           <Search size={18} className="text-gray-400 group-focus-within:text-nesma-secondary transition-colors" />
           <input
             type="text"
-            placeholder={t('common.searchPlaceholder')}
+            placeholder="Search assets, orders..."
             className="bg-transparent border-none outline-none text-sm w-full px-3 placeholder-gray-500 text-white"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-3 md:gap-6 ps-2">
+      <div className="flex items-center gap-3 md:gap-6 pl-2">
         {/* Mobile Search Icon */}
         <button className="md:hidden p-2 text-gray-300 hover:text-white" aria-label="Search">
           <Search size={20} />
@@ -64,24 +60,6 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
         <div className="flex items-center gap-1 md:gap-2">
           {/* Notifications */}
           <NotificationCenter />
-
-          <button
-            onClick={toggleDirection}
-            className="relative hidden sm:flex items-center h-8 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs font-semibold overflow-hidden"
-            aria-label={isRtl ? 'Switch to English' : 'التبديل إلى العربية'}
-            title={isRtl ? 'English' : 'العربية'}
-          >
-            <span
-              className={`px-2.5 py-1 rounded-full transition-all ${!isRtl ? 'bg-nesma-primary text-white' : 'text-gray-400'}`}
-            >
-              EN
-            </span>
-            <span
-              className={`px-2.5 py-1 rounded-full transition-all ${isRtl ? 'bg-nesma-primary text-white' : 'text-gray-400'}`}
-            >
-              عر
-            </span>
-          </button>
 
           <div className="relative hidden sm:block" ref={settingsRef}>
             <button
@@ -94,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
             </button>
 
             {settingsOpen && (
-              <div className="absolute end-0 top-full mt-2 w-64 bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 p-3 animate-fade-in">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 p-3 animate-fade-in">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                   Quick Settings
                 </p>
@@ -106,8 +84,8 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
 
         <div className="h-8 w-px bg-white/10 mx-1 md:mx-2 hidden sm:block"></div>
 
-        <div className="flex items-center gap-3 ps-2 sm:ps-0 border-s border-white/10 sm:border-0">
-          <div className="text-end hidden lg:block">
+        <div className="flex items-center gap-3 pl-2 sm:pl-0 border-l border-white/10 sm:border-0">
+          <div className="text-right hidden lg:block">
             <p className="text-sm font-bold text-white leading-tight">{user.name}</p>
             <p className="text-[10px] text-nesma-secondary font-medium tracking-wide uppercase mt-0.5">{user.role}</p>
           </div>

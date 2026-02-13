@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useDynamicDocumentList } from '@/api/hooks/useDynamicDocuments';
 import { useDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
 import type { StatusFlowConfig } from '@/api/hooks/useDynamicDocumentTypes';
@@ -9,7 +8,6 @@ import { Plus, Search, FileText } from 'lucide-react';
 export const DynamicDocumentListPage: React.FC = () => {
   const { typeCode } = useParams<{ typeCode: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -57,7 +55,7 @@ export const DynamicDocumentListPage: React.FC = () => {
           className="btn-primary flex items-center gap-2"
         >
           <Plus size={20} />
-          {t('common.create', 'Create New')}
+          Create New
         </button>
       </div>
 
