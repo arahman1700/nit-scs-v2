@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, BarChart3, Database } from 'lucide-react';
 import type { DashboardWidget } from '@/api/hooks/useDashboards';
+import { SemanticQueryBuilder } from '@/components/SemanticQueryBuilder';
 
 const DATA_SOURCES = [
   { value: 'stats/pending_requests', label: 'Pending Requests' },
@@ -38,10 +39,23 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
   const [dataSource, setDataSource] = useState(widget.dataSource);
   const [displayConfig, setDisplayConfig] = useState<Record<string, unknown>>(widget.displayConfig || {});
   const [width, setWidth] = useState(widget.width);
+  const [sourceTab, setSourceTab] = useState<'preset' | 'semantic'>(
+    widget.dataSource?.startsWith('semantic:') ? 'semantic' : 'preset',
+  );
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSave({ title, dataSource, displayConfig, width });
+  }
+
+  function handleSemanticSave(config: {
+    measure: string;
+    dimensions: string[];
+    filters: Array<{ field: string; op: string; value: unknown }>;
+    dateRange?: { start: string; end: string };
+  }) {
+    setDataSource(`semantic:${config.measure}`);
+    setDisplayConfig(prev => ({ ...prev, queryConfig: config }));
   }
 
   return (
@@ -67,22 +81,53 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
             />
           </div>
 
-          {/* Data Source */}
+          {/* Data Source Tab Switcher */}
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Data Source</label>
-            <select
-              value={dataSource}
-              onChange={e => setDataSource(e.target.value)}
-              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                focus:border-[#80D1E9]/50 focus:outline-none focus:ring-1 focus:ring-[#80D1E9]/30"
-            >
-              <option value="">Select a data source</option>
-              {DATA_SOURCES.map(ds => (
-                <option key={ds.value} value={ds.value}>
-                  {ds.label}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setSourceTab('preset')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  sourceTab === 'preset'
+                    ? 'bg-nesma-primary/30 border-nesma-secondary/50 text-white'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                }`}
+              >
+                <Database size={14} />
+                Preset
+              </button>
+              <button
+                type="button"
+                onClick={() => setSourceTab('semantic')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  sourceTab === 'semantic'
+                    ? 'bg-nesma-primary/30 border-nesma-secondary/50 text-white'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
+                }`}
+              >
+                <BarChart3 size={14} />
+                Semantic
+              </button>
+            </div>
+
+            {sourceTab === 'preset' ? (
+              <select
+                value={dataSource}
+                onChange={e => setDataSource(e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
+                  focus:border-[#80D1E9]/50 focus:outline-none focus:ring-1 focus:ring-[#80D1E9]/30"
+              >
+                <option value="">Select a data source</option>
+                {DATA_SOURCES.map(ds => (
+                  <option key={ds.value} value={ds.value}>
+                    {ds.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <SemanticQueryBuilder onSave={handleSemanticSave} />
+            )}
           </div>
 
           {/* Chart type (for chart widgets) */}

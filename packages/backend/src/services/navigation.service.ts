@@ -1,13 +1,39 @@
-import type { NavItem } from '@nit-scs-v2/shared/types';
-import { UserRole } from '@nit-scs-v2/shared/types';
+// ============================================================================
+// Navigation Service — merges static nav, dynamic doc types, and overrides
+// ============================================================================
 
-export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
+import { prisma } from '../utils/prisma.js';
+import { UserRole } from '@nit-scs-v2/shared';
+import type { NavItem } from '@nit-scs-v2/shared/types';
+
+// ── In-memory cache with TTL ────────────────────────────────────────────────
+const NAV_CACHE = new Map<string, { data: NavItem[]; expiresAt: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+function getCached(role: string): NavItem[] | null {
+  const entry = NAV_CACHE.get(role);
+  if (entry && entry.expiresAt > Date.now()) return entry.data;
+  if (entry) NAV_CACHE.delete(role);
+  return null;
+}
+
+function setCache(role: string, data: NavItem[]): void {
+  NAV_CACHE.set(role, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+export function invalidateNavCache(role?: string): void {
+  if (role) {
+    NAV_CACHE.delete(role);
+  } else {
+    NAV_CACHE.clear();
+  }
+}
+
+// ── Static navigation config (mirrors frontend navigation.ts) ───────────────
+const STATIC_NAV: Record<string, NavItem[]> = {
   [UserRole.ADMIN]: [
-    // ── 1. Dashboard ──
     { label: 'Dashboard', path: '/admin' },
     { label: 'Exceptions', path: '/admin/dashboards/exceptions' },
-
-    // ── 2. Warehouses & Stores ──
     {
       label: 'Warehouses & Stores',
       path: '/admin/warehouses',
@@ -34,8 +60,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Yard Management', path: '/admin/warehouse/yard' },
       ],
     },
-
-    // ── 3. Equipment & Transport ──
     {
       label: 'Equipment & Transport',
       path: '/admin/equipment',
@@ -58,8 +82,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Tool Issues', path: '/admin/equipment?tab=tool-issues' },
       ],
     },
-
-    // ── 4. Scrap & Surplus ──
     {
       label: 'Scrap & Surplus',
       path: '/admin/scrap',
@@ -70,8 +92,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Surplus Items', path: '/admin/scrap?tab=surplus' },
       ],
     },
-
-    // ── 5. Shipping & Customs ──
     {
       label: 'Shipping & Customs',
       path: '/admin/shipping',
@@ -82,14 +102,8 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'SLA Performance', path: '/admin/shipping?tab=sla' },
       ],
     },
-
-    // ── 6. Interactive Map ──
     { label: 'Interactive Map', path: '/admin/map' },
-
-    // ── 7. Documents ──
     { label: 'Documents', path: '/admin/documents' },
-
-    // ── 8. Master Data ──
     {
       label: 'Master Data',
       path: '/admin/master',
@@ -102,8 +116,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Equipment', path: '/admin/master?tab=equipment' },
       ],
     },
-
-    // ── 9. Employees & Org ──
     {
       label: 'Employees & Org',
       path: '/admin/employees',
@@ -114,8 +126,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Delegations', path: '/admin/employees?tab=delegations' },
       ],
     },
-
-    // ── 10. Settings ──
     {
       label: 'Settings',
       path: '/admin/settings',
@@ -139,8 +149,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Workflow Templates', path: '/admin/workflow-templates' },
         { label: 'AI Insights', path: '/admin/ai-insights' },
         { label: '---', type: 'divider' },
-        { label: 'Labor Dashboard', path: '/admin/dashboards/labor' },
-        { label: '---', type: 'divider' },
         { label: 'Features Catalog', path: '/admin/features' },
         { label: 'ROI Calculator', path: '/admin/roi-calculator' },
       ],
@@ -162,7 +170,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Labor Dashboard', path: '/warehouse/labor' },
   ],
   [UserRole.WAREHOUSE_STAFF]: [
     { label: 'Dashboard', path: '/warehouse' },
@@ -292,4 +299,134 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
   ],
 };
 
-export const STATIC_NAVIGATION = NAVIGATION_LINKS;
+// ── Dynamic document types → nav items ──────────────────────────────────────
+async function getDynamicNavItems(role: string): Promise<NavItem[]> {
+  const types = await prisma.dynamicDocumentType.findMany({
+    where: { isActive: true },
+    select: { code: true, name: true, visibleToRoles: true },
+    orderBy: { name: 'asc' },
+  });
+
+  const visible = types.filter(t => {
+    const roles = t.visibleToRoles as string[];
+    return Array.isArray(roles) && (roles.includes(role) || roles.includes('*'));
+  });
+
+  if (visible.length === 0) return [];
+
+  return [
+    {
+      label: 'Custom Documents',
+      path: '/admin/dynamic',
+      children: visible.map(t => ({
+        label: t.name,
+        path: `/admin/dynamic/${t.code}`,
+      })),
+    },
+  ];
+}
+
+// ── Apply overrides (sort + hide) ───────────────────────────────────────────
+async function applyOverrides(role: string, items: NavItem[]): Promise<NavItem[]> {
+  const overrides = await prisma.navigationOverride.findMany({
+    where: { role },
+  });
+
+  if (overrides.length === 0) return items;
+
+  const overrideMap = new Map(overrides.map(o => [o.path, o]));
+
+  // Filter hidden items
+  const filtered = items.filter(item => {
+    const override = item.path ? overrideMap.get(item.path) : null;
+    return !override?.hidden;
+  });
+
+  // Apply sort orders
+  const sorted = filtered.map(item => {
+    const override = item.path ? overrideMap.get(item.path) : null;
+    return { item, sortOrder: override?.sortOrder ?? 0 };
+  });
+
+  sorted.sort((a, b) => a.sortOrder - b.sortOrder);
+
+  return sorted.map(s => s.item);
+}
+
+// ── Public API ──────────────────────────────────────────────────────────────
+
+export async function getNavigationForRole(role: string): Promise<NavItem[]> {
+  const cached = getCached(role);
+  if (cached) return cached;
+
+  // 1. Static nav items for this role
+  const staticItems = structuredClone(STATIC_NAV[role] ?? []);
+
+  // 2. Dynamic document types visible to this role
+  const dynamicItems = await getDynamicNavItems(role);
+
+  // 3. Merge
+  const merged = [...staticItems, ...dynamicItems];
+
+  // 4. Apply overrides (reorder, hide)
+  const result = await applyOverrides(role, merged);
+
+  setCache(role, result);
+  return result;
+}
+
+export async function updateNavigationOrder(
+  role: string,
+  overrides: Array<{ path: string; sortOrder: number; parentPath?: string }>,
+): Promise<void> {
+  await prisma.$transaction(
+    overrides.map(o =>
+      prisma.navigationOverride.upsert({
+        where: { role_path: { role, path: o.path } },
+        create: {
+          role,
+          path: o.path,
+          sortOrder: o.sortOrder,
+          parentPath: o.parentPath ?? null,
+        },
+        update: {
+          sortOrder: o.sortOrder,
+          parentPath: o.parentPath ?? null,
+        },
+      }),
+    ),
+  );
+  invalidateNavCache(role);
+}
+
+export async function hideNavigationItem(role: string, path: string): Promise<void> {
+  await prisma.navigationOverride.upsert({
+    where: { role_path: { role, path } },
+    create: { role, path, hidden: true },
+    update: { hidden: true },
+  });
+  invalidateNavCache(role);
+}
+
+export async function showNavigationItem(role: string, path: string): Promise<void> {
+  // Delete the override entirely if it only existed to hide the item
+  const existing = await prisma.navigationOverride.findUnique({
+    where: { role_path: { role, path } },
+  });
+
+  if (!existing) return;
+
+  if (existing.sortOrder === 0 && !existing.parentPath) {
+    // No other overrides — just delete it
+    await prisma.navigationOverride.delete({
+      where: { role_path: { role, path } },
+    });
+  } else {
+    // Has sort/parent overrides — just toggle hidden off
+    await prisma.navigationOverride.update({
+      where: { role_path: { role, path } },
+      data: { hidden: false },
+    });
+  }
+  invalidateNavCache(role);
+}

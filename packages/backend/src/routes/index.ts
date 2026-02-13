@@ -101,8 +101,17 @@ import workflowTemplateRoutes from './workflow-template.routes.js';
 // ── ROI Calculator ──────────────────────────────────────────────────────
 import roiCalculatorRoutes from './roi-calculator.routes.js';
 
+// ── Labor Standards ──────────────────────────────────────────────────────
+import laborRoutes from './labor.routes.js';
+
+// ── Navigation ──────────────────────────────────────────────────────────
+import navigationRoutes from './navigation.routes.js';
+
 // ── Global Search ───────────────────────────────────────────────────────
 import searchRoutes from './search.routes.js';
+
+// ── Semantic Analytics Layer ────────────────────────────────────────────
+import semanticRoutes from './semantic.routes.js';
 
 const router = Router();
 
@@ -262,7 +271,16 @@ router.use('/workflow-templates', workflowTemplateRoutes);
 // ── ROI Calculator ──────────────────────────────────────────────────────
 router.use('/roi-calculator', roiCalculatorRoutes);
 
+// ── Labor Standards ──────────────────────────────────────────────────────
+router.use('/labor', laborRoutes);
+
+// ── Navigation ──────────────────────────────────────────────────────────
+router.use('/navigation', navigationRoutes);
+
 // ── Global Search ───────────────────────────────────────────────────────
 router.use('/search', searchRoutes);
+
+// ── Semantic Analytics Layer ────────────────────────────────────────────
+router.use('/semantic', semanticRoutes);
 
 export default router;

@@ -3386,3 +3386,71 @@ model StagingAssignment {
   @@index([direction], map: "idx_staging_direction")
   @@map("staging_assignments")
 }
+
+// ############################################################################
+// SECTION: LABOR STANDARDS
+// ############################################################################
+
+model LaborStandard {
+  id              String   @id @default(uuid()) @db.Uuid
+  taskType        String   @unique @map("task_type") @db.VarChar(30)
+  description     String?
+  standardMinutes Float    @map("standard_minutes")
+  unitOfMeasure   String   @default("document") @map("unit_of_measure") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  @@map("labor_standards")
+}
+
+// ############################################################################
+// SECTION: NAVIGATION OVERRIDES
+// ############################################################################
+
+model NavigationOverride {
+  id          String   @id @default(uuid()) @db.Uuid
+  role        String   @db.VarChar(50)
+  path        String   @db.VarChar(200)
+  sortOrder   Int      @default(0) @map("sort_order")
+  hidden      Boolean  @default(false)
+  parentPath  String?  @map("parent_path") @db.VarChar(200)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  @@unique([role, path])
+  @@map("navigation_overrides")
+}
+
+// ############################################################################
+// SECTION: SEMANTIC ANALYTICS LAYER
+// ############################################################################
+
+model SemanticMeasure {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique @db.VarChar(60)
+  name          String   @db.VarChar(100)
+  description   String?
+  category      String   @db.VarChar(40)
+  entityType    String   @map("entity_type") @db.VarChar(40)
+  aggregation   String   @db.VarChar(20)
+  field         String?  @db.VarChar(60)
+  defaultFilters Json?   @map("default_filters")
+  unit          String?  @db.VarChar(20)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  @@map("semantic_measures")
+}
+
+model SemanticDimension {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique @db.VarChar(60)
+  name          String   @db.VarChar(100)
+  description   String?
+  entityTypes   Json     @map("entity_types")
+  field         String   @db.VarChar(60)
+  dimensionType String   @map("dimension_type") @db.VarChar(20)
+  hierarchy     Json?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  @@map("semantic_dimensions")
+}

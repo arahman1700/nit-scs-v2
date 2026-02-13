@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { NavItem } from '@nit-scs-v2/shared/types';
 import { UserRole } from '@nit-scs-v2/shared/types';
 import { NAVIGATION_LINKS } from '@/config/navigation';
+import { useNavigation } from '@/api/hooks/useNavigation';
 import {
   LogOut,
   ChevronDown,
@@ -212,7 +213,11 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
 
 export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogout }) => {
   const location = useLocation();
-  const rawLinks = (NAVIGATION_LINKS as Record<string, NavItemWithIcon[]>)[role] || [];
+  const { data: dynamicNav } = useNavigation();
+  const rawLinks =
+    (dynamicNav as NavItemWithIcon[] | undefined) ||
+    (NAVIGATION_LINKS as Record<string, NavItemWithIcon[]>)[role] ||
+    [];
   const links = rawLinks.map(link => ({ ...link, icon: link.icon || ICON_MAP[link.label] }));
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

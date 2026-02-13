@@ -619,6 +619,14 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       }
     />
     <Route
+      path="/warehouse/labor"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <LaborDashboard />
+        </RoleGuard>
+      }
+    />
+    <Route
       path="/warehouse/mobile"
       element={
         <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>

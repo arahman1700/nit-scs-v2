@@ -3,11 +3,9 @@ import {
   Truck,
   DoorOpen,
   CalendarClock,
-  ArrowRightLeft,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Plus,
   LogIn,
   LogOut,
   MapPin,
@@ -25,9 +23,11 @@ import {
   useCheckInTruck,
   useAssignDock,
   useCheckOutTruck,
+  useDockUtilization,
 } from '@/api/hooks/useYard';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { YardStatus, YardAppointment, TruckVisit, DockDoor } from '@/api/hooks/useYard';
+import type { YardStatus, DockDoor, DockUtilization } from '@/api/hooks/useYard';
 
 // ── Status colors ─────────────────────────────────────────────────────
 
@@ -373,7 +373,7 @@ export const YardDashboard: React.FC = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState('');
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'trucks'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'trucks' | 'analytics'>('overview');
 
   // Queries
   const { data: warehousesRes } = useWarehouses();
@@ -383,6 +383,10 @@ export const YardDashboard: React.FC = () => {
 
   const { data: statusRes, isLoading } = useYardStatus(selectedWarehouse || undefined);
   const yardStatus = (statusRes as unknown as { data?: YardStatus })?.data;
+
+  const todayDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const { data: utilizationRes } = useDockUtilization(selectedWarehouse || undefined, todayDate);
+  const utilization = (utilizationRes as unknown as { data?: DockUtilization })?.data;
 
   // Mutations
   const checkInAppt = useCheckInAppointment();
@@ -486,7 +490,7 @@ export const YardDashboard: React.FC = () => {
 
       {/* ── Tabs ───────────────────────────────────────────────────── */}
       <div className="flex gap-1 bg-white/5 rounded-xl p-1">
-        {(['overview', 'appointments', 'trucks'] as const).map(tab => (
+        {(['overview', 'appointments', 'trucks', 'analytics'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -496,7 +500,13 @@ export const YardDashboard: React.FC = () => {
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             }`}
           >
-            {tab === 'overview' ? 'Overview' : tab === 'appointments' ? 'Appointments' : 'Active Trucks'}
+            {tab === 'overview'
+              ? 'Overview'
+              : tab === 'appointments'
+                ? 'Appointments'
+                : tab === 'trucks'
+                  ? 'Active Trucks'
+                  : 'Analytics'}
           </button>
         ))}
       </div>
@@ -871,6 +881,140 @@ export const YardDashboard: React.FC = () => {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Tab: Analytics ──────────────────────────────────────────── */}
+      {activeTab === 'analytics' && yardStatus && (
+        <div className="space-y-6">
+          {/* SLA Metrics */}
+          {(() => {
+            const SLA_GRACE_MINUTES = 15;
+            const allAppts = todayAppointments;
+            const totalAppts = allAppts.length;
+            const noShows = allAppts.filter(a => a.status === 'no_show').length;
+
+            // Late arrivals: appointments that were checked in after scheduledStart + 15 min
+            const lateArrivals = allAppts.filter(a => {
+              if (a.status === 'scheduled' || a.status === 'cancelled' || a.status === 'no_show') return false;
+              // checked_in, loading, completed all had a check-in; approximate by createdAt or scheduledStart
+              const graceEnd = new Date(new Date(a.scheduledStart).getTime() + SLA_GRACE_MINUTES * 60_000);
+              // If appointment was checked in, updatedAt is close to check-in time
+              // Use a heuristic: if current status implies checked in and scheduledStart + grace < now
+              return new Date() > graceEnd && ['checked_in', 'loading'].includes(a.status);
+            }).length;
+
+            const completed = allAppts.filter(a => a.status === 'completed').length;
+            const applicable = completed + lateArrivals + noShows;
+            const onTimeRate = applicable > 0 ? Math.round(((completed - lateArrivals) / applicable) * 100) : 100;
+
+            return (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard
+                  icon={<CheckCircle2 className="w-5 h-5 text-emerald-400" />}
+                  label="On-Time Rate"
+                  value={`${Math.max(0, onTimeRate)}%`}
+                  color="bg-emerald-500/15"
+                />
+                <KpiCard
+                  icon={<Clock className="w-5 h-5 text-amber-400" />}
+                  label="Late Arrivals"
+                  value={lateArrivals}
+                  color="bg-amber-500/15"
+                />
+                <KpiCard
+                  icon={<AlertTriangle className="w-5 h-5 text-red-400" />}
+                  label="No Shows"
+                  value={noShows}
+                  color="bg-red-500/15"
+                />
+                <KpiCard
+                  icon={<CalendarClock className="w-5 h-5 text-blue-400" />}
+                  label="Total Appointments"
+                  value={totalAppts}
+                  color="bg-blue-500/15"
+                />
+              </div>
+            );
+          })()}
+
+          {/* Dock Utilization Chart */}
+          <div className="glass-card rounded-2xl p-6 border border-white/5">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-nesma-primary" />
+              Dock Utilization
+            </h2>
+            {(() => {
+              const chartData = utilization
+                ? utilization.dockMetrics.map(d => ({
+                    name: `Door #${d.doorNumber}`,
+                    appointments: d.appointmentCount,
+                    visits: d.visitCount,
+                    completed: d.completedCount,
+                    avgDwell: d.avgDwellMinutes,
+                  }))
+                : dockDoors.map(d => {
+                    const doorAppts = todayAppointments.filter(a => a.dockDoorId === d.id);
+                    const completedAppts = doorAppts.filter(a => a.status === 'completed').length;
+                    return {
+                      name: `Door #${d.doorNumber}`,
+                      appointments: doorAppts.length,
+                      visits: d.truckVisits?.length ?? 0,
+                      completed: completedAppts,
+                      avgDwell: 0,
+                    };
+                  });
+
+              if (chartData.length === 0) {
+                return <p className="text-sm text-gray-500 py-8 text-center">No dock door data available.</p>;
+              }
+
+              return (
+                <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 48)}>
+                  <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
+                    <XAxis type="number" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fill: '#9ca3af', fontSize: 12 }} width={100} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(10, 22, 40, 0.95)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '12px',
+                        color: '#fff',
+                      }}
+                    />
+                    <Bar dataKey="appointments" fill="#3b82f6" name="Appointments" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="visits" fill="#10b981" name="Truck Visits" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="completed" fill="#8b5cf6" name="Completed" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              );
+            })()}
+          </div>
+
+          {/* Utilization Summary */}
+          {utilization?.summary && (
+            <div className="glass-card rounded-2xl p-6 border border-white/5">
+              <h2 className="text-lg font-semibold text-white mb-4">Utilization Summary</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white">{Math.round(utilization.summary.utilizationRate)}%</p>
+                  <p className="text-xs text-gray-400 mt-1">Utilization Rate</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white">{utilization.summary.completedAppointments}</p>
+                  <p className="text-xs text-gray-400 mt-1">Completed</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-400">{utilization.summary.cancelledAppointments}</p>
+                  <p className="text-xs text-gray-400 mt-1">Cancelled</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-red-400">{utilization.summary.noShowAppointments}</p>
+                  <p className="text-xs text-gray-400 mt-1">No Shows</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
