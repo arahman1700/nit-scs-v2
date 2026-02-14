@@ -18,6 +18,17 @@ import { JobStatus } from '@nit-scs-v2/shared/types';
 import type { MIRV, JobOrder, InventoryItem, Project } from '@nit-scs-v2/shared/types';
 import { useParams, useNavigate } from 'react-router-dom';
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 // The logged-in engineer (simulated)
 const CURRENT_ENGINEER = {
   name: 'Eng. Mohammed Alamri',
@@ -56,11 +67,11 @@ export const EngineerDashboard: React.FC = () => {
     const mirvRequests = myMirvs.map(m => ({
       id: m.id as string,
       type: 'MI' as const,
-      title: `Material Issue - ${m.project as string}`,
+      title: `Material Issue - ${displayStr(m.project)}`,
       date: m.date as string,
       status: m.status as string,
       value: Number(m.value || 0),
-      warehouse: (m.warehouse as string) || '',
+      warehouse: displayStr(m.warehouse),
     }));
     const joRequests = myJobs.map(j => ({
       id: j.id as string,

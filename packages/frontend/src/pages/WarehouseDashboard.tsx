@@ -24,6 +24,17 @@ import { StatusBadge } from '@/components/StatusBadge';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 const StatCard: React.FC<{
   title: string;
   value: string;
@@ -205,7 +216,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <div>
                         <p className="text-sm font-bold text-gray-200 group-hover:text-white">{mrrv.id as string}</p>
                         <p className="text-xs text-gray-500">
-                          {mrrv.supplier as string} • {mrrv.date as string}
+                          {displayStr(mrrv.supplier)} • {mrrv.date as string}
                         </p>
                       </div>
                     </div>
@@ -244,7 +255,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <div>
                         <p className="text-sm font-bold text-gray-200 group-hover:text-white">{mirv.id as string}</p>
                         <p className="text-xs text-gray-500">
-                          {mirv.project as string} • {mirv.requester as string}
+                          {displayStr(mirv.project)} • {displayStr(mirv.requester)}
                         </p>
                       </div>
                     </div>
@@ -276,7 +287,7 @@ export const WarehouseDashboard: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-200">{item.name as string}</p>
                       <p className="text-xs text-gray-500">
-                        {item.code as string} • {item.warehouse as string}
+                        {item.code as string} • {displayStr(item.warehouse)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -358,9 +369,9 @@ export const WarehouseDashboard: React.FC = () => {
                   {mrrvData.map(mrrv => (
                     <tr key={mrrv.id as string} className="hover:bg-white/5 transition-colors group">
                       <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">{mrrv.id as string}</td>
-                      <td className="px-6 py-4 text-gray-200">{mrrv.supplier as string}</td>
+                      <td className="px-6 py-4 text-gray-200">{displayStr(mrrv.supplier)}</td>
                       <td className="px-6 py-4 text-gray-400">{mrrv.date as string}</td>
-                      <td className="px-6 py-4 text-gray-400">{mrrv.warehouse as string}</td>
+                      <td className="px-6 py-4 text-gray-400">{displayStr(mrrv.warehouse)}</td>
                       <td className="px-6 py-4 text-white font-medium">
                         {Number(mrrv.value || 0).toLocaleString()} SAR
                       </td>
@@ -458,12 +469,12 @@ export const WarehouseDashboard: React.FC = () => {
                   {mirvData.map(mirv => (
                     <tr key={mirv.id as string} className="hover:bg-white/5 transition-colors group">
                       <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">{mirv.id as string}</td>
-                      <td className="px-6 py-4 text-gray-200 max-w-[200px] truncate" title={mirv.project as string}>
-                        {mirv.project as string}
+                      <td className="px-6 py-4 text-gray-200 max-w-[200px] truncate" title={displayStr(mirv.project)}>
+                        {displayStr(mirv.project)}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{mirv.requester as string}</td>
+                      <td className="px-6 py-4 text-gray-300">{displayStr(mirv.requester)}</td>
                       <td className="px-6 py-4 text-gray-400">{mirv.date as string}</td>
-                      <td className="px-6 py-4 text-gray-400">{mirv.warehouse as string}</td>
+                      <td className="px-6 py-4 text-gray-400">{displayStr(mirv.warehouse)}</td>
                       <td className="px-6 py-4 text-white font-medium">
                         {Number(mirv.value || 0).toLocaleString()} SAR
                       </td>
@@ -538,11 +549,11 @@ export const WarehouseDashboard: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-xs text-gray-500 block">Project</span>
-                    <span className="text-sm text-gray-200">{mrv.project as string}</span>
+                    <span className="text-sm text-gray-200">{displayStr(mrv.project)}</span>
                   </div>
                   <div>
                     <span className="text-xs text-gray-500 block">Warehouse</span>
-                    <span className="text-sm text-gray-300">{mrv.warehouse as string}</span>
+                    <span className="text-sm text-gray-300">{displayStr(mrv.warehouse)}</span>
                   </div>
                   <div className="pt-3 border-t border-white/10">
                     <span className="text-xs text-gray-500 block">Reason</span>
@@ -607,7 +618,7 @@ export const WarehouseDashboard: React.FC = () => {
                     <tr key={item.id as string} className="hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 font-mono font-medium text-white">{item.code as string}</td>
                       <td className="px-6 py-4 text-gray-300">{item.name as string}</td>
-                      <td className="px-6 py-4 text-gray-400">{item.warehouse as string}</td>
+                      <td className="px-6 py-4 text-gray-400">{displayStr(item.warehouse)}</td>
                       <td className="px-6 py-4 font-bold text-nesma-secondary">
                         {(item.quantity as number)?.toLocaleString()}
                       </td>

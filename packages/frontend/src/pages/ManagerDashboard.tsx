@@ -22,6 +22,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 type ManagerTab = 'overview' | 'approvals' | 'documents' | 'projects';
 
 export const ManagerDashboard: React.FC = () => {
@@ -86,7 +97,7 @@ export const ManagerDashboard: React.FC = () => {
       ...pendingMirvs.map(m => ({
         id: m.id as string,
         type: 'MI',
-        title: `MI - ${m.project as string}`,
+        title: `MI - ${displayStr(m.project)}`,
         value: Number(m.value || 0),
         date: m.date as string,
         status: m.status as string,
@@ -102,7 +113,7 @@ export const ManagerDashboard: React.FC = () => {
       ...pendingMrfs.map(m => ({
         id: m.id as string,
         type: 'MR',
-        title: `MR - ${(m.project as string) || ''}`,
+        title: `MR - ${displayStr(m.project)}`,
         value: 0,
         date: m.date as string,
         status: m.status as string,

@@ -8,6 +8,17 @@ import { useWarehouses } from '@/api/hooks/useMasterData';
 import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 export const GatePassForm: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -190,14 +201,14 @@ export const GatePassForm: React.FC = () => {
                   <optgroup label="MI (Material Issuance)">
                     {mirvData.map(m => (
                       <option key={m.id as string} value={m.id as string}>
-                        {m.id as string} - {(m.project as string) || 'N/A'}
+                        {m.id as string} - {displayStr(m.project) || 'N/A'}
                       </option>
                     ))}
                   </optgroup>
                   <optgroup label="GRN (Goods Receipt Notes)">
                     {mrrvData.map(m => (
                       <option key={m.id as string} value={m.id as string}>
-                        {m.id as string} - {(m.supplier as string) || 'N/A'}
+                        {m.id as string} - {displayStr(m.supplier) || 'N/A'}
                       </option>
                     ))}
                   </optgroup>

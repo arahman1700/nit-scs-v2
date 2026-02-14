@@ -10,6 +10,17 @@ import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import { JobStatus } from '@nit-scs-v2/shared/types';
 import type { MIRV, JobOrder, Project, InventoryItem } from '@nit-scs-v2/shared/types';
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 type SETab = 'dashboard' | 'new-request' | 'my-requests' | 'my-project' | 'site-inventory';
 
 export const SiteEngineerDashboard: React.FC = () => {
@@ -50,7 +61,7 @@ export const SiteEngineerDashboard: React.FC = () => {
       ...allMirvs.slice(0, 50).map(m => ({
         id: m.id as string,
         type: 'MI' as const,
-        title: `Material Issue - ${(m.project as string) || ''}`,
+        title: `Material Issue - ${displayStr(m.project)}`,
         date: m.date as string,
         status: m.status as string,
         value: Number(m.value || 0),
@@ -66,7 +77,7 @@ export const SiteEngineerDashboard: React.FC = () => {
       ...allMrfs.slice(0, 50).map(m => ({
         id: m.id as string,
         type: 'MR' as const,
-        title: `Material Request - ${(m.project as string) || ''}`,
+        title: `Material Request - ${displayStr(m.project)}`,
         date: m.date as string,
         status: m.status as string,
         value: 0,

@@ -7,6 +7,17 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useMrrvList, useShipments, useRfimList, useCustomsClearances, useGatePasses } from '@/api/hooks';
 
+/** Safely extract a display string from a value that may be a string or a nested relation object */
+const displayStr = (val: unknown): string => {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'object') {
+    const obj = val as Record<string, unknown>;
+    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+  }
+  return String(val);
+};
+
 export const ReceivingSectionPage: React.FC = () => {
   const navigate = useNavigate();
   const { data: mrrvAll, isLoading: mrrvLoading } = useMrrvList({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
@@ -104,10 +115,10 @@ export const ReceivingSectionPage: React.FC = () => {
                         {(r.documentNumber as string) ?? (r.id as string).slice(0, 8)}
                       </td>
                       <td className="px-4 py-3 text-sm text-white">
-                        {(r.supplierName as string) ?? (r.supplier as string) ?? '-'}
+                        {displayStr(r.supplierName ?? r.supplier) || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-400">
-                        {(r.warehouseName as string) ?? (r.warehouse as string) ?? '-'}
+                        {displayStr(r.warehouseName ?? r.warehouse) || '-'}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-400">
                         {(r.receivedDate as string) ?? (r.createdAt as string)?.slice(0, 10) ?? '-'}
