@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowLeftRight, CheckCircle } from 'lucide-react';
+import { Save, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { ExportButton } from '@/components/ExportButton';

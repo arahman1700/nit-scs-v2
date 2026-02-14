@@ -1,4 +1,4 @@
-import { WifiOff, Wifi, Loader2, CloudUpload, AlertTriangle } from 'lucide-react';
+import { WifiOff, Wifi, Loader2, CloudUpload } from 'lucide-react';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 
 /**

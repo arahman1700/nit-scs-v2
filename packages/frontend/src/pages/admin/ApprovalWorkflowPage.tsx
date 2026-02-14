@@ -50,7 +50,7 @@ const EMPTY_FORM: FormState = {
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
-function getDocTypeLabel(value: string) {
+function _getDocTypeLabel(value: string) {
   return DOCUMENT_TYPES.find(d => d.value === value)?.label ?? value;
 }
 

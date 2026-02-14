@@ -10,8 +10,6 @@ import {
   ChevronUp,
   ChevronDown,
   Download,
-  LayoutGrid,
-  List,
   CheckSquare,
   Square,
   Loader2,

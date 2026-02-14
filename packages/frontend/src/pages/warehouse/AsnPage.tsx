@@ -1,24 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Plus,
-  Search,
-  Filter,
-  Package,
-  Clock,
-  Truck,
-  MapPin,
-  CheckCircle2,
-  XCircle,
-  ArrowRight,
-  BarChart3,
-  X,
-  Trash2,
-} from 'lucide-react';
+import { Plus, Search, Package, Clock, Truck, MapPin, CheckCircle2, XCircle, BarChart3, X, Trash2 } from 'lucide-react';
 import {
   useAsnList,
   useAsn,
   useCreateAsn,
-  useUpdateAsn,
   useMarkInTransit,
   useMarkArrived,
   useReceiveAsn,
@@ -509,9 +494,28 @@ const AsnDetail: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack })
 
 // ── Variance Modal ──────────────────────────────────────────────────────
 
+interface VarianceLine {
+  id: string;
+  item: { itemCode: string; itemDescription: string };
+  qtyExpected: number;
+  qtyReceived: number;
+  variance: number;
+  variancePercent: number;
+}
+
+interface VarianceReport {
+  summary: {
+    totalExpected: number;
+    totalReceived: number;
+    totalVariance: number;
+    totalVariancePercent: number;
+  };
+  lines: VarianceLine[];
+}
+
 const VarianceModal: React.FC<{ asnId: string; onClose: () => void }> = ({ asnId, onClose }) => {
   const { data: varianceData, isLoading } = useAsnVariance(asnId);
-  const report = (varianceData as unknown as { data?: any })?.data;
+  const report = (varianceData as unknown as { data?: VarianceReport })?.data;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -573,7 +577,7 @@ const VarianceModal: React.FC<{ asnId: string; onClose: () => void }> = ({ asnId
                 </tr>
               </thead>
               <tbody>
-                {report.lines.map((line: any) => (
+                {report.lines.map((line: VarianceLine) => (
                   <tr key={line.id} className="border-b border-white/5">
                     <td className="py-2 px-2">
                       <span className="text-white font-mono text-xs">{line.item.itemCode}</span>

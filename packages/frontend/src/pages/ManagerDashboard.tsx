@@ -7,12 +7,8 @@ import {
   FileText,
   FolderOpen,
   Briefcase,
-  Filter,
   Search,
-  Package,
-  AlertTriangle,
   Warehouse,
-  Ship,
 } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { useMirvList } from '@/api/hooks/useMirv';
@@ -22,7 +18,7 @@ import { useStockTransferList } from '@/api/hooks/useStockTransfers';
 import { useProjects } from '@/api/hooks/useMasterData';
 import { useCrossDepartment } from '@/api/hooks/useDashboard';
 import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
 
@@ -31,7 +27,6 @@ type ManagerTab = 'overview' | 'approvals' | 'documents' | 'projects';
 export const ManagerDashboard: React.FC = () => {
   const { tab } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const activeTab: ManagerTab = (
     ['overview', 'approvals', 'documents', 'projects'].includes(tab || '') ? tab : 'overview'
   ) as ManagerTab;

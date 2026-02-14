@@ -18,8 +18,8 @@ import { list, getById, create, update, submit, approve, release, returnPass, ca
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
 
-const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
-const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
+const _mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
+const _mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 
 // ── helpers ──────────────────────────────────────────────────────────
 const USER_ID = 'user-1';

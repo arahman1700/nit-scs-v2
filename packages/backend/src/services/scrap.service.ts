@@ -107,7 +107,7 @@ export async function report(id: string) {
   return prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'reported' } });
 }
 
-export async function approveBySiteManager(id: string, userId: string) {
+export async function approveBySiteManager(id: string, _userId: string) {
   const scrap = await prisma.scrapItem.findUnique({ where: { id } });
   if (!scrap) throw new NotFoundError('Scrap', id);
   if (scrap.status !== 'reported') {
@@ -120,7 +120,7 @@ export async function approveBySiteManager(id: string, userId: string) {
   });
 }
 
-export async function approveByQc(id: string, userId: string) {
+export async function approveByQc(id: string, _userId: string) {
   const scrap = await prisma.scrapItem.findUnique({ where: { id } });
   if (!scrap) throw new NotFoundError('Scrap', id);
   if (scrap.status !== 'reported') {
@@ -133,7 +133,7 @@ export async function approveByQc(id: string, userId: string) {
   });
 }
 
-export async function approveByStorekeeper(id: string, userId: string) {
+export async function approveByStorekeeper(id: string, _userId: string) {
   const scrap = await prisma.scrapItem.findUnique({ where: { id } });
   if (!scrap) throw new NotFoundError('Scrap', id);
   if (scrap.status !== 'reported') {

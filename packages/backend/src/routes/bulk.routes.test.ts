@@ -38,7 +38,6 @@ vi.mock('../services/audit.service.js', () => ({
 }));
 
 import { executeBulkAction, getAvailableBulkActions } from '../services/bulk.service.js';
-import { createAuditLog } from '../services/audit.service.js';
 
 const app = createTestApp();
 const request = supertest(app);

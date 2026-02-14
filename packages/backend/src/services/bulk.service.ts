@@ -1,4 +1,3 @@
-import type { Request } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 
 import * as mrrvService from './mrrv.service.js';

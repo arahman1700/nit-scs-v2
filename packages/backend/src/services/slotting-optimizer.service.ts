@@ -88,7 +88,7 @@ function isGoldenZone(aisle: number, shelf: number): boolean {
   return aisle <= GOLDEN_ZONE_MAX_AISLE && shelf <= GOLDEN_ZONE_MAX_SHELF;
 }
 
-function isMidZone(aisle: number, shelf: number): boolean {
+function _isMidZone(aisle: number, shelf: number): boolean {
   return !isGoldenZone(aisle, shelf) && aisle <= MID_ZONE_MAX_AISLE && shelf <= MID_ZONE_MAX_SHELF;
 }
 

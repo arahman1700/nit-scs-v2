@@ -1,4 +1,4 @@
-import { createPrismaMock, type PrismaMock } from '../test-utils/prisma-mock.js';
+import { type PrismaMock as _PrismaMock } from '../test-utils/prisma-mock.js';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 

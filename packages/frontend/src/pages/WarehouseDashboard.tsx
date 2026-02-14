@@ -1,6 +1,5 @@
 import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import {
-  Package,
   AlertCircle,
   ArrowDown,
   ArrowUp,
@@ -11,7 +10,6 @@ import {
   Eye,
   CheckCircle,
   Clock,
-  FileText,
   Plus,
   ChevronRight,
   ScanLine,

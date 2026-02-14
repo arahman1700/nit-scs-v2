@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -14,42 +13,11 @@ import {
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Package, AlertTriangle, Warehouse, FileText, Clock, TrendingUp, Shield } from 'lucide-react';
+import { KpiCard } from '@/components/KpiCard';
 import { useCrossDepartment } from '@/api/hooks/useDashboard';
 import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6'];
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-  subtitle,
-  onClick,
-}: {
-  icon: typeof Activity;
-  label: string;
-  value: string | number;
-  color: string;
-  subtitle?: string;
-  onClick?: () => void;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className={`glass-card rounded-2xl p-5 border border-white/10 ${onClick ? 'cursor-pointer hover:scale-[1.02] transition-transform duration-300' : ''}`}
-    >
-      <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-xl ${color}`}>
-          <Icon size={18} className="text-white" />
-        </div>
-        <span className="text-sm text-gray-400">{label}</span>
-      </div>
-      <div className="text-2xl font-bold text-white">{typeof value === 'number' ? value.toLocaleString() : value}</div>
-      {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
-    </div>
-  );
-}
 
 export function OperationsDashboard() {
   const navigate = useNavigate();
@@ -98,9 +66,9 @@ export function OperationsDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        <KpiCard
           icon={Package}
-          label="Inventory Value"
+          title="Inventory Value"
           value={
             data.inventory.totalInventoryValue > 1_000_000
               ? `${(data.inventory.totalInventoryValue / 1_000_000).toFixed(1)}M SAR`
@@ -109,27 +77,27 @@ export function OperationsDashboard() {
           color="bg-blue-600/20"
           onClick={() => navigate('/admin/warehouses?tab=inventory')}
         />
-        <StatCard
+        <KpiCard
           icon={FileText}
-          label="Active Documents"
+          title="Active Documents"
           value={totalActiveDocuments}
           color="bg-emerald-600/20"
-          subtitle="Across all departments"
+          sublabel="Across all departments"
           onClick={() => navigate('/admin/documents')}
         />
-        <StatCard
+        <KpiCard
           icon={AlertTriangle}
-          label="Low Stock Alerts"
+          title="Low Stock Alerts"
           value={data.inventory.lowStockAlerts}
           color="bg-amber-600/20"
           onClick={() => navigate('/admin/warehouses?tab=non-moving')}
         />
-        <StatCard
+        <KpiCard
           icon={Shield}
-          label="Blocked Lots"
+          title="Blocked Lots"
           value={data.inventory.blockedLots}
           color="bg-red-600/20"
-          subtitle="Pending inspection"
+          sublabel="Pending inspection"
           onClick={() => navigate('/admin/warehouses?tab=inventory')}
         />
       </div>

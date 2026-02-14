@@ -5,7 +5,6 @@
 
 import { create } from 'zustand';
 import type { User, Notification } from '@nit-scs-v2/shared/types';
-import { UserRole } from '@nit-scs-v2/shared/types';
 
 interface AppState {
   // Auth (managed by login API response)

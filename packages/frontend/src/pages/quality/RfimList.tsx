@@ -1,18 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Eye,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  XCircle,
-  FileCheck,
-  X,
-} from 'lucide-react';
+import { Plus, Search, Filter, Eye, AlertTriangle, CheckCircle, Clock, XCircle, FileCheck, X } from 'lucide-react';
 import { useRfimList } from '@/api/hooks/useRfim';
 import { DocumentActions } from '@/components/DocumentActions';
 import { ExportButton } from '@/components/ExportButton';

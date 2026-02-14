@@ -23,38 +23,13 @@ import {
   Save,
   BarChart3,
 } from 'lucide-react';
+import { KpiCard } from '@/components/KpiCard';
 import { useLaborProductivity } from '@/api/hooks/useLaborProductivity';
 import { useLaborStandards, useUpsertLaborStandard, useLaborPerformance } from '@/api/hooks/useLabor';
 import type { WorkerProductivity, ProductivitySummary } from '@/api/hooks/useLaborProductivity';
 import type { LaborStandard, PerformanceWorker } from '@/api/hooks/useLabor';
 
 type TabKey = 'productivity' | 'standards' | 'performance';
-
-// ── Summary Card ──────────────────────────────────────────────────────
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: number;
-  color: string;
-}) {
-  return (
-    <div className="glass-card rounded-2xl p-5 border border-white/10">
-      <div className="flex items-center gap-3 mb-2">
-        <div className={`p-2 rounded-xl ${color}`}>
-          <Icon size={18} className="text-white" />
-        </div>
-        <span className="text-sm text-gray-400">{label}</span>
-      </div>
-      <div className="text-2xl font-bold text-white">{value.toLocaleString()}</div>
-    </div>
-  );
-}
 
 // ── Worker Row ────────────────────────────────────────────────────────
 
@@ -537,27 +512,27 @@ export function LaborDashboard() {
             <>
               {/* Summary Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard
+                <KpiCard
                   icon={Package}
-                  label="GRNs Processed"
+                  title="GRNs Processed"
                   value={data.totals.grnsProcessed}
                   color="bg-blue-600/20"
                 />
-                <StatCard
+                <KpiCard
                   icon={ArrowUpDown}
-                  label="MIs Issued"
+                  title="MIs Issued"
                   value={data.totals.misIssued}
                   color="bg-emerald-600/20"
                 />
-                <StatCard
+                <KpiCard
                   icon={ArrowUpDown}
-                  label="WTs Transferred"
+                  title="WTs Transferred"
                   value={data.totals.wtsTransferred}
                   color="bg-amber-600/20"
                 />
-                <StatCard
+                <KpiCard
                   icon={ClipboardCheck}
-                  label="Tasks Completed"
+                  title="Tasks Completed"
                   value={data.totals.tasksCompleted}
                   color="bg-purple-600/20"
                 />

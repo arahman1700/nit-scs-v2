@@ -4,7 +4,7 @@ import type { Server as SocketIOServer } from 'socket.io';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
-import { sendSuccess, sendCreated, sendError, sendNoContent } from '../utils/response.js';
+import { sendSuccess, sendCreated, sendNoContent } from '../utils/response.js';
 import * as notificationService from '../services/notification.service.js';
 import { notificationListSchema, notificationCreateSchema } from '../schemas/system.schema.js';
 

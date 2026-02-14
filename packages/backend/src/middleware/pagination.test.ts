@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { paginate, type PaginationQuery } from './pagination.js';
+import { paginate } from './pagination.js';
 
 const mockReq = (overrides = {}) => ({ headers: {}, query: {}, body: {}, ...overrides }) as unknown as Request;
 

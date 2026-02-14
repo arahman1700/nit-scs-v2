@@ -1,5 +1,5 @@
 import type { PrismaMock } from '../test-utils/prisma-mock.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 
 // ── Hoisted mock container ──────────────────────────────────────────────
 const { mockPrisma } = vi.hoisted(() => {

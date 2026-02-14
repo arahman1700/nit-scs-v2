@@ -112,7 +112,7 @@ export async function approve(id: string) {
  * 14 days have elapsed (allowing time for internal transfer/return options).
  * NOTE: scmApprovalDate field pending schema migration on surplus_items table.
  */
-export async function scmApprove(id: string, scmUserId: string) {
+export async function scmApprove(id: string, _scmUserId: string) {
   const surplus = await prisma.surplusItem.findUnique({ where: { id } });
   if (!surplus) throw new NotFoundError('Surplus', id);
 

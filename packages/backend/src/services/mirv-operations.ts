@@ -4,7 +4,7 @@
  *
  * All functions accept a Prisma transaction client so they compose inside transactions.
  */
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { generateDocumentNumber } from './document-number.service.js';
 import { consumeReservationBatch, releaseReservation } from './inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
@@ -19,13 +19,13 @@ interface MirvWithLines {
   projectId: string;
   locationOfWork: string | null;
   reservationStatus: string | null;
-  qcSignatureId?: string | null;
-  gatePassAutoCreated?: boolean | null;
+  qcSignatureId: string | null;
+  gatePassAutoCreated: boolean;
   mirvLines: Array<{
     id: string;
     itemId: string;
-    qtyRequested: number | any;
-    qtyApproved: number | null | any;
+    qtyRequested: Prisma.Decimal;
+    qtyApproved: Prisma.Decimal | null;
   }>;
 }
 
@@ -34,14 +34,14 @@ interface MirvWithLines {
  * Must be called before materials can be issued.
  */
 export async function signQcForMirv(tx: TxClient | PrismaClient, mirvId: string, qcUserId: string) {
-  const mirv = await (tx as any).mirv.findUnique({ where: { id: mirvId } });
+  const mirv = await tx.mirv.findUnique({ where: { id: mirvId } });
   if (!mirv) throw new NotFoundError('MIRV', mirvId);
   if (mirv.status !== 'approved') {
     throw new BusinessRuleError('MIRV must be approved for QC signature');
   }
-  return (tx as any).mirv.update({
+  return tx.mirv.update({
     where: { id: mirvId },
-    data: { qcSignatureId: qcUserId } as any,
+    data: { qcSignatureId: qcUserId },
   });
 }
 
@@ -51,7 +51,7 @@ export async function signQcForMirv(tx: TxClient | PrismaClient, mirvId: string,
  * and auto-creates an outbound GatePass if not already created.
  */
 export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, userId: string) {
-  const mirv: MirvWithLines | null = await (tx as any).mirv.findUnique({
+  const mirv: MirvWithLines | null = await tx.mirv.findUnique({
     where: { id: mirvId },
     include: { mirvLines: true },
   });
@@ -61,7 +61,7 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
   }
 
   // V5 requirement: QC counter-signature must be present before issuing
-  if (!(mirv as any).qcSignatureId) {
+  if (!mirv.qcSignatureId) {
     throw new BusinessRuleError('QC counter-signature is required before issuing materials (V5 requirement)');
   }
 
@@ -78,7 +78,7 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
     mirv.mirvLines.map(line => {
       const qtyToIssue = Number(line.qtyApproved ?? line.qtyRequested);
       const cost = lineCosts.get(line.id) ?? 0;
-      return (tx as any).mirvLine.update({
+      return tx.mirvLine.update({
         where: { id: line.id },
         data: {
           qtyIssued: qtyToIssue,
@@ -88,7 +88,7 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
     }),
   );
 
-  await (tx as any).mirv.update({
+  await tx.mirv.update({
     where: { id: mirv.id },
     data: {
       status: 'issued',
@@ -99,9 +99,9 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
   });
 
   // Auto-create outbound GatePass (idempotent — only if not already auto-created)
-  if (!(mirv as any).gatePassAutoCreated) {
+  if (!mirv.gatePassAutoCreated) {
     const gatePassNumber = await generateDocumentNumber('gatepass');
-    await (tx as any).gatePass.create({
+    await tx.gatePass.create({
       data: {
         gatePassNumber,
         passType: 'outbound',
@@ -117,9 +117,9 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
         notes: `Auto-created from MI ${mirv.mirvNumber}`,
       },
     });
-    await (tx as any).mirv.update({
+    await tx.mirv.update({
       where: { id: mirv.id },
-      data: { gatePassAutoCreated: true } as any,
+      data: { gatePassAutoCreated: true },
     });
   }
 
@@ -130,7 +130,7 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
  * Cancel a MIRV, releasing any reserved stock.
  */
 export async function cancelMirv(tx: TxClient | PrismaClient, mirvId: string) {
-  const mirv: MirvWithLines | null = await (tx as any).mirv.findUnique({
+  const mirv: MirvWithLines | null = await tx.mirv.findUnique({
     where: { id: mirvId },
     include: { mirvLines: true },
   });
@@ -147,7 +147,7 @@ export async function cancelMirv(tx: TxClient | PrismaClient, mirvId: string) {
     }
   }
 
-  const updated = await (tx as any).mirv.update({
+  const updated = await tx.mirv.update({
     where: { id: mirv.id },
     data: { status: 'cancelled', reservationStatus: 'released' },
   });

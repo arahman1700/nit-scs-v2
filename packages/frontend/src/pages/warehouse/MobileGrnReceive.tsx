@@ -1,8 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
-import { Package, CheckCircle2, ScanLine, ArrowLeft, Loader2, AlertCircle, MapPin } from 'lucide-react';
+import { Package, CheckCircle2, ScanLine, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { useGrnList, useReceiveGrn } from '@/api/hooks';
-import { useBarcodeLookup } from '@/api/hooks/useBarcodes';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { OfflineQueueBanner } from '@/components/OfflineQueueBanner';
 import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
@@ -20,7 +19,7 @@ interface ScannedItem {
 export function MobileGrnReceive() {
   const [step, setStep] = useState<Step>('scan');
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedCode, setScannedCode] = useState('');
+  const [, setScannedCode] = useState('');
   const [scannedItem, setScannedItem] = useState<ScannedItem | null>(null);
   const [selectedGrnId, setSelectedGrnId] = useState<string | null>(null);
   const [receivedQty, setReceivedQty] = useState('');

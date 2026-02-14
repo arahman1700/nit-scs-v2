@@ -9,9 +9,6 @@ import {
   Clipboard,
   Ship,
   Users,
-  Wrench,
-  Fuel,
-  Settings,
 } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import {

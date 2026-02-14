@@ -47,7 +47,7 @@ export async function getById(id: string) {
 
 export async function createBid(
   data: { scrapItemId: string; bidderName: string; bidderContact?: string; bidAmount: number },
-  userId: string,
+  _userId: string,
 ) {
   // Verify scrap item exists and is in SSC stage
   const scrapItem = await prisma.scrapItem.findUnique({ where: { id: data.scrapItemId } });
@@ -69,7 +69,7 @@ export async function createBid(
   });
 }
 
-export async function acceptBid(bidId: string, userId: string) {
+export async function acceptBid(bidId: string, _userId: string) {
   return prisma.$transaction(async tx => {
     const bid = await tx.sscBid.findUnique({ where: { id: bidId } });
     if (!bid) throw new NotFoundError('SscBid', bidId);
@@ -98,7 +98,7 @@ export async function acceptBid(bidId: string, userId: string) {
   });
 }
 
-export async function rejectBid(bidId: string, userId: string) {
+export async function rejectBid(bidId: string, _userId: string) {
   const bid = await prisma.sscBid.findUnique({ where: { id: bidId } });
   if (!bid) throw new NotFoundError('SscBid', bidId);
   if (bid.status !== 'submitted') {
@@ -112,7 +112,7 @@ export async function rejectBid(bidId: string, userId: string) {
   });
 }
 
-export async function signMemo(bidId: string, userId: string) {
+export async function signMemo(bidId: string, _userId: string) {
   const bid = await prisma.sscBid.findUnique({ where: { id: bidId } });
   if (!bid) throw new NotFoundError('SscBid', bidId);
   if (bid.status !== 'accepted') {

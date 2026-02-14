@@ -1,33 +1,233 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Download, ArrowRightLeft, Calendar, Package, Users, Building2, X, BarChart3 } from 'lucide-react';
+import { Search, Download, ArrowRightLeft, Calendar, Package, Users, Building2, X } from 'lucide-react';
 
 // Real data from Shifting Material Report.ods
 const SHIFTING_MATERIALS_DATA = [
-  { material: "LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC", qty: "732", date: "2025-09-12", sendProject: "QATIF SHATI", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC", qty: "721", date: "2025-09-12", sendProject: "URUBA", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC", qty: "724", date: "2025-09-12", sendProject: "QALAH", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "LV CABLE 4Cx95 Sq. mm 0.6/1 kv , CU/XLPE /SWA/ PVC", qty: "254", date: "2025-09-12", sendProject: "QALAH", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "LV CABLE 4Cx95 Sq. mm 0.6/1 kv , CU/XLPE /SWA/ PVC", qty: "243", date: "2025-09-12", sendProject: "BAYOUNIYAH", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "LV CABLE 4Cx25 Sq. mm 0.6/1 kv , CU/XLPE /SWA /PVC", qty: "973", date: "2025-09-12", sendProject: "BAYOUNIYA", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Dammam WH" },
-  { material: "2FMM DUPLEX ZIP CORDE FIBER OPTIC CABLE", qty: "1010", date: "2025-11-02", sendProject: "Surplus NIC", requestProject: "Farasan Island", requestedBy: "Ahmed Salah", issuedBy: "Tabuk WH" },
-  { material: "Cable 1x300", qty: "157", date: "2026-10-04", sendProject: "Surplus", requestProject: "Farasan Island", requestedBy: "Ousama", issuedBy: "Asfan WH" },
-  { material: "RGS Pipes 1\"", qty: "3000", date: "2025-11-02", sendProject: "Surplus", requestProject: "Farasan Island", requestedBy: "Ousama", issuedBy: "Asfan WH" },
-  { material: "VT cables 7X6mm2 CU/XLPE/CTS/PVC 0.6/1KV", qty: "995", date: "2026-11-25", sendProject: "Qalaa", requestProject: "Aljazira", requestedBy: "Ahmed Shaban", issuedBy: "Dammam WH" },
-  { material: "Control cable 12Cx2.5mm2 CU/XLPE/CTS/PVC 0.6/1KV", qty: "1018", date: "2026-11-25", sendProject: "Qalaa", requestProject: "Aljazira", requestedBy: "Ahmed Shaban", issuedBy: "Dammam WH" },
-  { material: "CT Cables 4x4 CU/XLPE/PVC", qty: "870", date: "2026-11-25", sendProject: "NIC North", requestProject: "Aljazira", requestedBy: "Ahmed Shaban", issuedBy: "Tabuk WH" },
-  { material: "Cable 1x50", qty: "750", date: "2025-11-30", sendProject: "SurplusSharafia", requestProject: "Diraia", requestedBy: "Ahmed Sallam", issuedBy: "Twiq WH" },
-  { material: "Bare copper Conducter 150mm2", qty: "365", date: "2025-12-31", sendProject: "Surplus HARAM 3", requestProject: "WHD-3", requestedBy: "Naif Alghamdi", issuedBy: "HARAM 3" },
-  { material: "4C × 6 mm2 CU/XLPE/CUT/PVC RED, YELLOW, BLUE and BLACK", qty: "386", date: "2025-12-31", sendProject: "Surplus HARAM 3", requestProject: "Tiba Univesity", requestedBy: "Fahad Almehmadi", issuedBy: "HARAM 3" },
-  { material: "Security porta cabin", qty: "2", date: "2026-01-06", sendProject: "Asfan", requestProject: "Rumah", requestedBy: "Gaser", issuedBy: "Asfan" },
-  { material: "1x70mm hitachi cable 6kv", qty: "140", date: "2026-01-06", sendProject: "NIC EV2 S/S", requestProject: "Aljazira", requestedBy: "Saper", issuedBy: "Tabuk WH" },
-  { material: "Control Cable 4X2.5", qty: "1030", date: "2026-01-08", sendProject: "Qatif Fhati", requestProject: "Hafar Albatin", requestedBy: "Mohamed Alshamani", issuedBy: "Dammam WH" },
-  { material: "Lighting fixture", qty: "19", date: "2026-01-10", sendProject: "Khobar Corniche SS", requestProject: "Wadi Aldhran", requestedBy: "Mahmoud", issuedBy: "Dammam WH" },
-  { material: "1X400mm CU/XLPE/PVC-FR0.6/1KV", qty: "72", date: "2026-01-14", sendProject: "Alryadia", requestProject: "Dana 2", requestedBy: "Essam", issuedBy: "Dammam WH" },
-  { material: "Cable - 4Cx 4 MM", qty: "1054", date: "2026-01-15", sendProject: "KSP8388", requestProject: "Jazira", requestedBy: "Samy", issuedBy: "Twiq WH" },
-  { material: "Metal Spring for MV Cable Clamps", qty: "250", date: "2026-01-19", sendProject: "HDM", requestProject: "Buhairat", requestedBy: "Zeeshan", issuedBy: "Asfan" },
-  { material: "03 Rooms Porta cabin", qty: "1", date: "2026-01-20", sendProject: "Tabuk WH", requestProject: "Modon Asir", requestedBy: "Hayman", issuedBy: "Tabuk WH" },
-  { material: "HDG SFT-225 corner angel including screw accessories", qty: "1215", date: "2026-01-25", sendProject: "Surplus Defaa", requestProject: "Uruba", requestedBy: "Ahmed Nawarah", issuedBy: "Defaa" },
-  { material: "1X240 Yellow/Green grounding cable", qty: "250", date: "2026-06-22", sendProject: "Qalaa", requestProject: "8388 King Salman Park", requestedBy: "Fahad Althawri", issuedBy: "Dammam WH" },
+  {
+    material: 'LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC',
+    qty: '732',
+    date: '2025-09-12',
+    sendProject: 'QATIF SHATI',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC',
+    qty: '721',
+    date: '2025-09-12',
+    sendProject: 'URUBA',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'LV CABLE 1Cx400 Sq. mm 0.6/1 kv , CU/XLPE / PVC',
+    qty: '724',
+    date: '2025-09-12',
+    sendProject: 'QALAH',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'LV CABLE 4Cx95 Sq. mm 0.6/1 kv , CU/XLPE /SWA/ PVC',
+    qty: '254',
+    date: '2025-09-12',
+    sendProject: 'QALAH',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'LV CABLE 4Cx95 Sq. mm 0.6/1 kv , CU/XLPE /SWA/ PVC',
+    qty: '243',
+    date: '2025-09-12',
+    sendProject: 'BAYOUNIYAH',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'LV CABLE 4Cx25 Sq. mm 0.6/1 kv , CU/XLPE /SWA /PVC',
+    qty: '973',
+    date: '2025-09-12',
+    sendProject: 'BAYOUNIYA',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: '2FMM DUPLEX ZIP CORDE FIBER OPTIC CABLE',
+    qty: '1010',
+    date: '2025-11-02',
+    sendProject: 'Surplus NIC',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ahmed Salah',
+    issuedBy: 'Tabuk WH',
+  },
+  {
+    material: 'Cable 1x300',
+    qty: '157',
+    date: '2026-10-04',
+    sendProject: 'Surplus',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ousama',
+    issuedBy: 'Asfan WH',
+  },
+  {
+    material: 'RGS Pipes 1"',
+    qty: '3000',
+    date: '2025-11-02',
+    sendProject: 'Surplus',
+    requestProject: 'Farasan Island',
+    requestedBy: 'Ousama',
+    issuedBy: 'Asfan WH',
+  },
+  {
+    material: 'VT cables 7X6mm2 CU/XLPE/CTS/PVC 0.6/1KV',
+    qty: '995',
+    date: '2026-11-25',
+    sendProject: 'Qalaa',
+    requestProject: 'Aljazira',
+    requestedBy: 'Ahmed Shaban',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'Control cable 12Cx2.5mm2 CU/XLPE/CTS/PVC 0.6/1KV',
+    qty: '1018',
+    date: '2026-11-25',
+    sendProject: 'Qalaa',
+    requestProject: 'Aljazira',
+    requestedBy: 'Ahmed Shaban',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'CT Cables 4x4 CU/XLPE/PVC',
+    qty: '870',
+    date: '2026-11-25',
+    sendProject: 'NIC North',
+    requestProject: 'Aljazira',
+    requestedBy: 'Ahmed Shaban',
+    issuedBy: 'Tabuk WH',
+  },
+  {
+    material: 'Cable 1x50',
+    qty: '750',
+    date: '2025-11-30',
+    sendProject: 'SurplusSharafia',
+    requestProject: 'Diraia',
+    requestedBy: 'Ahmed Sallam',
+    issuedBy: 'Twiq WH',
+  },
+  {
+    material: 'Bare copper Conducter 150mm2',
+    qty: '365',
+    date: '2025-12-31',
+    sendProject: 'Surplus HARAM 3',
+    requestProject: 'WHD-3',
+    requestedBy: 'Naif Alghamdi',
+    issuedBy: 'HARAM 3',
+  },
+  {
+    material: '4C × 6 mm2 CU/XLPE/CUT/PVC RED, YELLOW, BLUE and BLACK',
+    qty: '386',
+    date: '2025-12-31',
+    sendProject: 'Surplus HARAM 3',
+    requestProject: 'Tiba Univesity',
+    requestedBy: 'Fahad Almehmadi',
+    issuedBy: 'HARAM 3',
+  },
+  {
+    material: 'Security porta cabin',
+    qty: '2',
+    date: '2026-01-06',
+    sendProject: 'Asfan',
+    requestProject: 'Rumah',
+    requestedBy: 'Gaser',
+    issuedBy: 'Asfan',
+  },
+  {
+    material: '1x70mm hitachi cable 6kv',
+    qty: '140',
+    date: '2026-01-06',
+    sendProject: 'NIC EV2 S/S',
+    requestProject: 'Aljazira',
+    requestedBy: 'Saper',
+    issuedBy: 'Tabuk WH',
+  },
+  {
+    material: 'Control Cable 4X2.5',
+    qty: '1030',
+    date: '2026-01-08',
+    sendProject: 'Qatif Fhati',
+    requestProject: 'Hafar Albatin',
+    requestedBy: 'Mohamed Alshamani',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'Lighting fixture',
+    qty: '19',
+    date: '2026-01-10',
+    sendProject: 'Khobar Corniche SS',
+    requestProject: 'Wadi Aldhran',
+    requestedBy: 'Mahmoud',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: '1X400mm CU/XLPE/PVC-FR0.6/1KV',
+    qty: '72',
+    date: '2026-01-14',
+    sendProject: 'Alryadia',
+    requestProject: 'Dana 2',
+    requestedBy: 'Essam',
+    issuedBy: 'Dammam WH',
+  },
+  {
+    material: 'Cable - 4Cx 4 MM',
+    qty: '1054',
+    date: '2026-01-15',
+    sendProject: 'KSP8388',
+    requestProject: 'Jazira',
+    requestedBy: 'Samy',
+    issuedBy: 'Twiq WH',
+  },
+  {
+    material: 'Metal Spring for MV Cable Clamps',
+    qty: '250',
+    date: '2026-01-19',
+    sendProject: 'HDM',
+    requestProject: 'Buhairat',
+    requestedBy: 'Zeeshan',
+    issuedBy: 'Asfan',
+  },
+  {
+    material: '03 Rooms Porta cabin',
+    qty: '1',
+    date: '2026-01-20',
+    sendProject: 'Tabuk WH',
+    requestProject: 'Modon Asir',
+    requestedBy: 'Hayman',
+    issuedBy: 'Tabuk WH',
+  },
+  {
+    material: 'HDG SFT-225 corner angel including screw accessories',
+    qty: '1215',
+    date: '2026-01-25',
+    sendProject: 'Surplus Defaa',
+    requestProject: 'Uruba',
+    requestedBy: 'Ahmed Nawarah',
+    issuedBy: 'Defaa',
+  },
+  {
+    material: '1X240 Yellow/Green grounding cable',
+    qty: '250',
+    date: '2026-06-22',
+    sendProject: 'Qalaa',
+    requestProject: '8388 King Salman Park',
+    requestedBy: 'Fahad Althawri',
+    issuedBy: 'Dammam WH',
+  },
 ];
 
 export const ShiftingMaterialDashboard: React.FC = () => {
@@ -45,7 +245,8 @@ export const ShiftingMaterialDashboard: React.FC = () => {
   // Filter data
   const filteredData = useMemo(() => {
     return SHIFTING_MATERIALS_DATA.filter(item => {
-      const matchesSearch = item.material.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch =
+        item.material.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.requestedBy.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSend = !filterSendProject || item.sendProject === filterSendProject;
       const matchesRequest = !filterRequestProject || item.requestProject === filterRequestProject;
@@ -55,12 +256,16 @@ export const ShiftingMaterialDashboard: React.FC = () => {
   }, [searchQuery, filterSendProject, filterRequestProject, filterIssuedBy]);
 
   // Stats
-  const stats = useMemo(() => ({
-    totalTransfers: filteredData.length,
-    uniqueMaterials: new Set(filteredData.map(d => d.material)).size,
-    uniqueProjects: new Set([...filteredData.map(d => d.sendProject), ...filteredData.map(d => d.requestProject)]).size,
-    uniqueWarehouses: new Set(filteredData.map(d => d.issuedBy)).size,
-  }), [filteredData]);
+  const stats = useMemo(
+    () => ({
+      totalTransfers: filteredData.length,
+      uniqueMaterials: new Set(filteredData.map(d => d.material)).size,
+      uniqueProjects: new Set([...filteredData.map(d => d.sendProject), ...filteredData.map(d => d.requestProject)])
+        .size,
+      uniqueWarehouses: new Set(filteredData.map(d => d.issuedBy)).size,
+    }),
+    [filteredData],
+  );
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -80,9 +285,7 @@ export const ShiftingMaterialDashboard: React.FC = () => {
             <ArrowRightLeft className="text-nesma-secondary" />
             Shifting Materials
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Track material transfers between projects and warehouses
-          </p>
+          <p className="text-sm text-gray-400 mt-1">Track material transfers between projects and warehouses</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 border border-white/20 rounded-lg text-gray-300 hover:bg-white/10 text-sm transition-all">
@@ -151,7 +354,7 @@ export const ShiftingMaterialDashboard: React.FC = () => {
                 type="text"
                 placeholder="Search material or requester..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
               />
             </div>
@@ -160,29 +363,41 @@ export const ShiftingMaterialDashboard: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <select
                 value={filterSendProject}
-                onChange={(e) => setFilterSendProject(e.target.value)}
+                onChange={e => setFilterSendProject(e.target.value)}
                 className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
               >
                 <option value="">From Project</option>
-                {sendProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                {sendProjects.map(p => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={filterRequestProject}
-                onChange={(e) => setFilterRequestProject(e.target.value)}
+                onChange={e => setFilterRequestProject(e.target.value)}
                 className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
               >
                 <option value="">To Project</option>
-                {requestProjects.map(p => <option key={p} value={p}>{p}</option>)}
+                {requestProjects.map(p => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={filterIssuedBy}
-                onChange={(e) => setFilterIssuedBy(e.target.value)}
+                onChange={e => setFilterIssuedBy(e.target.value)}
                 className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
               >
                 <option value="">Warehouse</option>
-                {issuedByList.map(w => <option key={w} value={w}>{w}</option>)}
+                {issuedByList.map(w => (
+                  <option key={w} value={w}>
+                    {w}
+                  </option>
+                ))}
               </select>
 
               {hasActiveFilters && (
@@ -232,14 +447,18 @@ export const ShiftingMaterialDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5 text-sm text-gray-300">
                 {filteredData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4 max-w-xs truncate" title={row.material}>{row.material}</td>
+                    <td className="px-6 py-4 max-w-xs truncate" title={row.material}>
+                      {row.material}
+                    </td>
                     <td className="px-6 py-4 font-mono text-white">{row.qty}</td>
                     <td className="px-6 py-4 text-gray-400">{row.date}</td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs">{row.sendProject}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">{row.requestProject}</span>
+                      <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">
+                        {row.requestProject}
+                      </span>
                     </td>
                     <td className="px-6 py-4">{row.requestedBy}</td>
                     <td className="px-6 py-4 text-nesma-secondary">{row.issuedBy}</td>
@@ -254,7 +473,10 @@ export const ShiftingMaterialDashboard: React.FC = () => {
         {viewMode === 'cards' && (
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredData.map((row, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all">
+              <div
+                key={idx}
+                className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all"
+              >
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="text-white font-medium text-sm line-clamp-2">{row.material}</h3>
                   <span className="text-lg font-bold text-nesma-secondary ml-2">{row.qty}</span>
@@ -262,7 +484,9 @@ export const ShiftingMaterialDashboard: React.FC = () => {
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs">{row.sendProject}</span>
                   <ArrowRightLeft size={14} className="text-gray-500" />
-                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">{row.requestProject}</span>
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">
+                    {row.requestProject}
+                  </span>
                 </div>
                 <div className="flex justify-between text-xs text-gray-400">
                   <span>{row.requestedBy}</span>
@@ -279,7 +503,9 @@ export const ShiftingMaterialDashboard: React.FC = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-white/10 bg-white/5 flex justify-between items-center text-xs text-gray-400">
-          <span>Showing {filteredData.length} of {SHIFTING_MATERIALS_DATA.length} records</span>
+          <span>
+            Showing {filteredData.length} of {SHIFTING_MATERIALS_DATA.length} records
+          </span>
           <span>Shifting Materials Report</span>
         </div>
       </div>

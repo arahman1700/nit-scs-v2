@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, RefreshCw, Shield, Clock, DollarSign, Hash, Globe, Loader2 } from 'lucide-react';
+import { Save, Shield, Clock, Hash, Globe, Loader2 } from 'lucide-react';
 import { MI_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from '@nit-scs-v2/shared/constants';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { useSettings, useUpdateSettings } from '@/api/hooks/useSettings';

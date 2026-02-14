@@ -5,7 +5,7 @@
  */
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import type { GeneratorMaintenanceCreateDto, GeneratorMaintenanceUpdateDto, ListParams } from '../types/dto.js';
 
@@ -52,7 +52,7 @@ export async function getById(id: string) {
   return record;
 }
 
-export async function create(data: GeneratorMaintenanceCreateDto, userId: string) {
+export async function create(data: GeneratorMaintenanceCreateDto, _userId: string) {
   // Verify generator exists
   const generator = await prisma.generator.findUnique({ where: { id: data.generatorId } });
   if (!generator) throw new NotFoundError('Generator', data.generatorId);

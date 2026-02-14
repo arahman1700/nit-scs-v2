@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../utils/response.js';
 import { auditAndEmit } from '../utils/routeHelpers.js';

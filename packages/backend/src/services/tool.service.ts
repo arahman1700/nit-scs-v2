@@ -56,7 +56,7 @@ export async function getById(id: string) {
   return record;
 }
 
-export async function create(data: ToolCreateDto, userId: string) {
+export async function create(data: ToolCreateDto, _userId: string) {
   const toolCode = await generateDocumentNumber('tool');
 
   return prisma.tool.create({

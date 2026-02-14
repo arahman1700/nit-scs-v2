@@ -27,7 +27,7 @@ import type { SensorCreateDto, SensorUpdateDto, SensorListParams } from '../serv
 const router = Router();
 
 const WRITE_ROLES = ['admin', 'warehouse_supervisor'];
-const READ_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff', 'manager'];
+const _READ_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff', 'manager'];
 
 // ── GET / — List sensors ────────────────────────────────────────────────────
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {

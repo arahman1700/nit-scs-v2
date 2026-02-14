@@ -66,7 +66,6 @@ vi.mock('../services/delegation.service.js', () => ({
 
 // ── Imports ─────────────────────────────────────────────────────────────
 
-import * as authService from '../services/auth.service.js';
 import * as delegationService from '../services/delegation.service.js';
 import { createTestApp, signTestToken } from '../test-utils/test-app.js';
 import supertest from 'supertest';

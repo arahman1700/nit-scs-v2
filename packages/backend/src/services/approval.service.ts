@@ -1,7 +1,7 @@
 import type { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../utils/prisma.js';
 import { createAuditLog } from './audit.service.js';
-import { emitToRole, emitToUser, emitToDocument } from '../socket/setup.js';
+import { emitToRole, emitToDocument } from '../socket/setup.js';
 import { log } from '../config/logger.js';
 import { eventBus } from '../events/event-bus.js';
 

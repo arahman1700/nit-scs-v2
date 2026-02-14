@@ -111,17 +111,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
     copyright: '© 2026 Nesma Infrastructure & Technology. All rights reserved.',
   };
 
-  const demoAccounts = [
-    { label: 'Admin', email: 'admin@nit.sa', role: 'Admin' },
-    { label: 'Warehouse', email: 'ahmed@nit.sa', role: 'Warehouse' },
-    { label: 'Transport', email: 'mohammed@nit.sa', role: 'Transport' },
-    { label: 'Engineer', email: 'khalid@nit.sa', role: 'Engineer' },
-  ];
+  const demoAccounts = import.meta.env.DEV
+    ? [
+        { label: 'Admin', email: 'admin@nit.sa', role: 'Admin' },
+        { label: 'Warehouse', email: 'ahmed@nit.sa', role: 'Warehouse' },
+        { label: 'Transport', email: 'mohammed@nit.sa', role: 'Transport' },
+        { label: 'Engineer', email: 'khalid@nit.sa', role: 'Engineer' },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen flex" dir="ltr">
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-[#051020] via-[#0E2841] to-[#0a1628]">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-nesma-dark via-nesma-primary/20 to-nesma-dark">
         {/* Animated Background Elements */}
         <div className="absolute top-20 left-20 w-72 h-72 bg-nesma-primary/10 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-nesma-secondary/5 rounded-full blur-[150px]"></div>
@@ -248,8 +250,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
           </form>
 
-          {/* Demo Accounts — only in development or when VITE_DEMO_MODE is enabled */}
-          {(import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === 'true') && (
+          {/* Demo Accounts — only in development */}
+          {import.meta.env.DEV && (
             <div className="mt-10 pt-8 border-t border-white/10">
               <p className="text-xs text-gray-500 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
               <div className="grid grid-cols-2 gap-2">

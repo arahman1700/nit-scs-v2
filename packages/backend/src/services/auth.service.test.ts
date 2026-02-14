@@ -387,7 +387,7 @@ describe('auth.service', () => {
 
       await logout('access-token');
 
-      const redis = vi.mocked(getRedis)();
+      const _redis = vi.mocked(getRedis)();
       // blacklistToken checks !jti and returns early, so setex should not be called
       // (getRedis is called inside blacklistToken, not directly in logout for setex)
     });

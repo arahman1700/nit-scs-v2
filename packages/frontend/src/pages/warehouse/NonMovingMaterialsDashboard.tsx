@@ -1,38 +1,308 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Download, AlertTriangle, Package, Building2, Clock, X, Eye, BarChart3 } from 'lucide-react';
+import { Search, Download, AlertTriangle, Package, Building2, Clock, BarChart3 } from 'lucide-react';
 
 // Real data from NON MOVING MATERIALS.xlsx
 const NON_MOVING_DATA = [
-  { sn: 1, warehouse: "Asfan", description: "HS Joint Kit", unit: "box", location: "inside store", qty: 4, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 2, warehouse: "Asfan", description: "Heavy Duty Safety Switch", unit: "box", location: "inside store", qty: 7, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 3, warehouse: "Asfan", description: "Fibre system", unit: "pcs", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 4, warehouse: "Asfan", description: "Insulator with fixing systems", unit: "box", location: "inside store", qty: 1, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 5, warehouse: "Asfan", description: "HS outdoor termination", unit: "box", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 6, warehouse: "Asfan", description: "Insulating parts including conductive screen", unit: "pcs", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 7, warehouse: "Asfan", description: "Insulating plug w/cap k650 Bip", unit: "pcs", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 8, warehouse: "Asfan", description: "SLC A6TH/5-400 VPE.SA", unit: "box", location: "inside store", qty: 1, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 9, warehouse: "Asfan", description: "Alarm System", unit: "pcs", location: "inside store", qty: 4, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 10, warehouse: "Asfan", description: "Conduit Fittings", unit: "pcs", location: "inside store", qty: 100, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 11, warehouse: "Asfan", description: "Spare parts set", unit: "pcs", location: "inside store", qty: 10, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 12, warehouse: "Asfan", description: "SENOID valve (0063)", unit: "pcs", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 13, warehouse: "Asfan", description: "SJE 185-12", unit: "pcs", location: "inside store", qty: 84, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 14, warehouse: "Asfan", description: "SJE 300-M10", unit: "pcs", location: "inside store", qty: 18, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 15, warehouse: "Asfan", description: "KSE - D34 A300-M12", unit: "pcs", location: "inside store", qty: 85, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 16, warehouse: "Asfan", description: "Pilot Wire Differential Relay", unit: "pcs", location: "inside store", qty: 1, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 17, warehouse: "Asfan", description: "Alstom MMIG02", unit: "pcs", location: "inside store", qty: 5, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 18, warehouse: "Asfan", description: "ABB MCX913-1-6-1", unit: "pcs", location: "inside store", qty: 1, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 19, warehouse: "Asfan", description: "ABB RTXP24", unit: "pcs", location: "inside store", qty: 3, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 20, warehouse: "Asfan", description: "Protection Relay REG 670", unit: "pcs", location: "inside store", qty: 2, project: "old stock", remarks: "Past 4 year haven't moved" },
-  { sn: 21, warehouse: "Jafurah", description: "Cable Tray 300mm Perforated", unit: "pcs", location: "yard", qty: 150, project: "Project Materials", remarks: "Excess from project" },
-  { sn: 22, warehouse: "Jafurah", description: "Cable Tray Cover 300mm", unit: "pcs", location: "yard", qty: 120, project: "Project Materials", remarks: "Excess from project" },
-  { sn: 23, warehouse: "Jafurah", description: "Unistrut Channel 41x41", unit: "meter", location: "yard", qty: 500, project: "Project Materials", remarks: "Excess from project" },
-  { sn: 24, warehouse: "Jafurah", description: "Spring Nut M10", unit: "pcs", location: "inside store", qty: 2000, project: "Project Materials", remarks: "Excess from project" },
-  { sn: 25, warehouse: "Jafurah", description: "Hex Bolt M10x40", unit: "pcs", location: "inside store", qty: 1500, project: "Project Materials", remarks: "Excess from project" },
-  { sn: 26, warehouse: "Asfan", description: "Multi Function Meter", unit: "pcs", location: "inside store", qty: 8, project: "Optern materials", remarks: "Past 3 year haven't moved" },
-  { sn: 27, warehouse: "Asfan", description: "Current Transformer 5A", unit: "pcs", location: "inside store", qty: 24, project: "Optern materials", remarks: "Past 3 year haven't moved" },
-  { sn: 28, warehouse: "Asfan", description: "Voltage Transformer 110V", unit: "pcs", location: "inside store", qty: 12, project: "Optern materials", remarks: "Past 3 year haven't moved" },
-  { sn: 29, warehouse: "Jafurah", description: "Safety Helmet White", unit: "pcs", location: "inside store", qty: 50, project: "Project Tools", remarks: "Unused safety equipment" },
-  { sn: 30, warehouse: "Jafurah", description: "Safety Vest Orange", unit: "pcs", location: "inside store", qty: 40, project: "Project Tools", remarks: "Unused safety equipment" },
+  {
+    sn: 1,
+    warehouse: 'Asfan',
+    description: 'HS Joint Kit',
+    unit: 'box',
+    location: 'inside store',
+    qty: 4,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 2,
+    warehouse: 'Asfan',
+    description: 'Heavy Duty Safety Switch',
+    unit: 'box',
+    location: 'inside store',
+    qty: 7,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 3,
+    warehouse: 'Asfan',
+    description: 'Fibre system',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 4,
+    warehouse: 'Asfan',
+    description: 'Insulator with fixing systems',
+    unit: 'box',
+    location: 'inside store',
+    qty: 1,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 5,
+    warehouse: 'Asfan',
+    description: 'HS outdoor termination',
+    unit: 'box',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 6,
+    warehouse: 'Asfan',
+    description: 'Insulating parts including conductive screen',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 7,
+    warehouse: 'Asfan',
+    description: 'Insulating plug w/cap k650 Bip',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 8,
+    warehouse: 'Asfan',
+    description: 'SLC A6TH/5-400 VPE.SA',
+    unit: 'box',
+    location: 'inside store',
+    qty: 1,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 9,
+    warehouse: 'Asfan',
+    description: 'Alarm System',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 4,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 10,
+    warehouse: 'Asfan',
+    description: 'Conduit Fittings',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 100,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 11,
+    warehouse: 'Asfan',
+    description: 'Spare parts set',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 10,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 12,
+    warehouse: 'Asfan',
+    description: 'SENOID valve (0063)',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 13,
+    warehouse: 'Asfan',
+    description: 'SJE 185-12',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 84,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 14,
+    warehouse: 'Asfan',
+    description: 'SJE 300-M10',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 18,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 15,
+    warehouse: 'Asfan',
+    description: 'KSE - D34 A300-M12',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 85,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 16,
+    warehouse: 'Asfan',
+    description: 'Pilot Wire Differential Relay',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 1,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 17,
+    warehouse: 'Asfan',
+    description: 'Alstom MMIG02',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 5,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 18,
+    warehouse: 'Asfan',
+    description: 'ABB MCX913-1-6-1',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 1,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 19,
+    warehouse: 'Asfan',
+    description: 'ABB RTXP24',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 3,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 20,
+    warehouse: 'Asfan',
+    description: 'Protection Relay REG 670',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2,
+    project: 'old stock',
+    remarks: "Past 4 year haven't moved",
+  },
+  {
+    sn: 21,
+    warehouse: 'Jafurah',
+    description: 'Cable Tray 300mm Perforated',
+    unit: 'pcs',
+    location: 'yard',
+    qty: 150,
+    project: 'Project Materials',
+    remarks: 'Excess from project',
+  },
+  {
+    sn: 22,
+    warehouse: 'Jafurah',
+    description: 'Cable Tray Cover 300mm',
+    unit: 'pcs',
+    location: 'yard',
+    qty: 120,
+    project: 'Project Materials',
+    remarks: 'Excess from project',
+  },
+  {
+    sn: 23,
+    warehouse: 'Jafurah',
+    description: 'Unistrut Channel 41x41',
+    unit: 'meter',
+    location: 'yard',
+    qty: 500,
+    project: 'Project Materials',
+    remarks: 'Excess from project',
+  },
+  {
+    sn: 24,
+    warehouse: 'Jafurah',
+    description: 'Spring Nut M10',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 2000,
+    project: 'Project Materials',
+    remarks: 'Excess from project',
+  },
+  {
+    sn: 25,
+    warehouse: 'Jafurah',
+    description: 'Hex Bolt M10x40',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 1500,
+    project: 'Project Materials',
+    remarks: 'Excess from project',
+  },
+  {
+    sn: 26,
+    warehouse: 'Asfan',
+    description: 'Multi Function Meter',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 8,
+    project: 'Optern materials',
+    remarks: "Past 3 year haven't moved",
+  },
+  {
+    sn: 27,
+    warehouse: 'Asfan',
+    description: 'Current Transformer 5A',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 24,
+    project: 'Optern materials',
+    remarks: "Past 3 year haven't moved",
+  },
+  {
+    sn: 28,
+    warehouse: 'Asfan',
+    description: 'Voltage Transformer 110V',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 12,
+    project: 'Optern materials',
+    remarks: "Past 3 year haven't moved",
+  },
+  {
+    sn: 29,
+    warehouse: 'Jafurah',
+    description: 'Safety Helmet White',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 50,
+    project: 'Project Tools',
+    remarks: 'Unused safety equipment',
+  },
+  {
+    sn: 30,
+    warehouse: 'Jafurah',
+    description: 'Safety Vest Orange',
+    unit: 'pcs',
+    location: 'inside store',
+    qty: 40,
+    project: 'Project Tools',
+    remarks: 'Unused safety equipment',
+  },
 ];
 
 export const NonMovingMaterialsDashboard: React.FC = () => {
@@ -40,7 +310,7 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
   const [filterWarehouse, setFilterWarehouse] = useState('');
   const [filterProject, setFilterProject] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [selectedItem, setSelectedItem] = useState<typeof NON_MOVING_DATA[0] | null>(null);
+  const [_selectedItem, _setSelectedItem] = useState<(typeof NON_MOVING_DATA)[0] | null>(null);
 
   // Get unique values
   const warehouses = useMemo(() => [...new Set(NON_MOVING_DATA.map(d => d.warehouse))], []);
@@ -77,11 +347,16 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
 
   const getProjectColor = (project: string) => {
     switch (project) {
-      case 'old stock': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'Optern materials': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'Project Materials': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'Project Tools': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+      case 'old stock':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'Optern materials':
+        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      case 'Project Materials':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'Project Tools':
+        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      default:
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
@@ -172,7 +447,7 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
                 type="text"
                 placeholder="Search description..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
               />
             </div>
@@ -181,20 +456,28 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <select
                 value={filterWarehouse}
-                onChange={(e) => setFilterWarehouse(e.target.value)}
+                onChange={e => setFilterWarehouse(e.target.value)}
                 className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
               >
                 <option value="">All Warehouses</option>
-                {warehouses.map(w => <option key={w} value={w}>{w}</option>)}
+                {warehouses.map(w => (
+                  <option key={w} value={w}>
+                    {w}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={filterProject}
-                onChange={(e) => setFilterProject(e.target.value)}
+                onChange={e => setFilterProject(e.target.value)}
                 className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
               >
                 <option value="">All Categories</option>
-                {projects.map(p => <option key={p} value={p}>{p}</option>)}
+                {projects.map(p => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
               </select>
 
               {/* View Toggle */}
@@ -244,9 +527,13 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
                     <td className="px-4 py-3 text-gray-400">{row.location}</td>
                     <td className="px-4 py-3 font-mono text-lg text-white">{row.qty}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs border ${getProjectColor(row.project)}`}>{row.project}</span>
+                      <span className={`px-2 py-1 rounded text-xs border ${getProjectColor(row.project)}`}>
+                        {row.project}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate" title={row.remarks}>{row.remarks}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate" title={row.remarks}>
+                      {row.remarks}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -264,7 +551,9 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
               >
                 <div className="flex justify-between items-start mb-3">
                   <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs">{row.warehouse}</span>
-                  <span className={`px-2 py-1 rounded text-xs border ${getProjectColor(row.project)}`}>{row.project}</span>
+                  <span className={`px-2 py-1 rounded text-xs border ${getProjectColor(row.project)}`}>
+                    {row.project}
+                  </span>
                 </div>
                 <h3 className="text-white font-medium mb-2">{row.description}</h3>
                 <div className="flex justify-between items-end">
@@ -289,7 +578,9 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-white/10 bg-white/5 flex justify-between items-center text-xs text-gray-400">
-          <span>Showing {filteredData.length} of {NON_MOVING_DATA.length} non-moving items</span>
+          <span>
+            Showing {filteredData.length} of {NON_MOVING_DATA.length} non-moving items
+          </span>
           <span>Non-Moving Materials Report</span>
         </div>
       </div>

@@ -10,19 +10,11 @@ import {
   MoreHorizontal,
   Plus,
   Users,
-  Settings,
   Search,
   MapPin,
-  Phone,
   Star,
   CheckCircle,
-  Clock,
-  AlertTriangle,
-  Filter,
-  Eye,
   Wrench,
-  Fuel,
-  BarChart3,
   Package,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -32,7 +24,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
   status,
   jobs,
   color,
-  borderColor,
+  borderColor: _borderColor,
 }) => (
   <div className="flex-1 min-w-[300px] glass-card rounded-2xl p-4 flex flex-col h-[calc(100vh-180px)] bg-black/20">
     <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">

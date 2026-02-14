@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Calculator,
   ClipboardList,
@@ -8,7 +8,6 @@ import {
   GripVertical,
   ChevronDown,
   ChevronUp,
-  Check,
   X,
   ToggleLeft,
   ToggleRight,
@@ -29,7 +28,7 @@ import {
   useDeleteChecklistItem,
   useReorderChecklistItems,
 } from '@/api/hooks';
-import type { InspectionLevel, Checklist, ChecklistItem } from '@/api/hooks';
+import type { InspectionLevel, Checklist } from '@/api/hooks';
 
 // ── Tab definitions ────────────────────────────────────────────────────────
 

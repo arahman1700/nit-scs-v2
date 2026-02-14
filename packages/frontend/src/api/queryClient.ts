@@ -1,4 +1,4 @@
-import { QueryClient, type Mutation } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { toast } from '@/components/Toaster';
 
 export const queryClient = new QueryClient({

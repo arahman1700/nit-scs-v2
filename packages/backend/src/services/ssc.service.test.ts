@@ -10,7 +10,7 @@ vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
 
 import { createPrismaMock } from '../test-utils/prisma-mock.js';
 import { listBids, getById, createBid, acceptBid, rejectBid, signMemo, notifyFinance } from './ssc.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 
 // ── helpers ──────────────────────────────────────────────────────────
 const USER_ID = 'user-1';

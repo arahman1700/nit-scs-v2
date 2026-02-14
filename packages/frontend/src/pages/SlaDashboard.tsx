@@ -19,7 +19,7 @@ import type { Project } from '@nit-scs-v2/shared/types';
 
 export const SlaDashboard: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('All');
-  const [selectedMonth, setSelectedMonth] = useState('Jan 2026');
+  const [selectedMonth] = useState('Jan 2026');
 
   const jobsQuery = useJobOrderList({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
@@ -49,7 +49,7 @@ export const SlaDashboard: React.FC = () => {
     { name: 'Overdue', value: overdue },
   ].filter(d => d.value > 0);
 
-  const companyData = [
+  const _companyData = [
     { name: 'NIT', value: Math.floor(totalJobs * 0.7) },
     { name: 'NP', value: Math.floor(totalJobs * 0.2) },
     { name: 'Logistic', value: Math.floor(totalJobs * 0.1) },

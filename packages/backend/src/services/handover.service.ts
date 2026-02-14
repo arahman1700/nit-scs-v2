@@ -47,7 +47,7 @@ export async function getById(id: string) {
   return record;
 }
 
-export async function create(data: HandoverCreateDto, userId: string) {
+export async function create(data: HandoverCreateDto, _userId: string) {
   return prisma.storekeeperHandover.create({
     data: {
       warehouseId: data.warehouseId,
@@ -79,7 +79,7 @@ export async function update(id: string, data: HandoverUpdateDto) {
   return { existing, updated };
 }
 
-export async function startVerification(id: string, userId: string) {
+export async function startVerification(id: string, _userId: string) {
   const record = await prisma.storekeeperHandover.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('StorekeeperHandover', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
@@ -90,7 +90,7 @@ export async function startVerification(id: string, userId: string) {
   });
 }
 
-export async function complete(id: string, userId: string) {
+export async function complete(id: string, _userId: string) {
   const record = await prisma.storekeeperHandover.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('StorekeeperHandover', id);
   assertTransition(DOC_TYPE, record.status, 'completed');

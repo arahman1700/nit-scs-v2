@@ -220,7 +220,7 @@ export function createNitPdf(options: PdfOptions): jsPDF {
 
   // We use the internal event system via autoTable's didDrawPage
   // but also set up a final page count replacement
-  const pageCount = doc.getNumberOfPages;
+  const _pageCount = doc.getNumberOfPages;
   // Store reference for the finalize step
   (doc as unknown as Record<string, unknown>).__nitStartY = lineY + 6;
   (doc as unknown as Record<string, unknown>).__nitTotalPlaceholder = totalPagesPlaceholder;
@@ -271,7 +271,7 @@ export function addTable(doc: jsPDF, columns: TableColumn[], data: Record<string
       {} as Record<number, { cellWidth: number }>,
     ),
     margin: { left: 14, right: 14 },
-    didDrawPage: hookData => {
+    didDrawPage: _hookData => {
       addNitPageFooter(doc);
     },
   });

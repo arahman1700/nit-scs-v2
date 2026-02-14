@@ -38,7 +38,7 @@ interface HealthResponse {
 }
 
 export async function healthCheck(_req: Request, res: Response): Promise<void> {
-  const startTime = Date.now();
+  const _startTime = Date.now();
 
   // ── Database Check ──────────────────────────────────────────────────────
   let dbStatus: ComponentStatus;

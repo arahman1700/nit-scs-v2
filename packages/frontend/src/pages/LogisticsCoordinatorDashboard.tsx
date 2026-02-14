@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Truck, Ship, Shield, Clock, Plus, Search, Package } from 'lucide-react';
+import { Truck, Ship, Shield, Clock, Search, Package } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useShipmentList } from '@/api/hooks/useShipments';

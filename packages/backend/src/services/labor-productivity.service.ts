@@ -42,7 +42,7 @@ export interface ProductivitySummary {
  * Counts document-level actions (create/update on mrrv, mirv, stock_transfers)
  * grouped by performer, plus task completion time from the Task model.
  */
-export async function getProductivitySummary(days: number = 30, warehouseId?: string): Promise<ProductivitySummary> {
+export async function getProductivitySummary(days: number = 30, _warehouseId?: string): Promise<ProductivitySummary> {
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - days);
   const toDate = new Date();
