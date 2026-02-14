@@ -11,24 +11,24 @@ export interface ApprovalWorkflow {
   slaHours: number;
 }
 
-/** GET /api/v1/approvals/workflows */
+/** GET /api/approvals/workflows */
 export function useApprovalWorkflows() {
   return useQuery({
     queryKey: ['approval-workflows'],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<ApprovalWorkflow[]>>('/v1/approvals/workflows');
+      const { data } = await apiClient.get<ApiResponse<ApprovalWorkflow[]>>('/approvals/workflows');
       return data;
     },
     staleTime: 5 * 60_000,
   });
 }
 
-/** GET /api/v1/approvals/workflows/:documentType */
+/** GET /api/approvals/workflows/:documentType */
 export function useApprovalWorkflowsByType(documentType: string) {
   return useQuery({
     queryKey: ['approval-workflows', documentType],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<ApprovalWorkflow[]>>(`/v1/approvals/workflows/${documentType}`);
+      const { data } = await apiClient.get<ApiResponse<ApprovalWorkflow[]>>(`/approvals/workflows/${documentType}`);
       return data;
     },
     enabled: !!documentType,
@@ -36,50 +36,50 @@ export function useApprovalWorkflowsByType(documentType: string) {
   });
 }
 
-/** POST /api/v1/approvals/workflows */
+/** POST /api/approvals/workflows */
 export function useCreateApprovalWorkflow() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: Omit<ApprovalWorkflow, 'id'>) => {
-      const { data } = await apiClient.post<ApiResponse<ApprovalWorkflow>>('/v1/approvals/workflows', body);
+      const { data } = await apiClient.post<ApiResponse<ApprovalWorkflow>>('/approvals/workflows', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['approval-workflows'] }),
   });
 }
 
-/** PUT /api/v1/approvals/workflows/:id */
+/** PUT /api/approvals/workflows/:id */
 export function useUpdateApprovalWorkflow() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...body }: Partial<ApprovalWorkflow> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<ApprovalWorkflow>>(`/v1/approvals/workflows/${id}`, body);
+      const { data } = await apiClient.put<ApiResponse<ApprovalWorkflow>>(`/approvals/workflows/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['approval-workflows'] }),
   });
 }
 
-/** DELETE /api/v1/approvals/workflows/:id */
+/** DELETE /api/approvals/workflows/:id */
 export function useDeleteApprovalWorkflow() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.delete<ApiResponse<unknown>>(`/v1/approvals/workflows/${id}`);
+      const { data } = await apiClient.delete<ApiResponse<unknown>>(`/approvals/workflows/${id}`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['approval-workflows'] }),
   });
 }
 
-/** GET /api/v1/approvals/chain/:documentType/:amount — preview the chain for a given amount */
+/** GET /api/approvals/chain/:documentType/:amount — preview the chain for a given amount */
 export function useApprovalChainPreview(documentType: string, amount: number) {
   return useQuery({
     queryKey: ['approval-chain', documentType, amount],
     queryFn: async () => {
       const { data } = await apiClient.get<
         ApiResponse<{ steps: Array<{ level: number; approverRole: string; slaHours: number }> }>
-      >(`/v1/approvals/chain/${documentType}/${amount}`);
+      >(`/approvals/chain/${documentType}/${amount}`);
       return data;
     },
     enabled: !!documentType && amount > 0,
