@@ -233,7 +233,7 @@ async function checkApprovalBasedSlaBreaches(now: Date): Promise<void> {
       // Find the current pending approval step
       const pendingStep = await prisma.approvalStep.findFirst({
         where: {
-          documentType: model.name === 'jobOrder' ? 'jo' : model.name,
+          documentType: model.name,
           documentId: docId,
           status: 'pending',
         },
@@ -660,7 +660,7 @@ async function checkApprovalBasedSlaWarnings(now: Date, oneHourFromNow: Date): P
 
       const pendingStep = await prisma.approvalStep.findFirst({
         where: {
-          documentType: model.name === 'jobOrder' ? 'jo' : model.name,
+          documentType: model.name,
           documentId: docId,
           status: 'pending',
         },
