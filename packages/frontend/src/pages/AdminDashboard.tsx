@@ -458,6 +458,7 @@ export const AdminDashboard: React.FC = () => {
                       outerRadius={90}
                       paddingAngle={5}
                       dataKey="value"
+                      nameKey="name"
                       stroke="none"
                     >
                       {jobTypesData.map((_entry, index) => (
@@ -676,16 +677,16 @@ export const AdminDashboard: React.FC = () => {
                       <td className="py-3">
                         <span
                           className={`text-[10px] px-2 py-1 rounded-full font-semibold border ${
-                            log.action.startsWith('GRN') || log.action.startsWith('MRRV')
+                            log.action?.startsWith('GRN') || log.action?.startsWith('MRRV')
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : log.action.startsWith('MI') || log.action.startsWith('MIRV')
+                              : log.action?.startsWith('MI') || log.action?.startsWith('MIRV')
                                 ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                : log.action.startsWith('JO')
+                                : log.action?.startsWith('JO')
                                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                                   : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
                           }`}
                         >
-                          {log.action.split('-')[0]}
+                          {(log.action || 'N/A').split('-')[0]}
                         </span>
                       </td>
                       <td className="py-3 text-sm text-gray-300">{log.details}</td>

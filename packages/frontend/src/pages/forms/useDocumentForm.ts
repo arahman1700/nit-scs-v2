@@ -223,16 +223,28 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
     service: serviceAdapter,
   });
 
-  // Extract option arrays from API data
-  const projectOptions = (projectsQuery.data?.data ?? []).map((p: { name: string }) => p.name);
-  const warehouseOptions = (warehousesQuery.data?.data ?? []).map((w: { name: string }) => w.name);
-  const supplierOptions = (suppliersQuery.data?.data ?? []).map((s: { name: string }) => s.name);
-  const mrrvOptions = (mrrvListQuery.data?.data ?? []).map(
-    (m: { id: string; supplier?: string }) => `${m.id}${m.supplier ? ` - ${m.supplier}` : ''}`,
-  );
-  const inspectorOptions = (employeesQuery.data?.data ?? [])
-    .filter((e: { department: string }) => e.department === 'Warehouse' || e.department === 'Logistics')
-    .map((e: { name: string }) => e.name);
+  // Extract option arrays from API data (API returns legacy Prisma field names, not shared type names)
+  const projectsRaw = (projectsQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const warehousesRaw = (warehousesQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const suppliersRaw = (suppliersQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const employeesRaw = (employeesQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+
+  const projectOptions = projectsRaw.map(p => (p.projectName as string) || (p.name as string) || '');
+  const warehouseOptions = warehousesRaw.map(w => (w.warehouseName as string) || (w.name as string) || '');
+  const supplierOptions = suppliersRaw.map(s => (s.supplierName as string) || (s.name as string) || '');
+  const mrrvOptions = ((mrrvListQuery.data?.data as unknown as Array<Record<string, unknown>>) ?? []).map(m => {
+    const sup = m.supplier as Record<string, unknown> | string | undefined;
+    const supName = typeof sup === 'string' ? sup : (sup?.supplierName as string) || (sup?.name as string) || '';
+    const num = (m.mrrvNumber as string) || (m.id as string);
+    return supName ? `${num} - ${supName}` : String(num);
+  });
+  const inspectorOptions = employeesRaw
+    .filter(
+      e =>
+        String(e.department || '').toLowerCase() === 'warehouse' ||
+        String(e.department || '').toLowerCase() === 'logistics',
+    )
+    .map(e => (e.fullName as string) || (e.name as string) || '');
 
   // Auto-calculate total from line items
   const totalValue = useMemo(() => lineItems.reduce((sum, item) => sum + item.totalPrice, 0), [lineItems]);
@@ -278,8 +290,60 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...formData, lineItems, totalValue, type: joType || undefined };
-    submit(payload);
+
+    // Map display names → IDs for the backend API
+    const supplierId = suppliersRaw.find(s => (s.supplierName || s.name) === formData.supplier)?.id as
+      | string
+      | undefined;
+
+    const projectId = projectsRaw.find(p => (p.projectName || p.name) === formData.project)?.id as string | undefined;
+
+    const warehouseId = warehousesRaw.find(w => (w.warehouseName || w.name) === formData.warehouse)?.id as
+      | string
+      | undefined;
+
+    // Convert date fields to ISO 8601 datetime (fall back to DOM input if React state wasn't updated)
+    const formDate = (formData.date as string) || (formData.receiveDate as string) || '';
+    const rawDate = formDate || (document.querySelector('input[type="date"]') as HTMLInputElement | null)?.value || '';
+    const receiveDate = rawDate && !rawDate.includes('T') ? `${rawDate}T00:00:00.000Z` : rawDate;
+    const rawRequestDate = (formData.requestDate as string) || '';
+    const requestDate =
+      rawRequestDate && !rawRequestDate.includes('T') ? `${rawRequestDate}T00:00:00.000Z` : rawRequestDate;
+
+    // Map form field names to API field names
+    const payload: Record<string, unknown> = {
+      ...formData,
+      supplierId: supplierId || formData.supplierId || formData.supplier,
+      projectId: projectId || formData.projectId || formData.project,
+      warehouseId: warehouseId || formData.warehouseId || formData.warehouse,
+      receiveDate: receiveDate || undefined,
+      requestDate: requestDate || undefined,
+      qciRequired: Boolean(formData.rfimRequired || formData.qciRequired),
+      totalValue,
+      type: joType || undefined,
+    };
+
+    // Map frontend condition values to backend enum
+    const conditionMap: Record<string, string> = {
+      New: 'good',
+      Good: 'good',
+      Fair: 'good',
+      Damaged: 'damaged',
+    };
+
+    // Map lineItems to the `lines` array format the backend expects
+    const mappedLines = lineItems.map(li => ({
+      itemId: li.itemId,
+      qtyOrdered: li.qtyExpected || li.quantity,
+      qtyReceived: li.quantity,
+      uomId: li.uomId,
+      unitCost: li.unitPrice,
+      condition: conditionMap[li.condition || 'New'] || 'good',
+      notes: li.notes,
+    }));
+    payload.lines = mappedLines;
+
+    submit(payload, lineItems);
   };
 
   const handleInputChange = (key: string, value: unknown) => {

@@ -30,7 +30,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
     const map = new Map<string, number>();
     for (const level of inventoryLevels) {
       const item = level.item as Record<string, unknown> | undefined;
-      const code = (item?.code as string) ?? '';
+      const code = (item?.itemCode as string) ?? (item?.code as string) ?? '';
       const onHand = (level.qtyOnHand as number) ?? 0;
       const reserved = (level.qtyReserved as number) ?? 0;
       const available = onHand - reserved;
@@ -50,7 +50,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const MATERIAL_CATALOG = (itemsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
   const uomsQuery = useUoms({ pageSize: 100 });
   const UNIT_OPTIONS = (uomsQuery.data?.data ?? []).map(
-    (u: Record<string, unknown>) => (u.name as string) || (u.symbol as string) || '',
+    (u: Record<string, unknown>) =>
+      (u.uomName as string) || (u.name as string) || (u.uomCode as string) || (u.symbol as string) || '',
   );
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,9 +69,11 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
       MATERIAL_CATALOG.filter((m: Record<string, unknown>) => {
         const matchSearch =
           searchTerm === '' ||
-          ((m.nameAr as string) ?? '').includes(searchTerm) ||
-          ((m.nameEn as string) ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-          ((m.code as string) ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+          ((m.itemDescriptionAr as string) ?? (m.nameAr as string) ?? '').includes(searchTerm) ||
+          ((m.itemDescription as string) ?? (m.nameEn as string) ?? '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          ((m.itemCode as string) ?? (m.code as string) ?? '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchCategory = selectedCategory === 'All' || m.category === selectedCategory;
         return matchSearch && matchCategory;
       }),
@@ -78,23 +81,32 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   );
 
   const addItemFromCatalog = (catalogItem: MaterialCatalogItem) => {
-    const existing = items.find(i => i.itemCode === catalogItem.code);
+    const raw = catalogItem as unknown as Record<string, unknown>;
+    const code = (raw.itemCode as string) || catalogItem.code;
+    const name = (raw.itemDescription as string) || catalogItem.nameEn;
+    const uomObj = raw.uom as Record<string, unknown> | undefined;
+    const unitName = (uomObj?.uomCode as string) || catalogItem.unit || 'EA';
+    const price = Number(raw.standardCost) || catalogItem.unitPrice || 0;
+    const itemId = raw.id as string | undefined;
+    const uomId = (uomObj?.id as string) || (raw.uomId as string) || undefined;
+
+    const existing = items.find(i => i.itemCode === code);
     if (existing) {
       const updated = items.map(i =>
-        i.itemCode === catalogItem.code
-          ? { ...i, quantity: i.quantity + 1, totalPrice: (i.quantity + 1) * i.unitPrice }
-          : i,
+        i.itemCode === code ? { ...i, quantity: i.quantity + 1, totalPrice: (i.quantity + 1) * i.unitPrice } : i,
       );
       onItemsChange(updated);
     } else {
       const newItem: VoucherLineItem = {
         id: `line-${Date.now()}`,
-        itemCode: catalogItem.code,
-        itemName: catalogItem.nameEn,
-        unit: catalogItem.unit,
+        itemId,
+        itemCode: code,
+        itemName: name,
+        uomId,
+        unit: unitName,
         quantity: 1,
-        unitPrice: catalogItem.unitPrice,
-        totalPrice: catalogItem.unitPrice,
+        unitPrice: price,
+        totalPrice: price,
         condition: 'New',
       };
       onItemsChange([...items, newItem]);
@@ -236,30 +248,35 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
           </div>
 
           <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
-            {filteredCatalog.map((item: Record<string, unknown>) => (
-              <button
-                key={item.code as string}
-                type="button"
-                onClick={() => addItemFromCatalog(item as unknown as MaterialCatalogItem)}
-                className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 rounded-lg transition-colors text-left group"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400 border border-white/5">
-                    {item.code as string}
-                  </span>
-                  <div>
-                    <span className="text-sm text-gray-200 group-hover:text-white">{item.nameEn as string}</span>
-                    <span className="text-xs text-gray-500 block">{item.code as string}</span>
+            {filteredCatalog.map((item: Record<string, unknown>) => {
+              const code = (item.itemCode as string) || (item.code as string) || '';
+              const name = (item.itemDescription as string) || (item.nameEn as string) || '';
+              const price = Number(item.standardCost) || (item.unitPrice as number) || 0;
+              const uom = item.uom as Record<string, unknown> | undefined;
+              const unitLabel = (uom?.uomCode as string) || (item.unit as string) || '';
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => addItemFromCatalog(item as unknown as MaterialCatalogItem)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 rounded-lg transition-colors text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400 border border-white/5">
+                      {code}
+                    </span>
+                    <div>
+                      <span className="text-sm text-gray-200 group-hover:text-white">{name}</span>
+                      <span className="text-xs text-gray-500 block">{code}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-sm text-nesma-secondary font-medium">
-                    {(item.unitPrice as number)?.toLocaleString()} SAR
-                  </span>
-                  <span className="text-xs text-gray-500 block">/{item.unit as string}</span>
-                </div>
-              </button>
-            ))}
+                  <div className="text-right">
+                    <span className="text-sm text-nesma-secondary font-medium">{price?.toLocaleString()} SAR</span>
+                    <span className="text-xs text-gray-500 block">/{unitLabel}</span>
+                  </div>
+                </button>
+              );
+            })}
             {filteredCatalog.length === 0 && (
               <div className="text-center py-6 text-gray-500 text-sm">No results found</div>
             )}

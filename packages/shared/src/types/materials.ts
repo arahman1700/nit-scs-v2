@@ -6,8 +6,10 @@ import type { ApprovalChain } from './approval.js';
 
 export interface VoucherLineItem {
   id: string;
+  itemId?: string;
   itemCode: string;
   itemName: string;
+  uomId?: string;
   unit: string;
   quantity: number;
   unitPrice: number;

@@ -3,7 +3,7 @@
  *
  * Seeds 33 measures and 15 dimensions for the semantic query builder.
  */
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
