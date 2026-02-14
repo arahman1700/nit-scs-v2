@@ -208,14 +208,12 @@ async function checkSlaBreaches(): Promise<void> {
 }
 
 /**
- * Original approval-based SLA breach check for MIRV and Job Order.
- * These models have slaDueDate fields and use approval steps.
+ * Original approval-based SLA breach check for MIRV.
+ * Only MIRV has a direct slaDueDate field on the model.
+ * JobOrder SLA is on JoSlaTracking — handled by checkJoExecutionBreaches().
  */
 async function checkApprovalBasedSlaBreaches(now: Date): Promise<void> {
-  const models = [
-    { name: 'mirv', label: 'MIRV' },
-    { name: 'jobOrder', label: 'Job Order' },
-  ] as const;
+  const models = [{ name: 'mirv', label: 'MIRV' }] as const;
 
   for (const model of models) {
     const delegate = getDelegate(model.name);
@@ -638,14 +636,12 @@ async function checkSlaWarnings(): Promise<void> {
 }
 
 /**
- * Approval-based SLA warnings for MIRV and Job Order.
+ * Approval-based SLA warnings for MIRV.
  * Deadline is within the next hour and status is still pending_approval.
+ * JobOrder SLA warnings handled separately via JoSlaTracking.
  */
 async function checkApprovalBasedSlaWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const models = [
-    { name: 'mirv', label: 'MIRV' },
-    { name: 'jobOrder', label: 'Job Order' },
-  ] as const;
+  const models = [{ name: 'mirv', label: 'MIRV' }] as const;
 
   for (const model of models) {
     const delegate = getDelegate(model.name);
