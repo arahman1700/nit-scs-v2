@@ -15,25 +15,14 @@ import {
   ScanLine,
 } from 'lucide-react';
 import { useInventory } from '@/api/hooks/useMasterData';
-import type { InventoryItem } from '@nit-scs-v2/shared/types';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrvList } from '@/api/hooks/useMrv';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
+import { displayStr } from '@/utils/displayStr';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
-
-/** Safely extract a display string from a value that may be a string or a nested relation object */
-const displayStr = (val: unknown): string => {
-  if (val == null) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object') {
-    const obj = val as Record<string, unknown>;
-    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
-  }
-  return String(val);
-};
 
 const StatCard: React.FC<{
   title: string;
@@ -67,7 +56,22 @@ export const WarehouseDashboard: React.FC = () => {
   const mirvQuery = useMirvList({ pageSize: 100 });
   const mrvQuery = useMrvList({ pageSize: 100 });
   const inventoryQuery = useInventory({ pageSize: 100 });
-  const inventoryItems = (inventoryQuery.data?.data ?? []) as InventoryItem[];
+  // Normalize InventoryLevel records (API shape) into display-friendly objects
+  const inventoryItems = ((inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[]).map(inv => {
+    const nested = inv.item as Record<string, unknown> | undefined;
+    return {
+      id: String(inv.id),
+      code: String(nested?.itemCode || inv.itemCode || inv.code || '-'),
+      name: String(nested?.itemDescription || inv.itemDescription || inv.name || '-'),
+      warehouse: inv.warehouse,
+      quantity: Number(inv.qtyOnHand ?? inv.quantity ?? 0),
+      reserved: Number(inv.qtyReserved ?? inv.reserved ?? 0),
+      minLevel: Number(inv.minLevel ?? 0),
+      category: String(nested?.category || inv.category || '-'),
+      location: String(inv.location || '-'),
+      stockStatus: String(inv.status || inv.stockStatus || 'In Stock'),
+    };
+  });
 
   const mrrvData = (mrrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
   const mirvData = (mirvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
@@ -100,10 +104,10 @@ export const WarehouseDashboard: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return inventoryItems.filter(
       i =>
-        (i.code ?? '').toLowerCase().includes(term) ||
-        (i.name ?? '').includes(searchTerm) ||
-        (i.warehouse ?? '').toLowerCase().includes(term) ||
-        (i.category ?? '').toLowerCase().includes(term),
+        i.code.toLowerCase().includes(term) ||
+        i.name.toLowerCase().includes(term) ||
+        displayStr(i.warehouse).toLowerCase().includes(term) ||
+        i.category.toLowerCase().includes(term),
     );
   }, [inventoryItems, searchTerm]);
 
@@ -281,20 +285,20 @@ export const WarehouseDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {lowStockItems.map(item => (
                   <div
-                    key={item.id as string}
+                    key={item.id}
                     className="flex items-center justify-between p-3 bg-red-500/5 rounded-xl border border-red-500/10"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-200">{item.name as string}</p>
+                      <p className="text-sm font-medium text-gray-200">{item.name}</p>
                       <p className="text-xs text-gray-500">
-                        {item.code as string} • {displayStr(item.warehouse)}
+                        {item.code} • {displayStr(item.warehouse)}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className={`text-lg font-bold ${item.quantity === 0 ? 'text-red-400' : 'text-amber-400'}`}>
-                        {item.quantity as number}
+                        {item.quantity}
                       </p>
-                      <p className="text-[10px] text-gray-500">Min: {item.minLevel as number}</p>
+                      <p className="text-[10px] text-gray-500">Min: {item.minLevel}</p>
                     </div>
                   </div>
                 ))}
@@ -615,21 +619,19 @@ export const WarehouseDashboard: React.FC = () => {
                 {filteredInventory.map(item => {
                   const isLow = item.stockStatus === 'Low Stock' || item.stockStatus === 'Out of Stock';
                   return (
-                    <tr key={item.id as string} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4 font-mono font-medium text-white">{item.code as string}</td>
-                      <td className="px-6 py-4 text-gray-300">{item.name as string}</td>
+                    <tr key={item.id} className="hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-4 font-mono font-medium text-white">{item.code}</td>
+                      <td className="px-6 py-4 text-gray-300">{item.name}</td>
                       <td className="px-6 py-4 text-gray-400">{displayStr(item.warehouse)}</td>
-                      <td className="px-6 py-4 font-bold text-nesma-secondary">
-                        {(item.quantity as number)?.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 text-gray-400">{item.reserved as number}</td>
-                      <td className="px-6 py-4 text-gray-500">{item.minLevel as number}</td>
-                      <td className="px-6 py-4 text-gray-400 font-mono text-xs">{item.location as string}</td>
+                      <td className="px-6 py-4 font-bold text-nesma-secondary">{item.quantity.toLocaleString()}</td>
+                      <td className="px-6 py-4 text-gray-400">{item.reserved}</td>
+                      <td className="px-6 py-4 text-gray-500">{item.minLevel}</td>
+                      <td className="px-6 py-4 text-gray-400 font-mono text-xs">{item.location}</td>
                       <td className="px-6 py-4">
                         {isLow ? (
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
                             <AlertCircle size={12} />
-                            {item.stockStatus as string}
+                            {item.stockStatus}
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">

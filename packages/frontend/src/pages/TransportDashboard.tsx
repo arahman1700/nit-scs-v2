@@ -18,6 +18,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { displayStr } from '@/utils/displayStr';
 
 // ============ KANBAN COLUMN ============
 const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; borderColor: string }> = ({
@@ -73,7 +74,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <User size={14} className="text-gray-500" />
-              <span>{job.requester}</span>
+              <span>{displayStr((job as unknown as Record<string, unknown>).requestedBy) || job.requester || '-'}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Calendar size={14} className="text-gray-500" />
@@ -82,7 +83,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
             {job.project && (
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <MapPin size={14} className="text-gray-500" />
-                <span>{job.project}</span>
+                <span>{displayStr(job.project)}</span>
               </div>
             )}
             {job.slaStatus && (
@@ -122,7 +123,7 @@ export const TransportDashboard: React.FC = () => {
   const supplierQuery = useSuppliers({ pageSize: 200 });
   const employeeQuery = useEmployees({ pageSize: 200 });
   const JOBS = (jobsQuery.data?.data ?? []) as JobOrder[];
-  const suppliers = (supplierQuery.data?.data ?? []) as Supplier[];
+  const suppliers = (supplierQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
   const employees = (employeeQuery.data?.data ?? []) as Employee[];
   const isLoading = jobsQuery.isLoading;
   const isError = jobsQuery.isError;
@@ -164,7 +165,7 @@ export const TransportDashboard: React.FC = () => {
         id: `FL-${job.id.split('-').pop()}`,
         name: job.title.split(' - ')[0] || job.title,
         type: job.type === 'Transport' ? 'Truck' : job.type === 'Generator_Maintenance' ? 'Generator' : 'Equipment',
-        project: job.project || '-',
+        project: displayStr(job.project) || '-',
         status:
           job.status === JobStatus.IN_PROGRESS
             ? 'Active'
@@ -197,8 +198,10 @@ export const TransportDashboard: React.FC = () => {
       suppliers.filter(
         s =>
           searchTerm === '' ||
-          s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (s.city ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
+          String(s.supplierName || s.name || '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          displayStr(s.city).toLowerCase().includes(searchTerm.toLowerCase()),
       ),
     [searchTerm, suppliers],
   );
@@ -206,7 +209,7 @@ export const TransportDashboard: React.FC = () => {
   const suppliersByCity = useMemo(() => {
     const byCityMap: Record<string, number> = {};
     suppliers.forEach(s => {
-      const city = s.city ?? '';
+      const city = displayStr(s.city) || 'Unknown';
       byCityMap[city] = (byCityMap[city] || 0) + 1;
     });
     return byCityMap;
@@ -470,7 +473,7 @@ export const TransportDashboard: React.FC = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-nesma-primary/30 flex items-center justify-center text-sm text-nesma-secondary font-bold border border-nesma-primary/20">
-                    {(supplier.name as string)
+                    {String(supplier.supplierName || supplier.name || '')
                       .split(' ')
                       .map(n => n[0])
                       .join('')
@@ -478,9 +481,9 @@ export const TransportDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">
-                      {supplier.name as string}
+                      {String(supplier.supplierName || supplier.name || '-')}
                     </h4>
-                    <span className="text-xs text-gray-500 font-mono">{supplier.id as string}</span>
+                    <span className="text-xs text-gray-500 font-mono">{String(supplier.id)}</span>
                   </div>
                 </div>
               </div>
@@ -488,7 +491,7 @@ export const TransportDashboard: React.FC = () => {
               <div className="space-y-2 pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 text-xs text-gray-400">
                   <MapPin size={14} className="text-gray-500" />
-                  <span>{supplier.city as string}</span>
+                  <span>{displayStr(supplier.city) || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span
@@ -498,10 +501,12 @@ export const TransportDashboard: React.FC = () => {
                         : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
                     }`}
                   >
-                    {supplier.status === 'Active' ? 'Active' : (supplier.status as string)}
+                    {supplier.status === 'Active' ? 'Active' : String(supplier.status || '-')}
                   </span>
                   <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                    {(supplier.type as string).replace('_', ' ')}
+                    {Array.isArray(supplier.types)
+                      ? (supplier.types as string[]).join(', ')
+                      : String(supplier.type || '-').replace('_', ' ')}
                   </span>
                 </div>
               </div>

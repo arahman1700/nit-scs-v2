@@ -6,17 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useMrrvList, useShipments, useRfimList, useCustomsClearances, useGatePasses } from '@/api/hooks';
-
-/** Safely extract a display string from a value that may be a string or a nested relation object */
-const displayStr = (val: unknown): string => {
-  if (val == null) return '';
-  if (typeof val === 'string') return val;
-  if (typeof val === 'object') {
-    const obj = val as Record<string, unknown>;
-    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
-  }
-  return String(val);
-};
+import { displayStr } from '@/utils/displayStr';
 
 export const ReceivingSectionPage: React.FC = () => {
   const navigate = useNavigate();

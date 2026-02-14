@@ -24,6 +24,7 @@ import { JobStatus } from '@nit-scs-v2/shared/types';
 import type { JobOrder } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';
 import { Truck, User, MoreHorizontal, Plus, AlertCircle, CheckCircle, XCircle, MapPin, Search } from 'lucide-react';
+import { displayStr } from '@/utils/displayStr';
 
 // ── Backend → Kanban column mapping ──────────────────────────────────────────
 
@@ -134,7 +135,7 @@ const JobCard: React.FC<{ job: JobOrder; borderColor: string; isDragOverlay?: bo
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <MapPin size={12} className="text-nesma-secondary" />
-            <span className="truncate">{job.project || 'Unassigned Project'}</span>
+            <span className="truncate">{displayStr(job.project) || 'Unassigned Project'}</span>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-2">

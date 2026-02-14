@@ -15,8 +15,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useInventorySummary, useWarehouses, useInventory, useGatePasses, useStockTransfers } from '@/api/hooks';
-import type { InventoryItem } from '@nit-scs-v2/shared/types';
-import type { Warehouse as WarehouseType } from '@nit-scs-v2/shared/types';
+import { displayStr } from '@/utils/displayStr';
 
 const InventoryDashboard = React.lazy(() =>
   import('@/pages/warehouse/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })),
@@ -97,9 +96,9 @@ export const InventorySectionPage: React.FC = () => {
   ];
 
   const byCategory = useMemo(() => inv?.byCategory ?? [], [inv]);
-  const lowStockItems: InventoryItem[] = (lowStockData?.data ?? []) as unknown as InventoryItem[];
-  const inventoryRows: InventoryItem[] = (invItems?.data ?? []) as unknown as InventoryItem[];
-  const warehouseRows: WarehouseType[] = (whData?.data ?? []) as unknown as WarehouseType[];
+  const lowStockItems = (lowStockData?.data ?? []) as unknown as Record<string, unknown>[];
+  const inventoryRows = (invItems?.data ?? []) as unknown as Record<string, unknown>[];
+  const warehouseRows = (whData?.data ?? []) as unknown as Record<string, unknown>[];
   const gatePassRows = (gpData?.data ?? []) as Array<Record<string, unknown>>;
   const stockTransferRows = (stData?.data ?? []) as Array<Record<string, unknown>>;
 
@@ -169,9 +168,11 @@ export const InventorySectionPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {lowStockItems.length > 0 ? (
                     lowStockItems.map(item => (
-                      <div key={item.id} className="bg-white/5 rounded-lg p-3 border border-red-500/20">
-                        <p className="text-white text-sm font-medium truncate">{item.name || item.code}</p>
-                        <p className="text-red-400 text-xs mt-1">Qty: {item.quantity ?? 0}</p>
+                      <div key={String(item.id)} className="bg-white/5 rounded-lg p-3 border border-red-500/20">
+                        <p className="text-white text-sm font-medium truncate">
+                          {String(item.itemDescription || item.name || item.itemCode || item.code || '-')}
+                        </p>
+                        <p className="text-red-400 text-xs mt-1">Qty: {Number(item.quantity ?? 0).toLocaleString()}</p>
                       </div>
                     ))
                   ) : (
@@ -204,13 +205,13 @@ export const InventorySectionPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {inventoryRows.map(r => (
-                    <tr key={r.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-3 text-sm text-gray-300">{r.code ?? '-'}</td>
-                      <td className="px-4 py-3 text-sm text-white">{r.name ?? '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{r.warehouse ?? '-'}</td>
-                      <td className="px-4 py-3 text-sm text-white">{(r.quantity ?? 0).toLocaleString()}</td>
+                    <tr key={String(r.id)} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="px-4 py-3 text-sm text-gray-300">{String(r.itemCode || r.code || '-')}</td>
+                      <td className="px-4 py-3 text-sm text-white">{String(r.itemDescription || r.name || '-')}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400">{displayStr(r.warehouse) || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-white">{Number(r.quantity ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={r.stockStatus ?? 'Active'} />
+                        <StatusBadge status={String(r.stockStatus || 'Active')} />
                       </td>
                     </tr>
                   ))}
@@ -248,12 +249,12 @@ export const InventorySectionPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {warehouseRows.map(r => (
-                    <tr key={r.id} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-3 text-sm text-white">{r.name ?? '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{r.city ?? '-'}</td>
-                      <td className="px-4 py-3 text-sm text-gray-400">{r.type ?? '-'}</td>
+                    <tr key={String(r.id)} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="px-4 py-3 text-sm text-white">{String(r.warehouseName || r.name || '-')}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400">{displayStr(r.city) || '-'}</td>
+                      <td className="px-4 py-3 text-sm text-gray-400">{String(r.type || '-')}</td>
                       <td className="px-4 py-3">
-                        <StatusBadge status={r.status ?? 'Active'} />
+                        <StatusBadge status={String(r.status || 'Active')} />
                       </td>
                     </tr>
                   ))}
@@ -345,8 +346,8 @@ export const InventorySectionPage: React.FC = () => {
                         <td className="px-4 py-3 text-sm text-gray-300">
                           {(r.documentNumber as string) ?? (r.id as string).slice(0, 8)}
                         </td>
-                        <td className="px-4 py-3 text-sm text-white">{(r.fromWarehouse as string) ?? '-'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-400">{(r.toWarehouse as string) ?? '-'}</td>
+                        <td className="px-4 py-3 text-sm text-white">{displayStr(r.fromWarehouse) || '-'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-400">{displayStr(r.toWarehouse) || '-'}</td>
                         <td className="px-4 py-3">
                           <StatusBadge status={(r.status as string) ?? 'Pending'} />
                         </td>
