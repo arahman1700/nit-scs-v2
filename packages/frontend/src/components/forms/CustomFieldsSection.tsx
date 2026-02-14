@@ -9,10 +9,18 @@ interface CustomFieldsSectionProps {
   values: Record<string, unknown>;
   onChange: (values: Record<string, unknown>) => void;
   readOnly?: boolean;
+  errors?: Record<string, string>;
 }
 
-export function CustomFieldsSection({ entityType, entityId, values, onChange, readOnly }: CustomFieldsSectionProps) {
-  const { data: defsData } = useCustomFieldDefinitions(entityType);
+export function CustomFieldsSection({
+  entityType,
+  entityId,
+  values,
+  onChange,
+  readOnly,
+  errors,
+}: CustomFieldsSectionProps) {
+  const { data: defsData, isLoading } = useCustomFieldDefinitions(entityType);
   const { data: savedData } = useCustomFieldValues(entityType, entityId);
 
   const definitions = (defsData as unknown as { data?: CustomFieldDefinition[] })?.data ?? [];
@@ -32,6 +40,22 @@ export function CustomFieldsSection({ entityType, entityId, values, onChange, re
     [values, onChange],
   );
 
+  if (isLoading) {
+    return (
+      <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Settings2 size={18} className="text-nesma-secondary" />
+          <h3 className="text-lg font-semibold text-white">Custom Fields</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-16 bg-white/10 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (definitions.length === 0) return null;
 
   return (
@@ -49,6 +73,7 @@ export function CustomFieldsSection({ entityType, entityId, values, onChange, re
             value={values[def.fieldKey]}
             onChange={v => handleFieldChange(def.fieldKey, v)}
             readOnly={readOnly}
+            error={errors?.[def.fieldKey]}
           />
         ))}
       </div>
@@ -63,11 +88,13 @@ function CustomFieldInput({
   value,
   onChange,
   readOnly,
+  error,
 }: {
   definition: CustomFieldDefinition;
   value: unknown;
   onChange: (value: unknown) => void;
   readOnly?: boolean;
+  error?: string;
 }) {
   const strValue = (value ?? '') as string;
   const numValue = value as number | undefined;
@@ -95,6 +122,7 @@ function CustomFieldInput({
             readOnly={readOnly}
             required={definition.isRequired}
           />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
@@ -112,6 +140,7 @@ function CustomFieldInput({
             required={definition.isRequired}
             step={definition.fieldType === 'currency' ? '0.01' : undefined}
           />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
@@ -127,6 +156,7 @@ function CustomFieldInput({
             readOnly={readOnly}
             required={definition.isRequired}
           />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
@@ -141,6 +171,7 @@ function CustomFieldInput({
             readOnly={readOnly}
             required={definition.isRequired}
           />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
@@ -162,23 +193,27 @@ function CustomFieldInput({
               </option>
             ))}
           </select>
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
     case 'checkbox':
       return (
-        <div className="flex items-center gap-2 pt-6">
-          <input
-            type="checkbox"
-            id={`cf-${definition.fieldKey}`}
-            checked={!!value}
-            onChange={e => onChange(e.target.checked)}
-            disabled={readOnly}
-            className="rounded"
-          />
-          <label htmlFor={`cf-${definition.fieldKey}`} className="text-sm text-gray-300">
-            {definition.label}
-          </label>
+        <div>
+          <div className="flex items-center gap-2 pt-6">
+            <input
+              type="checkbox"
+              id={`cf-${definition.fieldKey}`}
+              checked={!!value}
+              onChange={e => onChange(e.target.checked)}
+              disabled={readOnly}
+              className="rounded"
+            />
+            <label htmlFor={`cf-${definition.fieldKey}`} className="text-sm text-gray-300">
+              {definition.label}
+            </label>
+          </div>
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
 
@@ -192,6 +227,7 @@ function CustomFieldInput({
             onChange={e => onChange(e.target.value)}
             readOnly={readOnly}
           />
+          {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
         </div>
       );
   }

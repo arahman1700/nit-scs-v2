@@ -12,6 +12,7 @@ export interface CustomFieldDefinition {
   labelAr?: string;
   fieldType: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'email' | 'url' | 'phone' | 'currency';
   options?: Array<{ value: string; label: string }>;
+  validationRules?: Record<string, unknown>;
   isRequired: boolean;
   showInGrid: boolean;
   sortOrder: number;

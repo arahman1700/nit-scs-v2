@@ -2,12 +2,20 @@ import React from 'react';
 import type { FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
 import { useProjects, useWarehouses, useSuppliers, useEmployees, useItems } from '@/api/hooks/useMasterData';
 
+const COL_SPAN_MAP: Record<number, string> = {
+  1: 'md:col-span-1',
+  2: 'md:col-span-2',
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+};
+
 interface DynamicFieldRendererProps {
   field: FieldDefinition;
   value: unknown;
   onChange: (key: string, value: unknown) => void;
   disabled?: boolean;
   error?: string;
+  hideLabel?: boolean;
 }
 
 export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
@@ -16,6 +24,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   onChange,
   disabled = false,
   error,
+  hideLabel = false,
 }) => {
   const inputBase =
     'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all';
@@ -23,6 +32,14 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   const handleChange = (val: unknown) => onChange(field.fieldKey, val);
 
   const renderField = () => {
+    const rules = (field.validationRules ?? {}) as {
+      min?: number;
+      max?: number;
+      minLength?: number;
+      maxLength?: number;
+      pattern?: string;
+    };
+
     switch (field.fieldType) {
       case 'text':
       case 'email':
@@ -36,6 +53,9 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             className={inputBase}
             disabled={disabled || field.isReadOnly}
             placeholder={`Enter ${field.label}`}
+            {...(rules.minLength !== undefined && { minLength: rules.minLength })}
+            {...(rules.maxLength !== undefined && { maxLength: rules.maxLength })}
+            {...(rules.pattern !== undefined && { pattern: rules.pattern })}
           />
         );
 
@@ -49,6 +69,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             className={inputBase}
             disabled={disabled || field.isReadOnly}
             step={field.fieldType === 'currency' ? '0.01' : 'any'}
+            {...(rules.min !== undefined && { min: rules.min })}
+            {...(rules.max !== undefined && { max: rules.max })}
           />
         );
 
@@ -60,6 +82,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             onChange={e => handleChange(e.target.value)}
             className={inputBase}
             disabled={disabled || field.isReadOnly}
+            {...(rules.min !== undefined && { min: rules.min as unknown as string })}
+            {...(rules.max !== undefined && { max: rules.max as unknown as string })}
           />
         );
 
@@ -71,6 +95,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             onChange={e => handleChange(e.target.value)}
             className={inputBase}
             disabled={disabled || field.isReadOnly}
+            {...(rules.min !== undefined && { min: rules.min as unknown as string })}
+            {...(rules.max !== undefined && { max: rules.max as unknown as string })}
           />
         );
 
@@ -82,6 +108,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             className={`${inputBase} min-h-[100px]`}
             disabled={disabled || field.isReadOnly}
             placeholder={`Enter ${field.label}`}
+            {...(rules.minLength !== undefined && { minLength: rules.minLength })}
+            {...(rules.maxLength !== undefined && { maxLength: rules.maxLength })}
           />
         );
 
@@ -209,11 +237,13 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   };
 
   return (
-    <div className={`col-span-${field.colSpan}`}>
-      <label className="block text-sm font-medium text-gray-300 mb-1.5">
-        {field.label}
-        {field.isRequired && <span className="text-red-400 ml-1">*</span>}
-      </label>
+    <div className={hideLabel ? undefined : (COL_SPAN_MAP[field.colSpan] ?? 'md:col-span-1')}>
+      {!hideLabel && (
+        <label className="block text-sm font-medium text-gray-300 mb-1.5">
+          {field.label}
+          {field.isRequired && <span className="text-red-400 ml-1">*</span>}
+        </label>
+      )}
       {renderField()}
       {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>

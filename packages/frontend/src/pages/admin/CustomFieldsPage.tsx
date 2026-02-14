@@ -44,6 +44,8 @@ const EMPTY_FIELD: CreateFieldDefinitionInput = {
   label: '',
   labelAr: '',
   fieldType: 'text',
+  options: [],
+  validationRules: {},
   isRequired: false,
   showInGrid: false,
   sortOrder: 0,
@@ -74,7 +76,8 @@ export function CustomFieldsPage() {
       label: f.label,
       labelAr: f.labelAr,
       fieldType: f.fieldType,
-      options: f.options,
+      options: f.options ?? [],
+      validationRules: f.validationRules ?? {},
       isRequired: f.isRequired,
       showInGrid: f.showInGrid,
       sortOrder: f.sortOrder,
@@ -262,6 +265,104 @@ export function CustomFieldsPage() {
                   onChange={e => setEditing(p => ({ ...p, sortOrder: parseInt(e.target.value) || 0 }))}
                 />
               </div>
+
+              {/* Options editor for select fields */}
+              {editing.fieldType === 'select' && (
+                <div>
+                  <label className="text-sm text-gray-300 block mb-2">Options</label>
+                  <div className="space-y-2">
+                    {(editing.options ?? []).map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          className="input-field flex-1"
+                          value={opt.value}
+                          onChange={e => {
+                            const updated = [...(editing.options ?? [])];
+                            updated[idx] = { ...updated[idx], value: e.target.value };
+                            setEditing(p => ({ ...p, options: updated }));
+                          }}
+                          placeholder="Value"
+                        />
+                        <input
+                          className="input-field flex-1"
+                          value={opt.label}
+                          onChange={e => {
+                            const updated = [...(editing.options ?? [])];
+                            updated[idx] = { ...updated[idx], label: e.target.value };
+                            setEditing(p => ({ ...p, options: updated }));
+                          }}
+                          placeholder="Label"
+                        />
+                        <button
+                          onClick={() => {
+                            const updated = (editing.options ?? []).filter((_, i) => i !== idx);
+                            setEditing(p => ({ ...p, options: updated }));
+                          }}
+                          className="p-2 hover:bg-red-500/20 rounded-lg transition-all"
+                          aria-label="Remove option"
+                        >
+                          <Trash2 size={14} className="text-red-400" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => {
+                        const updated = [...(editing.options ?? []), { value: '', label: '' }];
+                        setEditing(p => ({ ...p, options: updated }));
+                      }}
+                      className="text-nesma-secondary text-xs hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Add Option
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Validation rules for number/currency */}
+              {(editing.fieldType === 'number' || editing.fieldType === 'currency') && (
+                <div>
+                  <label className="text-sm text-gray-300 block mb-2">Validation Rules</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Min Value</label>
+                      <input
+                        type="number"
+                        className="input-field w-full"
+                        value={(editing.validationRules?.min as number) ?? ''}
+                        onChange={e =>
+                          setEditing(p => ({
+                            ...p,
+                            validationRules: {
+                              ...p.validationRules,
+                              min: e.target.value ? Number(e.target.value) : undefined,
+                            },
+                          }))
+                        }
+                        placeholder="No minimum"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 block mb-1">Max Value</label>
+                      <input
+                        type="number"
+                        className="input-field w-full"
+                        value={(editing.validationRules?.max as number) ?? ''}
+                        onChange={e =>
+                          setEditing(p => ({
+                            ...p,
+                            validationRules: {
+                              ...p.validationRules,
+                              max: e.target.value ? Number(e.target.value) : undefined,
+                            },
+                          }))
+                        }
+                        placeholder="No maximum"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2 text-sm text-gray-300">
                   <input

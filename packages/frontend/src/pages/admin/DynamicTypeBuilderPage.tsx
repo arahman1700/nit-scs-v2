@@ -7,9 +7,420 @@ import {
   useAddField,
   useUpdateField,
   useDeleteField,
+  useReorderFields,
 } from '@/api/hooks/useDynamicDocumentTypes';
 import type { DynamicDocumentType, FieldDefinition, StatusFlowConfig } from '@/api/hooks/useDynamicDocumentTypes';
-import { ArrowLeft, Save, Plus, Trash2, GripVertical, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, ChevronUp, ChevronDown, Eye, ChevronRight, Check, X } from 'lucide-react';
+
+const COL_SPAN_MAP: Record<number, string> = {
+  1: 'md:col-span-1',
+  2: 'md:col-span-2',
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+};
+
+// ── Sub-Components ──────────────────────────────────────────────────────
+
+const INPUT_CLS =
+  'w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all';
+
+// ── Task 2: Options Editor ──────────────────────────────────────────────
+
+interface FieldOptionsEditorProps {
+  options: Array<{ value: string; label: string }>;
+  onSave: (options: Array<{ value: string; label: string }>) => void;
+}
+
+const FieldOptionsEditor: React.FC<FieldOptionsEditorProps> = ({ options: initialOptions, onSave }) => {
+  const [open, setOpen] = useState(false);
+  const [opts, setOpts] = useState(initialOptions);
+
+  React.useEffect(() => {
+    setOpts(initialOptions);
+  }, [initialOptions]);
+
+  const handleMove = (idx: number, dir: -1 | 1) => {
+    const next = [...opts];
+    const target = idx + dir;
+    if (target < 0 || target >= next.length) return;
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setOpts(next);
+    onSave(next);
+  };
+
+  const handleUpdate = (idx: number, key: 'value' | 'label', val: string) => {
+    const next = [...opts];
+    next[idx] = { ...next[idx], [key]: val };
+    setOpts(next);
+  };
+
+  const handleBlur = () => onSave(opts);
+
+  const handleRemove = (idx: number) => {
+    const next = opts.filter((_, i) => i !== idx);
+    setOpts(next);
+    onSave(next);
+  };
+
+  const handleAdd = () => {
+    const next = [...opts, { value: `opt_${Date.now()}`, label: 'New Option' }];
+    setOpts(next);
+    onSave(next);
+  };
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs text-nesma-secondary hover:underline"
+      >
+        <ChevronRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+        Options ({opts.length})
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          {opts.map((opt, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                value={opt.value}
+                onChange={e => handleUpdate(idx, 'value', e.target.value)}
+                onBlur={handleBlur}
+                className={`${INPUT_CLS} w-32`}
+                placeholder="value"
+              />
+              <input
+                value={opt.label}
+                onChange={e => handleUpdate(idx, 'label', e.target.value)}
+                onBlur={handleBlur}
+                className={`${INPUT_CLS} flex-1`}
+                placeholder="label"
+              />
+              <button
+                onClick={() => handleMove(idx, -1)}
+                disabled={idx === 0}
+                className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30"
+              >
+                <ChevronUp size={14} />
+              </button>
+              <button
+                onClick={() => handleMove(idx, 1)}
+                disabled={idx === opts.length - 1}
+                className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30"
+              >
+                <ChevronDown size={14} />
+              </button>
+              <button
+                onClick={() => handleRemove(idx)}
+                className="p-1 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <button onClick={handleAdd} className="flex items-center gap-1 text-xs text-nesma-secondary hover:underline">
+            <Plus size={14} /> Add Option
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Task 3: Validation Rules Panel ──────────────────────────────────────
+
+interface ValidationRulesPanelProps {
+  fieldType: string;
+  rules: Record<string, unknown>;
+  onSave: (rules: Record<string, unknown>) => void;
+}
+
+const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, rules: initialRules, onSave }) => {
+  const [open, setOpen] = useState(false);
+  const [rules, setRules] = useState<Record<string, unknown>>(initialRules);
+  const [testInput, setTestInput] = useState('');
+  const [testResult, setTestResult] = useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    setRules(initialRules);
+  }, [initialRules]);
+
+  const updateRule = (key: string, value: unknown) => {
+    setRules(r => ({ ...r, [key]: value }));
+  };
+
+  const handleBlur = () => {
+    const cleaned: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(rules)) {
+      if (v !== '' && v !== undefined && v !== null) cleaned[k] = v;
+    }
+    onSave(cleaned);
+  };
+
+  const handleTestPattern = () => {
+    const pattern = rules.pattern as string;
+    if (!pattern) {
+      setTestResult(null);
+      return;
+    }
+    try {
+      setTestResult(new RegExp(pattern).test(testInput));
+    } catch {
+      setTestResult(false);
+    }
+  };
+
+  const showNumber = ['number', 'currency'].includes(fieldType);
+  const showText = ['text', 'email', 'phone', 'url', 'textarea'].includes(fieldType);
+  const showDate = ['date', 'datetime'].includes(fieldType);
+  const showPattern = ['text', 'email', 'phone', 'url'].includes(fieldType);
+
+  if (!showNumber && !showText && !showDate) return null;
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs text-nesma-secondary hover:underline"
+      >
+        <ChevronRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+        Validation Rules
+      </button>
+      {open && (
+        <div className="mt-2 grid grid-cols-2 gap-3">
+          {showNumber && (
+            <>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Min</label>
+                <input
+                  type="number"
+                  value={(rules.min as number) ?? ''}
+                  onChange={e => updateRule('min', e.target.value ? Number(e.target.value) : '')}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Max</label>
+                <input
+                  type="number"
+                  value={(rules.max as number) ?? ''}
+                  onChange={e => updateRule('max', e.target.value ? Number(e.target.value) : '')}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+            </>
+          )}
+          {showText && (
+            <>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Min Length</label>
+                <input
+                  type="number"
+                  value={(rules.minLength as number) ?? ''}
+                  onChange={e => updateRule('minLength', e.target.value ? Number(e.target.value) : '')}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Max Length</label>
+                <input
+                  type="number"
+                  value={(rules.maxLength as number) ?? ''}
+                  onChange={e => updateRule('maxLength', e.target.value ? Number(e.target.value) : '')}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+            </>
+          )}
+          {showDate && (
+            <>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Min Date</label>
+                <input
+                  type={fieldType === 'datetime' ? 'datetime-local' : 'date'}
+                  value={(rules.min as string) ?? ''}
+                  onChange={e => updateRule('min', e.target.value)}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Max Date</label>
+                <input
+                  type={fieldType === 'datetime' ? 'datetime-local' : 'date'}
+                  value={(rules.max as string) ?? ''}
+                  onChange={e => updateRule('max', e.target.value)}
+                  onBlur={handleBlur}
+                  className={INPUT_CLS}
+                />
+              </div>
+            </>
+          )}
+          {showPattern && (
+            <div className="col-span-2">
+              <label className="block text-xs text-gray-500 mb-1">Pattern (regex)</label>
+              <div className="flex gap-2">
+                <input
+                  value={(rules.pattern as string) ?? ''}
+                  onChange={e => updateRule('pattern', e.target.value)}
+                  onBlur={handleBlur}
+                  className={`${INPUT_CLS} flex-1`}
+                  placeholder="^[A-Z]{2}-\\d{4}$"
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <input
+                  value={testInput}
+                  onChange={e => setTestInput(e.target.value)}
+                  className={`${INPUT_CLS} flex-1`}
+                  placeholder="Test value..."
+                />
+                <button
+                  onClick={handleTestPattern}
+                  className="px-3 py-2 rounded-lg bg-white/10 text-xs text-gray-300 hover:bg-white/15 transition-colors"
+                >
+                  Test
+                </button>
+                {testResult !== null &&
+                  (testResult ? (
+                    <Check size={16} className="text-emerald-400" />
+                  ) : (
+                    <X size={16} className="text-red-400" />
+                  ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Task 4: Field Configuration Panel ───────────────────────────────────
+
+interface FieldConfigPanelProps {
+  field: FieldDefinition;
+  siblingFields: FieldDefinition[];
+  existingSections: string[];
+  onSave: (updates: Partial<FieldDefinition>) => void;
+}
+
+const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingFields, existingSections, onSave }) => {
+  const [open, setOpen] = useState(false);
+
+  const cond = (field.conditionalDisplay ?? {}) as {
+    dependsOn?: string;
+    operator?: string;
+    value?: string;
+  };
+
+  const handleCondChange = (key: string, value: string) => {
+    const next = { ...cond, [key]: value };
+    onSave({ conditionalDisplay: next });
+  };
+
+  return (
+    <div className="mt-3 border-t border-white/5 pt-3">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 text-xs text-nesma-secondary hover:underline"
+      >
+        <ChevronRight size={14} className={`transition-transform ${open ? 'rotate-90' : ''}`} />
+        Configuration
+      </button>
+      {open && (
+        <div className="mt-2 space-y-3">
+          {/* Conditional Display */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Conditional Display</label>
+            <div className="flex gap-2">
+              <select
+                value={cond.dependsOn ?? ''}
+                onChange={e => handleCondChange('dependsOn', e.target.value)}
+                className={`${INPUT_CLS} flex-1 appearance-none`}
+              >
+                <option value="">No condition</option>
+                {siblingFields
+                  .filter(f => f.id !== field.id)
+                  .map(f => (
+                    <option key={f.id} value={f.fieldKey}>
+                      {f.label}
+                    </option>
+                  ))}
+              </select>
+              <select
+                value={cond.operator ?? 'eq'}
+                onChange={e => handleCondChange('operator', e.target.value)}
+                className={`${INPUT_CLS} w-20 appearance-none`}
+                disabled={!cond.dependsOn}
+              >
+                <option value="eq">eq</option>
+                <option value="ne">ne</option>
+                <option value="in">in</option>
+              </select>
+              <input
+                value={cond.value ?? ''}
+                onChange={e => handleCondChange('value', e.target.value)}
+                onBlur={() => onSave({ conditionalDisplay: cond })}
+                className={`${INPUT_CLS} w-32`}
+                placeholder="Value"
+                disabled={!cond.dependsOn}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            {/* Section Name */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Section</label>
+              <input
+                defaultValue={field.sectionName ?? ''}
+                onBlur={e => onSave({ sectionName: e.target.value || undefined })}
+                className={INPUT_CLS}
+                placeholder="General"
+                list={`sections-${field.id}`}
+              />
+              <datalist id={`sections-${field.id}`}>
+                {existingSections.map(s => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+            </div>
+
+            {/* Column Span */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Column Span</label>
+              <select
+                defaultValue={field.colSpan}
+                onChange={e => onSave({ colSpan: Number(e.target.value) })}
+                className={`${INPUT_CLS} appearance-none`}
+              >
+                <option value={1}>1 column</option>
+                <option value={2}>2 columns</option>
+                <option value={3}>3 columns</option>
+                <option value={4}>4 columns (full)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Line Item Toggle */}
+          <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={field.isLineItem}
+              onChange={e => onSave({ isLineItem: e.target.checked })}
+              className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
+            />
+            Line Item Field
+          </label>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
@@ -49,6 +460,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
   const addFieldMut = useAddField();
   const updateFieldMut = useUpdateField();
   const deleteFieldMut = useDeleteField();
+  const reorderMut = useReorderFields();
 
   // ── Form State ──────────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -117,6 +529,20 @@ export const DynamicTypeBuilderPage: React.FC = () => {
     if (!id) return;
     await deleteFieldMut.mutateAsync({ typeId: id, fieldId });
   };
+
+  const handleMoveField = (idx: number, direction: 'up' | 'down') => {
+    const fields = docType?.fields;
+    if (!fields || !id) return;
+    const target = direction === 'up' ? idx - 1 : idx + 1;
+    if (target < 0 || target >= fields.length) return;
+    const swapped = [...fields];
+    [swapped[idx], swapped[target]] = [swapped[target], swapped[idx]];
+    reorderMut.mutate({ typeId: id, fieldIds: swapped.map(f => f.id) });
+  };
+
+  const existingSections = Array.from(
+    new Set((docType?.fields ?? []).map(f => f.sectionName).filter(Boolean) as string[]),
+  );
 
   const inputBase =
     'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all';
@@ -248,75 +674,120 @@ export const DynamicTypeBuilderPage: React.FC = () => {
             </div>
           )}
 
-          {docType?.fields?.map(field => (
+          {docType?.fields?.map((field, idx) => (
             <div key={field.id} className="glass-card rounded-2xl p-4">
               <div className="flex items-start gap-4">
-                <div className="pt-2 text-gray-500 cursor-grab">
-                  <GripVertical size={20} />
+                {/* Task 5: Reorder buttons */}
+                <div className="flex flex-col gap-1 pt-1">
+                  <button
+                    onClick={() => handleMoveField(idx, 'up')}
+                    disabled={idx === 0}
+                    className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30 transition-colors"
+                    aria-label="Move field up"
+                  >
+                    <ChevronUp size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleMoveField(idx, 'down')}
+                    disabled={idx === (docType?.fields?.length ?? 0) - 1}
+                    className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30 transition-colors"
+                    aria-label="Move field down"
+                  >
+                    <ChevronDown size={16} />
+                  </button>
                 </div>
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Key</label>
-                    <input
-                      defaultValue={field.fieldKey}
-                      onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldKey: e.target.value })}
-                      className={`${inputBase} text-sm`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Label</label>
-                    <input
-                      defaultValue={field.label}
-                      onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, label: e.target.value })}
-                      className={`${inputBase} text-sm`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Type</label>
-                    <select
-                      defaultValue={field.fieldType}
-                      onChange={e =>
-                        updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldType: e.target.value })
-                      }
-                      className={`${inputBase} text-sm appearance-none`}
-                    >
-                      {FIELD_TYPES.map(ft => (
-                        <option key={ft.value} value={ft.value}>
-                          {ft.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <label className="flex items-center gap-2 text-sm text-gray-400">
+                <div className="flex-1">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Key</label>
                       <input
-                        type="checkbox"
-                        defaultChecked={field.isRequired}
-                        onChange={e =>
-                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, isRequired: e.target.checked })
+                        defaultValue={field.fieldKey}
+                        onBlur={e =>
+                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldKey: e.target.value })
                         }
-                        className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
+                        className={`${inputBase} text-sm`}
                       />
-                      Required
-                    </label>
-                    <label className="flex items-center gap-2 text-sm text-gray-400">
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Label</label>
                       <input
-                        type="checkbox"
-                        defaultChecked={field.showInGrid}
-                        onChange={e =>
-                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, showInGrid: e.target.checked })
-                        }
-                        className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
+                        defaultValue={field.label}
+                        onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, label: e.target.value })}
+                        className={`${inputBase} text-sm`}
                       />
-                      Grid
-                    </label>
-                    <button
-                      onClick={() => handleDeleteField(field.id)}
-                      className="p-2 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors ml-auto"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Type</label>
+                      <select
+                        defaultValue={field.fieldType}
+                        onChange={e =>
+                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldType: e.target.value })
+                        }
+                        className={`${inputBase} text-sm appearance-none`}
+                      >
+                        {FIELD_TYPES.map(ft => (
+                          <option key={ft.value} value={ft.value}>
+                            {ft.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <label className="flex items-center gap-2 text-sm text-gray-400">
+                        <input
+                          type="checkbox"
+                          defaultChecked={field.isRequired}
+                          onChange={e =>
+                            updateFieldMut.mutate({ typeId: id!, fieldId: field.id, isRequired: e.target.checked })
+                          }
+                          className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
+                        />
+                        Required
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-gray-400">
+                        <input
+                          type="checkbox"
+                          defaultChecked={field.showInGrid}
+                          onChange={e =>
+                            updateFieldMut.mutate({ typeId: id!, fieldId: field.id, showInGrid: e.target.checked })
+                          }
+                          className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
+                        />
+                        Grid
+                      </label>
+                      <button
+                        onClick={() => handleDeleteField(field.id)}
+                        className="p-2 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors ml-auto"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Task 2: Options Editor (select/multiselect only) */}
+                  {(field.fieldType === 'select' || field.fieldType === 'multiselect') && (
+                    <FieldOptionsEditor
+                      options={field.options ?? []}
+                      onSave={options => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, options })}
+                    />
+                  )}
+
+                  {/* Task 3: Validation Rules */}
+                  <ValidationRulesPanel
+                    fieldType={field.fieldType}
+                    rules={(field.validationRules ?? {}) as Record<string, unknown>}
+                    onSave={validationRules =>
+                      updateFieldMut.mutate({ typeId: id!, fieldId: field.id, validationRules })
+                    }
+                  />
+
+                  {/* Task 4: Field Configuration */}
+                  <FieldConfigPanel
+                    field={field}
+                    siblingFields={docType?.fields ?? []}
+                    existingSections={existingSections}
+                    onSave={updates => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, ...updates })}
+                  />
                 </div>
               </div>
             </div>
@@ -501,7 +972,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                 {docType.fields
                   .filter(f => f.showInForm && !f.isLineItem)
                   .map(field => (
-                    <div key={field.id} className={`col-span-1 md:col-span-${field.colSpan}`}>
+                    <div key={field.id} className={COL_SPAN_MAP[field.colSpan] ?? 'md:col-span-1'}>
                       <label className="block text-sm font-medium text-gray-400 mb-1.5">
                         {field.label}
                         {field.isRequired && <span className="text-red-400 ml-1">*</span>}

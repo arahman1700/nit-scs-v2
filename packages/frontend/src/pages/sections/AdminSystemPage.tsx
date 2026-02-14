@@ -20,6 +20,9 @@ const EmailLogsPage = React.lazy(() => import('@/pages/EmailLogsPage').then(m =>
 const ApprovalLevelsPage = React.lazy(() =>
   import('@/pages/admin/ApprovalLevelsPage').then(m => ({ default: m.ApprovalLevelsPage })),
 );
+const ApprovalWorkflowPage = React.lazy(() =>
+  import('@/pages/admin/ApprovalWorkflowPage').then(m => ({ default: m.ApprovalWorkflowPage })),
+);
 
 // Platform tools — lazy loaded
 const DashboardBuilderPage = React.lazy(() =>
@@ -84,6 +87,7 @@ const tabs: TabDef[] = [
   { key: 'settings', label: 'Settings' },
   { key: 'reports', label: 'Reports' },
   { key: 'approval-levels', label: 'Approval Levels' },
+  { key: 'approval-workflows', label: 'Approval Workflows' },
   { key: 'workflows', label: 'Workflows' },
   { key: 'email-templates', label: 'Email Templates' },
   { key: 'email-logs', label: 'Email Logs' },
@@ -140,6 +144,13 @@ export const AdminSystemPage: React.FC = () => {
           <RouteErrorBoundary label="Approval Levels">
             <Suspense fallback={<Spinner />}>
               <ApprovalLevelsPage />
+            </Suspense>
+          </RouteErrorBoundary>
+        ),
+        'approval-workflows': (
+          <RouteErrorBoundary label="Approval Workflows">
+            <Suspense fallback={<Spinner />}>
+              <ApprovalWorkflowPage />
             </Suspense>
           </RouteErrorBoundary>
         ),

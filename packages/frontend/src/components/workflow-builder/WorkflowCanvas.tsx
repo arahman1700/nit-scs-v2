@@ -57,6 +57,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ rule, onChange }
         <ConditionBuilder
           value={rule.conditions as never}
           onChange={conditions => onChange({ ...rule, conditions: conditions as unknown as Record<string, unknown> })}
+          entityType={rule.triggerEvent?.split('.')[0]}
         />
       </div>
 

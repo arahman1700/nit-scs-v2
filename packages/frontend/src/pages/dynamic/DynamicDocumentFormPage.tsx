@@ -9,7 +9,9 @@ import {
 import { useDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
 import type { StatusFlowConfig, FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
 import { DynamicFormRenderer } from '@/components/dynamic-form/DynamicFormRenderer';
-import { ArrowLeft, Save, Send, Clock } from 'lucide-react';
+import { DynamicLineItemsTable } from '@/components/dynamic-form/DynamicLineItemsTable';
+import { CustomFieldsSection } from '@/components/forms/CustomFieldsSection';
+import { ArrowLeft, Save, Send, Clock, AlertCircle } from 'lucide-react';
 
 export const DynamicDocumentFormPage: React.FC = () => {
   const { typeCode, id } = useParams<{ typeCode: string; id?: string }>();
@@ -29,26 +31,36 @@ export const DynamicDocumentFormPage: React.FC = () => {
   )?.data;
 
   const [formData, setFormData] = useState<Record<string, unknown>>({});
+  const [lineItems, setLineItems] = useState<Record<string, unknown>[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [lineErrors, setLineErrors] = useState<Record<number, Record<string, string>>>({});
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, unknown>>({});
 
   const createMut = useCreateDynamicDocument(typeCode!);
   const updateMut = useUpdateDynamicDocument(typeCode!);
   const transitionMut = useTransitionDynamicDocument(typeCode!);
 
+  // Split fields into header fields and line-item fields
+  const headerFields = useMemo(() => (docType?.fields ?? []).filter(f => !f.isLineItem), [docType?.fields]);
+  const lineFields = useMemo(() => (docType?.fields ?? []).filter(f => f.isLineItem), [docType?.fields]);
+  const hasLineItems = lineFields.length > 0;
+
   // Initialize form data from defaults or existing doc
   useEffect(() => {
     if (existingDoc?.data) {
       setFormData(existingDoc.data);
+      const existingLines = (existingDoc as unknown as { lines?: Record<string, unknown>[] }).lines;
+      if (existingLines) setLineItems(existingLines);
     } else if (docType?.fields && isNew) {
       const defaults: Record<string, unknown> = {};
-      for (const field of docType.fields) {
+      for (const field of headerFields) {
         if (field.defaultValue !== null && field.defaultValue !== undefined) {
           defaults[field.fieldKey] = field.defaultValue;
         }
       }
       setFormData(defaults);
     }
-  }, [existingDoc, docType, isNew]);
+  }, [existingDoc, docType, isNew, headerFields]);
 
   // Available transitions
   const transitions = useMemo(() => {
@@ -63,20 +75,43 @@ export const DynamicDocumentFormPage: React.FC = () => {
 
   const handleSave = async () => {
     setErrors({});
+    setLineErrors({});
+    const payload = {
+      data: formData,
+      ...(hasLineItems && { lines: lineItems }),
+      ...(Object.keys(customFieldValues).length > 0 && { customFields: customFieldValues }),
+    };
     try {
       if (isNew) {
-        await createMut.mutateAsync({ data: formData });
+        await createMut.mutateAsync(payload);
       } else {
-        await updateMut.mutateAsync({ id: id!, data: formData });
+        await updateMut.mutateAsync({ id: id!, ...payload });
       }
       navigate(`/admin/dynamic/${typeCode}`);
     } catch (err: unknown) {
       if (err && typeof err === 'object' && 'response' in err) {
-        const resp = (err as { response?: { data?: { errors?: Array<{ field: string; message: string }> } } }).response;
+        const resp = (
+          err as {
+            response?: {
+              data?: {
+                errors?: Array<{ field: string; message: string; line?: number }>;
+              };
+            };
+          }
+        ).response;
         if (resp?.data?.errors) {
           const errMap: Record<string, string> = {};
-          for (const e of resp.data.errors) errMap[e.field] = e.message;
+          const lineErrMap: Record<number, Record<string, string>> = {};
+          for (const e of resp.data.errors) {
+            if (e.line !== undefined) {
+              if (!lineErrMap[e.line]) lineErrMap[e.line] = {};
+              lineErrMap[e.line][e.field] = e.message;
+            } else {
+              errMap[e.field] = e.message;
+            }
+          }
           setErrors(errMap);
+          setLineErrors(lineErrMap);
         }
       }
     }
@@ -140,6 +175,30 @@ export const DynamicDocumentFormPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Validation Error Banner */}
+      {(Object.keys(errors).length > 0 || Object.keys(lineErrors).length > 0) && (
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+          <AlertCircle size={20} className="text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-400">Please fix the following errors:</p>
+            <ul className="mt-1 space-y-0.5">
+              {Object.entries(errors).map(([field, msg]) => (
+                <li key={field} className="text-xs text-red-300">
+                  {msg}
+                </li>
+              ))}
+              {Object.entries(lineErrors).map(([rowIdx, fields]) =>
+                Object.entries(fields).map(([field, msg]) => (
+                  <li key={`${rowIdx}-${field}`} className="text-xs text-red-300">
+                    Row {Number(rowIdx) + 1}: {msg}
+                  </li>
+                )),
+              )}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Form */}
       {loadingDoc && !isNew ? (
         <div className="glass-card rounded-2xl p-8 text-center">
@@ -150,13 +209,31 @@ export const DynamicDocumentFormPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <DynamicFormRenderer
-          fields={docType.fields}
-          data={formData}
-          onChange={setFormData}
-          errors={errors}
-          disabled={false}
-        />
+        <>
+          <DynamicFormRenderer
+            fields={headerFields}
+            data={formData}
+            onChange={setFormData}
+            errors={errors}
+            disabled={false}
+          />
+
+          {hasLineItems && (
+            <DynamicLineItemsTable
+              lineFields={lineFields}
+              lines={lineItems}
+              onLinesChange={setLineItems}
+              errors={lineErrors}
+            />
+          )}
+
+          <CustomFieldsSection
+            entityType={`dynamic_${typeCode}`}
+            entityId={isNew ? undefined : id}
+            values={customFieldValues}
+            onChange={setCustomFieldValues}
+          />
+        </>
       )}
 
       {/* History */}

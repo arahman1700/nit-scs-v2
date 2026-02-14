@@ -2,6 +2,13 @@ import React, { useMemo } from 'react';
 import type { FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
 
+const COL_SPAN_MAP: Record<number, string> = {
+  1: 'md:col-span-1',
+  2: 'md:col-span-2',
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+};
+
 interface DynamicFormRendererProps {
   fields: FieldDefinition[];
   data: Record<string, unknown>;
@@ -64,7 +71,7 @@ export const DynamicFormRenderer: React.FC<DynamicFormRendererProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {sectionFields.map(field =>
               isFieldVisible(field) ? (
-                <div key={field.id} className={`col-span-1 md:col-span-${field.colSpan}`}>
+                <div key={field.id} className={COL_SPAN_MAP[field.colSpan] ?? 'md:col-span-1'}>
                   <DynamicFieldRenderer
                     field={field}
                     value={data[field.fieldKey]}

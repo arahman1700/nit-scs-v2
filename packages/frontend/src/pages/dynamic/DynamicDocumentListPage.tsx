@@ -5,6 +5,15 @@ import { useDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
 import type { StatusFlowConfig } from '@/api/hooks/useDynamicDocumentTypes';
 import { Plus, Search, FileText } from 'lucide-react';
 
+const STATUS_COLOR_MAP: Record<string, string> = {
+  gray: 'bg-gray-500/20 text-gray-400',
+  blue: 'bg-blue-500/20 text-blue-400',
+  green: 'bg-green-500/20 text-green-400',
+  red: 'bg-red-500/20 text-red-400',
+  amber: 'bg-amber-500/20 text-amber-400',
+  purple: 'bg-purple-500/20 text-purple-400',
+};
+
 export const DynamicDocumentListPage: React.FC = () => {
   const { typeCode } = useParams<{ typeCode: string }>();
   const navigate = useNavigate();
@@ -134,7 +143,7 @@ export const DynamicDocumentListPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium bg-${getStatusColor(doc.status as string)}-500/20 text-${getStatusColor(doc.status as string)}-400`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLOR_MAP[getStatusColor(doc.status as string)] ?? STATUS_COLOR_MAP.gray}`}
                       >
                         {doc.status as string}
                       </span>
