@@ -9,6 +9,7 @@
 import webPush from 'web-push';
 import { prisma } from '../utils/prisma.js';
 import { getEnv } from '../config/env.js';
+import { logger } from '../config/logger.js';
 
 // ── VAPID Key Management ────────────────────────────────────────────────────
 
@@ -24,13 +25,14 @@ function ensureVapidConfigured(): void {
   const subject: string = env.VAPID_SUBJECT ?? 'mailto:admin@nit-scs.com';
 
   if (!publicKey || !privateKey) {
-    console.warn('⚠  VAPID keys not found in environment — generating new keys.');
-    console.warn('   Add these to your .env file for persistence:');
+    logger.warn(
+      'VAPID keys not found in environment — generating ephemeral keys. Set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY in .env for persistence.',
+    );
     const generated = webPush.generateVAPIDKeys();
     publicKey = generated.publicKey;
     privateKey = generated.privateKey;
-    console.warn(`   VAPID_PUBLIC_KEY=${publicKey}`);
-    console.warn(`   VAPID_PRIVATE_KEY=${privateKey}`);
+  } else {
+    logger.info('VAPID keys: configured');
   }
 
   webPush.setVapidDetails(subject, publicKey!, privateKey!);

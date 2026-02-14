@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { z } from 'zod';
 import { log } from '../config/logger.js';
 
 /**
@@ -22,6 +23,16 @@ export interface SystemEvent {
   timestamp: string;
 }
 
+const systemEventSchema = z.object({
+  type: z.string().min(1),
+  entityType: z.string().min(1),
+  entityId: z.string().min(1),
+  action: z.string().min(1),
+  payload: z.record(z.unknown()),
+  performedById: z.string().optional(),
+  timestamp: z.string(),
+});
+
 class SystemEventBus extends EventEmitter {
   private static instance: SystemEventBus;
 
@@ -41,8 +52,16 @@ class SystemEventBus extends EventEmitter {
   /**
    * Publish a system event. Emits both the specific event type
    * and a wildcard '*' event (used by the rule engine).
+   * Validates the event shape with Zod; logs a warning if malformed but still publishes.
    */
   publish(event: SystemEvent): void {
+    const result = systemEventSchema.safeParse(event);
+    if (!result.success) {
+      log('warn', `[EventBus] Malformed event: ${result.error.issues.map(i => i.message).join(', ')}`, {
+        eventType: event.type,
+        entityType: event.entityType,
+      });
+    }
     log('debug', `[EventBus] ${event.type} — ${event.entityType}:${event.entityId}`);
     this.emit(event.type, event);
     this.emit('*', event);

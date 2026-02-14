@@ -130,7 +130,7 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
   const active = item.path ? isActive(item.path) : false;
   const hasChildren = item.children && item.children.length > 0;
   // Auto-expand when a child is active
-  const anyChildActive = hasChildren && item.children!.some(c => c.path && isActive(c.path));
+  const anyChildActive = hasChildren && (item.children?.some(c => c.path && isActive(c.path)) ?? false);
   const [isExpanded, setIsExpanded] = useState(anyChildActive);
 
   const handleClick = (e: React.MouseEvent) => {
@@ -182,7 +182,7 @@ const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isAct
         {/* Children */}
         {isOpen && hasChildren && isExpanded && (
           <div className="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-fade-in">
-            {(item.children as NavItemWithIcon[])!.map((child, idx) =>
+            {(item.children as NavItemWithIcon[] | undefined)?.map((child, idx) =>
               child.type === 'divider' ? (
                 <div key={idx} className="h-px w-full bg-white/10 my-2"></div>
               ) : (

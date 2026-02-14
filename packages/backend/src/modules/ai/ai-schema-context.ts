@@ -137,6 +137,11 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     return { valid: false, reason: 'Only SELECT queries are allowed.' };
   }
 
+  // Reject multi-statement attacks
+  if (normalized.includes(';')) {
+    return { valid: false, reason: 'Multiple statements are not allowed.' };
+  }
+
   // Must not contain dangerous keywords
   const forbidden = [
     'insert',
@@ -150,6 +155,12 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     'revoke',
     'exec',
     'execute',
+    'union',
+    'copy',
+    'set',
+    'pg_read_file',
+    'pg_sleep',
+    'lo_import',
   ];
   for (const word of forbidden) {
     // Check as whole word
@@ -157,6 +168,16 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     if (regex.test(sql)) {
       return { valid: false, reason: `Forbidden keyword: ${word}` };
     }
+  }
+
+  // Enforce LIMIT clause — reject queries without LIMIT or with LIMIT > 1000
+  const limitMatch = normalized.match(/\blimit\s+(\d+)/);
+  if (!limitMatch) {
+    return { valid: false, reason: 'Query must include a LIMIT clause.' };
+  }
+  const limitValue = parseInt(limitMatch[1], 10);
+  if (limitValue > 1000) {
+    return { valid: false, reason: 'LIMIT must not exceed 1000.' };
   }
 
   // Extract table names from FROM and JOIN clauses

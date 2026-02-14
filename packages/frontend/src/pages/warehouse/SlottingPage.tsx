@@ -126,7 +126,8 @@ function ZoneHeatmap({ suggestions }: { suggestions: SlottingSuggestion[] }) {
           aisle: parseInt(s.currentBin.split('-')[1] ?? '1', 10),
         };
       }
-      zones[key]!.count++;
+      const zone = zones[key];
+      if (zone) zone.count++;
     }
     return Object.values(zones).sort((a, b) => {
       if (a.zone !== b.zone) return a.zone.localeCompare(b.zone);

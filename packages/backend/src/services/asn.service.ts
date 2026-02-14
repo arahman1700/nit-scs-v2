@@ -2,6 +2,8 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 
+type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 // ── Types ───────────────────────────────────────────────────────────────
 
 export interface AsnLineDto {
@@ -80,14 +82,14 @@ export async function getAsns(params: AsnListParams) {
   const skip = (params.page - 1) * params.pageSize;
 
   const [data, total] = await Promise.all([
-    (prisma as any).advanceShippingNotice.findMany({
+    prisma.advanceShippingNotice.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip,
       take: params.pageSize,
       include: LIST_INCLUDE,
     }),
-    (prisma as any).advanceShippingNotice.count({ where }),
+    prisma.advanceShippingNotice.count({ where }),
   ]);
 
   return { data, total };
@@ -96,7 +98,7 @@ export async function getAsns(params: AsnListParams) {
 // ── Get by ID ───────────────────────────────────────────────────────────
 
 export async function getAsnById(id: string) {
-  const asn = await (prisma as any).advanceShippingNotice.findUnique({
+  const asn = await prisma.advanceShippingNotice.findUnique({
     where: { id },
     include: DETAIL_INCLUDE,
   });
@@ -113,7 +115,7 @@ export async function createAsn(data: AsnCreateDto) {
     throw new BusinessRuleError('ASN must have at least one line item');
   }
 
-  const asn = await (prisma as any).$transaction(async (tx: any) => {
+  const asn = await prisma.$transaction(async (tx: TransactionClient) => {
     const asnNumber = await generateDocumentNumber('asn');
 
     return tx.advanceShippingNotice.create({
@@ -146,7 +148,7 @@ export async function createAsn(data: AsnCreateDto) {
 // ── Update ──────────────────────────────────────────────────────────────
 
 export async function updateAsn(id: string, data: AsnUpdateDto) {
-  const existing = await (prisma as any).advanceShippingNotice.findUnique({ where: { id } });
+  const existing = await prisma.advanceShippingNotice.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('ASN', id);
   if (existing.status !== 'pending') {
     throw new BusinessRuleError('Only pending ASNs can be updated');
@@ -154,7 +156,7 @@ export async function updateAsn(id: string, data: AsnUpdateDto) {
 
   const { lines, ...header } = data;
 
-  const asn = await (prisma as any).$transaction(async (tx: any) => {
+  const asn = await prisma.$transaction(async (tx: TransactionClient) => {
     if (lines) {
       await tx.asnLine.deleteMany({ where: { asnId: id } });
     }
@@ -190,13 +192,13 @@ export async function updateAsn(id: string, data: AsnUpdateDto) {
 // ── Mark In Transit ─────────────────────────────────────────────────────
 
 export async function markInTransit(id: string) {
-  const existing = await (prisma as any).advanceShippingNotice.findUnique({ where: { id } });
+  const existing = await prisma.advanceShippingNotice.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('ASN', id);
   if (existing.status !== 'pending') {
     throw new BusinessRuleError('Only pending ASNs can be marked as in transit');
   }
 
-  return (prisma as any).advanceShippingNotice.update({
+  return prisma.advanceShippingNotice.update({
     where: { id },
     data: { status: 'in_transit' },
     include: DETAIL_INCLUDE,
@@ -206,13 +208,13 @@ export async function markInTransit(id: string) {
 // ── Mark Arrived ────────────────────────────────────────────────────────
 
 export async function markArrived(id: string) {
-  const existing = await (prisma as any).advanceShippingNotice.findUnique({ where: { id } });
+  const existing = await prisma.advanceShippingNotice.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('ASN', id);
   if (existing.status !== 'in_transit') {
     throw new BusinessRuleError('Only in-transit ASNs can be marked as arrived');
   }
 
-  return (prisma as any).advanceShippingNotice.update({
+  return prisma.advanceShippingNotice.update({
     where: { id },
     data: { status: 'arrived', actualArrival: new Date() },
     include: DETAIL_INCLUDE,
@@ -221,8 +223,8 @@ export async function markArrived(id: string) {
 
 // ── Receive ASN (create GRN from ASN lines) ─────────────────────────────
 
-export async function receiveAsn(id: string) {
-  const existing = await (prisma as any).advanceShippingNotice.findUnique({
+export async function receiveAsn(id: string, userId: string) {
+  const existing = await prisma.advanceShippingNotice.findUnique({
     where: { id },
     include: { lines: true },
   });
@@ -231,7 +233,7 @@ export async function receiveAsn(id: string) {
     throw new BusinessRuleError('Only arrived ASNs can be received');
   }
 
-  const result = await (prisma as any).$transaction(async (tx: any) => {
+  const result = await prisma.$transaction(async (tx: TransactionClient) => {
     const grnNumber = await generateDocumentNumber('grn');
 
     const grn = await tx.mrrv.create({
@@ -239,14 +241,18 @@ export async function receiveAsn(id: string) {
         mrrvNumber: grnNumber,
         supplierId: existing.supplierId,
         warehouseId: existing.warehouseId,
+        receivedById: userId,
+        receiveDate: new Date(),
         status: 'draft',
-        purchaseOrderNumber: existing.purchaseOrderRef || null,
+        poNumber: existing.purchaseOrderRef || null,
         notes: `Auto-created from ASN ${existing.asnNumber}`,
         mrrvLines: {
-          create: existing.lines.map((line: any) => ({
+          create: existing.lines.map(line => ({
             itemId: line.itemId,
-            qtyOrdered: line.qtyExpected,
-            qtyReceived: line.qtyExpected,
+            qtyOrdered: Number(line.qtyExpected),
+            qtyReceived: Number(line.qtyExpected),
+            uomId: line.itemId, // placeholder — resolved by item's default UOM
+            condition: 'good',
             lotNumber: line.lotNumber || null,
           })),
         },
@@ -280,13 +286,13 @@ export async function receiveAsn(id: string) {
 // ── Cancel ASN ──────────────────────────────────────────────────────────
 
 export async function cancelAsn(id: string) {
-  const existing = await (prisma as any).advanceShippingNotice.findUnique({ where: { id } });
+  const existing = await prisma.advanceShippingNotice.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('ASN', id);
   if (existing.status === 'received' || existing.status === 'cancelled') {
     throw new BusinessRuleError(`Cannot cancel ASN in ${existing.status} status`);
   }
 
-  return (prisma as any).advanceShippingNotice.update({
+  return prisma.advanceShippingNotice.update({
     where: { id },
     data: { status: 'cancelled' },
     include: DETAIL_INCLUDE,
@@ -296,7 +302,7 @@ export async function cancelAsn(id: string) {
 // ── Variance Report ─────────────────────────────────────────────────────
 
 export async function getVarianceReport(id: string) {
-  const asn = await (prisma as any).advanceShippingNotice.findUnique({
+  const asn = await prisma.advanceShippingNotice.findUnique({
     where: { id },
     include: {
       lines: {
@@ -310,7 +316,7 @@ export async function getVarianceReport(id: string) {
   });
   if (!asn) throw new NotFoundError('ASN', id);
 
-  const lines = asn.lines.map((line: any) => {
+  const lines = asn.lines.map(line => {
     const expected = Number(line.qtyExpected);
     const received = line.qtyReceived ? Number(line.qtyReceived) : 0;
     const variance = received - expected;
@@ -327,8 +333,8 @@ export async function getVarianceReport(id: string) {
     };
   });
 
-  const totalExpected = lines.reduce((sum: number, l: any) => sum + l.qtyExpected, 0);
-  const totalReceived = lines.reduce((sum: number, l: any) => sum + l.qtyReceived, 0);
+  const totalExpected = lines.reduce((sum, l) => sum + l.qtyExpected, 0);
+  const totalReceived = lines.reduce((sum, l) => sum + l.qtyReceived, 0);
 
   return {
     asnNumber: asn.asnNumber,

@@ -21,10 +21,10 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   readOnly = false,
 }) => {
   // React Query hooks for master data
-  const itemsQuery = useItems({ pageSize: 500 });
+  const itemsQuery = useItems({ pageSize: 100 });
 
   // Inventory levels from real API — keyed by item code for fast lookup
-  const inventoryQuery = useInventory({ pageSize: 1000 });
+  const inventoryQuery = useInventory({ pageSize: 200 });
   const inventoryLevels = (inventoryQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
   const inventoryByCode = useMemo(() => {
     const map = new Map<string, number>();
@@ -287,19 +287,45 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
       {/* Items Table */}
       {items.length > 0 ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left" aria-label="Line items">
             <thead>
               <tr className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
-                <th className="pb-3 px-2 font-medium w-8">#</th>
-                <th className="pb-3 px-2 font-medium">Code</th>
-                <th className="pb-3 px-2 font-medium min-w-[200px]">Item</th>
-                <th className="pb-3 px-2 font-medium">Unit</th>
-                <th className="pb-3 px-2 font-medium text-center">Qty</th>
-                <th className="pb-3 px-2 font-medium text-center">Price</th>
-                <th className="pb-3 px-2 font-medium text-center">Total</th>
-                {showStockAvailability && <th className="pb-3 px-2 font-medium text-center">Available</th>}
-                {showCondition && <th className="pb-3 px-2 font-medium">Condition</th>}
-                {!readOnly && <th className="pb-3 px-2 font-medium w-10"></th>}
+                <th scope="col" className="pb-3 px-2 font-medium w-8">
+                  #
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium">
+                  Code
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium min-w-[200px]">
+                  Item
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium">
+                  Unit
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium text-center">
+                  Qty
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium text-center">
+                  Price
+                </th>
+                <th scope="col" className="pb-3 px-2 font-medium text-center">
+                  Total
+                </th>
+                {showStockAvailability && (
+                  <th scope="col" className="pb-3 px-2 font-medium text-center">
+                    Available
+                  </th>
+                )}
+                {showCondition && (
+                  <th scope="col" className="pb-3 px-2 font-medium">
+                    Condition
+                  </th>
+                )}
+                {!readOnly && (
+                  <th scope="col" className="pb-3 px-2 font-medium w-10">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -444,7 +470,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                        aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
+                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
                       >
                         <Trash2 size={14} />
                       </button>

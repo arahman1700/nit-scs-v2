@@ -179,7 +179,9 @@ export async function logout(accessToken: string, refreshToken?: string): Promis
 
   // Revoke refresh token from DB
   if (refreshToken) {
-    await prisma.refreshToken.deleteMany({ where: { token: refreshToken } }).catch(() => {});
+    await prisma.refreshToken.deleteMany({ where: { token: refreshToken } }).catch(err => {
+      log('warn', `[Auth] Failed to revoke refresh token: ${(err as Error).message}`);
+    });
   }
 }
 

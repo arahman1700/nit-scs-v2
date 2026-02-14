@@ -3,6 +3,7 @@ import { verifyAccessToken, type JwtPayload } from '../utils/jwt.js';
 import { isTokenBlacklisted } from '../services/auth.service.js';
 import { sendError } from '../utils/response.js';
 import { Sentry } from '../config/sentry.js';
+import { logger } from '../config/logger.js';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -40,8 +41,9 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
           Sentry.setUser({ id: payload.userId, email: payload.email });
           next();
         })
-        .catch(() => {
+        .catch(err => {
           // Redis failure — allow request (graceful degradation)
+          logger.warn({ err }, 'Redis blacklist check failed');
           req.user = payload;
           req.rawAccessToken = token;
           Sentry.setUser({ id: payload.userId, email: payload.email });

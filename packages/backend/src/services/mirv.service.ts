@@ -2,7 +2,8 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { submitForApproval, processApproval } from './approval.service.js';
-import { reserveStockBatch, consumeReservationBatch, releaseReservation } from './inventory.service.js';
+import { reserveStockBatch } from './inventory.service.js';
+import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import type { Server as SocketIOServer } from 'socket.io';
@@ -205,126 +206,24 @@ export async function approve(
 
 /**
  * QC counter-signature for an approved MIRV (V5 requirement).
- * Must be called before materials can be issued.
- * NOTE: qcSignatureId field pending schema migration on mirv table.
+ * Delegates to shared mirv-operations.
  */
 export async function signQc(id: string, qcUserId: string) {
-  const mirv = await prisma.mirv.findUnique({ where: { id } });
-  if (!mirv) throw new NotFoundError('MIRV', id);
-  if (mirv.status !== 'approved') {
-    throw new BusinessRuleError('MIRV must be approved for QC signature');
-  }
-  return prisma.mirv.update({
-    where: { id },
-    data: { qcSignatureId: qcUserId } as any, // qcSignatureId pending schema migration
-  });
+  return signQcForMirv(prisma, id, qcUserId);
 }
 
+/**
+ * Issue materials for an approved MIRV.
+ * Delegates to shared mirv-operations.
+ */
 export async function issue(id: string, userId: string) {
-  const mirv = await prisma.mirv.findUnique({
-    where: { id },
-    include: { mirvLines: true },
-  });
-  if (!mirv) throw new NotFoundError('MIRV', id);
-  if (mirv.status !== 'approved' && mirv.status !== 'partially_issued') {
-    throw new BusinessRuleError('MIRV must be approved or partially issued to issue materials');
-  }
-
-  // V5 requirement: QC counter-signature must be present before issuing
-  // NOTE: qcSignatureId field pending schema migration — guard with optional chaining
-  if (!(mirv as any).qcSignatureId) {
-    throw new BusinessRuleError('QC counter-signature is required before issuing materials (V5 requirement)');
-  }
-
-  const consumeItems = mirv.mirvLines.map(line => ({
-    itemId: line.itemId,
-    warehouseId: mirv.warehouseId,
-    qty: Number(line.qtyApproved ?? line.qtyRequested),
-    mirvLineId: line.id,
-  }));
-  const { totalCost, lineCosts } = await consumeReservationBatch(consumeItems);
-
-  // Update line costs from batch result
-  await Promise.all(
-    mirv.mirvLines.map(line => {
-      const qtyToIssue = Number(line.qtyApproved ?? line.qtyRequested);
-      const cost = lineCosts.get(line.id) ?? 0;
-      return prisma.mirvLine.update({
-        where: { id: line.id },
-        data: {
-          qtyIssued: qtyToIssue,
-          unitCost: qtyToIssue > 0 ? cost / qtyToIssue : 0,
-        },
-      });
-    }),
-  );
-
-  await prisma.mirv.update({
-    where: { id: mirv.id },
-    data: {
-      status: 'issued',
-      issuedById: userId,
-      issuedDate: new Date(),
-      reservationStatus: 'released',
-    },
-  });
-
-  // Auto-create outbound GatePass (idempotent — only if not already auto-created)
-  // NOTE: gatePassAutoCreated field pending schema migration on mirv table
-  if (!(mirv as any).gatePassAutoCreated) {
-    const gatePassNumber = await generateDocumentNumber('gatepass');
-    await prisma.gatePass.create({
-      data: {
-        gatePassNumber,
-        passType: 'outbound',
-        mirvId: mirv.id,
-        projectId: mirv.projectId,
-        warehouseId: mirv.warehouseId,
-        vehicleNumber: 'TBD',
-        driverName: 'TBD',
-        destination: mirv.locationOfWork ?? 'Project Site',
-        issueDate: new Date(),
-        status: 'pending',
-        issuedById: userId,
-        notes: `Auto-created from MIRV ${mirv.mirvNumber}`,
-      },
-    });
-    // Mark MIRV as having auto-created gate pass to prevent duplicates
-    await prisma.mirv.update({
-      where: { id: mirv.id },
-      data: { gatePassAutoCreated: true } as any, // gatePassAutoCreated pending schema migration
-    });
-  }
-
-  return { id: mirv.id, totalCost, warehouseId: mirv.warehouseId };
+  return issueMirv(prisma, id, userId);
 }
 
+/**
+ * Cancel a MIRV, releasing any reserved stock.
+ * Delegates to shared mirv-operations.
+ */
 export async function cancel(id: string) {
-  const mirv = await prisma.mirv.findUnique({
-    where: { id },
-    include: { mirvLines: true },
-  });
-  if (!mirv) throw new NotFoundError('MIRV', id);
-
-  const cancellableStatuses = ['approved', 'partially_issued', 'pending_approval'];
-  if (!cancellableStatuses.includes(mirv.status)) {
-    throw new BusinessRuleError(`MIRV cannot be cancelled from status: ${mirv.status}`);
-  }
-
-  if (mirv.reservationStatus === 'reserved') {
-    for (const line of mirv.mirvLines) {
-      await releaseReservation(line.itemId, mirv.warehouseId, Number(line.qtyApproved ?? line.qtyRequested));
-    }
-  }
-
-  const updated = await prisma.mirv.update({
-    where: { id: mirv.id },
-    data: { status: 'cancelled', reservationStatus: 'released' },
-  });
-
-  return {
-    updated,
-    wasReserved: mirv.reservationStatus === 'reserved',
-    warehouseId: mirv.warehouseId,
-  };
+  return cancelMirv(prisma, id);
 }

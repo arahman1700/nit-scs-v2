@@ -18,8 +18,8 @@ import { DocumentActions } from '@/components/DocumentActions';
 import { ExportButton } from '@/components/ExportButton';
 import type { RFIM } from '@nit-scs-v2/shared/types';
 
-// Custom Badge for Inspection Status
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
+// Custom Badge for Inspection Status (includes per-status icons, unlike shared StatusBadge)
+const InspectionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
   let colorClass = 'bg-gray-500/10 text-gray-400 border-gray-500/20';
   let Icon = Clock;
 
@@ -243,7 +243,7 @@ export const RfimList: React.FC = () => {
                         <PriorityBadge priority={rowPriority} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={rowStatus} />
+                        <InspectionStatusBadge status={rowStatus} />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export const RfimList: React.FC = () => {
                 <div className="space-y-1">
                   <span className="text-xs text-gray-400 uppercase tracking-wider">Current Status</span>
                   <div className="flex items-center gap-3">
-                    <StatusBadge status={selectedItem.status} />
+                    <InspectionStatusBadge status={selectedItem.status} />
                     <span className="text-gray-500">•</span>
                     <PriorityBadge priority={selectedItem.priority} />
                   </div>

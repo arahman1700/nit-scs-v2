@@ -96,10 +96,10 @@ export const DynamicTypeBuilderPage: React.FC = () => {
   // ── Handlers ────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (isNew) {
-      await createMut.mutateAsync(form as Partial<DynamicDocumentType>);
+      await createMut.mutateAsync(form);
       navigate('/admin/dynamic-types');
     } else {
-      await updateMut.mutateAsync({ id: id!, ...form } as Partial<DynamicDocumentType> & { id: string });
+      await updateMut.mutateAsync({ id: id!, ...form });
     }
   };
 
@@ -110,7 +110,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
       fieldKey: `field_${Date.now()}`,
       label: 'New Field',
       fieldType: 'text',
-    } as Partial<FieldDefinition> & { typeId: string });
+    });
   };
 
   const handleDeleteField = async (fieldId: string) => {
@@ -259,9 +259,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                     <label className="block text-xs text-gray-500 mb-1">Key</label>
                     <input
                       defaultValue={field.fieldKey}
-                      onBlur={e =>
-                        updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldKey: e.target.value } as any)
-                      }
+                      onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldKey: e.target.value })}
                       className={`${inputBase} text-sm`}
                     />
                   </div>
@@ -269,9 +267,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                     <label className="block text-xs text-gray-500 mb-1">Label</label>
                     <input
                       defaultValue={field.label}
-                      onBlur={e =>
-                        updateFieldMut.mutate({ typeId: id!, fieldId: field.id, label: e.target.value } as any)
-                      }
+                      onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, label: e.target.value })}
                       className={`${inputBase} text-sm`}
                     />
                   </div>
@@ -280,7 +276,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                     <select
                       defaultValue={field.fieldType}
                       onChange={e =>
-                        updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldType: e.target.value } as any)
+                        updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldType: e.target.value })
                       }
                       className={`${inputBase} text-sm appearance-none`}
                     >
@@ -297,7 +293,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                         type="checkbox"
                         defaultChecked={field.isRequired}
                         onChange={e =>
-                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, isRequired: e.target.checked } as any)
+                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, isRequired: e.target.checked })
                         }
                         className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
                       />
@@ -308,7 +304,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                         type="checkbox"
                         defaultChecked={field.showInGrid}
                         onChange={e =>
-                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, showInGrid: e.target.checked } as any)
+                          updateFieldMut.mutate({ typeId: id!, fieldId: field.id, showInGrid: e.target.checked })
                         }
                         className="w-4 h-4 rounded border-gray-500 text-nesma-secondary bg-transparent"
                       />

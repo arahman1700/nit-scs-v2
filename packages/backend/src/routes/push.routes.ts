@@ -6,8 +6,10 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
+import { rateLimiter } from '../middleware/rate-limiter.js';
 import { sendSuccess, sendError, sendCreated, sendNoContent } from '../utils/response.js';
 import * as pushService from '../services/push-notification.service.js';
+import { logger } from '../config/logger.js';
 
 const router = Router();
 
@@ -24,30 +26,35 @@ router.get('/vapid-key', authenticate, async (_req: Request, res: Response, next
 
 // ── POST /subscribe — Register push subscription ────────────────────────────
 
-router.post('/subscribe', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { endpoint, keys } = req.body as {
-      endpoint?: string;
-      keys?: { p256dh?: string; auth?: string };
-    };
+router.post(
+  '/subscribe',
+  authenticate,
+  rateLimiter(10, 60_000),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { endpoint, keys } = req.body as {
+        endpoint?: string;
+        keys?: { p256dh?: string; auth?: string };
+      };
 
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
-      sendError(res, 400, 'Missing required fields: endpoint, keys.p256dh, keys.auth');
-      return;
+      if (!endpoint || !keys?.p256dh || !keys?.auth) {
+        sendError(res, 400, 'Missing required fields: endpoint, keys.p256dh, keys.auth');
+        return;
+      }
+
+      const userAgent = req.headers['user-agent'];
+      const subscription = await pushService.subscribe(
+        req.user!.userId,
+        { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } },
+        userAgent,
+      );
+
+      sendCreated(res, subscription);
+    } catch (err) {
+      next(err);
     }
-
-    const userAgent = req.headers['user-agent'];
-    const subscription = await pushService.subscribe(
-      req.user!.userId,
-      { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } },
-      userAgent,
-    );
-
-    sendCreated(res, subscription);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── DELETE /unsubscribe — Remove push subscription ──────────────────────────
 
@@ -69,43 +76,54 @@ router.delete('/unsubscribe', authenticate, async (req: Request, res: Response, 
 
 // ── POST /test — Send test notification to current user (admin only) ────────
 
-router.post('/test', authenticate, requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await pushService.sendPushToUser(req.user!.userId, {
-      title: 'NIT SCS — Test Notification',
-      body: 'Push notifications are working correctly!',
-      url: '/notifications',
-      tag: 'test',
-    });
+router.post(
+  '/test',
+  authenticate,
+  requireRole('admin'),
+  rateLimiter(5, 60_000),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await pushService.sendPushToUser(req.user!.userId, {
+        title: 'NIT SCS — Test Notification',
+        body: 'Push notifications are working correctly!',
+        url: '/notifications',
+        tag: 'test',
+      });
 
-    sendSuccess(res, { message: 'Test notification sent' });
-  } catch (err) {
-    next(err);
-  }
-});
+      sendSuccess(res, { message: 'Test notification sent' });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /action — Handle push notification action (approve/reject) ─────
 
-router.post('/action', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { action, documentType, documentId } = req.body as {
-      action?: string;
-      documentType?: string;
-      documentId?: string;
-    };
+router.post(
+  '/action',
+  authenticate,
+  rateLimiter(20, 60_000),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { action, documentType, documentId } = req.body as {
+        action?: string;
+        documentType?: string;
+        documentId?: string;
+      };
 
-    if (!action || !documentType || !documentId) {
-      sendError(res, 400, 'Missing required fields: action, documentType, documentId');
-      return;
+      if (!action || !documentType || !documentId) {
+        sendError(res, 400, 'Missing required fields: action, documentType, documentId');
+        return;
+      }
+
+      // Log the action — full approval integration can be added later
+      logger.info({ action, documentType, documentId, userId: req.user!.userId }, 'Push action received');
+
+      sendSuccess(res, { message: `Action "${action}" received for ${documentType} ${documentId}` });
+    } catch (err) {
+      next(err);
     }
-
-    // Log the action — full approval integration can be added later
-    console.log(`[Push Action] ${action} on ${documentType}/${documentId} by user ${req.user!.userId}`);
-
-    sendSuccess(res, { message: `Action "${action}" received for ${documentType} ${documentId}` });
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 export default router;

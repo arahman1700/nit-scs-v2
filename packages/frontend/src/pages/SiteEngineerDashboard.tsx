@@ -31,7 +31,7 @@ export const SiteEngineerDashboard: React.FC = () => {
   const joQuery = useJobOrderList({ pageSize: 200 });
   const mrfQuery = useMrfList({ pageSize: 200 });
   const projectsQuery = useProjects({ pageSize: 200 });
-  const inventoryQuery = useInventory({ pageSize: 500 });
+  const inventoryQuery = useInventory({ pageSize: 100 });
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];

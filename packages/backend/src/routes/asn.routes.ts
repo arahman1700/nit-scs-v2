@@ -131,7 +131,7 @@ router.post('/:id/receive', async (req: Request, res: Response, next: NextFuncti
       return sendError(res, 403, 'Only admin, manager, or warehouse supervisor can receive ASNs');
     }
 
-    const result = await asnService.receiveAsn(req.params.id as string);
+    const result = await asnService.receiveAsn(req.params.id as string, req.user!.userId);
     sendSuccess(res, result);
   } catch (err) {
     next(err);

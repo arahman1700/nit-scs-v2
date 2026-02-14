@@ -162,7 +162,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       </div>
 
       {/* Right Panel - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-gradient-to-br from-[#0a1628] to-[#051020]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 bg-nesma-dark">
         <div className="w-full max-w-md">
           {/* Spacer */}
           <div className="mb-8"></div>
@@ -248,28 +248,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-10 pt-8 border-t border-white/10">
-            <p className="text-xs text-gray-500 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map(account => (
-                <button
-                  key={account.email}
-                  onClick={() => {
-                    setEmail(account.email);
-                    setPassword('Admin@2026!');
-                    setError('');
-                  }}
-                  className="text-left px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-nesma-secondary/30 rounded-lg transition-all group"
-                >
-                  <span className="text-xs font-medium text-gray-300 group-hover:text-white block">
-                    {account.label}
-                  </span>
-                  <span className="text-[10px] text-gray-500">{account.email}</span>
-                </button>
-              ))}
+          {/* Demo Accounts — only in development or when VITE_DEMO_MODE is enabled */}
+          {(import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === 'true') && (
+            <div className="mt-10 pt-8 border-t border-white/10">
+              <p className="text-xs text-gray-500 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {demoAccounts.map(account => (
+                  <button
+                    key={account.email}
+                    onClick={() => {
+                      setEmail(account.email);
+                      setPassword('Admin@2026!');
+                      setError('');
+                    }}
+                    className="text-left px-3 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-nesma-secondary/30 rounded-lg transition-all group"
+                  >
+                    <span className="text-xs font-medium text-gray-300 group-hover:text-white block">
+                      {account.label}
+                    </span>
+                    <span className="text-[10px] text-gray-500">{account.email}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Powered by Idaratech */}
           <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-2 group">
@@ -292,7 +294,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           />
 
           {/* Modal */}
-          <div className="relative w-full max-w-md bg-gradient-to-br from-[#0d1f38] to-[#081425] border border-white/10 rounded-2xl shadow-2xl p-8 animate-fade-in">
+          <div className="relative w-full max-w-md glass-panel border border-white/10 rounded-2xl shadow-2xl p-8 animate-fade-in">
             {/* Close / Back */}
             <button
               type="button"

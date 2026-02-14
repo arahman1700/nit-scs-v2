@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback } from 'react';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export interface KpiCardProps {
@@ -15,6 +15,16 @@ export interface KpiCardProps {
 
 export const KpiCard: React.FC<KpiCardProps> = memo(
   ({ title, value, icon: Icon, color, sublabel, trend, alert, onClick, loading }) => {
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent) => {
+        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      },
+      [onClick],
+    );
+
     if (loading) {
       return (
         <div className="glass-card p-6 rounded-xl animate-pulse">
@@ -32,8 +42,12 @@ export const KpiCard: React.FC<KpiCardProps> = memo(
     return (
       <div
         onClick={onClick}
+        onKeyDown={handleKeyDown}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        aria-label={onClick ? `${title}: ${typeof value === 'number' ? value.toLocaleString() : value}` : undefined}
         className={`glass-card p-6 rounded-xl flex items-start justify-between transition-all duration-300 group
-        ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}
+        ${onClick ? 'cursor-pointer hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none' : ''}
         ${alert ? 'border border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'hover:border-nesma-secondary/30'}
       `}
       >

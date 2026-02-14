@@ -4,6 +4,15 @@ import { AppError, RequestValidationError } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
 import { Sentry } from '../config/sentry.js';
 
+interface DynamicValidationError extends Error {
+  statusCode: number;
+  fieldErrors?: Record<string, string>;
+}
+
+function isDynamicValidationError(err: unknown): err is DynamicValidationError {
+  return err instanceof Error && 'statusCode' in err;
+}
+
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
   log('error', err.message, { stack: err.stack });
 
@@ -28,12 +37,12 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
   }
 
   // ── DynamicValidationError (422) ──────────────────────────────────────
-  if ('fieldErrors' in err && 'statusCode' in err && (err as any).statusCode === 422) {
+  if (isDynamicValidationError(err) && err.statusCode === 422) {
     res.status(422).json({
       success: false,
       message: err.message,
       code: 'DYNAMIC_VALIDATION_ERROR',
-      errors: (err as any).fieldErrors,
+      errors: err.fieldErrors,
     });
     return;
   }

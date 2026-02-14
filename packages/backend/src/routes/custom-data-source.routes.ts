@@ -10,6 +10,7 @@ import {
   executeCustomDataSource,
 } from '../services/custom-data-source.service.js';
 import { createAuditLog } from '../services/audit.service.js';
+import { logger } from '../config/logger.js';
 
 const router = Router();
 
@@ -50,7 +51,9 @@ router.post('/', requireRole('admin'), async (req, res, next) => {
       newValues: req.body,
       performedById: req.user!.userId,
       ipAddress: req.ip,
-    }).catch(() => {});
+    }).catch(err => {
+      logger.error({ err }, 'Audit log write failed');
+    });
     res.status(201).json({ success: true, data: source });
   } catch (err) {
     next(err);
@@ -68,7 +71,9 @@ router.put('/:id', requireRole('admin'), async (req, res, next) => {
       newValues: req.body,
       performedById: req.user!.userId,
       ipAddress: req.ip,
-    }).catch(() => {});
+    }).catch(err => {
+      logger.error({ err }, 'Audit log write failed');
+    });
     res.json({ success: true, data: source });
   } catch (err) {
     next(err);
@@ -85,7 +90,9 @@ router.delete('/:id', requireRole('admin'), async (req, res, next) => {
       action: 'delete',
       performedById: req.user!.userId,
       ipAddress: req.ip,
-    }).catch(() => {});
+    }).catch(err => {
+      logger.error({ err }, 'Audit log write failed');
+    });
     res.json({ success: true, message: 'Data source deleted' });
   } catch (err) {
     next(err);

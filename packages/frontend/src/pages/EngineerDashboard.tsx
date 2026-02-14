@@ -37,7 +37,7 @@ export const EngineerDashboard: React.FC = () => {
   const mirvQuery = useMirvList({ pageSize: 100 });
   const jobsQuery = useJobOrderList({ pageSize: 100 });
   const projectsQuery = useProjects({ pageSize: 200 });
-  const inventoryQuery = useInventory({ pageSize: 500 });
+  const inventoryQuery = useInventory({ pageSize: 100 });
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJobs = (jobsQuery.data?.data ?? []) as JobOrder[];

@@ -1043,12 +1043,16 @@ async function checkLowStock(): Promise<void> {
 
     if (lowStockItems.length === 0) return;
 
-    // Mark alerts as sent — batch update using raw SQL to avoid N+1
-    const itemWarehousePairs = lowStockItems.map(i => `('${i.item_id}', '${i.warehouse_id}')`).join(', ');
-    await prisma.$executeRawUnsafe(`
-      UPDATE inventory_levels SET alert_sent = true
-      WHERE (item_id, warehouse_id) IN (${itemWarehousePairs})
-    `);
+    // Mark alerts as sent — batch update using Prisma query builder
+    await prisma.inventoryLevel.updateMany({
+      where: {
+        OR: lowStockItems.map(i => ({
+          itemId: i.item_id,
+          warehouseId: i.warehouse_id,
+        })),
+      },
+      data: { alertSent: true },
+    });
 
     // Notify warehouse staff
     const warehouseStaff = await prisma.employee.findMany({
@@ -1056,26 +1060,27 @@ async function checkLowStock(): Promise<void> {
       select: { id: true },
     });
 
-    for (const staff of warehouseStaff) {
-      const isCritical = lowStockItems.some(i => i.min_level !== null && i.qty_on_hand - i.qty_reserved <= i.min_level);
+    const isCritical = lowStockItems.some(i => i.min_level !== null && i.qty_on_hand - i.qty_reserved <= i.min_level);
+    const notificationBody =
+      lowStockItems
+        .slice(0, 5)
+        .map(i => `${i.item_code} at ${i.warehouse_code}: ${(i.qty_on_hand - i.qty_reserved).toFixed(0)} available`)
+        .join(', ') + (lowStockItems.length > 5 ? ` (+${lowStockItems.length - 5} more)` : '');
 
-      await createNotification(
-        {
-          recipientId: staff.id,
-          title: `Low Stock Alert: ${lowStockItems.length} item(s)`,
-          body:
-            lowStockItems
-              .slice(0, 5)
-              .map(
-                i => `${i.item_code} at ${i.warehouse_code}: ${(i.qty_on_hand - i.qty_reserved).toFixed(0)} available`,
-              )
-              .join(', ') + (lowStockItems.length > 5 ? ` (+${lowStockItems.length - 5} more)` : ''),
-          notificationType: isCritical ? 'alert' : 'warning',
-          referenceTable: 'inventory_levels',
-        },
-        io ?? undefined,
-      );
-    }
+    await Promise.all(
+      warehouseStaff.map(staff =>
+        createNotification(
+          {
+            recipientId: staff.id,
+            title: `Low Stock Alert: ${lowStockItems.length} item(s)`,
+            body: notificationBody,
+            notificationType: isCritical ? 'alert' : 'warning',
+            referenceTable: 'inventory_levels',
+          },
+          io ?? undefined,
+        ),
+      ),
+    );
 
     log('warn', `[Scheduler] Low stock: ${lowStockItems.length} item(s) below threshold`);
   } catch (err) {

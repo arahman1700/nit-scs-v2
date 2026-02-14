@@ -26,10 +26,20 @@ interface ChatResult {
 }
 
 // ── Lazy-load Anthropic SDK ────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let anthropicClient: any = null;
+interface AnthropicClient {
+  messages: {
+    create(params: {
+      model: string;
+      max_tokens: number;
+      system: string;
+      messages: Array<{ role: string; content: string }>;
+    }): Promise<{ content: Array<{ type: string; text?: string }> }>;
+  };
+}
 
-async function getAnthropicClient() {
+let anthropicClient: AnthropicClient | null = null;
+
+async function getAnthropicClient(): Promise<AnthropicClient> {
   if (anthropicClient) return anthropicClient;
   // Dynamic import — @anthropic-ai/sdk is an optional peer dependency.
   // We use a variable to prevent TypeScript from resolving the module at compile time.
@@ -40,7 +50,7 @@ async function getAnthropicClient() {
   }>);
   const Anthropic = mod.Anthropic ?? mod.default?.Anthropic;
   if (!Anthropic) throw new Error('Failed to load @anthropic-ai/sdk — make sure it is installed.');
-  anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) as unknown as AnthropicClient;
   return anthropicClient;
 }
 
@@ -114,7 +124,7 @@ export async function chat(
     messages: messages.map(m => ({ role: m.role, content: m.content })),
   });
 
-  const assistantText = (response.content as Array<{ type: string; text?: string }>)
+  const assistantText = response.content
     .filter(c => c.type === 'text' && c.text)
     .map(c => c.text!)
     .join('\n');
@@ -137,9 +147,15 @@ export async function chat(
         finalContent = `I generated a query but it was blocked for safety: ${validation.reason}\n\n${explanation || ''}`;
         generatedQuery = undefined;
       } else {
-        // Execute the query
+        // Execute the query inside a read-only transaction with 5s timeout
         try {
-          resultData = await prisma.$queryRawUnsafe(query);
+          resultData = await prisma.$transaction(
+            async tx => {
+              await tx.$queryRawUnsafe('SET TRANSACTION READ ONLY');
+              return tx.$queryRawUnsafe(query);
+            },
+            { timeout: 5000 },
+          );
           finalContent = explanation || 'Here are the results.';
         } catch (queryErr) {
           logger.warn({ err: queryErr, query }, 'AI query execution failed');

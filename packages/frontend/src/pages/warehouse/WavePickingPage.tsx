@@ -48,7 +48,7 @@ function groupStopsByZone(stops: PickStop[]): Map<string, PickStop[]> {
   for (const stop of stops) {
     const zone = stop.zone || 'Unknown';
     if (!grouped.has(zone)) grouped.set(zone, []);
-    grouped.get(zone)!.push(stop);
+    grouped.get(zone)?.push(stop);
   }
   return grouped;
 }

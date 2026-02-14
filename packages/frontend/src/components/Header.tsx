@@ -6,6 +6,7 @@ import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 import { GlobalSearchDropdown } from '@/components/GlobalSearchDropdown';
 import { useGlobalSearch } from '@/api/hooks/useSearch';
+import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -13,7 +14,7 @@ interface HeaderProps {
   role: UserRole;
 }
 
-export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => {
+export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role: _role }) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -24,8 +25,6 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  void role; // role available for future use
-
   // Debounce search query (300ms)
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
@@ -34,27 +33,8 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
 
   const { data: searchResults = [], isLoading: searchLoading } = useGlobalSearch(debouncedQuery);
 
-  // Close settings dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setSettingsOpen(false);
-      }
-    };
-    if (settingsOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [settingsOpen]);
-
-  // Close search dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    };
-    if (searchOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [searchOpen]);
+  useClickOutside(settingsRef, () => setSettingsOpen(false), settingsOpen);
+  useClickOutside(searchRef, () => setSearchOpen(false), searchOpen);
 
   const handleSearchSelect = (type: string, id: string) => {
     setSearchOpen(false);
@@ -82,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role }) => 
             <input
               type="text"
               placeholder="Search assets, orders..."
+              aria-label="Global search"
               className="bg-transparent border-none outline-none text-sm w-full px-3 placeholder-gray-500 text-white"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}

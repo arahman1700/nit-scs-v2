@@ -4,6 +4,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../types/dto.js';
+import { log } from '../config/logger.js';
 
 const LIST_INCLUDE = {
   supplier: { select: { id: true, supplierName: true, supplierCode: true } },
@@ -248,7 +249,9 @@ export async function deliver(id: string, userId?: string) {
           where: { id: shipment.mrrvId },
           data: { status: 'received' },
         })
-        .catch(() => {});
+        .catch(err => {
+          log('warn', `[Shipment] Failed to update linked GRN ${shipment.mrrvId}`, err);
+        });
     } else if (shipment.destinationWarehouseId && shipment.shipmentLines.length > 0 && userId) {
       // Auto-create draft GRN from shipment lines
       const grnNumber = await generateDocumentNumber('grn');

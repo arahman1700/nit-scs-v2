@@ -40,9 +40,7 @@ import {
 } from '@/api/hooks';
 import { useProjects } from '@/api/hooks';
 import { Link, useNavigate } from 'react-router-dom';
-
-// Nesma Palette for Charts
-const COLORS = ['#2E3192', '#80D1E9', '#0E2841', '#203366', '#B3B3B3'];
+import { CHART_PALETTE, CHART_TOOLTIP_STYLE } from '@/config/chartTheme';
 
 // ── Loading Skeleton Components ────────────────────────────────────────────
 
@@ -95,7 +93,20 @@ const StatCard: React.FC<{
 }> = ({ title, value, icon: Icon, color, label, onClick }) => (
   <div
     onClick={onClick}
-    className={`glass-card p-6 rounded-xl flex items-start justify-between hover:border-nesma-secondary/30 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+    onKeyDown={
+      onClick
+        ? e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClick();
+            }
+          }
+        : undefined
+    }
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    aria-label={onClick ? `${title}: ${value}` : undefined}
+    className={`glass-card p-6 rounded-xl flex items-start justify-between hover:border-nesma-secondary/30 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:scale-[1.02] focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none' : ''}`}
   >
     <div>
       <h3 className="text-3xl font-bold text-white mb-1 group-hover:text-nesma-secondary transition-colors">{value}</h3>
@@ -143,7 +154,16 @@ const SectionCard: React.FC<SectionCardProps> = ({ title, icon: Icon, path, metr
   return (
     <div
       onClick={() => navigate(path)}
-      className="glass-card p-6 rounded-xl cursor-pointer hover:border-nesma-secondary/30 hover:scale-[1.02] transition-all duration-300 group"
+      onKeyDown={e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(path);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${title}`}
+      className="glass-card p-6 rounded-xl cursor-pointer hover:border-nesma-secondary/30 hover:scale-[1.02] transition-all duration-300 group focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-3 bg-gradient-to-br from-nesma-primary to-nesma-dark text-white rounded-xl shadow-lg border border-white/10">
@@ -427,13 +447,8 @@ export const AdminDashboard: React.FC = () => {
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 12, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
                     <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: '#0E2841',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
-                      itemStyle={{ color: '#80D1E9' }}
+                      contentStyle={CHART_TOOLTIP_STYLE.contentStyle}
+                      itemStyle={CHART_TOOLTIP_STYLE.itemStyle}
                       cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                     />
                     <Bar dataKey="in" fill="#34D399" radius={[4, 4, 0, 0]} barSize={20} />
@@ -462,7 +477,7 @@ export const AdminDashboard: React.FC = () => {
                       stroke="none"
                     >
                       {jobTypesData.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={CHART_PALETTE[index % CHART_PALETTE.length]} />
                       ))}
                     </Pie>
                     <Legend
@@ -473,12 +488,8 @@ export const AdminDashboard: React.FC = () => {
                       formatter={value => <span className="text-gray-400 text-xs ml-1">{value}</span>}
                     />
                     <RechartsTooltip
-                      contentStyle={{
-                        backgroundColor: '#0E2841',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        color: '#fff',
-                      }}
+                      contentStyle={CHART_TOOLTIP_STYLE.contentStyle}
+                      itemStyle={CHART_TOOLTIP_STYLE.itemStyle}
                     />
                   </PieChart>
                 </ResponsiveContainer>

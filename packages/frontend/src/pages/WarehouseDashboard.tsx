@@ -22,6 +22,7 @@ import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrvList } from '@/api/hooks/useMrv';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { StatusBadge } from '@/components/StatusBadge';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
@@ -45,27 +46,6 @@ const StatCard: React.FC<{
   </div>
 );
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const colorMap: Record<string, string> = {
-    Approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    Inspected: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    Issued: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    Draft: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
-    'Pending Approval': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    Pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    Rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
-    Completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    'Pending QC': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  };
-  return (
-    <span
-      className={`px-2.5 py-1 rounded-full text-xs font-medium border ${colorMap[status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20'}`}
-    >
-      {status}
-    </span>
-  );
-};
-
 export const WarehouseDashboard: React.FC = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
@@ -77,7 +57,7 @@ export const WarehouseDashboard: React.FC = () => {
   const mrrvQuery = useMrrvList({ pageSize: 100 });
   const mirvQuery = useMirvList({ pageSize: 100 });
   const mrvQuery = useMrvList({ pageSize: 100 });
-  const inventoryQuery = useInventory({ pageSize: 500 });
+  const inventoryQuery = useInventory({ pageSize: 100 });
   const inventoryItems = (inventoryQuery.data?.data ?? []) as InventoryItem[];
 
   const mrrvData = (mrrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;

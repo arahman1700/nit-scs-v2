@@ -4,6 +4,7 @@ import { Plus, X } from 'lucide-react';
 import { KpiCard } from './KpiCard';
 import { SectionTabBar } from './SectionTabBar';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 import type { KpiCardProps } from './KpiCard';
 import type { TabDef } from './SectionTabBar';
 
@@ -54,6 +55,9 @@ export const SectionLandingPage: React.FC<SectionLandingPageProps> = ({
   );
 
   const hasActions = quickActions && quickActions.length > 0;
+
+  // Close FAB menu on Escape key
+  useEscapeKey(() => setFabOpen(false), fabOpen);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -114,7 +118,11 @@ export const SectionLandingPage: React.FC<SectionLandingPageProps> = ({
           {/* Expanded menu */}
           {fabOpen && (
             <>
-              <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setFabOpen(false)} />
+              <div
+                role="presentation"
+                className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                onClick={() => setFabOpen(false)}
+              />
               <div className="absolute bottom-16 right-0 flex flex-col gap-2 items-end mb-2">
                 {quickActions.map((action, i) => {
                   const ActionIcon = action.icon || Plus;
@@ -125,7 +133,7 @@ export const SectionLandingPage: React.FC<SectionLandingPageProps> = ({
                         setFabOpen(false);
                         action.onClick();
                       }}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-[#0a1628] border border-white/10 rounded-xl text-sm text-white shadow-xl animate-fade-in whitespace-nowrap"
+                      className="flex items-center gap-2 px-4 py-2.5 bg-nesma-dark border border-white/10 rounded-xl text-sm text-white shadow-xl animate-fade-in whitespace-nowrap"
                     >
                       <ActionIcon size={16} className="text-nesma-secondary" />
                       {action.label}

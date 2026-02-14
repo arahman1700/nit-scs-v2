@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { X, Filter } from 'lucide-react';
+import { useEscapeKey } from '@/hooks/useEscapeKey';
 
 interface FilterConfig {
   key: string;
@@ -28,19 +28,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   onApply,
   onClear,
 }) => {
+  useEscapeKey(onClose, isOpen);
+
   if (!isOpen) return null;
 
-  const activeCount = Object.values(values).filter(
-    (v) => v !== '' && v !== undefined && v !== null
-  ).length;
+  const activeCount = Object.values(values).filter(v => v !== '' && v !== undefined && v !== null).length;
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" onClick={onClose} />
 
       {/* Panel */}
       <div className="fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col bg-[#0a1628]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right">
@@ -69,7 +66,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-6 space-y-5">
-          {filters.map((filter) => (
+          {filters.map(filter => (
             <div key={filter.key}>
               <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                 {filter.label}
@@ -79,7 +76,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 <input
                   type="text"
                   value={values[filter.key] || ''}
-                  onChange={(e) => onChange(filter.key, e.target.value)}
+                  onChange={e => onChange(filter.key, e.target.value)}
                   placeholder={`Search ${filter.label.toLowerCase()}...`}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:border-nesma-secondary/50 focus:bg-white/10 outline-none transition-all"
                 />
@@ -88,11 +85,11 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               {filter.type === 'select' && (
                 <select
                   value={values[filter.key] || ''}
-                  onChange={(e) => onChange(filter.key, e.target.value)}
+                  onChange={e => onChange(filter.key, e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all appearance-none cursor-pointer"
                 >
                   <option value="">All</option>
-                  {filter.options?.map((opt) => (
+                  {filter.options?.map(opt => (
                     <option key={opt} value={opt}>
                       {opt}
                     </option>
@@ -104,7 +101,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 <input
                   type="date"
                   value={values[filter.key] || ''}
-                  onChange={(e) => onChange(filter.key, e.target.value)}
+                  onChange={e => onChange(filter.key, e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all"
                 />
               )}
@@ -114,18 +111,14 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   <input
                     type="date"
                     value={values[`${filter.key}_from`] || ''}
-                    onChange={(e) =>
-                      onChange(`${filter.key}_from`, e.target.value)
-                    }
+                    onChange={e => onChange(`${filter.key}_from`, e.target.value)}
                     className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all"
                   />
                   <span className="text-gray-500 text-xs font-medium">to</span>
                   <input
                     type="date"
                     value={values[`${filter.key}_to`] || ''}
-                    onChange={(e) =>
-                      onChange(`${filter.key}_to`, e.target.value)
-                    }
+                    onChange={e => onChange(`${filter.key}_to`, e.target.value)}
                     className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all"
                   />
                 </div>
