@@ -32,7 +32,7 @@ export const EmployeeSectionPage: React.FC = () => {
   const navigate = useNavigate();
   const employeesQuery = useEmployees({ pageSize: 1 });
   const employeesFullQuery = useEmployees({ pageSize: 15 });
-  const employeesData = employeesFullQuery.data?.data ?? [];
+  const employeesData = (employeesFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
   const employeesTotal = employeesQuery.data?.meta?.total ?? 0;
 
   const kpis: KpiCardProps[] = [
@@ -79,11 +79,11 @@ export const EmployeeSectionPage: React.FC = () => {
               </thead>
               <tbody>
                 {employeesData.slice(0, 15).map(e => (
-                  <tr key={e.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white font-medium">{e.name || '-'}</td>
-                    <td className="p-4 text-gray-300">{e.department || '-'}</td>
-                    <td className="p-4 text-gray-300">{e.title || '-'}</td>
-                    <td className="p-4 text-gray-300">{e.site || '-'}</td>
+                  <tr key={String(e.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-white font-medium">{String(e.fullName || e.name || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(e.department || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(e.role || e.title || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(e.systemRole || e.site || '-')}</td>
                   </tr>
                 ))}
                 {employeesData.length === 0 && (

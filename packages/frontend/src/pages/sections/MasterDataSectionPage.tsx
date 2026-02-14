@@ -14,6 +14,7 @@ import { SectionLandingPage } from '@/components/SectionLandingPage';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useSuppliers, useItems, useProjects, useEmployees, useWarehouses, useFleet, useGenerators } from '@/api/hooks';
+import { displayStr } from '@/utils/displayStr';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -86,9 +87,9 @@ export const MasterDataSectionPage: React.FC = () => {
   const itemsTotal = itemsQuery.data?.meta?.total ?? 0;
   const projectsTotal = projectsQuery.data?.meta?.total ?? 0;
   const employeesTotal = employeesQuery.data?.meta?.total ?? 0;
-  const warehousesData = warehousesQuery.data?.data ?? [];
-  const fleetData = fleetQuery.data?.data ?? [];
-  const generatorsData = generatorsQuery.data?.data ?? [];
+  const warehousesData = (warehousesQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const fleetData = (fleetQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const generatorsData = (generatorsQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
   const warehousesTotal = warehousesQuery.data?.meta?.total ?? warehousesData.length;
 
   const loading =
@@ -100,10 +101,12 @@ export const MasterDataSectionPage: React.FC = () => {
   const projectsFullQuery = useProjects({ pageSize: 15 });
   const employeesFullQuery = useEmployees({ pageSize: 15 });
 
-  const suppliersData = suppliersFullQuery.data?.data ?? [];
-  const itemsData = itemsFullQuery.data?.data ?? [];
-  const projectsData = projectsFullQuery.data?.data ?? [];
-  const employeesData = employeesFullQuery.data?.data ?? [];
+  // Cast to Record<string, unknown>[] because shared types use idealized field names
+  // (code, name) but API returns Prisma field names (itemCode, supplierName, etc.)
+  const suppliersData = (suppliersFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const itemsData = (itemsFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const projectsData = (projectsFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const employeesData = (employeesFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
 
@@ -209,12 +212,14 @@ export const MasterDataSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {suppliersData.slice(0, 15).map(s => (
-              <tr key={s.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{s.name || '-'}</td>
-                <td className="p-4 text-gray-300">{s.city || '-'}</td>
-                <td className="p-4 text-gray-300">{s.type || '-'}</td>
+              <tr key={String(s.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="p-4 text-white font-medium">{String(s.supplierName || s.name || '-')}</td>
+                <td className="p-4 text-gray-300">{displayStr(s.city) || '-'}</td>
+                <td className="p-4 text-gray-300">
+                  {Array.isArray(s.types) ? s.types.join(', ') : String(s.type || '-')}
+                </td>
                 <td className="p-4">
-                  <StatusBadge status={s.status || 'Active'} />
+                  <StatusBadge status={String(s.status || 'active')} />
                 </td>
               </tr>
             ))}
@@ -252,10 +257,10 @@ export const MasterDataSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {itemsData.slice(0, 15).map(item => (
-              <tr key={item.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{item.code || '-'}</td>
-                <td className="p-4 text-gray-300">{item.name || '-'}</td>
-                <td className="p-4 text-gray-300">{item.category || '-'}</td>
+              <tr key={String(item.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="p-4 text-white font-medium">{String(item.itemCode || item.code || '-')}</td>
+                <td className="p-4 text-gray-300">{String(item.itemDescription || item.name || '-')}</td>
+                <td className="p-4 text-gray-300">{String(item.category || '-')}</td>
               </tr>
             ))}
             {itemsData.length === 0 && (
@@ -294,13 +299,13 @@ export const MasterDataSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {projectsData.slice(0, 15).map(p => (
-              <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{p.name || '-'}</td>
-                <td className="p-4 text-gray-300">{p.client || '-'}</td>
-                <td className="p-4 text-gray-300">{p.region || '-'}</td>
-                <td className="p-4 text-gray-300">{p.manager || '-'}</td>
+              <tr key={String(p.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="p-4 text-white font-medium">{String(p.projectName || p.name || '-')}</td>
+                <td className="p-4 text-gray-300">{String(p.client || '-')}</td>
+                <td className="p-4 text-gray-300">{displayStr(p.region) || '-'}</td>
+                <td className="p-4 text-gray-300">{displayStr(p.projectManager ?? p.manager) || '-'}</td>
                 <td className="p-4">
-                  <StatusBadge status={p.status || 'Active'} />
+                  <StatusBadge status={String(p.status || 'active')} />
                 </td>
               </tr>
             ))}
@@ -339,11 +344,11 @@ export const MasterDataSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {employeesData.slice(0, 15).map(e => (
-              <tr key={e.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{e.name || '-'}</td>
-                <td className="p-4 text-gray-300">{e.department || '-'}</td>
-                <td className="p-4 text-gray-300">{e.title || '-'}</td>
-                <td className="p-4 text-gray-300">{e.site || '-'}</td>
+              <tr key={String(e.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="p-4 text-white font-medium">{String(e.fullName || e.name || '-')}</td>
+                <td className="p-4 text-gray-300">{String(e.department || '-')}</td>
+                <td className="p-4 text-gray-300">{String(e.role || e.title || '-')}</td>
+                <td className="p-4 text-gray-300">{String(e.systemRole || e.site || '-')}</td>
               </tr>
             ))}
             {employeesData.length === 0 && (
@@ -380,10 +385,10 @@ export const MasterDataSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {warehousesData.slice(0, 15).map(w => (
-              <tr key={w.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{w.id}</td>
-                <td className="p-4 text-gray-300">{w.name || '-'}</td>
-                <td className="p-4 text-gray-300">{w.city || '-'}</td>
+              <tr key={String(w.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="p-4 text-white font-medium">{String(w.warehouseCode || w.id).slice(0, 12)}</td>
+                <td className="p-4 text-gray-300">{String(w.warehouseName || w.name || '-')}</td>
+                <td className="p-4 text-gray-300">{displayStr(w.city) || '-'}</td>
               </tr>
             ))}
             {warehousesData.length === 0 && (
@@ -427,12 +432,12 @@ export const MasterDataSectionPage: React.FC = () => {
               </thead>
               <tbody>
                 {fleetData.slice(0, 10).map(f => (
-                  <tr key={f.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white font-medium">{f.plateNumber || '-'}</td>
-                    <td className="p-4 text-gray-300">{f.type || '-'}</td>
-                    <td className="p-4 text-gray-300">{f.category || '-'}</td>
+                  <tr key={String(f.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-white font-medium">{String(f.plateNumber || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(f.type || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(f.category || '-')}</td>
                     <td className="p-4">
-                      <StatusBadge status={f.status || 'Active'} />
+                      <StatusBadge status={String(f.status || 'Active')} />
                     </td>
                   </tr>
                 ))}
@@ -465,12 +470,12 @@ export const MasterDataSectionPage: React.FC = () => {
               </thead>
               <tbody>
                 {generatorsData.slice(0, 10).map(g => (
-                  <tr key={g.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white font-medium">{g.assetId || '-'}</td>
-                    <td className="p-4 text-gray-300">{g.model || '-'}</td>
-                    <td className="p-4 text-gray-300">{g.capacityKva ?? '-'}</td>
+                  <tr key={String(g.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="p-4 text-white font-medium">{String(g.assetId || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(g.model || '-')}</td>
+                    <td className="p-4 text-gray-300">{String(g.capacityKva ?? '-')}</td>
                     <td className="p-4">
-                      <StatusBadge status={g.status || 'Active'} />
+                      <StatusBadge status={String(g.status || 'Active')} />
                     </td>
                   </tr>
                 ))}

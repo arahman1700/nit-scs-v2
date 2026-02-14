@@ -4,7 +4,17 @@ export const displayStr = (val: unknown): string => {
   if (typeof val === 'string') return val;
   if (typeof val === 'object') {
     const obj = val as Record<string, unknown>;
-    return String(obj.supplierName ?? obj.warehouseName ?? obj.projectName ?? obj.fullName ?? obj.name ?? obj.id ?? '');
+    return String(
+      obj.supplierName ??
+        obj.warehouseName ??
+        obj.projectName ??
+        obj.fullName ??
+        obj.regionName ??
+        obj.cityName ??
+        obj.name ??
+        obj.id ??
+        '',
+    );
   }
   return String(val);
 };
