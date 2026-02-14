@@ -5,6 +5,7 @@ import { SectionLandingPage } from '@/components/SectionLandingPage';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useMirvList, useMrfList, useGatePasses, useStockTransfers } from '@/api/hooks';
+import { displayStr } from '@/utils/displayStr';
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -426,10 +427,10 @@ export const IssuingSectionPage: React.FC = () => {
                       {(r.transferDate as string) ?? (r.createdAt as string)?.slice(0, 10) ?? '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-white">
-                      {(r.fromWarehouseName as string) ?? (r.fromWarehouse as string) ?? '-'}
+                      {displayStr(r.fromWarehouseName ?? r.fromWarehouse) || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">
-                      {(r.toWarehouseName as string) ?? (r.toWarehouse as string) ?? '-'}
+                      {displayStr(r.toWarehouseName ?? r.toWarehouse) || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">{(r.itemCount as number) ?? '-'}</td>
                     <td className="px-4 py-3">

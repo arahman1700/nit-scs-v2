@@ -5,6 +5,7 @@ import { useRfimList } from '@/api/hooks/useRfim';
 import { useOsdList } from '@/api/hooks/useOsd';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useParams, useNavigate } from 'react-router-dom';
+import { displayStr } from '@/utils/displayStr';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 type QCTab = 'overview' | 'inspections' | 'osd' | 'incoming';
@@ -317,8 +318,8 @@ export const QCOfficerDashboard: React.FC = () => {
               {allMrrvs.slice(0, 50).map(m => (
                 <tr key={String(m.id)} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-sm text-white">{String(m.id).slice(0, 12)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{String(m.supplier || '-')}</td>
-                  <td className="px-4 py-3 text-sm text-gray-400">{String(m.warehouse || '-')}</td>
+                  <td className="px-4 py-3 text-sm text-gray-300">{displayStr(m.supplier) || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{displayStr(m.warehouse) || '-'}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`text-[10px] px-2 py-0.5 rounded ${m.status === 'Pending QC' ? 'bg-amber-500/20 text-amber-400' : 'bg-white/10 text-gray-300'}`}

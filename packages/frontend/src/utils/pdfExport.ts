@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { displayStr } from './displayStr';
 
 export interface DocumentPdfOptions {
   title: string;
@@ -774,12 +775,12 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         ...common,
         title: 'Goods Receipt Note',
         fields: [
-          { label: 'Supplier', value: String((record as Record<string, unknown>).supplier || record.supplierId || '') },
+          { label: 'Supplier', value: displayStr((record as Record<string, unknown>).supplier || record.supplierId) },
           {
             label: 'Warehouse',
-            value: String((record as Record<string, unknown>).warehouse || record.warehouseId || ''),
+            value: displayStr((record as Record<string, unknown>).warehouse || record.warehouseId),
           },
-          { label: 'Project', value: String((record as Record<string, unknown>).project || record.projectId || '') },
+          { label: 'Project', value: displayStr((record as Record<string, unknown>).project || record.projectId) },
           { label: 'PO Reference', value: String(record.poReference || record.poNumber || '') },
           { label: 'Delivery Note', value: String(record.deliveryNoteNumber || '') },
           { label: 'Total Value', value: record.value ? `${Number(record.value).toLocaleString()} SAR` : '-' },
@@ -791,9 +792,9 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         ...common,
         title: 'Material Issuance',
         fields: [
-          { label: 'Project', value: String(record.project || record.projectId || '') },
-          { label: 'Requester', value: String(record.requester || record.requesterId || '') },
-          { label: 'Warehouse', value: String(record.warehouse || record.warehouseId || '') },
+          { label: 'Project', value: displayStr(record.project || record.projectId) },
+          { label: 'Requester', value: displayStr(record.requester || record.requesterId) },
+          { label: 'Warehouse', value: displayStr(record.warehouse || record.warehouseId) },
           { label: 'Total Value', value: record.value ? `${Number(record.value).toLocaleString()} SAR` : '-' },
           { label: 'Notes', value: String(record.notes || '') },
         ],
@@ -804,8 +805,8 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         title: 'Material Return Note',
         fields: [
           { label: 'Return Type', value: String(record.returnType || '') },
-          { label: 'Project', value: String(record.project || record.projectId || '') },
-          { label: 'Warehouse', value: String(record.warehouse || record.warehouseId || '') },
+          { label: 'Project', value: displayStr(record.project || record.projectId) },
+          { label: 'Warehouse', value: displayStr(record.warehouse || record.warehouseId) },
           { label: 'Notes', value: String(record.notes || '') },
         ],
       };
@@ -815,8 +816,8 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         title: 'Job Order',
         fields: [
           { label: 'Type', value: String(record.type || '') },
-          { label: 'Project', value: String(record.project || record.projectId || '') },
-          { label: 'Requester', value: String(record.requester || record.requesterId || '') },
+          { label: 'Project', value: displayStr(record.project || record.projectId) },
+          { label: 'Requester', value: displayStr(record.requester || record.requesterId) },
           { label: 'Vehicle', value: String(record.vehicle || '') },
           { label: 'Driver', value: String(record.driver || '') },
           { label: 'SLA Status', value: String(record.slaStatus || '') },
@@ -855,7 +856,7 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         fields: [
           { label: 'Type', value: String(record.type || '') },
           { label: 'Linked Document', value: String(record.linkedDocument || '') },
-          { label: 'Warehouse', value: String(record.warehouse || '') },
+          { label: 'Warehouse', value: displayStr(record.warehouse) },
           { label: 'Vehicle Plate', value: String(record.vehiclePlate || '') },
         ],
       };
@@ -864,8 +865,8 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         ...common,
         title: 'Stock Transfer',
         fields: [
-          { label: 'From Warehouse', value: String(record.fromWarehouse || '') },
-          { label: 'To Warehouse', value: String(record.toWarehouse || '') },
+          { label: 'From Warehouse', value: displayStr(record.fromWarehouse) },
+          { label: 'To Warehouse', value: displayStr(record.toWarehouse) },
           { label: 'Notes', value: String(record.notes || '') },
         ],
       };
@@ -874,7 +875,7 @@ export function buildPdfOptions(resourceType: string, record: Record<string, unk
         ...common,
         title: 'Shipment',
         fields: [
-          { label: 'Supplier', value: String(record.supplier || '') },
+          { label: 'Supplier', value: displayStr(record.supplier) },
           { label: 'Description', value: String(record.description || '') },
           { label: 'ETD', value: String(record.etd || '') },
           { label: 'ETA', value: String(record.eta || '') },

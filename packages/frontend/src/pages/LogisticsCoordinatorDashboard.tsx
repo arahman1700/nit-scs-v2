@@ -9,6 +9,7 @@ import { useSLACompliance } from '@/api/hooks/useDashboard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { JobOrder } from '@nit-scs-v2/shared/types';
+import { displayStr } from '@/utils/displayStr';
 
 type LogTab = 'overview' | 'jobs' | 'shipments' | 'gate-passes' | 'customs' | 'receiving';
 const CHART_COLORS = ['#2E3192', '#80D1E9', '#4CAF50', '#FF9800', '#F44336', '#9C27B0', '#00BCD4'];
@@ -239,7 +240,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
                   <tr key={j.id as string} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 text-sm text-white">{String(j.title || j.id)}</td>
                     <td className="px-4 py-3 text-sm text-gray-300">{String(j.type || '-')}</td>
-                    <td className="px-4 py-3 text-sm text-gray-400">{String(j.project || '-')}</td>
+                    <td className="px-4 py-3 text-sm text-gray-400">{displayStr(j.project) || '-'}</td>
                     <td className="px-4 py-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-gray-300">
                         {String(j.status)}
@@ -276,7 +277,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               {allShipments.slice(0, 50).map(s => (
                 <tr key={String(s.id)} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-sm text-white">{String(s.id).slice(0, 12)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{String(s.supplier || '-')}</td>
+                  <td className="px-4 py-3 text-sm text-gray-300">{displayStr(s.supplier) || '-'}</td>
                   <td className="px-4 py-3 text-sm text-gray-400">{String(s.eta || '-')}</td>
                   <td className="px-4 py-3">
                     <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-gray-300">
@@ -350,8 +351,8 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               {allMrrvs.slice(0, 50).map(m => (
                 <tr key={String(m.id)} className="hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3 text-sm text-white">{String(m.id).slice(0, 12)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{String(m.supplier || '-')}</td>
-                  <td className="px-4 py-3 text-sm text-gray-400">{String(m.warehouse || '-')}</td>
+                  <td className="px-4 py-3 text-sm text-gray-300">{displayStr(m.supplier) || '-'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-400">{displayStr(m.warehouse) || '-'}</td>
                   <td className="px-4 py-3">
                     <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-gray-300">
                       {String(m.status)}
