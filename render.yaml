@@ -11,11 +11,6 @@ services:
         fromDatabase:
           name: nit-scs-v2-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: nit-scs-v2-redis
-          type: redis
-          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
