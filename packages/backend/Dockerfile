@@ -43,8 +43,12 @@ COPY packages/backend/data packages/backend/data
 # Copy startup script
 COPY packages/backend/start.sh packages/backend/start.sh
 
+# Create writable directories before switching to non-root
+RUN mkdir -p /app/packages/backend/uploads
+
 # Security: run as non-root
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN chown -R nodejs:nodejs /app/packages/backend/uploads
 USER nodejs
 
 WORKDIR /app/packages/backend

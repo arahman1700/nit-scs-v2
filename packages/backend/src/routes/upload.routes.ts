@@ -12,8 +12,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = join(__dirname, '../../uploads');
 
 // Ensure uploads directory exists
-if (!existsSync(UPLOADS_DIR)) {
-  mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  if (!existsSync(UPLOADS_DIR)) {
+    mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch {
+  // In Docker, the directory is pre-created by the Dockerfile
+  console.warn(`[Upload] Could not create uploads dir at ${UPLOADS_DIR} — using /tmp/uploads fallback`);
 }
 
 // ── Allowed file types with MIME validation ──────────────────────────────
