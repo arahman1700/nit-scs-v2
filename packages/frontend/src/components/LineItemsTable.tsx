@@ -69,8 +69,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
       MATERIAL_CATALOG.filter((m: Record<string, unknown>) => {
         const matchSearch =
           searchTerm === '' ||
-          ((m.itemDescriptionAr as string) ?? (m.nameAr as string) ?? '').includes(searchTerm) ||
-          ((m.itemDescription as string) ?? (m.nameEn as string) ?? '')
+          ((m.itemDescription as string) ?? (m.name as string) ?? '')
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
           ((m.itemCode as string) ?? (m.code as string) ?? '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -83,7 +82,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   const addItemFromCatalog = (catalogItem: MaterialCatalogItem) => {
     const raw = catalogItem as unknown as Record<string, unknown>;
     const code = (raw.itemCode as string) || catalogItem.code;
-    const name = (raw.itemDescription as string) || catalogItem.nameEn;
+    const name = (raw.itemDescription as string) || catalogItem.name;
     const uomObj = raw.uom as Record<string, unknown> | undefined;
     const unitName = (uomObj?.uomCode as string) || catalogItem.unit || 'EA';
     const price = Number(raw.standardCost) || catalogItem.unitPrice || 0;
@@ -117,7 +116,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
   const addItemFromScan = (scannedItem: Record<string, unknown>) => {
     const code = String(scannedItem.itemCode || scannedItem.code || '');
-    const name = String(scannedItem.itemDescription || scannedItem.nameEn || scannedItem.itemName || '');
+    const name = String(scannedItem.itemDescription || scannedItem.name || scannedItem.itemName || '');
     const unit = String(scannedItem.unit || 'Piece');
     const price = Number(scannedItem.unitPrice || 0);
 
@@ -250,7 +249,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
           <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
             {filteredCatalog.map((item: Record<string, unknown>) => {
               const code = (item.itemCode as string) || (item.code as string) || '';
-              const name = (item.itemDescription as string) || (item.nameEn as string) || '';
+              const name = (item.itemDescription as string) || (item.name as string) || '';
               const price = Number(item.standardCost) || (item.unitPrice as number) || 0;
               const uom = item.uom as Record<string, unknown> | undefined;
               const unitLabel = (uom?.uomCode as string) || (item.unit as string) || '';

@@ -31,8 +31,7 @@ export interface VoucherLineItem {
 
 export interface MaterialCatalogItem {
   code: string;
-  nameAr: string;
-  nameEn: string;
+  name: string;
   category: string;
   unit: string;
   unitPrice: number;

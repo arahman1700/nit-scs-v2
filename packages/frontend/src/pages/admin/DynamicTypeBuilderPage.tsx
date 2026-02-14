@@ -466,7 +466,6 @@ export const DynamicTypeBuilderPage: React.FC = () => {
   const [form, setForm] = useState({
     code: '',
     name: '',
-    nameAr: '',
     description: '',
     icon: '',
     category: 'custom',
@@ -494,7 +493,6 @@ export const DynamicTypeBuilderPage: React.FC = () => {
       setForm({
         code: docType.code,
         name: docType.name,
-        nameAr: docType.nameAr ?? '',
         description: docType.description ?? '',
         icon: docType.icon ?? '',
         category: docType.category,
@@ -606,16 +604,6 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className={inputBase}
                 placeholder="Safety Inspection"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Name (Arabic)</label>
-              <input
-                value={form.nameAr}
-                onChange={e => setForm(f => ({ ...f, nameAr: e.target.value }))}
-                className={inputBase}
-                dir="rtl"
-                placeholder="فحص السلامة"
               />
             </div>
             <div>

@@ -11,8 +11,7 @@ vi.mock('@/api/hooks/useMasterData', () => ({
         {
           id: 'item-1',
           code: 'MAT-001',
-          nameEn: 'Steel Pipe',
-          nameAr: 'أنبوب فولاذ',
+          name: 'Steel Pipe',
           unit: 'Meter',
           category: 'Pipes',
           unitPrice: 50,
@@ -20,8 +19,7 @@ vi.mock('@/api/hooks/useMasterData', () => ({
         {
           id: 'item-2',
           code: 'MAT-002',
-          nameEn: 'Cement Bag',
-          nameAr: 'كيس اسمنت',
+          name: 'Cement Bag',
           unit: 'Bag',
           category: 'Cement',
           unitPrice: 25,
