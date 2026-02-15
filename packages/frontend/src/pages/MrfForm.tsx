@@ -119,7 +119,7 @@ export const MrfForm: React.FC = () => {
                     project: String(formData.project ?? ''),
                     requester: currentUserName,
                     requiredDate: new Date().toISOString().split('T')[0],
-                    priority: String(formData.urgency ?? 'Normal'),
+                    priority: String(formData.priority ?? 'medium'),
                     status: 'submitted',
                     items: lineItems.map(li => ({
                       itemCode: li.itemCode ?? '',
@@ -175,16 +175,17 @@ export const MrfForm: React.FC = () => {
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-300 ml-1">
-                  Urgency <span className="text-red-400">*</span>
+                  Priority <span className="text-red-400">*</span>
                 </label>
                 <select
-                  onChange={e => handleChange('urgency', e.target.value)}
+                  onChange={e => handleChange('priority', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                 >
-                  <option value="Normal">Normal</option>
-                  <option value="Urgent">Urgent</option>
-                  <option value="Critical">Critical</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
                 </select>
               </div>
               <div className="flex flex-col gap-2">

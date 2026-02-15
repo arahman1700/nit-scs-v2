@@ -48,15 +48,32 @@ export const GatePassForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(
-      { ...formData, date: formData.date || new Date().toISOString().split('T')[0] },
-      {
-        onSuccess: res => {
-          setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'GP-NEW');
-          setSubmitted(true);
-        },
+
+    // Map frontend field names → Prisma GatePass model field names
+    const warehouseId = warehouses.find(w => (w.name as string) === formData.warehouse)?.id as string | undefined;
+
+    const dateStr = String(formData.date || new Date().toISOString().split('T')[0]);
+    const issueDate = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`;
+
+    const payload: Record<string, unknown> = {
+      passType: formData.type,
+      vehicleNumber: formData.vehiclePlate,
+      driverName: formData.driverName,
+      driverIdNumber: formData.driverIdNumber,
+      destination: formData.destination,
+      warehouseId: warehouseId || formData.warehouse,
+      issueDate,
+      validUntil: formData.validUntil || undefined,
+      notes: formData.notes,
+      mirvId: formData.linkedDocumentType === 'MIRV' ? formData.linkedDocument : undefined,
+    };
+
+    createMutation.mutate(payload, {
+      onSuccess: res => {
+        setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'GP-NEW');
+        setSubmitted(true);
       },
-    );
+    });
   };
 
   const reset = () => {
@@ -247,6 +264,26 @@ export const GatePassForm: React.FC = () => {
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Destination */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-white flex items-center gap-3">
+              <span className="w-1 h-6 bg-nesma-secondary rounded-full shadow-[0_0_8px_rgba(128,209,233,0.6)]"></span>
+              Destination
+            </h3>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-gray-300 ml-1">
+                Destination <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Project site, warehouse location..."
+                onChange={e => handleChange('destination', e.target.value)}
+                required
+                className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
+              />
             </div>
           </div>
 

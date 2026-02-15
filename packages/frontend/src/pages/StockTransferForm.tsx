@@ -35,15 +35,44 @@ export const StockTransferForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(
-      { ...formData, totalValue, lineItems, date: formData.date || new Date().toISOString().split('T')[0] },
-      {
-        onSuccess: res => {
-          setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'ST-NEW');
-          setSubmitted(true);
-        },
+
+    // Map frontend field names → Prisma StockTransfer model field names
+    const transferTypeMap: Record<string, string> = {
+      inter_warehouse: 'warehouse_to_warehouse',
+      inter_project: 'project_to_project',
+    };
+
+    const fromWarehouseId = warehouses.find(w => (w.name as string) === formData.fromWarehouse)?.id as
+      | string
+      | undefined;
+
+    const toWarehouseId = warehouses.find(w => (w.name as string) === formData.toWarehouse)?.id as string | undefined;
+
+    const fromProjectId = projects.find(p => (p.name as string) === formData.fromProject)?.id as string | undefined;
+
+    const toProjectId = projects.find(p => (p.name as string) === formData.toProject)?.id as string | undefined;
+
+    const dateStr = String(formData.date || new Date().toISOString().split('T')[0]);
+    const transferDate = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`;
+
+    const payload: Record<string, unknown> = {
+      transferType: transferTypeMap[String(formData.transferType)] || formData.transferType,
+      fromWarehouseId: fromWarehouseId || formData.fromWarehouse,
+      toWarehouseId: toWarehouseId || formData.toWarehouse,
+      fromProjectId: fromProjectId || undefined,
+      toProjectId: toProjectId || undefined,
+      transferDate,
+      totalValue,
+      lineItems,
+      notes: formData.notes,
+    };
+
+    createMutation.mutate(payload, {
+      onSuccess: res => {
+        setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'ST-NEW');
+        setSubmitted(true);
       },
-    );
+    });
   };
 
   const reset = () => {

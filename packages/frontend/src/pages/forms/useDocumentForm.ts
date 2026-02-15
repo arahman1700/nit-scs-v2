@@ -331,6 +331,22 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       Damaged: 'damaged',
     };
 
+    // ── Form-type-specific field mappings ──
+
+    // MI: Prisma Mirv has no `purpose` field — merge into `notes`
+    if (formType === 'mirv' && formData.purpose) {
+      const purposeText = String(formData.purpose);
+      const notesText = formData.notes ? String(formData.notes) : '';
+      payload.notes = notesText ? `${purposeText}\n\n${notesText}` : purposeText;
+      delete payload.purpose;
+    }
+
+    // DR: Prisma OsdReport expects `reportTypes` (String[]), not `reportType` (String)
+    if (formType === 'osd' && formData.reportType) {
+      payload.reportTypes = [String(formData.reportType)];
+      delete payload.reportType;
+    }
+
     // Map lineItems to the `lines` array format the backend expects
     const mappedLines = lineItems.map(li => ({
       itemId: li.itemId,

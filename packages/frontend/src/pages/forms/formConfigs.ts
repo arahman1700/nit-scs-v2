@@ -547,7 +547,7 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 key: 'priority',
                 label: 'Priority',
                 type: 'select',
-                options: ['Normal', 'Urgent', 'Critical'],
+                options: ['low', 'medium', 'high', 'urgent'],
                 required: true,
               },
               {
@@ -640,6 +640,13 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
           {
             title: 'Transfer Details',
             fields: [
+              {
+                key: 'transferType',
+                label: 'Transfer Type',
+                type: 'select',
+                options: ['warehouse_to_warehouse', 'project_to_project'],
+                required: true,
+              },
               {
                 key: 'sourceWarehouse',
                 label: 'Source Warehouse',
@@ -790,10 +797,18 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
           {
             title: 'Pass Details',
             fields: [
-              { key: 'passType', label: 'Pass Type', type: 'select', options: ['Inbound', 'Outbound'], required: true },
-              { key: 'vehiclePlate', label: 'Vehicle Plate', type: 'text', required: true },
-              { key: 'driverName', label: 'Driver Name', type: 'text' },
-              { key: 'validFrom', label: 'Valid From', type: 'datetime-local', required: true },
+              {
+                key: 'passType',
+                label: 'Pass Type',
+                type: 'select',
+                options: ['Inbound', 'Outbound', 'Transfer'],
+                required: true,
+              },
+              { key: 'vehicleNumber', label: 'Vehicle Plate', type: 'text', required: true },
+              { key: 'driverName', label: 'Driver Name', type: 'text', required: true },
+              { key: 'warehouse', label: 'Warehouse', type: 'select', options: warehouseOptions, required: true },
+              { key: 'destination', label: 'Destination', type: 'text', required: true },
+              { key: 'issueDate', label: 'Issue Date', type: 'datetime-local', required: true },
               { key: 'validUntil', label: 'Valid Until', type: 'datetime-local' },
             ],
           },
@@ -801,7 +816,6 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
             title: 'Reference',
             fields: [
               { key: 'miReference', label: 'MI Reference', type: 'text' },
-              { key: 'joReference', label: 'JO Reference', type: 'text' },
               { key: 'notes', label: 'Notes', type: 'textarea' },
             ],
           },

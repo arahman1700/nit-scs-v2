@@ -702,6 +702,12 @@ model Rfim {
   inspectorId        String?   @map("inspector_id") @db.Uuid
   requestDate        DateTime  @default(now()) @map("request_date") @db.Timestamptz
   inspectionDate     DateTime? @map("inspection_date") @db.Timestamptz
+  /// CHECK: inspection_type IN ('Visual', 'Functional', 'Dimensional', 'Lab Test')
+  inspectionType     String?   @map("inspection_type") @db.VarChar(30)
+  /// CHECK: priority IN ('Normal', 'Urgent', 'Critical')
+  priority           String?   @default("Normal") @map("priority") @db.VarChar(20)
+  itemsDescription   String?   @map("items_description")
+  specifications     String?
   /// CHECK: result IN ('pass', 'fail', 'conditional')
   result             String?   @db.VarChar(20)
   comments           String?
