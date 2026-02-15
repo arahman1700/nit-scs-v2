@@ -17,6 +17,7 @@ uploads/*
 
 # Screenshots (dev/debug artifacts)
 *.png
+!packages/frontend/public/icons/*.png
 
 # Playwright MCP
 .playwright-mcp/

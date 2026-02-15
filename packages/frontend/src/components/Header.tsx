@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Search, Settings } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
@@ -14,7 +14,7 @@ interface HeaderProps {
   role: UserRole;
 }
 
-export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role: _role }) => {
+export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, user, role: _role }) => {
   const navigate = useNavigate();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -45,15 +45,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar, user, role: _role
   return (
     <header className="h-16 md:h-20 flex items-center justify-between px-4 md:px-6 z-30 border-b border-white/10 bg-nesma-dark/80 backdrop-blur-md sticky top-0 shadow-lg">
       <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
-        <button
-          onClick={toggleSidebar}
-          className="p-2 rounded-xl hover:bg-white/10 text-white transition-colors border border-transparent hover:border-white/10 active:scale-95 transform transition-transform lg:hidden"
-          aria-label="Toggle sidebar menu"
-        >
-          <Menu size={24} />
-        </button>
-
-        <span className="lg:hidden font-bold text-lg text-white tracking-wider">NESMA</span>
+        <span className="lg:hidden font-bold text-lg text-white tracking-wider">NIT</span>
 
         {/* Desktop Search */}
         <div className="relative hidden md:block" ref={searchRef}>

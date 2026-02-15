@@ -4,13 +4,17 @@ import { UserRole } from '@nit-scs-v2/shared/types';
 import type { User } from '@nit-scs-v2/shared/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
+import { MobileTabBar } from '@/components/MobileTabBar';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
 import { PwaUpdatePrompt } from '@/components/PwaUpdatePrompt';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useRealtimeSync } from '@/socket/useRealtimeSync';
 import { useCurrentUser } from '@/api/hooks/useAuth';
+import { useNavigation } from '@/api/hooks/useNavigation';
+import { NAVIGATION_LINKS } from '@/config/navigation';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AI_ENABLED } from '@/modules/ai/index';
+import type { NavItem } from '@nit-scs-v2/shared/types';
 
 const AiChatWidget = AI_ENABLED
   ? React.lazy(() => import('@/modules/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
@@ -100,6 +104,11 @@ export const MainLayout: React.FC<{
       }
     : { id: '', name: 'Loading...', email: '', role, avatar: '' };
 
+  // Navigation links for the mobile tab bar
+  const { data: dynamicNav } = useNavigation();
+  const navLinks: NavItem[] =
+    (dynamicNav as NavItem[] | undefined) || (NAVIGATION_LINKS as Record<string, NavItem[]>)[role] || [];
+
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-nesma-dark to-[#051020] text-white font-sans">
       {/* Skip Navigation — Accessibility */}
@@ -140,16 +149,20 @@ export const MainLayout: React.FC<{
         <main
           id="main-content"
           className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 relative scroll-smooth"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
           role="main"
         >
           {/* Background texture (inline SVG noise — no external CDN) */}
           <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none fixed bg-[url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E&quot;)]"></div>
-          <div className="relative z-10 min-h-full pb-10">
+          <div className="relative z-10 min-h-full pb-24 lg:pb-10">
             <Breadcrumbs />
             {children}
           </div>
         </main>
       </div>
+
+      {/* Mobile Bottom Tab Bar */}
+      {isMobile && <MobileTabBar navLinks={navLinks} onMoreClick={toggleSidebar} />}
 
       <PwaInstallPrompt />
       <PwaUpdatePrompt />
