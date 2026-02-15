@@ -523,27 +523,12 @@ async function main() {
   }
   console.log(`  Role Permissions: ${permCount}`);
 
-  // ── Units of Measure ─────────────────────────────────────────────────
-  const uomData = [
-    { uomCode: 'EA', uomName: 'Each', category: 'count' },
-    { uomCode: 'KG', uomName: 'Kilogram', category: 'weight' },
-    { uomCode: 'M', uomName: 'Meter', category: 'length' },
-    { uomCode: 'L', uomName: 'Liter', category: 'volume' },
-    { uomCode: 'SET', uomName: 'Set', category: 'count' },
-    { uomCode: 'BOX', uomName: 'Box', category: 'count' },
-    { uomCode: 'ROLL', uomName: 'Roll', category: 'length' },
-    { uomCode: 'BAG', uomName: 'Bag', category: 'weight' },
-  ];
-  const uoms: Record<string, string> = {};
-  for (const u of uomData) {
-    const rec = await prisma.unitOfMeasure.upsert({
-      where: { uomCode: u.uomCode },
-      update: {},
-      create: u,
-    });
-    uoms[u.uomCode] = rec.id;
+  // ── Build UOM ID lookup (UOMs already seeded above) ─────────────────
+  const uomIdMap: Record<string, string> = {};
+  const allUoms = await prisma.unitOfMeasure.findMany();
+  for (const u of allUoms) {
+    uomIdMap[u.uomCode] = u.id;
   }
-  console.log(`  Units of Measure: ${uomData.length}`);
 
   // ── Suppliers ───────────────────────────────────────────────────────
   const supplierData = [
@@ -569,16 +554,16 @@ async function main() {
 
   // ── Items ───────────────────────────────────────────────────────────
   const itemData = [
-    { itemCode: 'STL-001', itemDescription: 'Steel Rebar 12mm', category: 'construction' as const, uomId: uoms.KG, minStock: 500, standardCost: 3.5 },
-    { itemCode: 'STL-002', itemDescription: 'Steel Plate 6mm', category: 'construction' as const, uomId: uoms.KG, minStock: 200, standardCost: 4.2 },
-    { itemCode: 'ELC-001', itemDescription: 'Power Cable 3x2.5mm', category: 'electrical' as const, uomId: uoms.M, minStock: 1000, standardCost: 8.5 },
-    { itemCode: 'ELC-002', itemDescription: 'Circuit Breaker 32A', category: 'electrical' as const, uomId: uoms.EA, minStock: 50, standardCost: 45 },
-    { itemCode: 'MEC-001', itemDescription: 'Pipe Fitting 2 inch', category: 'mechanical' as const, uomId: uoms.EA, minStock: 100, standardCost: 12 },
-    { itemCode: 'SAF-001', itemDescription: 'Safety Helmet', category: 'safety' as const, uomId: uoms.EA, minStock: 200, standardCost: 25 },
-    { itemCode: 'SAF-002', itemDescription: 'Safety Vest Hi-Vis', category: 'safety' as const, uomId: uoms.EA, minStock: 150, standardCost: 18 },
-    { itemCode: 'CON-001', itemDescription: 'Cement Portland 50kg', category: 'consumables' as const, uomId: uoms.BAG, minStock: 300, standardCost: 22 },
-    { itemCode: 'TOL-001', itemDescription: 'Drill Bit Set HSS', category: 'tools' as const, uomId: uoms.SET, minStock: 20, standardCost: 85 },
-    { itemCode: 'SPR-001', itemDescription: 'Generator Oil Filter', category: 'spare_parts' as const, uomId: uoms.EA, minStock: 30, standardCost: 35 },
+    { itemCode: 'STL-001', itemDescription: 'Steel Rebar 12mm', category: 'construction' as const, uomId: uomIdMap.KG, minStock: 500, standardCost: 3.5 },
+    { itemCode: 'STL-002', itemDescription: 'Steel Plate 6mm', category: 'construction' as const, uomId: uomIdMap.KG, minStock: 200, standardCost: 4.2 },
+    { itemCode: 'ELC-001', itemDescription: 'Power Cable 3x2.5mm', category: 'electrical' as const, uomId: uomIdMap.M, minStock: 1000, standardCost: 8.5 },
+    { itemCode: 'ELC-002', itemDescription: 'Circuit Breaker 32A', category: 'electrical' as const, uomId: uomIdMap.EA, minStock: 50, standardCost: 45 },
+    { itemCode: 'MEC-001', itemDescription: 'Pipe Fitting 2 inch', category: 'mechanical' as const, uomId: uomIdMap.EA, minStock: 100, standardCost: 12 },
+    { itemCode: 'SAF-001', itemDescription: 'Safety Helmet', category: 'safety' as const, uomId: uomIdMap.EA, minStock: 200, standardCost: 25 },
+    { itemCode: 'SAF-002', itemDescription: 'Safety Vest Hi-Vis', category: 'safety' as const, uomId: uomIdMap.EA, minStock: 150, standardCost: 18 },
+    { itemCode: 'CON-001', itemDescription: 'Cement Portland 50kg', category: 'consumables' as const, uomId: uomIdMap.BAG, minStock: 300, standardCost: 22 },
+    { itemCode: 'TOL-001', itemDescription: 'Drill Bit Set HSS', category: 'tools' as const, uomId: uomIdMap.SET, minStock: 20, standardCost: 85 },
+    { itemCode: 'SPR-001', itemDescription: 'Generator Oil Filter', category: 'spare_parts' as const, uomId: uomIdMap.EA, minStock: 30, standardCost: 35 },
   ];
   for (const item of itemData) {
     await prisma.item.upsert({ where: { itemCode: item.itemCode }, update: {}, create: item });
