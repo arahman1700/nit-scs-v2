@@ -111,7 +111,7 @@ export const {
   useCreate: useCreateUom,
   useUpdate: useUpdateUom,
   useRemove: useDeleteUom,
-} = createResourceHooks<{ id: string; name: string; symbol: string }>('/uoms', 'uoms');
+} = createResourceHooks<{ id: string; uomCode: string; uomName: string; category?: string }>('/uoms', 'uoms');
 
 export const {
   useList: useWarehouseTypes,

@@ -49,10 +49,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   };
   const MATERIAL_CATALOG = (itemsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
   const uomsQuery = useUoms({ pageSize: 100 });
-  const UNIT_OPTIONS = (uomsQuery.data?.data ?? []).map(
-    (u: Record<string, unknown>) =>
-      (u.uomName as string) || (u.name as string) || (u.uomCode as string) || (u.symbol as string) || '',
-  );
+  const UNIT_OPTIONS = (uomsQuery.data?.data ?? []).map(u => u.uomName || u.uomCode);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showCatalog, setShowCatalog] = useState(false);

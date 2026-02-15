@@ -139,6 +139,7 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'AI Insights', path: '/admin/ai-insights' },
         { label: '---', type: 'divider' },
         { label: 'Labor Dashboard', path: '/admin/dashboards/labor' },
+        { label: 'Exceptions Dashboard', path: '/admin/dashboards/exceptions' },
         { label: '---', type: 'divider' },
         { label: 'Features Catalog', path: '/admin/features' },
         { label: 'ROI Calculator', path: '/admin/roi-calculator' },

@@ -114,7 +114,6 @@ describe('custom-fields.service', () => {
         entityType: 'grn',
         fieldKey: 'customNote',
         label: 'Custom Note',
-        labelAr: 'ملاحظة مخصصة',
         fieldType: 'text',
         options: ['Option A', 'Option B'],
         isRequired: true,
@@ -132,7 +131,6 @@ describe('custom-fields.service', () => {
           entityType: 'grn',
           fieldKey: 'customNote',
           label: 'Custom Note',
-          labelAr: 'ملاحظة مخصصة',
           fieldType: 'text',
           options: ['Option A', 'Option B'],
           isRequired: true,
@@ -315,14 +313,14 @@ describe('custom-fields.service', () => {
       });
     });
 
-    it('should include labelAr when provided', async () => {
+    it('should update label when provided', async () => {
       mockPrisma.customFieldDefinition.update.mockResolvedValue({ id: 'def-1' });
 
-      await updateFieldDefinition('def-1', { labelAr: 'تسمية عربية' });
+      await updateFieldDefinition('def-1', { label: 'Updated Label' });
 
       expect(mockPrisma.customFieldDefinition.update).toHaveBeenCalledWith({
         where: { id: 'def-1' },
-        data: { labelAr: 'تسمية عربية' },
+        data: { label: 'Updated Label' },
       });
     });
   });

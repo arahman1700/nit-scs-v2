@@ -93,7 +93,7 @@ export async function create(headerData: Omit<MrrvCreateDto, 'lines'>, lines: Mr
         receiveDate: new Date(headerData.receiveDate),
         invoiceNumber: headerData.invoiceNumber ?? null,
         deliveryNote: headerData.deliveryNote ?? null,
-        rfimRequired: (headerData as any).qciRequired ?? (headerData as any).rfimRequired ?? false,
+        rfimRequired: headerData.qciRequired ?? false,
         hasOsd,
         totalValue,
         status: 'draft',

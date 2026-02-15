@@ -25,7 +25,6 @@ export async function createFieldDefinition(data: {
   entityType: string;
   fieldKey: string;
   label: string;
-  labelAr?: string;
   fieldType: string;
   options?: unknown;
   isRequired?: boolean;
@@ -37,7 +36,6 @@ export async function createFieldDefinition(data: {
       entityType: data.entityType,
       fieldKey: data.fieldKey,
       label: data.label,
-      labelAr: data.labelAr,
       fieldType: data.fieldType,
       options: data.options ? (data.options as Prisma.InputJsonValue) : Prisma.JsonNull,
       isRequired: data.isRequired ?? false,
@@ -51,7 +49,6 @@ export async function updateFieldDefinition(
   id: string,
   data: {
     label?: string;
-    labelAr?: string;
     fieldType?: string;
     options?: unknown;
     isRequired?: boolean;
@@ -63,7 +60,6 @@ export async function updateFieldDefinition(
     where: { id },
     data: {
       ...(data.label !== undefined && { label: data.label }),
-      ...(data.labelAr !== undefined && { labelAr: data.labelAr }),
       ...(data.fieldType !== undefined && { fieldType: data.fieldType }),
       ...(data.options !== undefined && {
         options: data.options ? (data.options as Prisma.InputJsonValue) : Prisma.JsonNull,

@@ -36,7 +36,6 @@ export interface UpdateDocumentTypeInput {
 export interface FieldDefinitionInput {
   fieldKey: string;
   label: string;
-  labelAr?: string;
   fieldType: string;
   options?: unknown[];
   isRequired?: boolean;
@@ -200,20 +199,19 @@ export async function addField(documentTypeId: string, input: FieldDefinitionInp
       documentTypeId,
       fieldKey: input.fieldKey,
       label: input.label,
-      labelAr: input.labelAr,
       fieldType: input.fieldType,
-      options: input.options as any,
+      options: (input.options as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       isRequired: input.isRequired ?? false,
       showInGrid: input.showInGrid ?? false,
       showInForm: input.showInForm ?? true,
       sectionName: input.sectionName,
       sortOrder: input.sortOrder,
-      validationRules: input.validationRules as any,
+      validationRules: (input.validationRules as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       defaultValue: input.defaultValue,
       colSpan: input.colSpan ?? 2,
       isLineItem: input.isLineItem ?? false,
       isReadOnly: input.isReadOnly ?? false,
-      conditionalDisplay: input.conditionalDisplay as any,
+      conditionalDisplay: (input.conditionalDisplay as Prisma.InputJsonValue) ?? Prisma.JsonNull,
     },
   });
 }
@@ -226,20 +224,19 @@ export async function updateField(fieldId: string, input: Partial<FieldDefinitio
     where: { id: fieldId },
     data: {
       label: input.label,
-      labelAr: input.labelAr,
       fieldType: input.fieldType,
-      options: input.options as any,
+      options: (input.options as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       isRequired: input.isRequired,
       showInGrid: input.showInGrid,
       showInForm: input.showInForm,
       sectionName: input.sectionName,
       sortOrder: input.sortOrder,
-      validationRules: input.validationRules as any,
+      validationRules: (input.validationRules as Prisma.InputJsonValue) ?? Prisma.JsonNull,
       defaultValue: input.defaultValue,
       colSpan: input.colSpan,
       isLineItem: input.isLineItem,
       isReadOnly: input.isReadOnly,
-      conditionalDisplay: input.conditionalDisplay as any,
+      conditionalDisplay: (input.conditionalDisplay as Prisma.InputJsonValue) ?? Prisma.JsonNull,
     },
   });
 }

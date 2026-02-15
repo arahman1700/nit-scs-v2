@@ -83,7 +83,7 @@ export async function create(headerData: Omit<OsdCreateDto, 'lines'>, lines: Osd
     return tx.osdReport.create({
       data: {
         osdNumber,
-        mrrvId: (headerData as any).grnId ?? (headerData as any).mrrvId ?? null,
+        mrrvId: headerData.grnId,
         poNumber: headerData.poNumber ?? null,
         supplierId: headerData.supplierId ?? null,
         warehouseId: headerData.warehouseId ?? null,
@@ -97,7 +97,7 @@ export async function create(headerData: Omit<OsdCreateDto, 'lines'>, lines: Osd
           create: lines.map(line => ({
             itemId: line.itemId,
             uomId: line.uomId,
-            mrrvLineId: (line as any).grnLineId ?? (line as any).mrrvLineId ?? null,
+            mrrvLineId: null,
             qtyInvoice: line.qtyInvoice,
             qtyReceived: line.qtyReceived,
             qtyDamaged: line.qtyDamaged ?? 0,
