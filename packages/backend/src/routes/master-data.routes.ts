@@ -21,6 +21,7 @@ router.use(
     createSchema: s.regionSchema,
     updateSchema: s.regionSchema.partial(),
     searchFields: ['regionName', 'regionNameAr'],
+    defaultSort: 'regionName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -34,6 +35,7 @@ router.use(
     updateSchema: s.citySchema.partial(),
     searchFields: ['cityName', 'cityNameAr'],
     includes: { region: true },
+    defaultSort: 'cityName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -47,6 +49,7 @@ router.use(
     updateSchema: s.portSchema.partial(),
     searchFields: ['portName', 'portCode'],
     includes: { city: true },
+    defaultSort: 'portName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -59,6 +62,7 @@ router.use(
     createSchema: s.uomSchema,
     updateSchema: s.uomSchema.partial(),
     searchFields: ['uomCode', 'uomName'],
+    defaultSort: 'uomCode',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -71,6 +75,7 @@ router.use(
     createSchema: s.warehouseTypeSchema,
     updateSchema: s.warehouseTypeSchema.partial(),
     searchFields: ['typeName'],
+    defaultSort: 'typeName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -83,6 +88,7 @@ router.use(
     createSchema: s.equipmentCategorySchema,
     updateSchema: s.equipmentCategorySchema.partial(),
     searchFields: ['categoryName'],
+    defaultSort: 'categoryName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -96,6 +102,7 @@ router.use(
     updateSchema: s.equipmentTypeSchema.partial(),
     searchFields: ['typeName'],
     includes: { category: true },
+    defaultSort: 'typeName',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
