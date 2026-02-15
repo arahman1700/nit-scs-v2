@@ -110,7 +110,8 @@ async function main() {
     { uomCode: 'FT', uomName: 'Foot', uomNameAr: 'قدم', category: 'length' },
   ];
   for (const u of uoms) {
-    await prisma.unitOfMeasure.create({ data: u }).catch(() => null);
+    await prisma.unitOfMeasure.upsert({ where: { uomCode: u.uomCode }, update: {}, create: u })
+      .catch((e: unknown) => console.error(`  UOM ${u.uomCode} failed:`, e));
   }
   console.log(`  UOMs: ${uoms.length}`);
 
@@ -543,9 +544,9 @@ async function main() {
 
   // ── Projects ────────────────────────────────────────────────────────
   const projectData = [
-    { projectCode: 'PRJ-001', projectName: 'NEOM Infrastructure Phase 1', client: 'NEOM', status: 'active' as const, managerId: admin.id },
-    { projectCode: 'PRJ-002', projectName: 'Riyadh Metro Station 7', client: 'RDA', status: 'active' as const, managerId: admin.id },
-    { projectCode: 'PRJ-003', projectName: 'Jeddah Tower Utilities', client: 'JEC', status: 'active' as const, managerId: admin.id },
+    { projectCode: 'PRJ-001', projectName: 'NEOM Infrastructure Phase 1', client: 'NEOM', status: 'active' as const, projectManagerId: admin.id },
+    { projectCode: 'PRJ-002', projectName: 'Riyadh Metro Station 7', client: 'RDA', status: 'active' as const, projectManagerId: admin.id },
+    { projectCode: 'PRJ-003', projectName: 'Jeddah Tower Utilities', client: 'JEC', status: 'active' as const, projectManagerId: admin.id },
   ];
   for (const p of projectData) {
     await prisma.project.upsert({ where: { projectCode: p.projectCode }, update: {}, create: p });
@@ -566,7 +567,9 @@ async function main() {
     { itemCode: 'SPR-001', itemDescription: 'Generator Oil Filter', category: 'spare_parts' as const, uomId: uomIdMap.EA, minStock: 30, standardCost: 35 },
   ];
   for (const item of itemData) {
-    await prisma.item.upsert({ where: { itemCode: item.itemCode }, update: {}, create: item });
+    if (!item.uomId) { console.warn(`  Skipping item ${item.itemCode}: no UOM ID`); continue; }
+    await prisma.item.upsert({ where: { itemCode: item.itemCode }, update: {}, create: item })
+      .catch((e: unknown) => console.error(`  Item ${item.itemCode} failed:`, e));
   }
   console.log(`  Items: ${itemData.length}`);
 
