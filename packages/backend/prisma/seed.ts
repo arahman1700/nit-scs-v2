@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { seedSemanticLayer } from './seed-semantic-layer.js';
 
 const prisma = new PrismaClient();
 
@@ -521,6 +522,9 @@ async function main() {
     }
   }
   console.log(`  Role Permissions: ${permCount}`);
+
+  // ── Semantic Analytics Layer ─────────────────────────────────────────
+  await seedSemanticLayer(prisma);
 
   console.log('\nSeed completed successfully.');
 }

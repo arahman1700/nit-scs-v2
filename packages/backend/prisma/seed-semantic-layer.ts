@@ -5,8 +5,6 @@
  */
 import { PrismaClient, Prisma } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
 interface MeasureSeed {
   key: string;
   name: string;
@@ -205,7 +203,8 @@ const DIMENSIONS: DimensionSeed[] = [
   },
 ];
 
-export async function seedSemanticLayer() {
+export async function seedSemanticLayer(externalPrisma?: PrismaClient) {
+  const prisma = externalPrisma ?? new PrismaClient();
   console.log('Seeding semantic measures...');
 
   for (const m of MEASURES) {
@@ -272,7 +271,8 @@ export async function seedSemanticLayer() {
 
 // Allow standalone execution
 if (process.argv[1]?.endsWith('seed-semantic-layer.ts') || process.argv[1]?.endsWith('seed-semantic-layer.js')) {
-  seedSemanticLayer()
+  const prisma = new PrismaClient();
+  seedSemanticLayer(prisma)
     .then(() => prisma.$disconnect())
     .catch(e => {
       console.error(e);
