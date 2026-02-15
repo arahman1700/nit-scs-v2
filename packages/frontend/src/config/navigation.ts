@@ -5,7 +5,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
   [UserRole.ADMIN]: [
     // ── 1. Dashboard ──
     { label: 'Dashboard', path: '/admin' },
-    { label: 'Exceptions', path: '/admin/dashboards/exceptions' },
 
     // ── 2. Warehouses & Stores ──
     {
