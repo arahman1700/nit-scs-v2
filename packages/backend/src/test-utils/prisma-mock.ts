@@ -104,6 +104,20 @@ export interface PrismaMock {
   tool: PrismaModelMock;
   toolIssue: PrismaModelMock;
   storekeeperHandover: PrismaModelMock;
+  laborStandard: PrismaModelMock;
+  navigationOverride: PrismaModelMock;
+  dynamicDocumentType: PrismaModelMock;
+  dynamicDocumentField: PrismaModelMock;
+  dynamicDocument: PrismaModelMock;
+  semanticMeasure: PrismaModelMock;
+  semanticDimension: PrismaModelMock;
+  customDataSource: PrismaModelMock;
+  customFieldDefinition: PrismaModelMock;
+  customFieldValue: PrismaModelMock;
+  workflow: PrismaModelMock;
+  workflowRule: PrismaModelMock;
+  workflowExecutionLog: PrismaModelMock;
+  surplusDeclaration: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -179,6 +193,20 @@ export function createPrismaMock(): PrismaMock {
     tool: createModelMock(),
     toolIssue: createModelMock(),
     storekeeperHandover: createModelMock(),
+    laborStandard: createModelMock(),
+    navigationOverride: createModelMock(),
+    dynamicDocumentType: createModelMock(),
+    dynamicDocumentField: createModelMock(),
+    dynamicDocument: createModelMock(),
+    semanticMeasure: createModelMock(),
+    semanticDimension: createModelMock(),
+    customDataSource: createModelMock(),
+    customFieldDefinition: createModelMock(),
+    customFieldValue: createModelMock(),
+    workflow: createModelMock(),
+    workflowRule: createModelMock(),
+    workflowExecutionLog: createModelMock(),
+    surplusDeclaration: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),

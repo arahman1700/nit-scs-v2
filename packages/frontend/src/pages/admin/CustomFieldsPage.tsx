@@ -42,7 +42,6 @@ const EMPTY_FIELD: CreateFieldDefinitionInput = {
   entityType: '',
   fieldKey: '',
   label: '',
-  labelAr: '',
   fieldType: 'text',
   options: [],
   validationRules: {},
@@ -74,7 +73,6 @@ export function CustomFieldsPage() {
       entityType: f.entityType,
       fieldKey: f.fieldKey,
       label: f.label,
-      labelAr: f.labelAr,
       fieldType: f.fieldType,
       options: f.options ?? [],
       validationRules: f.validationRules ?? {},
@@ -237,24 +235,13 @@ export function CustomFieldsPage() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">Label (EN)</label>
-                  <input
-                    className="input-field w-full"
-                    value={editing.label}
-                    onChange={e => setEditing(p => ({ ...p, label: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">Label (AR)</label>
-                  <input
-                    className="input-field w-full"
-                    value={editing.labelAr ?? ''}
-                    onChange={e => setEditing(p => ({ ...p, labelAr: e.target.value }))}
-                    dir="rtl"
-                  />
-                </div>
+              <div>
+                <label className="text-sm text-gray-300 block mb-1">Label</label>
+                <input
+                  className="input-field w-full"
+                  value={editing.label}
+                  onChange={e => setEditing(p => ({ ...p, label: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="text-sm text-gray-300 block mb-1">Sort Order</label>

@@ -7,7 +7,6 @@ import type { ApiResponse } from '../types';
 export interface WorkflowTemplate {
   id: string;
   name: string;
-  nameAr?: string;
   description?: string;
   category: string;
   source: string;

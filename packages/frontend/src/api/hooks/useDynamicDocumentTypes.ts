@@ -8,7 +8,6 @@ export interface DynamicDocumentType {
   id: string;
   code: string;
   name: string;
-  nameAr?: string;
   description?: string;
   icon?: string;
   category: string;
@@ -35,9 +34,8 @@ export interface FieldDefinition {
   documentTypeId: string;
   fieldKey: string;
   label: string;
-  labelAr?: string;
   fieldType: string;
-  options?: Array<{ value: string; label: string; labelAr?: string }>;
+  options?: Array<{ value: string; label: string }>;
   isRequired: boolean;
   showInGrid: boolean;
   showInForm: boolean;
@@ -70,9 +68,9 @@ export function useActiveDynamicTypes() {
     queryKey: ['dynamic-types', 'active'],
     queryFn: async () => {
       const { data } =
-        await apiClient.get<
-          ApiResponse<Array<{ code: string; name: string; nameAr?: string; icon?: string; category: string }>>
-        >('/dynamic-types/active');
+        await apiClient.get<ApiResponse<Array<{ code: string; name: string; icon?: string; category: string }>>>(
+          '/dynamic-types/active',
+        );
       return data;
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes

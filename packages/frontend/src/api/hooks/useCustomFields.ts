@@ -9,7 +9,6 @@ export interface CustomFieldDefinition {
   entityType: string;
   fieldKey: string;
   label: string;
-  labelAr?: string;
   fieldType: 'text' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'email' | 'url' | 'phone' | 'currency';
   options?: Array<{ value: string; label: string }>;
   validationRules?: Record<string, unknown>;
