@@ -24,7 +24,7 @@ services:
       - key: PORT
         value: 4000
       - key: CORS_ORIGIN
-        value: 'https://nit-scs-v2.onrender.com'
+        value: 'https://nit-scs.onrender.com'
 
 databases:
   - name: nit-scs-v2-db
