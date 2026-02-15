@@ -5,7 +5,6 @@ import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useCreateGatePass } from '@/api/hooks/useGatePasses';
 import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 
@@ -20,7 +19,7 @@ export const GatePassForm: React.FC = () => {
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const mirvData = (mirvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
   const mrrvData = (mrrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
-  const warehouses = (warehouseQuery.data?.data ?? []) as Warehouse[];
+  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const createMutation = useCreateGatePass();
 
@@ -49,9 +48,6 @@ export const GatePassForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Map frontend field names → Prisma GatePass model field names
-    const warehouseId = warehouses.find(w => (w.name as string) === formData.warehouse)?.id as string | undefined;
-
     const dateStr = String(formData.date || new Date().toISOString().split('T')[0]);
     const issueDate = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`;
 
@@ -61,7 +57,7 @@ export const GatePassForm: React.FC = () => {
       driverName: formData.driverName,
       driverIdNumber: formData.driverIdNumber,
       destination: formData.destination,
-      warehouseId: warehouseId || formData.warehouse,
+      warehouseId: formData.warehouse || undefined,
       issueDate,
       validUntil: formData.validUntil || undefined,
       notes: formData.notes,
@@ -191,8 +187,8 @@ export const GatePassForm: React.FC = () => {
                 >
                   <option value="">Select...</option>
                   {warehouses.map(w => (
-                    <option key={w.id as string} value={w.name as string}>
-                      {w.name as string}
+                    <option key={w.id as string} value={w.id as string}>
+                      {displayStr(w)}
                     </option>
                   ))}
                 </select>

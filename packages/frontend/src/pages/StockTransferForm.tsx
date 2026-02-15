@@ -6,8 +6,8 @@ import { LineItemsTable } from '@/components/LineItemsTable';
 import { ExportButton } from '@/components/ExportButton';
 import { useCreateStockTransfer } from '@/api/hooks/useStockTransfers';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
-import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { displayStr } from '@/utils/displayStr';
 import { generateWtPdf } from '@/utils/pdfExport';
 
 export const StockTransferForm: React.FC = () => {
@@ -20,8 +20,8 @@ export const StockTransferForm: React.FC = () => {
   const createMutation = useCreateStockTransfer();
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
-  const warehouses = (warehouseQuery.data?.data ?? []) as Warehouse[];
-  const projects = (projectQuery.data?.data ?? []) as Project[];
+  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const projects = (projectQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('stock-transfer'), []);
@@ -42,25 +42,15 @@ export const StockTransferForm: React.FC = () => {
       inter_project: 'project_to_project',
     };
 
-    const fromWarehouseId = warehouses.find(w => (w.name as string) === formData.fromWarehouse)?.id as
-      | string
-      | undefined;
-
-    const toWarehouseId = warehouses.find(w => (w.name as string) === formData.toWarehouse)?.id as string | undefined;
-
-    const fromProjectId = projects.find(p => (p.name as string) === formData.fromProject)?.id as string | undefined;
-
-    const toProjectId = projects.find(p => (p.name as string) === formData.toProject)?.id as string | undefined;
-
     const dateStr = String(formData.date || new Date().toISOString().split('T')[0]);
     const transferDate = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`;
 
     const payload: Record<string, unknown> = {
       transferType: transferTypeMap[String(formData.transferType)] || formData.transferType,
-      fromWarehouseId: fromWarehouseId || formData.fromWarehouse,
-      toWarehouseId: toWarehouseId || formData.toWarehouse,
-      fromProjectId: fromProjectId || undefined,
-      toProjectId: toProjectId || undefined,
+      fromWarehouseId: formData.fromWarehouse || undefined,
+      toWarehouseId: formData.toWarehouse || undefined,
+      fromProjectId: formData.fromProject || undefined,
+      toProjectId: formData.toProject || undefined,
       transferDate,
       totalValue,
       lineItems,
@@ -204,8 +194,8 @@ export const StockTransferForm: React.FC = () => {
                 >
                   <option value="">Select...</option>
                   {warehouses.map(w => (
-                    <option key={w.id as string} value={w.name as string}>
-                      {w.name as string}
+                    <option key={w.id as string} value={w.id as string}>
+                      {displayStr(w)}
                     </option>
                   ))}
                 </select>
@@ -221,8 +211,8 @@ export const StockTransferForm: React.FC = () => {
                 >
                   <option value="">Select...</option>
                   {warehouses.map(w => (
-                    <option key={w.id as string} value={w.name as string}>
-                      {w.name as string}
+                    <option key={w.id as string} value={w.id as string}>
+                      {displayStr(w)}
                     </option>
                   ))}
                 </select>
@@ -237,8 +227,8 @@ export const StockTransferForm: React.FC = () => {
                     >
                       <option value="">Select...</option>
                       {projects.map(p => (
-                        <option key={p.id as string} value={p.name as string}>
-                          {p.name as string}
+                        <option key={p.id as string} value={p.id as string}>
+                          {displayStr(p)}
                         </option>
                       ))}
                     </select>
@@ -251,8 +241,8 @@ export const StockTransferForm: React.FC = () => {
                     >
                       <option value="">Select...</option>
                       {projects.map(p => (
-                        <option key={p.id as string} value={p.name as string}>
-                          {p.name as string}
+                        <option key={p.id as string} value={p.id as string}>
+                          {displayStr(p)}
                         </option>
                       ))}
                     </select>

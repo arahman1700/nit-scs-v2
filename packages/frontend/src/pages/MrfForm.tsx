@@ -7,8 +7,8 @@ import { ExportButton } from '@/components/ExportButton';
 import { useCreateMrf } from '@/api/hooks/useMrf';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { useCurrentUser } from '@/api/hooks/useAuth';
-import type { Warehouse, Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { displayStr } from '@/utils/displayStr';
 import { getRequiredApprovalLevel } from '@nit-scs-v2/shared/permissions';
 import { generateMrPdf } from '@/utils/pdfExport';
 
@@ -22,8 +22,8 @@ export const MrfForm: React.FC = () => {
   const currentUserName = meQuery.data?.data?.fullName ?? '';
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
-  const warehouses = (warehouseQuery.data?.data ?? []) as Warehouse[];
-  const projects = (projectQuery.data?.data ?? []) as Project[];
+  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const projects = (projectQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('mrf'), []);
@@ -153,8 +153,8 @@ export const MrfForm: React.FC = () => {
                 >
                   <option value="">Select Project...</option>
                   {projects.map(p => (
-                    <option key={p.id as string} value={p.name as string}>
-                      {p.name as string}
+                    <option key={p.id as string} value={p.id as string}>
+                      {displayStr(p)}
                     </option>
                   ))}
                 </select>
@@ -167,8 +167,8 @@ export const MrfForm: React.FC = () => {
                 >
                   <option value="">Auto-select best</option>
                   {warehouses.map(w => (
-                    <option key={w.id as string} value={w.name as string}>
-                      {w.name as string}
+                    <option key={w.id as string} value={w.id as string}>
+                      {displayStr(w)}
                     </option>
                   ))}
                 </select>
