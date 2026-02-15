@@ -523,6 +523,68 @@ async function main() {
   }
   console.log(`  Role Permissions: ${permCount}`);
 
+  // ── Units of Measure ─────────────────────────────────────────────────
+  const uomData = [
+    { uomCode: 'EA', uomName: 'Each', category: 'count' },
+    { uomCode: 'KG', uomName: 'Kilogram', category: 'weight' },
+    { uomCode: 'M', uomName: 'Meter', category: 'length' },
+    { uomCode: 'L', uomName: 'Liter', category: 'volume' },
+    { uomCode: 'SET', uomName: 'Set', category: 'count' },
+    { uomCode: 'BOX', uomName: 'Box', category: 'count' },
+    { uomCode: 'ROLL', uomName: 'Roll', category: 'length' },
+    { uomCode: 'BAG', uomName: 'Bag', category: 'weight' },
+  ];
+  const uoms: Record<string, string> = {};
+  for (const u of uomData) {
+    const rec = await prisma.unitOfMeasure.upsert({
+      where: { uomCode: u.uomCode },
+      update: {},
+      create: u,
+    });
+    uoms[u.uomCode] = rec.id;
+  }
+  console.log(`  Units of Measure: ${uomData.length}`);
+
+  // ── Suppliers ───────────────────────────────────────────────────────
+  const supplierData = [
+    { supplierCode: 'SUP-001', supplierName: 'Al-Rajhi Steel', types: ['materials'], contactPerson: 'Faisal Al-Rajhi', phone: '+966501234567', email: 'faisal@alrajhisteel.sa', status: 'active' as const },
+    { supplierCode: 'SUP-002', supplierName: 'Saudi Cables Co', types: ['electrical'], contactPerson: 'Omar Saudi', phone: '+966509876543', email: 'omar@saudicables.sa', status: 'active' as const },
+    { supplierCode: 'SUP-003', supplierName: 'Gulf Safety Equipment', types: ['safety'], contactPerson: 'Tariq Gulf', phone: '+966507771234', email: 'tariq@gulfsafety.sa', status: 'active' as const },
+  ];
+  for (const s of supplierData) {
+    await prisma.supplier.upsert({ where: { supplierCode: s.supplierCode }, update: {}, create: s });
+  }
+  console.log(`  Suppliers: ${supplierData.length}`);
+
+  // ── Projects ────────────────────────────────────────────────────────
+  const projectData = [
+    { projectCode: 'PRJ-001', projectName: 'NEOM Infrastructure Phase 1', client: 'NEOM', status: 'active' as const, managerId: admin.id },
+    { projectCode: 'PRJ-002', projectName: 'Riyadh Metro Station 7', client: 'RDA', status: 'active' as const, managerId: admin.id },
+    { projectCode: 'PRJ-003', projectName: 'Jeddah Tower Utilities', client: 'JEC', status: 'active' as const, managerId: admin.id },
+  ];
+  for (const p of projectData) {
+    await prisma.project.upsert({ where: { projectCode: p.projectCode }, update: {}, create: p });
+  }
+  console.log(`  Projects: ${projectData.length}`);
+
+  // ── Items ───────────────────────────────────────────────────────────
+  const itemData = [
+    { itemCode: 'STL-001', itemDescription: 'Steel Rebar 12mm', category: 'construction' as const, uomId: uoms.KG, minStock: 500, standardCost: 3.5 },
+    { itemCode: 'STL-002', itemDescription: 'Steel Plate 6mm', category: 'construction' as const, uomId: uoms.KG, minStock: 200, standardCost: 4.2 },
+    { itemCode: 'ELC-001', itemDescription: 'Power Cable 3x2.5mm', category: 'electrical' as const, uomId: uoms.M, minStock: 1000, standardCost: 8.5 },
+    { itemCode: 'ELC-002', itemDescription: 'Circuit Breaker 32A', category: 'electrical' as const, uomId: uoms.EA, minStock: 50, standardCost: 45 },
+    { itemCode: 'MEC-001', itemDescription: 'Pipe Fitting 2 inch', category: 'mechanical' as const, uomId: uoms.EA, minStock: 100, standardCost: 12 },
+    { itemCode: 'SAF-001', itemDescription: 'Safety Helmet', category: 'safety' as const, uomId: uoms.EA, minStock: 200, standardCost: 25 },
+    { itemCode: 'SAF-002', itemDescription: 'Safety Vest Hi-Vis', category: 'safety' as const, uomId: uoms.EA, minStock: 150, standardCost: 18 },
+    { itemCode: 'CON-001', itemDescription: 'Cement Portland 50kg', category: 'consumables' as const, uomId: uoms.BAG, minStock: 300, standardCost: 22 },
+    { itemCode: 'TOL-001', itemDescription: 'Drill Bit Set HSS', category: 'tools' as const, uomId: uoms.SET, minStock: 20, standardCost: 85 },
+    { itemCode: 'SPR-001', itemDescription: 'Generator Oil Filter', category: 'spare_parts' as const, uomId: uoms.EA, minStock: 30, standardCost: 35 },
+  ];
+  for (const item of itemData) {
+    await prisma.item.upsert({ where: { itemCode: item.itemCode }, update: {}, create: item });
+  }
+  console.log(`  Items: ${itemData.length}`);
+
   // ── Semantic Analytics Layer ─────────────────────────────────────────
   await seedSemanticLayer(prisma);
 

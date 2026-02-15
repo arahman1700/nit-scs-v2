@@ -26,12 +26,12 @@ export const GatePassForm: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>(
     (): Record<string, string | number | boolean | null> => {
       if (linkedMirv) {
-        return { type: 'Outbound', linkedDocument: linkedMirv, linkedDocumentType: 'MIRV' };
+        return { type: 'outbound', linkedDocument: linkedMirv, linkedDocumentType: 'MIRV' };
       }
       if (linkedMrrv) {
-        return { type: 'Inbound', linkedDocument: linkedMrrv, linkedDocumentType: 'MRRV' };
+        return { type: 'inbound', linkedDocument: linkedMrrv, linkedDocumentType: 'MRRV' };
       }
-      return { type: 'Outbound' };
+      return { type: 'outbound' };
     },
   );
 
@@ -92,7 +92,7 @@ export const GatePassForm: React.FC = () => {
           <button
             onClick={() => {
               reset();
-              setFormData({ type: 'Outbound' });
+              setFormData({ type: 'outbound' });
             }}
             className="px-6 py-3 border border-white/20 rounded-xl text-gray-300 hover:bg-white/10 transition-all"
           >
@@ -158,9 +158,9 @@ export const GatePassForm: React.FC = () => {
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                 >
-                  <option value="Inbound">Inbound</option>
-                  <option value="Outbound">Outbound</option>
-                  <option value="Transfer">Transfer</option>
+                  <option value="inbound">Inbound</option>
+                  <option value="outbound">Outbound</option>
+                  <option value="transfer">Transfer</option>
                 </select>
               </div>
               <div className="flex flex-col gap-2">
