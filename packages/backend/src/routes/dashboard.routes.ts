@@ -399,7 +399,7 @@ router.get('/exceptions', async (req: Request, res: Response, next: NextFunction
           SELECT 'jo' as type, id, status, created_at FROM job_orders
           WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
           UNION ALL
-          SELECT 'mrf' as type, id, status, created_at FROM mrf
+          SELECT 'mrf' as type, id, status, created_at FROM material_requisitions
           WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
           LIMIT 50
         `,
