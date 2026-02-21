@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, u
             </button>
 
             {settingsOpen && (
-              <div className="absolute right-0 top-full mt-2 w-64 bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 p-3 animate-fade-in">
+              <div className="absolute right-0 top-full mt-2 w-64 bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-50 p-3 animate-fade-in">
                 <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 px-1">
                   Quick Settings
                 </p>

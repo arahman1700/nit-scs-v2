@@ -40,7 +40,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-opacity" onClick={onClose} />
 
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col bg-[#0a1628]/95 backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right">
+      <div className="fixed top-0 right-0 h-full w-full max-w-md z-50 flex flex-col bg-nesma-dark/95 backdrop-blur-xl border-l border-white/10 shadow-2xl animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">

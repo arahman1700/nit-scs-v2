@@ -28,7 +28,7 @@ export const VisualizationSelector: React.FC<VisualizationSelectorProps> = ({ va
               className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all
                 ${
                   isSelected
-                    ? 'bg-[#2E3A8C]/40 border-[#80D1E9]/40 text-white'
+                    ? 'bg-nesma-primary/40 border-nesma-secondary/40 text-white'
                     : 'bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/20'
                 }`}
             >

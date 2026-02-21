@@ -49,7 +49,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, onUpdate, 
         ref={setNodeRef}
         style={style}
         className={`bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden flex flex-col
-          ${isDragging ? 'ring-2 ring-[#80D1E9]/50 z-50' : ''}
+          ${isDragging ? 'ring-2 ring-nesma-secondary/50 z-50' : ''}
           ${widget.width === 2 ? 'col-span-2' : ''}
         `}
       >

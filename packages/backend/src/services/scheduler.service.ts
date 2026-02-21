@@ -23,7 +23,8 @@ import { autoCreateCycleCounts } from './cycle-count.service.js';
 import { processScheduledRules, initializeScheduledRules } from '../events/scheduled-rule-runner.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
-import { emitToRole } from '../socket/setup.js';
+import { emitToRole, emitToUser } from '../socket/setup.js';
+import { sendPushToUser } from './push-notification.service.js';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
 import type { Server as SocketIOServer } from 'socket.io';
 
@@ -119,6 +120,29 @@ async function hasRecentNotification(
   return !!existing;
 }
 
+/**
+ * Batch check for recent notifications across multiple document IDs.
+ * Returns a Set of referenceIds that already have a recent notification (should skip).
+ */
+async function getRecentNotificationRefs(
+  referenceTable: string,
+  referenceIds: string[],
+  titleFragment: string,
+  now: Date,
+): Promise<Set<string>> {
+  if (referenceIds.length === 0) return new Set();
+  const existing = await prisma.notification.findMany({
+    where: {
+      referenceTable,
+      referenceId: { in: referenceIds },
+      title: { contains: titleFragment },
+      createdAt: { gt: new Date(now.getTime() - 60 * 60 * 1000) },
+    },
+    select: { referenceId: true },
+  });
+  return new Set(existing.map(n => n.referenceId).filter((id): id is string => id !== null));
+}
+
 /** Fetch admin employee IDs */
 async function getAdminIds(): Promise<string[]> {
   const admins = await prisma.employee.findMany({
@@ -139,6 +163,7 @@ async function getEmployeeIdsByRole(role: string): Promise<string[]> {
 
 /**
  * Send SLA notifications to a set of recipients and emit socket events.
+ * Uses createMany for batch DB insert, then emits socket + push per recipient.
  */
 async function notifySla(params: {
   recipientIds: string[];
@@ -150,18 +175,47 @@ async function notifySla(params: {
   socketEvent: string;
   socketRoles: string[];
 }): Promise<void> {
-  for (const recipientId of params.recipientIds) {
-    await createNotification(
-      {
+  if (params.recipientIds.length === 0) return;
+
+  // Batch insert all notifications in a single DB call
+  await prisma.notification.createMany({
+    data: params.recipientIds.map(recipientId => ({
+      recipientId,
+      title: params.title,
+      body: params.body,
+      notificationType: params.notificationType,
+      referenceTable: params.referenceTable,
+      referenceId: params.referenceId,
+    })),
+  });
+
+  // Emit per-recipient socket events + push notifications (fire-and-forget)
+  if (io) {
+    for (const recipientId of params.recipientIds) {
+      emitToUser(io, recipientId, 'notification:new', {
         recipientId,
         title: params.title,
         body: params.body,
         notificationType: params.notificationType,
         referenceTable: params.referenceTable,
         referenceId: params.referenceId,
-      },
-      io ?? undefined,
-    );
+      });
+    }
+  }
+
+  // Send push notifications per recipient (fire-and-forget)
+  for (const recipientId of params.recipientIds) {
+    sendPushToUser(recipientId, {
+      title: params.title,
+      body: params.body || '',
+      url:
+        params.referenceTable && params.referenceId
+          ? `/${params.referenceTable}/${params.referenceId}`
+          : '/notifications',
+      tag: params.notificationType,
+    }).catch(() => {
+      // Silently ignore push failures
+    });
   }
 
   // Emit socket event to relevant roles
@@ -720,13 +774,18 @@ async function checkMrStockVerificationWarnings(now: Date, oneHourFromNow: Date)
 
   const allAtRisk = [...atRiskExplicit, ...atRiskComputed];
 
+  // Hoist role lookup before the loop
+  const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
+
+  // Batch check recent notifications
+  const atRiskIds = allAtRisk.map(d => d.id as string);
+  const recentlyNotified = await getRecentNotificationRefs('materialRequisition', atRiskIds, 'SLA Warning', now);
+
   for (const doc of allAtRisk) {
     const docId = doc.id as string;
     const docNumber = (doc.mrfNumber as string) || docId;
 
-    if (await hasRecentNotification('materialRequisition', docId, 'SLA Warning', now)) continue;
-
-    const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: warehouseIds,
@@ -747,6 +806,9 @@ async function checkMrStockVerificationWarnings(now: Date, oneHourFromNow: Date)
  * JO Execution SLA warning via JoSlaTracking.
  */
 async function checkJoExecutionWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
+  // Hoist role lookup before the loop
+  const logisticsIds = await getEmployeeIdsByRole('logistics_coordinator');
+
   const atRisk = await prisma.joSlaTracking.findMany({
     where: {
       slaDueDate: { gt: now, lt: oneHourFromNow },
@@ -762,13 +824,15 @@ async function checkJoExecutionWarnings(now: Date, oneHourFromNow: Date): Promis
     },
   });
 
+  // Batch check recent notifications
+  const atRiskDocIds = atRisk.map(t => (t.jobOrder as { id: string }).id);
+  const recentlyNotified = await getRecentNotificationRefs('jobOrder', atRiskDocIds, 'Execution SLA Warning', now);
+
   for (const tracking of atRisk) {
     const jo = tracking.jobOrder as { id: string; joNumber: string };
     const docId = jo.id;
 
-    if (await hasRecentNotification('jobOrder', docId, 'Execution SLA Warning', now)) continue;
-
-    const logisticsIds = await getEmployeeIdsByRole('logistics_coordinator');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: logisticsIds,
@@ -804,13 +868,18 @@ async function checkGatePassWarnings(now: Date, oneHourFromNow: Date): Promise<v
     select: { id: true, gatePassNumber: true },
   } as unknown);
 
+  // Hoist role lookup before the loop
+  const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
+
+  // Batch check recent notifications
+  const atRiskIds = atRisk.map(d => d.id as string);
+  const recentlyNotified = await getRecentNotificationRefs('gatePass', atRiskIds, 'SLA Warning', now);
+
   for (const doc of atRisk) {
     const docId = doc.id as string;
     const docNumber = (doc.gatePassNumber as string) || docId;
 
-    if (await hasRecentNotification('gatePass', docId, 'SLA Warning', now)) continue;
-
-    const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: warehouseIds,
@@ -858,13 +927,18 @@ async function checkScrapBuyerPickupWarnings(now: Date, oneHourFromNow: Date): P
 
   const allAtRisk = [...atRiskExplicit, ...atRiskComputed];
 
+  // Hoist role lookup before the loop
+  const scrapCommitteeIds = await getEmployeeIdsByRole('scrap_committee_member');
+
+  // Batch check recent notifications
+  const atRiskIds = allAtRisk.map(d => d.id as string);
+  const recentlyNotified = await getRecentNotificationRefs('scrapItem', atRiskIds, 'SLA Warning', now);
+
   for (const doc of allAtRisk) {
     const docId = doc.id as string;
     const docNumber = (doc.scrapNumber as string) || docId;
 
-    if (await hasRecentNotification('scrapItem', docId, 'SLA Warning', now)) continue;
-
-    const scrapCommitteeIds = await getEmployeeIdsByRole('scrap_committee_member');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: scrapCommitteeIds,
@@ -900,13 +974,18 @@ async function checkSurplusTimeoutWarnings(now: Date, oneHourFromNow: Date): Pro
     select: { id: true, surplusNumber: true },
   } as unknown);
 
+  // Hoist role lookup before the loop
+  const managerIds = await getEmployeeIdsByRole('manager');
+
+  // Batch check recent notifications
+  const atRiskIds = atRisk.map(d => d.id as string);
+  const recentlyNotified = await getRecentNotificationRefs('surplusItem', atRiskIds, 'SLA Warning', now);
+
   for (const doc of atRisk) {
     const docId = doc.id as string;
     const docNumber = (doc.surplusNumber as string) || docId;
 
-    if (await hasRecentNotification('surplusItem', docId, 'SLA Warning', now)) continue;
-
-    const managerIds = await getEmployeeIdsByRole('manager');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: managerIds,
@@ -942,13 +1021,18 @@ async function checkQciInspectionWarnings(now: Date, oneHourFromNow: Date): Prom
     select: { id: true, rfimNumber: true },
   } as unknown);
 
+  // Hoist role lookup before the loop
+  const qcIds = await getEmployeeIdsByRole('qc_officer');
+
+  // Batch check recent notifications
+  const atRiskIds = atRisk.map(d => d.id as string);
+  const recentlyNotified = await getRecentNotificationRefs('rfim', atRiskIds, 'SLA Warning', now);
+
   for (const doc of atRisk) {
     const docId = doc.id as string;
     const docNumber = (doc.rfimNumber as string) || docId;
 
-    if (await hasRecentNotification('rfim', docId, 'SLA Warning', now)) continue;
-
-    const qcIds = await getEmployeeIdsByRole('qc_officer');
+    if (recentlyNotified.has(docId)) continue;
 
     await notifySla({
       recipientIds: qcIds,

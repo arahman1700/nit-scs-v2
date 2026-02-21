@@ -231,7 +231,7 @@ export const ReportBuilderPage: React.FC = () => {
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-4">
-          <div className="p-2 rounded-xl bg-[#2E3A8C]/30 text-[#80D1E9]">
+          <div className="p-2 rounded-xl bg-nesma-primary/30 text-nesma-secondary">
             <FileBarChart size={20} />
           </div>
           <div>
@@ -265,7 +265,7 @@ export const ReportBuilderPage: React.FC = () => {
               <ChevronDown size={14} />
             </button>
             {showDropdown && (
-              <div className="absolute right-0 mt-1 w-64 bg-[#0d2137] border border-white/10 rounded-xl shadow-2xl z-50 py-1">
+              <div className="absolute right-0 mt-1 w-64 bg-nesma-dark border border-white/10 rounded-xl shadow-2xl z-50 py-1">
                 {list.map(r => (
                   <button
                     key={r.id}
@@ -274,7 +274,7 @@ export const ReportBuilderPage: React.FC = () => {
                       setShowDropdown(false);
                     }}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors
-                      ${r.id === selectedId ? 'text-[#80D1E9]' : 'text-gray-300'}`}
+                      ${r.id === selectedId ? 'text-nesma-secondary' : 'text-gray-300'}`}
                   >
                     {r.name}
                   </button>
@@ -285,7 +285,7 @@ export const ReportBuilderPage: React.FC = () => {
                       setShowDropdown(false);
                       setShowCreate(true);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#80D1E9] hover:bg-white/5"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-nesma-secondary hover:bg-white/5"
                   >
                     <Plus size={14} /> New Report
                   </button>
@@ -312,7 +312,7 @@ export const ReportBuilderPage: React.FC = () => {
             <button
               onClick={handleRun}
               disabled={runReport.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-[#2E3A8C] hover:bg-[#2E3A8C]/80
+              className="flex items-center gap-2 px-4 py-2 bg-nesma-primary hover:bg-nesma-primary/80
                 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
             >
               <Play size={14} />
@@ -337,7 +337,7 @@ export const ReportBuilderPage: React.FC = () => {
       {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#0d2137] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <div className="bg-nesma-dark border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">New Report</h2>
             <input
               type="text"
@@ -346,7 +346,7 @@ export const ReportBuilderPage: React.FC = () => {
               placeholder="Report name..."
               autoFocus
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                placeholder:text-gray-600 focus:border-[#80D1E9]/50 focus:outline-none mb-4"
+                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none mb-4"
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
             />
             <div className="flex justify-end gap-3">
@@ -356,7 +356,7 @@ export const ReportBuilderPage: React.FC = () => {
               <button
                 onClick={handleCreate}
                 disabled={!newName.trim() || createReport.isPending}
-                className="px-5 py-2 text-sm bg-[#2E3A8C] hover:bg-[#2E3A8C]/80 text-white
+                className="px-5 py-2 text-sm bg-nesma-primary hover:bg-nesma-primary/80 text-white
                   rounded-lg disabled:opacity-50"
               >
                 Create

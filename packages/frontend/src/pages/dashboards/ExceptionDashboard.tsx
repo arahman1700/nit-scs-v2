@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { useExceptions } from '@/api/hooks/useDashboard';
 import type { ExceptionData } from '@/api/hooks/useDashboard';
 import {
@@ -337,110 +338,112 @@ export const ExceptionDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-            <AlertTriangle size={24} className="text-nesma-secondary" />
-            Operational Exceptions
-            {data.totalExceptions > 0 && (
-              <span className="px-3 py-1 text-sm font-bold rounded-full bg-red-500/20 text-red-400">
-                {data.totalExceptions}
-              </span>
-            )}
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">Items requiring attention across all operations</p>
-        </div>
-        {isFetching && !isLoading && (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
-            <Loader2 size={14} className="animate-spin" />
-            Refreshing...
+    <RouteErrorBoundary label="Exception Dashboard">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <AlertTriangle size={24} className="text-nesma-secondary" />
+              Operational Exceptions
+              {data.totalExceptions > 0 && (
+                <span className="px-3 py-1 text-sm font-bold rounded-full bg-red-500/20 text-red-400">
+                  {data.totalExceptions}
+                </span>
+              )}
+            </h1>
+            <p className="text-sm text-gray-400 mt-1">Items requiring attention across all operations</p>
           </div>
-        )}
+          {isFetching && !isLoading && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Loader2 size={14} className="animate-spin" />
+              Refreshing...
+            </div>
+          )}
+        </div>
+
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <KpiCard
+            icon={Clock}
+            label="Overdue Approvals"
+            count={data.overdueApprovals.count}
+            colorClass={data.overdueApprovals.count > 0 ? 'bg-red-600/20' : 'bg-white/5'}
+          />
+          <KpiCard
+            icon={AlertTriangle}
+            label="SLA Breaches"
+            count={data.slaBreaches.count}
+            colorClass={data.slaBreaches.count > 0 ? 'bg-red-600/20' : 'bg-white/5'}
+          />
+          <KpiCard
+            icon={PackageMinus}
+            label="Low Stock"
+            count={data.lowStock.count}
+            colorClass={data.lowStock.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
+          />
+          <KpiCard
+            icon={PauseCircle}
+            label="Stalled Documents"
+            count={data.stalledDocuments.count}
+            colorClass={data.stalledDocuments.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
+          />
+          <KpiCard
+            icon={Timer}
+            label="Expiring Inventory"
+            count={data.expiringInventory.count}
+            colorClass={data.expiringInventory.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
+          />
+        </div>
+
+        {/* Collapsible Sections */}
+        <div className="space-y-4">
+          <CollapsibleSection
+            title="Overdue Approvals"
+            count={data.overdueApprovals.count}
+            isOpen={openSections.overdueApprovals}
+            onToggle={() => toggle('overdueApprovals')}
+          >
+            <OverdueApprovalsTable items={data.overdueApprovals.items} />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="SLA Breaches"
+            count={data.slaBreaches.count}
+            isOpen={openSections.slaBreaches}
+            onToggle={() => toggle('slaBreaches')}
+          >
+            <SlaBreachesTable items={data.slaBreaches.items} />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Low Stock Items"
+            count={data.lowStock.count}
+            isOpen={openSections.lowStock}
+            onToggle={() => toggle('lowStock')}
+          >
+            <LowStockTable items={data.lowStock.items} />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Stalled Documents"
+            count={data.stalledDocuments.count}
+            isOpen={openSections.stalledDocuments}
+            onToggle={() => toggle('stalledDocuments')}
+          >
+            <StalledDocumentsTable items={data.stalledDocuments.items} />
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            title="Expiring Inventory"
+            count={data.expiringInventory.count}
+            isOpen={openSections.expiringInventory}
+            onToggle={() => toggle('expiringInventory')}
+          >
+            <ExpiringInventoryTable items={data.expiringInventory.items} />
+          </CollapsibleSection>
+        </div>
       </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <KpiCard
-          icon={Clock}
-          label="Overdue Approvals"
-          count={data.overdueApprovals.count}
-          colorClass={data.overdueApprovals.count > 0 ? 'bg-red-600/20' : 'bg-white/5'}
-        />
-        <KpiCard
-          icon={AlertTriangle}
-          label="SLA Breaches"
-          count={data.slaBreaches.count}
-          colorClass={data.slaBreaches.count > 0 ? 'bg-red-600/20' : 'bg-white/5'}
-        />
-        <KpiCard
-          icon={PackageMinus}
-          label="Low Stock"
-          count={data.lowStock.count}
-          colorClass={data.lowStock.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
-        />
-        <KpiCard
-          icon={PauseCircle}
-          label="Stalled Documents"
-          count={data.stalledDocuments.count}
-          colorClass={data.stalledDocuments.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
-        />
-        <KpiCard
-          icon={Timer}
-          label="Expiring Inventory"
-          count={data.expiringInventory.count}
-          colorClass={data.expiringInventory.count > 0 ? 'bg-amber-600/20' : 'bg-white/5'}
-        />
-      </div>
-
-      {/* Collapsible Sections */}
-      <div className="space-y-4">
-        <CollapsibleSection
-          title="Overdue Approvals"
-          count={data.overdueApprovals.count}
-          isOpen={openSections.overdueApprovals}
-          onToggle={() => toggle('overdueApprovals')}
-        >
-          <OverdueApprovalsTable items={data.overdueApprovals.items} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="SLA Breaches"
-          count={data.slaBreaches.count}
-          isOpen={openSections.slaBreaches}
-          onToggle={() => toggle('slaBreaches')}
-        >
-          <SlaBreachesTable items={data.slaBreaches.items} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Low Stock Items"
-          count={data.lowStock.count}
-          isOpen={openSections.lowStock}
-          onToggle={() => toggle('lowStock')}
-        >
-          <LowStockTable items={data.lowStock.items} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Stalled Documents"
-          count={data.stalledDocuments.count}
-          isOpen={openSections.stalledDocuments}
-          onToggle={() => toggle('stalledDocuments')}
-        >
-          <StalledDocumentsTable items={data.stalledDocuments.items} />
-        </CollapsibleSection>
-
-        <CollapsibleSection
-          title="Expiring Inventory"
-          count={data.expiringInventory.count}
-          isOpen={openSections.expiringInventory}
-          onToggle={() => toggle('expiringInventory')}
-        >
-          <ExpiringInventoryTable items={data.expiringInventory.items} />
-        </CollapsibleSection>
-      </div>
-    </div>
+    </RouteErrorBoundary>
   );
 };

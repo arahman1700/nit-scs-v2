@@ -64,7 +64,7 @@ export const WorkflowListPage: React.FC = () => {
         </div>
         <button
           onClick={() => setCreating(true)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#80D1E9]/20 text-[#80D1E9] hover:bg-[#80D1E9]/30 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-nesma-secondary/20 text-nesma-secondary hover:bg-nesma-secondary/30 transition-colors text-sm font-medium"
         >
           <Plus size={16} /> New Workflow
         </button>
@@ -79,14 +79,14 @@ export const WorkflowListPage: React.FC = () => {
             onChange={e => setNewName(e.target.value)}
             placeholder="Workflow name (e.g. Approval Email Flow)"
             autoFocus
-            className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+            className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
           />
           <input
             type="text"
             value={newEntity}
             onChange={e => setNewEntity(e.target.value)}
             placeholder="Entity type filter (optional, e.g. mirv, jo)"
-            className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+            className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
           />
           <div className="flex gap-2">
             <button
@@ -109,7 +109,7 @@ export const WorkflowListPage: React.FC = () => {
       {/* Loading state */}
       {isLoading && (
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-2 border-[#80D1E9] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -127,7 +127,7 @@ export const WorkflowListPage: React.FC = () => {
           <div
             key={wf.id}
             className={`group bg-white/[0.03] rounded-xl border transition-all duration-200 ${
-              wf.isActive ? 'border-white/10 hover:border-[#80D1E9]/30' : 'border-white/5 opacity-60'
+              wf.isActive ? 'border-white/10 hover:border-nesma-secondary/30' : 'border-white/5 opacity-60'
             }`}
           >
             <div className="flex items-center gap-4 p-4">

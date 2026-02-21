@@ -87,7 +87,7 @@ export const DetailModal: React.FC<DetailModalProps> = ({ isOpen, onClose, title
         aria-labelledby="detail-modal-title"
         className="relative z-10 w-full max-w-3xl max-h-[90vh] mx-4 flex flex-col animate-[scaleIn_200ms_ease-out]"
       >
-        <div className="bg-[#0a1929]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 flex flex-col max-h-[90vh] overflow-hidden">
+        <div className="bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 flex flex-col max-h-[90vh] overflow-hidden">
           {/* Header */}
           <div className="flex items-start justify-between px-6 py-5 border-b border-white/10 flex-shrink-0">
             <div className="flex-1 min-w-0 pr-4">

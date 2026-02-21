@@ -334,7 +334,7 @@ export const MapDashboard: React.FC = () => {
       {/* Main Map Area */}
       <div className="flex-1 relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
         {/* Floating Controls */}
-        <div className="absolute top-4 left-4 z-[400] bg-[#0E2841]/90 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl min-w-[200px]">
+        <div className="absolute top-4 left-4 z-[400] bg-nesma-dark/90 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-2xl min-w-[200px]">
           <div className="flex items-center gap-2 mb-3 border-b border-white/10 pb-2">
             <Filter size={16} className="text-nesma-secondary" />
             <span className="font-bold text-white text-sm">Asset Filters</span>
@@ -345,7 +345,7 @@ export const MapDashboard: React.FC = () => {
                 <div
                   className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${filters[key as keyof typeof filters] ? 'bg-nesma-secondary border-nesma-secondary' : 'border-gray-500 bg-transparent'}`}
                 >
-                  {filters[key as keyof typeof filters] && <div className="w-2 h-2 bg-[#0E2841] rounded-sm"></div>}
+                  {filters[key as keyof typeof filters] && <div className="w-2 h-2 bg-nesma-dark rounded-sm"></div>}
                 </div>
                 <input
                   type="checkbox"
@@ -362,20 +362,20 @@ export const MapDashboard: React.FC = () => {
         <div className="absolute top-4 right-4 z-[400] flex flex-col gap-2">
           <button
             onClick={() => setActiveLayer(activeLayer === 'dark' ? 'satellite' : 'dark')}
-            className="p-3 bg-[#0E2841]/90 backdrop-blur-md rounded-xl border border-white/10 text-white hover:bg-nesma-primary hover:text-white hover:border-nesma-secondary/50 transition-all shadow-xl group/btn"
+            className="p-3 bg-nesma-dark/90 backdrop-blur-md rounded-xl border border-white/10 text-white hover:bg-nesma-primary hover:text-white hover:border-nesma-secondary/50 transition-all shadow-xl group/btn"
             title="Toggle Satellite"
           >
             <Layers size={20} className={activeLayer === 'satellite' ? 'text-nesma-secondary' : 'text-gray-300'} />
           </button>
-          <button className="p-3 bg-[#0E2841]/90 backdrop-blur-md rounded-xl border border-white/10 text-white hover:bg-nesma-primary hover:text-white hover:border-nesma-secondary/50 transition-all shadow-xl">
+          <button className="p-3 bg-nesma-dark/90 backdrop-blur-md rounded-xl border border-white/10 text-white hover:bg-nesma-primary hover:text-white hover:border-nesma-secondary/50 transition-all shadow-xl">
             <Maximize size={20} className="text-gray-300" />
           </button>
         </div>
 
         {/* Loading overlay on map */}
         {isLoading && (
-          <div className="absolute inset-0 z-[500] flex items-center justify-center bg-[#051020]/60 pointer-events-none">
-            <div className="flex items-center gap-2 bg-[#0E2841]/90 px-4 py-2 rounded-lg border border-white/10">
+          <div className="absolute inset-0 z-[500] flex items-center justify-center bg-nesma-dark/60 pointer-events-none">
+            <div className="flex items-center gap-2 bg-nesma-dark/90 px-4 py-2 rounded-lg border border-white/10">
               <Loader2 size={18} className="animate-spin text-nesma-secondary" />
               <span className="text-sm text-white">Loading assets...</span>
             </div>
@@ -383,10 +383,10 @@ export const MapDashboard: React.FC = () => {
         )}
 
         {/* Map */}
-        <div id="map-container" ref={mapContainerRef} className="w-full h-full bg-[#051020]"></div>
+        <div id="map-container" ref={mapContainerRef} className="w-full h-full bg-nesma-dark"></div>
 
         {/* Bottom Gradient Overlay for Aesthetics */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#051020] to-transparent pointer-events-none z-[400]"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-nesma-dark to-transparent pointer-events-none z-[400]"></div>
       </div>
     </div>
   );

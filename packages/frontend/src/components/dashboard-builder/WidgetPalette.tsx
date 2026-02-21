@@ -33,10 +33,10 @@ export const WidgetPalette: React.FC<WidgetPaletteProps> = ({ onAddWidget }) => 
             key={wt.type}
             onClick={() => onAddWidget(wt)}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-              bg-white/5 border border-white/5 hover:border-[#80D1E9]/30
+              bg-white/5 border border-white/5 hover:border-nesma-secondary/30
               hover:bg-white/10 transition-all text-left group"
           >
-            <div className="p-2 rounded-lg bg-[#2E3A8C]/30 text-[#80D1E9] group-hover:bg-[#2E3A8C]/50 transition-colors">
+            <div className="p-2 rounded-lg bg-nesma-primary/30 text-nesma-secondary group-hover:bg-nesma-primary/50 transition-colors">
               <Icon size={16} />
             </div>
             <span className="text-sm text-gray-300 group-hover:text-white transition-colors">{wt.label}</span>

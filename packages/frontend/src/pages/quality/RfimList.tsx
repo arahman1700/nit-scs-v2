@@ -286,7 +286,7 @@ export const RfimList: React.FC = () => {
           onClick={() => setSelectedItem(null)}
         >
           <div
-            className="glass-card w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0E2841]"
+            className="glass-card w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-nesma-dark"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5">

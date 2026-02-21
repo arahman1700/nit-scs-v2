@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useSuppliers, useEmployees } from '@/api/hooks/useMasterData';
 import { JobStatus } from '@nit-scs-v2/shared/types';
-import type { JobOrder, Supplier, Employee } from '@nit-scs-v2/shared/types';
+import type { JobOrder, Employee } from '@nit-scs-v2/shared/types';
 import {
   Calendar,
   Truck,

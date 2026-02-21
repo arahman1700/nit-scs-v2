@@ -10,7 +10,7 @@ export const CustomsForm: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>({});
 
   const shipmentQuery = useShipmentList({ pageSize: 100 });
-  const shipmentData = (shipmentQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+  const shipmentData = (shipmentQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const createMutation = useAddCustomsStage();
 

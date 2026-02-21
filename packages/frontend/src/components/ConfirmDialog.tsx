@@ -93,7 +93,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           aria-modal="true"
           aria-labelledby="confirm-dialog-title"
           aria-describedby="confirm-dialog-message"
-          className="w-full max-w-md bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 animate-fade-in"
+          className="w-full max-w-md bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 animate-fade-in"
           onClick={e => e.stopPropagation()}
         >
           {/* Body */}

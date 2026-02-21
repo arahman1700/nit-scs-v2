@@ -14,6 +14,17 @@ import type {
   EquipmentFleet,
   SupplierRate,
   InventoryItem,
+  MRRV,
+  MIRV,
+  MRV,
+  RFIM,
+  OSDReport,
+  JobOrder,
+  GatePass,
+  StockTransfer,
+  Shipment,
+  CustomsTracking,
+  MaterialRequisition,
 } from '@nit-scs-v2/shared/types';
 import type { ListParams, ApiResponse } from '../types';
 
@@ -218,7 +229,7 @@ export const {
   useCreate: useCreateMrrv,
   useUpdate: useUpdateMrrv,
   useRemove: useDeleteMrrv,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/mrrv', 'mrrv');
+} = createResourceHooks<MRRV>('/mrrv', 'mrrv');
 
 export const {
   useList: useMirvList,
@@ -226,7 +237,7 @@ export const {
   useCreate: useCreateMirv,
   useUpdate: useUpdateMirv,
   useRemove: useDeleteMirv,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/mirv', 'mirv');
+} = createResourceHooks<MIRV>('/mirv', 'mirv');
 
 export const {
   useList: useMrvList,
@@ -234,7 +245,7 @@ export const {
   useCreate: useCreateMrv,
   useUpdate: useUpdateMrv,
   useRemove: useDeleteMrv,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/mrv', 'mrv');
+} = createResourceHooks<MRV>('/mrv', 'mrv');
 
 export const {
   useList: useRfimList,
@@ -242,7 +253,7 @@ export const {
   useCreate: useCreateRfim,
   useUpdate: useUpdateRfim,
   useRemove: useDeleteRfim,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/rfim', 'rfim');
+} = createResourceHooks<RFIM>('/rfim', 'rfim');
 
 export const {
   useList: useOsdList,
@@ -250,7 +261,7 @@ export const {
   useCreate: useCreateOsd,
   useUpdate: useUpdateOsd,
   useRemove: useDeleteOsd,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/osd', 'osd');
+} = createResourceHooks<OSDReport>('/osd', 'osd');
 
 export const {
   useList: useJobOrders,
@@ -258,7 +269,7 @@ export const {
   useCreate: useCreateJobOrder,
   useUpdate: useUpdateJobOrder,
   useRemove: useDeleteJobOrder,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/job-orders', 'job-orders');
+} = createResourceHooks<JobOrder>('/job-orders', 'job-orders');
 
 export const {
   useList: useGatePasses,
@@ -266,7 +277,7 @@ export const {
   useCreate: useCreateGatePass,
   useUpdate: useUpdateGatePass,
   useRemove: useDeleteGatePass,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/gate-passes', 'gate-passes');
+} = createResourceHooks<GatePass>('/gate-passes', 'gate-passes');
 
 export const {
   useList: useStockTransfers,
@@ -274,7 +285,7 @@ export const {
   useCreate: useCreateStockTransfer,
   useUpdate: useUpdateStockTransfer,
   useRemove: useDeleteStockTransfer,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/stock-transfers', 'stock-transfers');
+} = createResourceHooks<StockTransfer>('/stock-transfers', 'stock-transfers');
 
 export const {
   useList: useShipments,
@@ -282,7 +293,7 @@ export const {
   useCreate: useCreateShipment,
   useUpdate: useUpdateShipment,
   useRemove: useDeleteShipment,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/shipments', 'shipments');
+} = createResourceHooks<Shipment>('/shipments', 'shipments');
 
 export const {
   useList: useCustomsClearances,
@@ -290,7 +301,7 @@ export const {
   useCreate: useCreateCustomsClearance,
   useUpdate: useUpdateCustomsClearance,
   useRemove: useDeleteCustomsClearance,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/customs', 'customs');
+} = createResourceHooks<CustomsTracking>('/customs', 'customs');
 
 export const {
   useList: useMrfList,
@@ -298,7 +309,7 @@ export const {
   useCreate: useCreateMrf,
   useUpdate: useUpdateMrf,
   useRemove: useDeleteMrf,
-} = createResourceHooks<{ id: string } & Record<string, unknown>>('/mrf', 'mrf');
+} = createResourceHooks<MaterialRequisition>('/mrf', 'mrf');
 
 // ── Dynamic Hook Map (for AdminResourceList) ──────────────────────────────
 

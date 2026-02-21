@@ -111,7 +111,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-3xl mx-4 bg-[#0a1929]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative z-10 w-full max-w-3xl mx-4 bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">

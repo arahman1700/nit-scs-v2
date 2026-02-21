@@ -60,7 +60,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#0d2137] border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+      <div className="bg-nesma-dark border border-white/10 rounded-2xl shadow-2xl w-full max-w-lg mx-4">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <h2 className="text-lg font-semibold text-white">Configure Widget</h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400">
@@ -77,7 +77,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
               value={title}
               onChange={e => setTitle(e.target.value)}
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                focus:border-[#80D1E9]/50 focus:outline-none focus:ring-1 focus:ring-[#80D1E9]/30"
+                focus:border-nesma-secondary/50 focus:outline-none focus:ring-1 focus:ring-nesma-secondary/30"
             />
           </div>
 
@@ -116,7 +116,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
                 value={dataSource}
                 onChange={e => setDataSource(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                  focus:border-[#80D1E9]/50 focus:outline-none focus:ring-1 focus:ring-[#80D1E9]/30"
+                  focus:border-nesma-secondary/50 focus:outline-none focus:ring-1 focus:ring-nesma-secondary/30"
               >
                 <option value="">Select a data source</option>
                 {DATA_SOURCES.map(ds => (
@@ -143,7 +143,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
                     className={`px-4 py-2 rounded-lg text-sm border transition-colors
                       ${
                         displayConfig.chartType === ct
-                          ? 'bg-[#2E3A8C]/50 border-[#80D1E9]/50 text-white'
+                          ? 'bg-nesma-primary/50 border-nesma-secondary/50 text-white'
                           : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                       }`}
                   >
@@ -166,7 +166,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
                   className={`px-4 py-2 rounded-lg text-sm border transition-colors
                     ${
                       width === w
-                        ? 'bg-[#2E3A8C]/50 border-[#80D1E9]/50 text-white'
+                        ? 'bg-nesma-primary/50 border-nesma-secondary/50 text-white'
                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
                     }`}
                 >
@@ -218,7 +218,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm bg-[#2E3A8C] hover:bg-[#2E3A8C]/80 text-white
+              className="px-5 py-2 text-sm bg-nesma-primary hover:bg-nesma-primary/80 text-white
                 rounded-lg transition-colors"
             >
               Save Changes

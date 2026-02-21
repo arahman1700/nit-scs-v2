@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { StockTransfer } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useWtList(params?: ListParams) {
   return useQuery({
     queryKey: ['wt', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/wt', { params });
+      const { data } = await apiClient.get<ApiResponse<StockTransfer[]>>('/wt', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useWt(id: string | undefined) {
   return useQuery({
     queryKey: ['wt', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/wt/${id}`);
+      const { data } = await apiClient.get<ApiResponse<StockTransfer>>(`/wt/${id}`);
       return data;
     },
     enabled: !!id,
@@ -29,8 +30,8 @@ export function useWt(id: string | undefined) {
 export function useCreateWt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/wt', body);
+    mutationFn: async (body: Partial<StockTransfer>) => {
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>('/wt', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wt'] }),
@@ -41,8 +42,8 @@ export function useCreateWt() {
 export function useUpdateWt() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/wt/${id}`, body);
+    mutationFn: async ({ id, ...body }: Partial<StockTransfer> & { id: string }) => {
+      const { data } = await apiClient.put<ApiResponse<StockTransfer>>(`/wt/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wt'] }),
@@ -54,7 +55,7 @@ export function useSubmitWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/submit`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/submit`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wt'] }),
@@ -65,7 +66,7 @@ export function useApproveWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/approve`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/approve`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wt'] }),
@@ -76,7 +77,7 @@ export function useShipWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/ship`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/ship`);
       return data;
     },
     onSuccess: () => {
@@ -90,7 +91,7 @@ export function useReceiveWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/receive`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/receive`);
       return data;
     },
     onSuccess: () => {
@@ -104,7 +105,7 @@ export function useCompleteWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/complete`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/complete`);
       return data;
     },
     onSuccess: () => {
@@ -118,7 +119,7 @@ export function useCancelWt() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/wt/${id}/cancel`);
+      const { data } = await apiClient.post<ApiResponse<StockTransfer>>(`/wt/${id}/cancel`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wt'] }),

@@ -49,7 +49,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ templateId, va
                 value={sampleData[v] || ''}
                 onChange={e => setSampleData({ ...sampleData, [v]: e.target.value })}
                 placeholder={`Sample ${v}`}
-                className="w-full bg-black/40 text-white text-sm rounded px-2.5 py-1.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+                className="w-full bg-black/40 text-white text-sm rounded px-2.5 py-1.5 border border-white/10 focus:border-nesma-secondary outline-none"
               />
             </div>
           ))}
@@ -59,10 +59,10 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ templateId, va
       <button
         onClick={handlePreview}
         disabled={!templateId || preview.isPending}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#80D1E9]/20 text-[#80D1E9] hover:bg-[#80D1E9]/30 transition-colors disabled:opacity-40 text-sm font-medium"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-nesma-secondary/20 text-nesma-secondary hover:bg-nesma-secondary/30 transition-colors disabled:opacity-40 text-sm font-medium"
       >
         {preview.isPending ? (
-          <div className="w-4 h-4 border-2 border-[#80D1E9] border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
         ) : (
           <Eye size={14} />
         )}

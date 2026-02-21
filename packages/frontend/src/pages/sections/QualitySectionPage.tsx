@@ -7,6 +7,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useMrvList, useRfimList, useOsdList } from '@/api/hooks';
+import { CHART_PALETTE } from '@/config/chartTheme';
 
 const LazyRfimList = React.lazy(() => import('@/pages/quality/RfimList').then(m => ({ default: m.RfimList })));
 
@@ -29,8 +30,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-const PIE_COLORS = ['#f59e0b', '#ef4444', '#3b82f6', '#10b981'];
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export const QualitySectionPage: React.FC = () => {
@@ -50,14 +49,14 @@ export const QualitySectionPage: React.FC = () => {
   // ── KPI calculations ──────────────────────────────────────────────────────
 
   const pendingReturns = useMemo(
-    () => mrvData.filter(r => (r as Record<string, unknown>).status === 'Pending').length,
+    () => mrvData.filter(r => (r as unknown as Record<string, unknown>).status === 'Pending').length,
     [mrvData],
   );
 
   const openInspections = useMemo(
     () =>
       rfimData.filter(r => {
-        const s = (r as Record<string, unknown>).status as string;
+        const s = (r as unknown as Record<string, unknown>).status as string;
         return s === 'Pending' || s === 'Open';
       }).length,
     [rfimData],
@@ -65,7 +64,7 @@ export const QualitySectionPage: React.FC = () => {
 
   const qcPassRate = useMemo(() => {
     if (rfimData.length === 0) return 0;
-    const passed = rfimData.filter(r => (r as Record<string, unknown>).result === 'Pass').length;
+    const passed = rfimData.filter(r => (r as unknown as Record<string, unknown>).result === 'Pass').length;
     return Math.round((passed / rfimData.length) * 100);
   }, [rfimData]);
 
@@ -114,7 +113,7 @@ export const QualitySectionPage: React.FC = () => {
   const returnsByType = useMemo(() => {
     const counts: Record<string, number> = {};
     mrvData.forEach(r => {
-      const t = ((r as Record<string, unknown>).returnType as string) || 'Other';
+      const t = ((r as unknown as Record<string, unknown>).returnType as string) || 'Other';
       counts[t] = (counts[t] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -125,7 +124,7 @@ export const QualitySectionPage: React.FC = () => {
   const osdSummary = useMemo(() => {
     const counts: Record<string, number> = { Overage: 0, Shortage: 0, Damage: 0 };
     osdData.forEach(r => {
-      const t = (r as Record<string, unknown>).reportType as string;
+      const t = (r as unknown as Record<string, unknown>).reportType as string;
       if (t && counts[t] !== undefined) counts[t]++;
     });
     return counts;
@@ -172,7 +171,7 @@ export const QualitySectionPage: React.FC = () => {
                     }
                   >
                     {returnsByType.map((_, i) => (
-                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -190,7 +189,7 @@ export const QualitySectionPage: React.FC = () => {
             {recentRfims.length > 0 ? (
               <div className="space-y-3">
                 {recentRfims.map(r => {
-                  const rec = r as Record<string, unknown>;
+                  const rec = r as unknown as Record<string, unknown>;
                   return (
                     <div
                       key={rec.id as string}
@@ -253,7 +252,7 @@ export const QualitySectionPage: React.FC = () => {
           </thead>
           <tbody>
             {mrvData.slice(0, 15).map(r => {
-              const rec = r as Record<string, unknown>;
+              const rec = r as unknown as Record<string, unknown>;
               return (
                 <tr key={rec.id as string} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 text-white font-medium">{(rec.documentNumber as string) || (rec.id as string)}</td>
@@ -320,7 +319,7 @@ export const QualitySectionPage: React.FC = () => {
           </thead>
           <tbody>
             {osdData.slice(0, 15).map(r => {
-              const rec = r as Record<string, unknown>;
+              const rec = r as unknown as Record<string, unknown>;
               return (
                 <tr key={rec.id as string} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 text-white font-medium">{(rec.documentNumber as string) || (rec.id as string)}</td>

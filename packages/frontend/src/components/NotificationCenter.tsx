@@ -100,7 +100,7 @@ export const NotificationCenter: React.FC = () => {
 
       {/* Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-96 max-h-[70vh] flex flex-col bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-96 max-h-[70vh] flex flex-col bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl shadow-black/40 z-50 overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
             <div className="flex items-center gap-2">

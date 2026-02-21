@@ -62,10 +62,10 @@ export const PwaInstallPrompt: React.FC = () => {
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-50 animate-slide-up">
-      <div className="bg-[#0a1929]/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 sm:px-6">
+      <div className="bg-nesma-dark/95 backdrop-blur-xl border-t border-white/10 px-4 py-3 sm:px-6">
         <div className="flex items-center justify-between gap-4 max-w-2xl mx-auto">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-[#2E3A8C] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-nesma-primary flex items-center justify-center shrink-0">
               <span className="text-white font-bold text-lg">N</span>
             </div>
             <div className="min-w-0">
@@ -80,7 +80,7 @@ export const PwaInstallPrompt: React.FC = () => {
             {!isIOS && (
               <button
                 onClick={handleInstall}
-                className="bg-[#2E3A8C] hover:bg-[#3a49a8] text-white text-sm rounded-lg px-6 py-2 transition-colors font-medium"
+                className="bg-nesma-primary hover:bg-nesma-primary/70 text-white text-sm rounded-lg px-6 py-2 transition-colors font-medium"
               >
                 Install
               </button>

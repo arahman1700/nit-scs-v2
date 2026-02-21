@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { OSDReport } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useDrList(params?: ListParams) {
   return useQuery({
     queryKey: ['dr', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/dr', { params });
+      const { data } = await apiClient.get<ApiResponse<OSDReport[]>>('/dr', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useDr(id: string | undefined) {
   return useQuery({
     queryKey: ['dr', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/dr/${id}`);
+      const { data } = await apiClient.get<ApiResponse<OSDReport>>(`/dr/${id}`);
       return data;
     },
     enabled: !!id,
@@ -29,8 +30,8 @@ export function useDr(id: string | undefined) {
 export function useCreateDr() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/dr', body);
+    mutationFn: async (body: Partial<OSDReport>) => {
+      const { data } = await apiClient.post<ApiResponse<OSDReport>>('/dr', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dr'] }),
@@ -41,8 +42,8 @@ export function useCreateDr() {
 export function useUpdateDr() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/dr/${id}`, body);
+    mutationFn: async ({ id, ...body }: Partial<OSDReport> & { id: string }) => {
+      const { data } = await apiClient.put<ApiResponse<OSDReport>>(`/dr/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dr'] }),
@@ -54,7 +55,7 @@ export function useSendClaimDr() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/dr/${id}/send-claim`);
+      const { data } = await apiClient.post<ApiResponse<OSDReport>>(`/dr/${id}/send-claim`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dr'] }),
@@ -64,8 +65,8 @@ export function useSendClaimDr() {
 export function useResolveDr() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/dr/${id}/resolve`, body);
+    mutationFn: async ({ id, ...body }: Partial<OSDReport> & { id: string }) => {
+      const { data } = await apiClient.post<ApiResponse<OSDReport>>(`/dr/${id}/resolve`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['dr'] }),

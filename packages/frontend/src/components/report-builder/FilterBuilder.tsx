@@ -40,7 +40,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
         <button
           onClick={addFilter}
           disabled={columns.length === 0}
-          className="flex items-center gap-1 text-xs text-[#80D1E9] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1 text-xs text-nesma-secondary hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
           <Plus size={12} /> Add Filter
         </button>
@@ -56,7 +56,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
               value={filter.field}
               onChange={e => updateFilter(i, 'field', e.target.value)}
               className="flex-1 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                focus:border-[#80D1E9]/50 focus:outline-none"
+                focus:border-nesma-secondary/50 focus:outline-none"
             >
               {columns.map(col => (
                 <option key={col} value={col}>
@@ -70,7 +70,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
               value={filter.operator}
               onChange={e => updateFilter(i, 'operator', e.target.value)}
               className="w-28 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                focus:border-[#80D1E9]/50 focus:outline-none"
+                focus:border-nesma-secondary/50 focus:outline-none"
             >
               {OPERATORS.map(op => (
                 <option key={op.value} value={op.value}>
@@ -86,7 +86,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
               onChange={e => updateFilter(i, 'value', e.target.value)}
               placeholder="Value..."
               className="flex-1 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                placeholder:text-gray-600 focus:border-[#80D1E9]/50 focus:outline-none"
+                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none"
             />
 
             {/* Remove */}

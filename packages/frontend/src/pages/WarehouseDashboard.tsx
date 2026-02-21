@@ -73,9 +73,9 @@ export const WarehouseDashboard: React.FC = () => {
     };
   });
 
-  const mrrvData = (mrrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
-  const mirvData = (mirvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
-  const mrvData = (mrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+  const mrrvData = (mrrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const mirvData = (mirvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const mrvData = (mrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
   const isLoading = mrrvQuery.isLoading || mirvQuery.isLoading || mrvQuery.isLoading || inventoryQuery.isLoading;
   const isError = mrrvQuery.isError || mirvQuery.isError || mrvQuery.isError || inventoryQuery.isError;
 

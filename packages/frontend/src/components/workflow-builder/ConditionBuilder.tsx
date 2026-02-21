@@ -87,7 +87,7 @@ const ConditionLeaf: React.FC<{
         onChange={e => onChange({ ...condition, field: e.target.value })}
         placeholder="field path"
         list={datalistId}
-        className="flex-1 bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-[#80D1E9] outline-none min-w-[120px]"
+        className="flex-1 bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-nesma-secondary outline-none min-w-[120px]"
       />
       <datalist id={datalistId}>
         {suggestions.map(f => (
@@ -97,7 +97,7 @@ const ConditionLeaf: React.FC<{
       <select
         value={condition.op}
         onChange={e => onChange({ ...condition, op: e.target.value })}
-        className="bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+        className="bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-nesma-secondary outline-none"
       >
         {OPERATORS.map(op => (
           <option key={op.value} value={op.value}>
@@ -110,7 +110,7 @@ const ConditionLeaf: React.FC<{
         value={condition.value}
         onChange={e => onChange({ ...condition, value: e.target.value })}
         placeholder="value"
-        className="flex-1 bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-[#80D1E9] outline-none min-w-[80px]"
+        className="flex-1 bg-black/40 text-white text-sm rounded px-2 py-1.5 border border-white/10 focus:border-nesma-secondary outline-none min-w-[80px]"
       />
       <button onClick={onRemove} className="text-red-400 hover:text-red-300 p-1">
         <Trash2 size={14} />
@@ -196,7 +196,7 @@ const ConditionGroup: React.FC<{
       <div className="flex gap-2 mt-3">
         <button
           onClick={addCondition}
-          className="flex items-center gap-1 text-xs text-[#80D1E9] hover:text-white transition-colors"
+          className="flex items-center gap-1 text-xs text-nesma-secondary hover:text-white transition-colors"
         >
           <Plus size={12} /> Add condition
         </button>

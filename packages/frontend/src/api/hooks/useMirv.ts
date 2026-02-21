@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { MIRV } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useMirvList(params?: ListParams) {
   return useQuery({
     queryKey: ['mirv', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/mirv', { params });
+      const { data } = await apiClient.get<ApiResponse<MIRV[]>>('/mirv', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useMirv(id: string | undefined) {
   return useQuery({
     queryKey: ['mirv', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/mirv/${id}`);
+      const { data } = await apiClient.get<ApiResponse<MIRV>>(`/mirv/${id}`);
       return data;
     },
     enabled: !!id,
@@ -29,8 +30,8 @@ export function useMirv(id: string | undefined) {
 export function useCreateMirv() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/mirv', body);
+    mutationFn: async (body: Partial<MIRV>) => {
+      const { data } = await apiClient.post<ApiResponse<MIRV>>('/mirv', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mirv'] }),
@@ -41,8 +42,8 @@ export function useCreateMirv() {
 export function useUpdateMirv() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/mirv/${id}`, body);
+    mutationFn: async ({ id, ...body }: Partial<MIRV> & { id: string }) => {
+      const { data } = await apiClient.put<ApiResponse<MIRV>>(`/mirv/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mirv'] }),
@@ -54,7 +55,7 @@ export function useSubmitMirv() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/mirv/${id}/submit`);
+      const { data } = await apiClient.post<ApiResponse<MIRV>>(`/mirv/${id}/submit`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['mirv'] }),
@@ -65,7 +66,7 @@ export function useApproveMirv() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/mirv/${id}/approve`);
+      const { data } = await apiClient.post<ApiResponse<MIRV>>(`/mirv/${id}/approve`);
       return data;
     },
     onSuccess: () => {
@@ -79,7 +80,7 @@ export function useIssueMirv() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/mirv/${id}/issue`);
+      const { data } = await apiClient.post<ApiResponse<MIRV>>(`/mirv/${id}/issue`);
       return data;
     },
     onSuccess: () => {
@@ -94,7 +95,7 @@ export function useCancelMirv() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/mirv/${id}/cancel`);
+      const { data } = await apiClient.post<ApiResponse<MIRV>>(`/mirv/${id}/cancel`);
       return data;
     },
     onSuccess: () => {

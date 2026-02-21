@@ -31,7 +31,7 @@ const ActionCard: React.FC<{
   return (
     <div className="bg-black/20 rounded-xl p-3 border border-white/5">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-bold text-[#80D1E9]">Action #{index + 1}</span>
+        <span className="text-xs font-bold text-nesma-secondary">Action #{index + 1}</span>
         <button onClick={onRemove} className="text-red-400 hover:text-red-300 p-1">
           <Trash2 size={14} />
         </button>
@@ -40,7 +40,7 @@ const ActionCard: React.FC<{
       <select
         value={action.type}
         onChange={e => onChange({ type: e.target.value, params: {} })}
-        className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none mb-3"
+        className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none mb-3"
       >
         <option value="">Select action type...</option>
         {ACTION_TYPES.map(t => (
@@ -65,7 +65,7 @@ const ActionCard: React.FC<{
                   })
                 }
                 placeholder={getPlaceholder(action.type, param)}
-                className="w-full bg-black/40 text-white text-sm rounded px-2.5 py-1.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+                className="w-full bg-black/40 text-white text-sm rounded px-2.5 py-1.5 border border-white/10 focus:border-nesma-secondary outline-none"
               />
             </div>
           ))}
@@ -118,7 +118,7 @@ export const ActionBuilder: React.FC<ActionBuilderProps> = ({ value, onChange })
       </div>
       <button
         onClick={addAction}
-        className="flex items-center gap-1.5 mt-3 text-sm text-[#80D1E9] hover:text-white transition-colors"
+        className="flex items-center gap-1.5 mt-3 text-sm text-nesma-secondary hover:text-white transition-colors"
       >
         <Plus size={14} /> Add action
       </button>

@@ -118,7 +118,7 @@ export const DashboardBuilderPage: React.FC = () => {
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
         <div className="flex items-center gap-4">
-          <div className="p-2 rounded-xl bg-[#2E3A8C]/30 text-[#80D1E9]">
+          <div className="p-2 rounded-xl bg-nesma-primary/30 text-nesma-secondary">
             <LayoutDashboard size={20} />
           </div>
           <div>
@@ -139,7 +139,7 @@ export const DashboardBuilderPage: React.FC = () => {
               <ChevronDown size={14} />
             </button>
             {showDropdown && (
-              <div className="absolute right-0 mt-1 w-64 bg-[#0d2137] border border-white/10 rounded-xl shadow-2xl z-50 py-1">
+              <div className="absolute right-0 mt-1 w-64 bg-nesma-dark border border-white/10 rounded-xl shadow-2xl z-50 py-1">
                 {list.map(d => (
                   <button
                     key={d.id}
@@ -148,7 +148,7 @@ export const DashboardBuilderPage: React.FC = () => {
                       setShowDropdown(false);
                     }}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors
-                      ${d.id === selectedId ? 'text-[#80D1E9]' : 'text-gray-300'}`}
+                      ${d.id === selectedId ? 'text-nesma-secondary' : 'text-gray-300'}`}
                   >
                     {d.name}
                     {d.isDefault && <span className="ml-2 text-xs text-gray-500">(default)</span>}
@@ -160,7 +160,7 @@ export const DashboardBuilderPage: React.FC = () => {
                       setShowDropdown(false);
                       setShowCreate(true);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#80D1E9] hover:bg-white/5"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-nesma-secondary hover:bg-white/5"
                   >
                     <Plus size={14} /> New Dashboard
                   </button>
@@ -175,7 +175,7 @@ export const DashboardBuilderPage: React.FC = () => {
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors border
               ${
                 editMode
-                  ? 'bg-[#2E3A8C]/40 border-[#80D1E9]/40 text-white'
+                  ? 'bg-nesma-primary/40 border-nesma-secondary/40 text-white'
                   : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
               }`}
           >
@@ -188,7 +188,7 @@ export const DashboardBuilderPage: React.FC = () => {
             <button
               onClick={() => handleReorder(widgets)}
               disabled={updateLayoutMut.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-[#2E3A8C] hover:bg-[#2E3A8C]/80
+              className="flex items-center gap-2 px-4 py-2 bg-nesma-primary hover:bg-nesma-primary/80
                 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
             >
               <Save size={14} />
@@ -213,7 +213,7 @@ export const DashboardBuilderPage: React.FC = () => {
       {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#0d2137] border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+          <div className="bg-nesma-dark border border-white/10 rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <h2 className="text-lg font-semibold text-white mb-4">New Dashboard</h2>
             <input
               type="text"
@@ -222,7 +222,7 @@ export const DashboardBuilderPage: React.FC = () => {
               placeholder="Dashboard name..."
               autoFocus
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                placeholder:text-gray-600 focus:border-[#80D1E9]/50 focus:outline-none mb-4"
+                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none mb-4"
               onKeyDown={e => e.key === 'Enter' && handleCreateDashboard()}
             />
             <div className="flex justify-end gap-3">
@@ -232,7 +232,7 @@ export const DashboardBuilderPage: React.FC = () => {
               <button
                 onClick={handleCreateDashboard}
                 disabled={!newName.trim() || createDashboard.isPending}
-                className="px-5 py-2 text-sm bg-[#2E3A8C] hover:bg-[#2E3A8C]/80 text-white
+                className="px-5 py-2 text-sm bg-nesma-primary hover:bg-nesma-primary/80 text-white
                   rounded-lg disabled:opacity-50"
               >
                 Create
@@ -265,7 +265,7 @@ export const DashboardBuilderPage: React.FC = () => {
               <p className="text-lg mb-2">No dashboard selected</p>
               <button
                 onClick={() => setShowCreate(true)}
-                className="mt-2 flex items-center gap-2 px-4 py-2 bg-[#2E3A8C] hover:bg-[#2E3A8C]/80
+                className="mt-2 flex items-center gap-2 px-4 py-2 bg-nesma-primary hover:bg-nesma-primary/80
                   text-white text-sm rounded-lg transition-colors"
               >
                 <Plus size={14} /> Create Dashboard

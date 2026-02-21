@@ -599,7 +599,7 @@ export const InventoryDashboard: React.FC = () => {
           onClick={() => setSelectedItem(null)}
         >
           <div
-            className="glass-card w-full max-w-lg rounded-2xl overflow-hidden border border-white/10 bg-[#0E2841]"
+            className="glass-card w-full max-w-lg rounded-2xl overflow-hidden border border-white/10 bg-nesma-dark"
             onClick={e => e.stopPropagation()}
           >
             <div className="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">

@@ -73,7 +73,7 @@ export const EmailTemplatesPage: React.FC = () => {
               isNew: true,
             })
           }
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#80D1E9]/20 text-[#80D1E9] hover:bg-[#80D1E9]/30 transition-colors text-sm font-medium"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-nesma-secondary/20 text-nesma-secondary hover:bg-nesma-secondary/30 transition-colors text-sm font-medium"
         >
           <Plus size={16} /> New Template
         </button>
@@ -91,7 +91,7 @@ export const EmailTemplatesPage: React.FC = () => {
               value={editing.name}
               onChange={e => setEditing({ ...editing, name: e.target.value })}
               placeholder="e.g. Approval Requested Email"
-              className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+              className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
             />
           </div>
 
@@ -143,7 +143,7 @@ export const EmailTemplatesPage: React.FC = () => {
       {/* Loading */}
       {isLoading && (
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-2 border-[#80D1E9] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -159,7 +159,7 @@ export const EmailTemplatesPage: React.FC = () => {
             templates.map(tpl => (
               <div
                 key={tpl.id}
-                className="group bg-white/[0.03] rounded-xl border border-white/10 hover:border-[#80D1E9]/30 transition-all duration-200"
+                className="group bg-white/[0.03] rounded-xl border border-white/10 hover:border-nesma-secondary/30 transition-all duration-200"
               >
                 <div className="flex items-center gap-4 p-4">
                   <div className="flex-1 min-w-0">

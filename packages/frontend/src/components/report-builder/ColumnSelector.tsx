@@ -53,7 +53,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ dataSource, sele
       <div className="flex items-center justify-between mb-2">
         <label className="text-sm text-gray-400">Columns</label>
         <div className="flex gap-2 text-xs">
-          <button onClick={selectAll} className="text-[#80D1E9] hover:underline">
+          <button onClick={selectAll} className="text-nesma-secondary hover:underline">
             All
           </button>
           <button onClick={clearAll} className="text-gray-500 hover:text-gray-300">
@@ -69,11 +69,11 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ dataSource, sele
               key={col}
               onClick={() => toggleColumn(col)}
               className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-left text-sm transition-colors
-                ${isSelected ? 'bg-[#2E3A8C]/30 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}
+                ${isSelected ? 'bg-nesma-primary/30 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200'}`}
             >
               <div
                 className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0
-                  ${isSelected ? 'bg-[#2E3A8C] border-[#80D1E9]/50' : 'border-white/20'}`}
+                  ${isSelected ? 'bg-nesma-primary border-nesma-secondary/50' : 'border-white/20'}`}
               >
                 {isSelected && <Check size={10} className="text-white" />}
               </div>

@@ -36,7 +36,7 @@ export const SiteEngineerDashboard: React.FC = () => {
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
-  const allMrfs = (mrfQuery.data?.data ?? []) as Record<string, unknown>[];
+  const allMrfs = (mrfQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
   const allProjects = (projectsQuery.data?.data ?? []) as Project[];
   const inventoryItems = (inventoryQuery.data?.data ?? []) as InventoryItem[];
 

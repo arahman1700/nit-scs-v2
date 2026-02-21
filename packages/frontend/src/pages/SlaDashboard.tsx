@@ -24,7 +24,7 @@ export const SlaDashboard: React.FC = () => {
   const jobsQuery = useJobOrderList({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
   const projects = (projectQuery.data?.data ?? []) as Project[];
-  const allJobs = (jobsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+  const allJobs = (jobsQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   // Filter Data
   const filteredJobs = useMemo(() => {

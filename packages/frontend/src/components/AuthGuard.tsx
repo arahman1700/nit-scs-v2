@@ -66,7 +66,7 @@ export const AuthGuard: React.FC = () => {
 
   if (isInitializing) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-nesma-dark to-[#051020]">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-nesma-dark to-nesma-dark">
         <div className="animate-spin w-8 h-8 border-2 border-nesma-secondary border-t-transparent rounded-full"></div>
       </div>
     );

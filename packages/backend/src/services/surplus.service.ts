@@ -129,13 +129,11 @@ export async function scmApprove(id: string, _scmUserId: string) {
     throw new BusinessRuleError('2-week timeout period has not elapsed');
   }
 
+  // TODO: Once scmApprovedById and scmApprovalDate columns are added via migration,
+  // include them in the update data: { scmApprovedById: scmUserId, scmApprovalDate: new Date() }
   return prisma.surplusItem.update({
     where: { id: surplus.id },
-    data: {
-      // NOTE: scmApprovalDate and scmApprovedById fields pending schema migration
-      // scmApprovedById: scmUserId,
-      // scmApprovalDate: new Date(),
-    } as any,
+    data: {},
   });
 }
 

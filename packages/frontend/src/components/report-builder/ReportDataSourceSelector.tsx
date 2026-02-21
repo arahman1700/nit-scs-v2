@@ -30,7 +30,7 @@ export const ReportDataSourceSelector: React.FC<ReportDataSourceSelectorProps> =
         value={value}
         onChange={e => onChange(e.target.value)}
         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-          focus:border-[#80D1E9]/50 focus:outline-none focus:ring-1 focus:ring-[#80D1E9]/30"
+          focus:border-nesma-secondary/50 focus:outline-none focus:ring-1 focus:ring-nesma-secondary/30"
       >
         <option value="">Select entity type...</option>
         {ENTITY_TYPES.map(et => (

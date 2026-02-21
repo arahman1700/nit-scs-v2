@@ -76,7 +76,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ rule, onChange }
             type="checkbox"
             checked={rule.stopOnMatch}
             onChange={e => onChange({ ...rule, stopOnMatch: e.target.checked })}
-            className="rounded border-white/20 bg-black/40 text-[#80D1E9] focus:ring-[#80D1E9]"
+            className="rounded border-white/20 bg-black/40 text-nesma-secondary focus:ring-nesma-secondary"
           />
           Stop processing further rules on match
         </label>
@@ -85,7 +85,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ rule, onChange }
             type="checkbox"
             checked={rule.enabled}
             onChange={e => onChange({ ...rule, enabled: e.target.checked })}
-            className="rounded border-white/20 bg-black/40 text-[#80D1E9] focus:ring-[#80D1E9]"
+            className="rounded border-white/20 bg-black/40 text-nesma-secondary focus:ring-nesma-secondary"
           />
           Enabled
         </label>

@@ -14,7 +14,7 @@ export const TriggerSelector: React.FC<TriggerSelectorProps> = ({ value, onChang
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-black/40 text-white text-sm rounded-lg p-3 border border-white/10 focus:border-[#80D1E9] focus:ring-1 focus:ring-[#80D1E9] outline-none"
+        className="w-full bg-black/40 text-white text-sm rounded-lg p-3 border border-white/10 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none"
       >
         <option value="">Select an event...</option>
         {eventEntries.map(([key, eventType]) => (

@@ -79,7 +79,7 @@ export function MobileWtTransfer() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a1929] p-4 pb-24">
+    <div className="min-h-screen bg-nesma-dark p-4 pb-24">
       {/* Offline Queue Banner */}
       <OfflineQueueBanner />
 
@@ -231,7 +231,7 @@ export function MobileWtTransfer() {
               </div>
             )}
 
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0a1929]/95 backdrop-blur-xl border-t border-white/10">
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-nesma-dark/95 backdrop-blur-xl border-t border-white/10">
               <button
                 onClick={handleTransfer}
                 disabled={shipMutation.isPending}

@@ -339,7 +339,7 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
       onClick={onClose}
     >
       <div
-        className="glass-card w-full max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-[#0E2841] flex flex-col"
+        className="glass-card w-full max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-nesma-dark flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

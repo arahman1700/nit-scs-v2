@@ -29,9 +29,9 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
   const slaQuery = useSLACompliance();
 
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
-  const allShipments = (shipQuery.data?.data ?? []) as Record<string, unknown>[];
-  const allGPs = (gpQuery.data?.data ?? []) as Record<string, unknown>[];
-  const allMrrvs = (mrrvQuery.data?.data ?? []) as Record<string, unknown>[];
+  const allShipments = (shipQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allGPs = (gpQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allMrrvs = (mrrvQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
 
   const isLoading = joQuery.isLoading;
 

@@ -82,7 +82,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-56 bg-[#0a1628]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-40 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 top-full mt-2 w-56 bg-nesma-dark/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl shadow-black/40 z-40 overflow-hidden animate-fade-in">
           <div className="py-1">
             {hasPdf && (
               <>

@@ -110,7 +110,7 @@ export const MainLayout: React.FC<{
     (dynamicNav as NavItem[] | undefined) || (NAVIGATION_LINKS as Record<string, NavItem[]>)[role] || [];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-nesma-dark to-[#051020] text-white font-sans">
+    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-nesma-dark to-nesma-dark text-white font-sans">
       {/* Skip Navigation — Accessibility */}
       <a
         href="#main-content"

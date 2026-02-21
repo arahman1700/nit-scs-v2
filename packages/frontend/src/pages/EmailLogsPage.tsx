@@ -68,7 +68,7 @@ export const EmailLogsPage: React.FC = () => {
             setStatusFilter(e.target.value);
             setPage(1);
           }}
-          className="bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+          className="bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
         >
           <option value="">All statuses</option>
           <option value="queued">Queued</option>

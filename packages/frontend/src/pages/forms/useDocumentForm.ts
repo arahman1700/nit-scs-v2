@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { UseQueryResult } from '@tanstack/react-query';
+import type { UseMutationResult } from '@tanstack/react-query';
 import {
   useProjects,
   useWarehouses,
@@ -25,7 +27,14 @@ import {
   useUpdateOsd,
 } from '@/api/hooks';
 import { useMrrv, useMirv, useMrv, useJobOrder, useRfim, useOsd } from '@/api/hooks';
-import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
+import type { VoucherLineItem, ApiResponse } from '@nit-scs-v2/shared/types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyDetailQuery = UseQueryResult<ApiResponse<any>, Error>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyCreateMutation = UseMutationResult<ApiResponse<any>, Error, any, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyUpdateMutation = UseMutationResult<ApiResponse<any>, Error, any, unknown>;
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { previewNextNumber } from '@/utils/autoNumber';
 import {
@@ -79,7 +88,7 @@ interface UseDocumentFormReturn {
   allSections: FormSectionConfig[];
   editableStatuses: string[];
   initialized: boolean;
-  detailQuery: ReturnType<typeof useMrrv> | undefined;
+  detailQuery: AnyDetailQuery | undefined;
   uploadPending: boolean;
   uploadError: Error | null;
   handleSubmit: (e: React.FormEvent) => void;
@@ -109,7 +118,7 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
   const rfimQuery = useRfim(formType === 'rfim' ? id : undefined);
   const osdQuery = useOsd(formType === 'osd' ? id : undefined);
 
-  const detailQueryMap: Record<string, typeof mrrvQuery> = {
+  const detailQueryMap: Record<string, AnyDetailQuery> = {
     mrrv: mrrvQuery,
     mirv: mirvQuery,
     mrv: mrvQuery,
@@ -172,7 +181,7 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
   const updateRfim = useUpdateRfim();
   const updateOsd = useUpdateOsd();
 
-  const createMutationMap: Record<string, typeof createMrrv> = {
+  const createMutationMap: Record<string, AnyCreateMutation> = {
     mrrv: createMrrv,
     mirv: createMirv,
     mrv: createMrv,
@@ -181,7 +190,7 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
     osd: createOsd,
   };
 
-  const updateMutationMap: Record<string, typeof updateMrrv> = {
+  const updateMutationMap: Record<string, AnyUpdateMutation> = {
     mrrv: updateMrrv,
     mirv: updateMirv,
     mrv: updateMrv,

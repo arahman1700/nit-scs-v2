@@ -109,7 +109,7 @@ const JobCard: React.FC<{ job: JobOrder; borderColor: string; isDragOverlay?: bo
       ref={isDragOverlay ? undefined : setNodeRef}
       style={isDragOverlay ? undefined : style}
       {...(isDragOverlay ? {} : { ...listeners, ...attributes })}
-      className={`bg-[#132D4B] p-4 rounded-xl border border-white/5 cursor-grab active:cursor-grabbing hover:bg-[#1A3A5E] hover:border-${borderColor}/50 transition-all group shadow-lg relative overflow-hidden ${isDragOverlay ? 'ring-2 ring-nesma-secondary shadow-2xl scale-105' : ''}`}
+      className={`bg-white/10 p-4 rounded-xl border border-white/5 cursor-grab active:cursor-grabbing hover:bg-white/10 hover:border-${borderColor}/50 transition-all group shadow-lg relative overflow-hidden ${isDragOverlay ? 'ring-2 ring-nesma-secondary shadow-2xl scale-105' : ''}`}
     >
       {/* Priority Stripe */}
       <div
@@ -183,7 +183,7 @@ const KanbanColumn: React.FC<{
       className={`min-w-[320px] max-w-[320px] glass-card rounded-2xl flex flex-col h-[calc(100vh-200px)] bg-black/20 border transition-colors ${isOver ? 'border-nesma-secondary/60 bg-nesma-secondary/5' : 'border-white/5'}`}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#0E2841]/80 backdrop-blur-sm z-10 rounded-t-2xl">
+      <div className="p-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-nesma-dark/80 backdrop-blur-sm z-10 rounded-t-2xl">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg bg-${borderColor}/10 text-${borderColor}-400`}>
             <Icon size={18} />

@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { Shipment, CustomsTracking } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useShipmentList(params?: ListParams) {
   return useQuery({
     queryKey: ['shipments', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/shipments', { params });
+      const { data } = await apiClient.get<ApiResponse<Shipment[]>>('/shipments', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useShipment(id: string | undefined) {
   return useQuery({
     queryKey: ['shipments', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/shipments/${id}`);
+      const { data } = await apiClient.get<ApiResponse<Shipment>>(`/shipments/${id}`);
       return data;
     },
     enabled: !!id,
@@ -29,8 +30,8 @@ export function useShipment(id: string | undefined) {
 export function useCreateShipment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/shipments', body);
+    mutationFn: async (body: Partial<Shipment>) => {
+      const { data } = await apiClient.post<ApiResponse<Shipment>>('/shipments', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
@@ -41,8 +42,8 @@ export function useCreateShipment() {
 export function useUpdateShipment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/shipments/${id}`, body);
+    mutationFn: async ({ id, ...body }: Partial<Shipment> & { id: string }) => {
+      const { data } = await apiClient.put<ApiResponse<Shipment>>(`/shipments/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
@@ -53,8 +54,8 @@ export function useUpdateShipment() {
 export function useUpdateShipmentStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/shipments/${id}/status`, body);
+    mutationFn: async ({ id, ...body }: { id: string; status: Shipment['status']; notes?: string }) => {
+      const { data } = await apiClient.put<ApiResponse<Shipment>>(`/shipments/${id}/status`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
@@ -65,8 +66,8 @@ export function useUpdateShipmentStatus() {
 export function useAddCustomsStage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/shipments/${id}/customs`, body);
+    mutationFn: async ({ id, ...body }: Partial<CustomsTracking> & { id: string }) => {
+      const { data } = await apiClient.post<ApiResponse<CustomsTracking>>(`/shipments/${id}/customs`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
@@ -76,8 +77,8 @@ export function useAddCustomsStage() {
 export function useUpdateCustomsStage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, customsId, ...body }: Record<string, unknown> & { id: string; customsId: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/shipments/${id}/customs/${customsId}`, body);
+    mutationFn: async ({ id, customsId, ...body }: Partial<CustomsTracking> & { id: string; customsId: string }) => {
+      const { data } = await apiClient.put<ApiResponse<CustomsTracking>>(`/shipments/${id}/customs/${customsId}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
@@ -89,7 +90,7 @@ export function useDeliverShipment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/shipments/${id}/deliver`);
+      const { data } = await apiClient.post<ApiResponse<Shipment>>(`/shipments/${id}/deliver`);
       return data;
     },
     onSuccess: () => {
@@ -104,7 +105,7 @@ export function useCancelShipment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/shipments/${id}/cancel`);
+      const { data } = await apiClient.post<ApiResponse<Shipment>>(`/shipments/${id}/cancel`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),

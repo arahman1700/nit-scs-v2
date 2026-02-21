@@ -35,7 +35,7 @@ export const RuleCard: React.FC<RuleCardProps> = ({ rule, onEdit, onToggle, onDe
   return (
     <div
       className={`group bg-white/[0.03] rounded-xl border transition-all duration-200 ${
-        rule.enabled ? 'border-white/10 hover:border-[#80D1E9]/30' : 'border-white/5 opacity-60'
+        rule.enabled ? 'border-white/10 hover:border-nesma-secondary/30' : 'border-white/5 opacity-60'
       }`}
     >
       <div className="flex items-center gap-4 p-4">

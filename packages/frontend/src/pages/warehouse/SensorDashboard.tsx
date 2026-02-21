@@ -563,7 +563,7 @@ const SensorDetailModal: React.FC<{
       onClick={onClose}
     >
       <div
-        className="glass-card w-full max-w-3xl rounded-2xl overflow-hidden border border-white/10 bg-[#0E2841]"
+        className="glass-card w-full max-w-3xl rounded-2xl overflow-hidden border border-white/10 bg-nesma-dark"
         onClick={e => e.stopPropagation()}
       >
         {/* Modal Header */}

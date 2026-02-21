@@ -302,7 +302,7 @@ export const RolesPage: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="px-4 py-3 text-xs text-gray-400 uppercase tracking-wider font-semibold sticky left-0 bg-[#0a1929] z-10 min-w-[140px]">
+                <th className="px-4 py-3 text-xs text-gray-400 uppercase tracking-wider font-semibold sticky left-0 bg-nesma-dark z-10 min-w-[140px]">
                   Resource
                 </th>
                 {ROLES.map(role => (
@@ -318,7 +318,7 @@ export const RolesPage: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {ALL_RESOURCES.map(resource => (
                 <tr key={resource} className="hover:bg-white/5 transition-colors">
-                  <td className="px-4 py-2.5 text-sm text-gray-300 font-medium sticky left-0 bg-[#0a1929]/95 z-10">
+                  <td className="px-4 py-2.5 text-sm text-gray-300 font-medium sticky left-0 bg-nesma-dark/95 z-10">
                     {RESOURCE_LABELS[resource] || resource}
                   </td>
                   {ROLES.map(role => {

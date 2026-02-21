@@ -72,7 +72,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           value={code}
           onChange={e => onCodeChange(e.target.value.replace(/[^a-z0-9_]/g, ''))}
           placeholder="e.g. approval_requested"
-          className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none font-mono"
+          className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none font-mono"
         />
       </div>
 
@@ -84,7 +84,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           value={subject}
           onChange={e => onSubjectChange(e.target.value)}
           placeholder="e.g. {{documentType}} #{{documentNumber}} requires approval"
-          className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+          className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
         />
       </div>
 
@@ -92,7 +92,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => setShowVariables(!showVariables)}
-          className="flex items-center gap-1.5 text-xs text-[#80D1E9] hover:text-white transition-colors px-2 py-1 rounded-lg bg-white/5"
+          className="flex items-center gap-1.5 text-xs text-nesma-secondary hover:text-white transition-colors px-2 py-1 rounded-lg bg-white/5"
         >
           <Code size={12} /> Insert Variable
         </button>
@@ -135,7 +135,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   <p>Amount: <strong>{{amount}} SAR</strong></p>
   <a href="{{loginUrl}}" style="...">Review Now</a>
 </div>`}
-          className="w-full bg-black/40 text-white text-sm rounded-lg p-3 border border-white/10 focus:border-[#80D1E9] outline-none font-mono leading-relaxed resize-y"
+          className="w-full bg-black/40 text-white text-sm rounded-lg p-3 border border-white/10 focus:border-nesma-secondary outline-none font-mono leading-relaxed resize-y"
         />
       </div>
 

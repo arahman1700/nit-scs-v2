@@ -556,11 +556,11 @@ export const ReportsPage: React.FC = () => {
               onChange={e => setProjectId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"
             >
-              <option value="" className="bg-[#0a1929]">
+              <option value="" className="bg-nesma-dark">
                 All Projects
               </option>
               {projects.map(p => (
-                <option key={p.id} value={p.id} className="bg-[#0a1929]">
+                <option key={p.id} value={p.id} className="bg-nesma-dark">
                   {p.name}
                 </option>
               ))}
@@ -574,11 +574,11 @@ export const ReportsPage: React.FC = () => {
               onChange={e => setWarehouseId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"
             >
-              <option value="" className="bg-[#0a1929]">
+              <option value="" className="bg-nesma-dark">
                 All Warehouses
               </option>
               {warehouses.map(w => (
-                <option key={w.id} value={w.id} className="bg-[#0a1929]">
+                <option key={w.id} value={w.id} className="bg-nesma-dark">
                   {w.name}
                 </option>
               ))}

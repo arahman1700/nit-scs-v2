@@ -18,10 +18,10 @@ export const ReceivingSectionPage: React.FC = () => {
   const { data: customsData } = useCustomsClearances({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
   const { data: gpData } = useGatePasses({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
 
-  const mrrvRows = (mrrvAll?.data ?? []) as Record<string, unknown>[];
-  const shipRows = (shipData?.data ?? []) as Record<string, unknown>[];
-  const customsRows = (customsData?.data ?? []) as Record<string, unknown>[];
-  const gpRows = (gpData?.data ?? []) as Record<string, unknown>[];
+  const mrrvRows = (mrrvAll?.data ?? []) as unknown as Record<string, unknown>[];
+  const shipRows = (shipData?.data ?? []) as unknown as Record<string, unknown>[];
+  const customsRows = (customsData?.data ?? []) as unknown as Record<string, unknown>[];
+  const gpRows = (gpData?.data ?? []) as unknown as Record<string, unknown>[];
 
   // Status breakdown for overview mini stat cards
   const statusCounts = useMemo(() => {

@@ -46,7 +46,7 @@ export const ExecutionLogTable: React.FC<ExecutionLogTableProps> = ({ logs, isLo
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-[#80D1E9] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

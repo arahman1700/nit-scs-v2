@@ -36,10 +36,10 @@ export const IssuingSectionPage: React.FC = () => {
   const { data: gpData } = useGatePasses({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
   const { data: stData } = useStockTransfers({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
 
-  const mirvRows = (mirvAll?.data ?? []) as Record<string, unknown>[];
-  const mrfRows = (mrfData?.data ?? []) as Record<string, unknown>[];
-  const gpRows = (gpData?.data ?? []) as Record<string, unknown>[];
-  const stRows = (stData?.data ?? []) as Record<string, unknown>[];
+  const mirvRows = (mirvAll?.data ?? []) as unknown as Record<string, unknown>[];
+  const mrfRows = (mrfData?.data ?? []) as unknown as Record<string, unknown>[];
+  const gpRows = (gpData?.data ?? []) as unknown as Record<string, unknown>[];
+  const stRows = (stData?.data ?? []) as unknown as Record<string, unknown>[];
 
   // Issued this month
   const issuedThisMonth = useMemo(() => {

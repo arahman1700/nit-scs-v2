@@ -17,8 +17,8 @@ export const GatePassForm: React.FC = () => {
   const mirvQuery = useMirvList({ pageSize: 100 });
   const mrrvQuery = useMrrvList({ pageSize: 100 });
   const warehouseQuery = useWarehouses({ pageSize: 200 });
-  const mirvData = (mirvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
-  const mrrvData = (mrrvQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+  const mirvData = (mirvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const mrrvData = (mrrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
   const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const createMutation = useCreateGatePass();

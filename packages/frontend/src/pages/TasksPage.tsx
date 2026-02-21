@@ -1,11 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import {
-  DndContext,
-  DragOverlay,
-  useDraggable,
-  useDroppable,
-  closestCenter,
-} from '@dnd-kit/core';
+import { DndContext, DragOverlay, useDraggable, useDroppable, closestCenter } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useTaskList, useCreateTask, useChangeTaskStatus } from '@/api/hooks/useTasks';
@@ -60,10 +54,7 @@ const PRIORITY_CONFIG: Record<string, { label: string; bg: string; text: string;
 
 // ── Draggable Task Card (Kanban) ──────────────────────────────────────────────
 
-const TaskCard: React.FC<{ task: Task; isDragOverlay?: boolean }> = ({
-  task,
-  isDragOverlay = false,
-}) => {
+const TaskCard: React.FC<{ task: Task; isDragOverlay?: boolean }> = ({ task, isDragOverlay = false }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
     data: { task },
@@ -82,7 +73,7 @@ const TaskCard: React.FC<{ task: Task; isDragOverlay?: boolean }> = ({
       ref={isDragOverlay ? undefined : setNodeRef}
       style={isDragOverlay ? undefined : style}
       {...(isDragOverlay ? {} : { ...listeners, ...attributes })}
-      className={`bg-[#132D4B] p-4 rounded-xl border border-white/5 cursor-grab active:cursor-grabbing hover:bg-[#1A3A5E] hover:border-white/10 transition-all group shadow-lg ${isDragOverlay ? 'ring-2 ring-nesma-secondary shadow-2xl scale-105' : ''}`}
+      className={`bg-white/10 p-4 rounded-xl border border-white/5 cursor-grab active:cursor-grabbing hover:bg-white/10 hover:border-white/10 transition-all group shadow-lg ${isDragOverlay ? 'ring-2 ring-nesma-secondary shadow-2xl scale-105' : ''}`}
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="font-semibold text-gray-100 text-sm leading-snug line-clamp-2 group-hover:text-nesma-secondary transition-colors flex-1">
@@ -132,7 +123,7 @@ const KanbanColumn: React.FC<{
       className={`min-w-[280px] flex-1 glass-card rounded-2xl flex flex-col h-[calc(100vh-260px)] bg-black/20 border transition-colors ${isOver ? 'border-nesma-secondary/60 bg-nesma-secondary/5' : 'border-white/5'}`}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#0E2841]/80 backdrop-blur-sm z-10 rounded-t-2xl">
+      <div className="p-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-nesma-dark/80 backdrop-blur-sm z-10 rounded-t-2xl">
         <div className="flex items-center gap-2">
           <Circle size={10} className={cfg.text} fill="currentColor" />
           <h3 className="font-bold text-white text-sm uppercase tracking-wide">{cfg.label}</h3>
@@ -144,7 +135,7 @@ const KanbanColumn: React.FC<{
 
       {/* Cards */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-        {tasks.map((task) => (
+        {tasks.map(task => (
           <TaskCard key={task.id} task={task} />
         ))}
 
@@ -197,7 +188,7 @@ const CreateTaskModal: React.FC<{
           resetForm();
           onClose();
         },
-        onError: (err) => {
+        onError: err => {
           const msg = err instanceof Error ? err.message : 'Failed to create task';
           toast.error('Create failed', msg);
         },
@@ -218,24 +209,18 @@ const CreateTaskModal: React.FC<{
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
 
       {/* Dialog */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           className="glass-card rounded-2xl p-6 border border-white/10 max-w-lg w-full animate-fade-in shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white">Create New Task</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-white transition-colors p-1"
-            >
+            <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
               <X size={18} />
             </button>
           </div>
@@ -248,7 +233,7 @@ const CreateTaskModal: React.FC<{
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={e => setTitle(e.target.value)}
                 placeholder="Enter task title..."
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
               />
@@ -259,7 +244,7 @@ const CreateTaskModal: React.FC<{
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Description</label>
               <textarea
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 placeholder="Describe the task..."
                 rows={3}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50 resize-none"
@@ -272,11 +257,11 @@ const CreateTaskModal: React.FC<{
                 <label className="block text-xs font-medium text-gray-400 mb-1.5">Priority</label>
                 <select
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value as 'high' | 'medium' | 'low')}
+                  onChange={e => setPriority(e.target.value as 'high' | 'medium' | 'low')}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
                 >
-                  {PRIORITIES.map((p) => (
-                    <option key={p} value={p} className="bg-[#0E2841]">
+                  {PRIORITIES.map(p => (
+                    <option key={p} value={p} className="bg-nesma-dark">
                       {p.charAt(0).toUpperCase() + p.slice(1)}
                     </option>
                   ))}
@@ -288,7 +273,7 @@ const CreateTaskModal: React.FC<{
                 <input
                   type="date"
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
+                  onChange={e => setDueDate(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
                 />
               </div>
@@ -299,12 +284,14 @@ const CreateTaskModal: React.FC<{
               <label className="block text-xs font-medium text-gray-400 mb-1.5">Assignee</label>
               <select
                 value={assigneeId}
-                onChange={(e) => setAssigneeId(e.target.value)}
+                onChange={e => setAssigneeId(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
               >
-                <option value="" className="bg-[#0E2841]">Unassigned</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id} className="bg-[#0E2841]">
+                <option value="" className="bg-nesma-dark">
+                  Unassigned
+                </option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id} className="bg-nesma-dark">
                     {emp.name}
                   </option>
                 ))}
@@ -355,7 +342,7 @@ export const TasksPage: React.FC = () => {
 
   // Filtered tasks
   const filteredTasks = useMemo(() => {
-    return allTasks.filter((t) => {
+    return allTasks.filter(t => {
       if (statusFilter && t.status !== statusFilter) return false;
       if (priorityFilter && t.priority !== priorityFilter) return false;
       if (searchText) {
@@ -376,7 +363,7 @@ export const TasksPage: React.FC = () => {
       completed: [],
       cancelled: [],
     };
-    filteredTasks.forEach((t) => {
+    filteredTasks.forEach(t => {
       if (grouped[t.status]) {
         grouped[t.status].push(t);
       } else {
@@ -410,7 +397,7 @@ export const TasksPage: React.FC = () => {
 
       const taskId = active.id as string;
       const targetStatus = over.id as string;
-      const task = allTasks.find((t) => t.id === taskId);
+      const task = allTasks.find(t => t.id === taskId);
 
       if (!task || task.status === targetStatus) return;
 
@@ -420,7 +407,7 @@ export const TasksPage: React.FC = () => {
           onSuccess: () => {
             toast.success('Status updated', `Task moved to ${STATUS_CONFIG[targetStatus]?.label ?? targetStatus}`);
           },
-          onError: (err) => {
+          onError: err => {
             const msg = err instanceof Error ? err.message : 'Failed to update status';
             toast.error('Update failed', msg);
           },
@@ -441,7 +428,7 @@ export const TasksPage: React.FC = () => {
         </div>
         <div className="glass-card rounded-2xl p-6 border border-white/10 animate-pulse">
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {[1, 2, 3, 4, 5].map(i => (
               <div key={i} className="h-12 bg-white/5 rounded-xl" />
             ))}
           </div>
@@ -467,7 +454,7 @@ export const TasksPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-white glow-text">Task Management</h1>
           <p className="text-sm text-gray-400 mt-1">
-            {allTasks.length} total tasks &middot; {allTasks.filter((t) => t.status === 'open').length} open
+            {allTasks.length} total tasks &middot; {allTasks.filter(t => t.status === 'open').length} open
           </p>
         </div>
 
@@ -488,7 +475,7 @@ export const TasksPage: React.FC = () => {
           <input
             type="text"
             value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
+            onChange={e => setSearchText(e.target.value)}
             placeholder="Search tasks..."
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
           />
@@ -497,12 +484,14 @@ export const TasksPage: React.FC = () => {
         {/* Status Filter */}
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={e => setStatusFilter(e.target.value)}
           className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
         >
-          <option value="" className="bg-[#0E2841]">All Statuses</option>
-          {STATUSES.map((s) => (
-            <option key={s} value={s} className="bg-[#0E2841]">
+          <option value="" className="bg-nesma-dark">
+            All Statuses
+          </option>
+          {STATUSES.map(s => (
+            <option key={s} value={s} className="bg-nesma-dark">
               {STATUS_CONFIG[s].label}
             </option>
           ))}
@@ -511,12 +500,14 @@ export const TasksPage: React.FC = () => {
         {/* Priority Filter */}
         <select
           value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
+          onChange={e => setPriorityFilter(e.target.value)}
           className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
         >
-          <option value="" className="bg-[#0E2841]">All Priorities</option>
-          {PRIORITIES.map((p) => (
-            <option key={p} value={p} className="bg-[#0E2841]">
+          <option value="" className="bg-nesma-dark">
+            All Priorities
+          </option>
+          {PRIORITIES.map(p => (
+            <option key={p} value={p} className="bg-nesma-dark">
               {p.charAt(0).toUpperCase() + p.slice(1)}
             </option>
           ))}
@@ -558,7 +549,7 @@ export const TasksPage: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {filteredTasks.length > 0 ? (
-                  filteredTasks.map((task) => {
+                  filteredTasks.map(task => {
                     const sCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG.open;
                     const pCfg = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG.low;
 
@@ -571,16 +562,12 @@ export const TasksPage: React.FC = () => {
 
                         {/* Assignee */}
                         <td className="py-3 pr-4">
-                          <span className="text-sm text-gray-400">
-                            {task.assignee?.fullName ?? 'Unassigned'}
-                          </span>
+                          <span className="text-sm text-gray-400">{task.assignee?.fullName ?? 'Unassigned'}</span>
                         </td>
 
                         {/* Priority */}
                         <td className="py-3 pr-4">
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded font-semibold ${pCfg.bg} ${pCfg.text}`}
-                          >
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-semibold ${pCfg.bg} ${pCfg.text}`}>
                             {pCfg.label}
                           </span>
                         </td>
@@ -588,9 +575,7 @@ export const TasksPage: React.FC = () => {
                         {/* Due Date */}
                         <td className="py-3 pr-4">
                           <span className="text-sm text-gray-400">
-                            {task.dueDate
-                              ? new Date(task.dueDate).toLocaleDateString()
-                              : '\u2014'}
+                            {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '\u2014'}
                           </span>
                         </td>
 
@@ -614,10 +599,8 @@ export const TasksPage: React.FC = () => {
                                       changeStatus.mutate(
                                         { id: task.id, status: 'in_progress' },
                                         {
-                                          onSuccess: () =>
-                                            toast.success('Updated', 'Task started'),
-                                          onError: () =>
-                                            toast.error('Error', 'Failed to update'),
+                                          onSuccess: () => toast.success('Updated', 'Task started'),
+                                          onError: () => toast.error('Error', 'Failed to update'),
                                         },
                                       )
                                     }
@@ -632,10 +615,8 @@ export const TasksPage: React.FC = () => {
                                       changeStatus.mutate(
                                         { id: task.id, status: 'completed' },
                                         {
-                                          onSuccess: () =>
-                                            toast.success('Updated', 'Task completed'),
-                                          onError: () =>
-                                            toast.error('Error', 'Failed to update'),
+                                          onSuccess: () => toast.success('Updated', 'Task completed'),
+                                          onError: () => toast.error('Error', 'Failed to update'),
                                         },
                                       )
                                     }
@@ -649,10 +630,8 @@ export const TasksPage: React.FC = () => {
                                     changeStatus.mutate(
                                       { id: task.id, status: 'cancelled' },
                                       {
-                                        onSuccess: () =>
-                                          toast.success('Updated', 'Task cancelled'),
-                                        onError: () =>
-                                          toast.error('Error', 'Failed to update'),
+                                        onSuccess: () => toast.success('Updated', 'Task cancelled'),
+                                        onError: () => toast.error('Error', 'Failed to update'),
                                       },
                                     )
                                   }
@@ -683,24 +662,14 @@ export const TasksPage: React.FC = () => {
 
       {/* ── Kanban View ────────────────────────────────────────────────────── */}
       {view === 'kanban' && (
-        <DndContext
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
+        <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="flex gap-4 overflow-x-auto pb-4 items-start">
-            {STATUSES.map((status) => (
-              <KanbanColumn
-                key={status}
-                status={status}
-                tasks={tasksByStatus[status]}
-              />
+            {STATUSES.map(status => (
+              <KanbanColumn key={status} status={status} tasks={tasksByStatus[status]} />
             ))}
           </div>
 
-          <DragOverlay>
-            {activeTask ? <TaskCard task={activeTask} isDragOverlay /> : null}
-          </DragOverlay>
+          <DragOverlay>{activeTask ? <TaskCard task={activeTask} isDragOverlay /> : null}</DragOverlay>
         </DndContext>
       )}
 

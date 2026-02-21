@@ -22,7 +22,7 @@ export const ShippingSectionPage: React.FC = () => {
 
   const sla = slaQuery.data?.data;
   const shipData = shipQuery.data?.data ?? [];
-  const inTransitCount = shipData.filter(s => (s as Record<string, unknown>).status === 'in_transit').length;
+  const inTransitCount = shipData.filter(s => (s as unknown as Record<string, unknown>).status === 'in_transit').length;
 
   const kpis: KpiCardProps[] = [
     {
@@ -103,7 +103,7 @@ export const ShippingSectionPage: React.FC = () => {
               {shipData.length > 0 ? (
                 <div className="space-y-3">
                   {shipData.slice(0, 5).map(s => {
-                    const rec = s as Record<string, unknown>;
+                    const rec = s as unknown as Record<string, unknown>;
                     return (
                       <div
                         key={rec.id as string}
@@ -133,7 +133,7 @@ export const ShippingSectionPage: React.FC = () => {
             title="Shipments"
             icon={Ship}
             columns={RESOURCE_COLUMNS.shipments.columns}
-            rows={(shipQuery.data?.data ?? []) as Record<string, unknown>[]}
+            rows={(shipQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
             loading={shipQuery.isLoading}
             createLabel="New Shipment"
             createUrl="/admin/forms/shipment"

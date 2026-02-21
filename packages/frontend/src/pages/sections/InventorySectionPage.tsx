@@ -16,6 +16,7 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useInventorySummary, useWarehouses, useInventory, useGatePasses, useStockTransfers } from '@/api/hooks';
 import { displayStr } from '@/utils/displayStr';
+import { CHART_PALETTE } from '@/config/chartTheme';
 
 const InventoryDashboard = React.lazy(() =>
   import('@/pages/warehouse/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })),
@@ -27,8 +28,6 @@ const NonMovingMaterialsDashboard = React.lazy(() =>
   import('@/pages/warehouse/NonMovingMaterialsDashboard').then(m => ({ default: m.NonMovingMaterialsDashboard })),
 );
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
-
-const PIE_COLORS = ['#2E3192', '#80D1E9', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -99,8 +98,8 @@ export const InventorySectionPage: React.FC = () => {
   const lowStockItems = (lowStockData?.data ?? []) as unknown as Record<string, unknown>[];
   const inventoryRows = (invItems?.data ?? []) as unknown as Record<string, unknown>[];
   const warehouseRows = (whData?.data ?? []) as unknown as Record<string, unknown>[];
-  const gatePassRows = (gpData?.data ?? []) as Array<Record<string, unknown>>;
-  const stockTransferRows = (stData?.data ?? []) as Array<Record<string, unknown>>;
+  const gatePassRows = (gpData?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const stockTransferRows = (stData?.data ?? []) as unknown as Array<Record<string, unknown>>;
 
   const renderPieLabel = ({ name, percent }: { name?: string; percent?: number }) =>
     `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`;
@@ -146,7 +145,7 @@ export const InventorySectionPage: React.FC = () => {
                         label={renderPieLabel}
                       >
                         {byCategory.map((_, i) => (
-                          <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                          <Cell key={i} fill={CHART_PALETTE[i % CHART_PALETTE.length]} />
                         ))}
                       </Pie>
                       <Tooltip

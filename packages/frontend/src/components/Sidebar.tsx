@@ -248,7 +248,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
 
   return (
     <aside
-      className={`${isOpen ? 'w-80' : 'w-24 hidden lg:flex'} glass-panel transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-[#051020]/95 backdrop-blur-xl shadow-2xl`}
+      className={`${isOpen ? 'w-80' : 'w-24 hidden lg:flex'} glass-panel transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-nesma-dark/95 backdrop-blur-xl shadow-2xl`}
     >
       {/* Logo Area */}
       <div className="h-24 flex items-center justify-center p-6 relative overflow-hidden group border-b border-white/5">
@@ -291,7 +291,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
       {/* Footer / User Controls */}
       <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
         {isOpen ? (
-          <div className="mb-3 bg-[#0E2841] p-3 rounded-xl border border-white/5 shadow-inner">
+          <div className="mb-3 bg-white/5 p-3 rounded-xl border border-white/5 shadow-inner">
             <label className="text-[10px] text-gray-400 block mb-1.5 font-bold uppercase tracking-wide">
               Current Persona
             </label>

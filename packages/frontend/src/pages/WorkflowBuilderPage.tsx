@@ -136,7 +136,7 @@ export const WorkflowBuilderPage: React.FC = () => {
                   value={editingRule.name}
                   onChange={e => setEditingRule({ ...editingRule, name: e.target.value })}
                   placeholder="e.g. Send approval email"
-                  className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+                  className="w-full bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
                 />
               </div>
 
@@ -175,7 +175,7 @@ export const WorkflowBuilderPage: React.FC = () => {
             <>
               {rulesLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-2 border-[#80D1E9] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : rules.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 text-sm">
@@ -200,7 +200,7 @@ export const WorkflowBuilderPage: React.FC = () => {
 
               <button
                 onClick={() => setEditingRule({ ...EMPTY_RULE, id: '', isNew: true })}
-                className="flex items-center gap-2 text-sm text-[#80D1E9] hover:text-white transition-colors"
+                className="flex items-center gap-2 text-sm text-nesma-secondary hover:text-white transition-colors"
               >
                 <Plus size={16} /> Add Rule
               </button>
@@ -216,7 +216,7 @@ export const WorkflowBuilderPage: React.FC = () => {
             <select
               value={selectedRuleId || ''}
               onChange={e => setSelectedRuleId(e.target.value || null)}
-              className="bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-[#80D1E9] outline-none"
+              className="bg-black/40 text-white text-sm rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary outline-none"
             >
               <option value="">All rules</option>
               {rules.map(r => (

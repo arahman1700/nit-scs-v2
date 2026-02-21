@@ -23,9 +23,9 @@ export const QCOfficerDashboard: React.FC = () => {
   const osdQuery = useOsdList({ pageSize: 200 });
   const mrrvQuery = useMrrvList({ pageSize: 200 });
 
-  const allRfims = (rfimQuery.data?.data ?? []) as Record<string, unknown>[];
-  const allOsds = (osdQuery.data?.data ?? []) as Record<string, unknown>[];
-  const allMrrvs = (mrrvQuery.data?.data ?? []) as Record<string, unknown>[];
+  const allRfims = (rfimQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allOsds = (osdQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allMrrvs = (mrrvQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
 
   const isLoading = rfimQuery.isLoading;
 
