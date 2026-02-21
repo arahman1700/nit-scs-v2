@@ -315,6 +315,23 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
     const requestDate =
       rawRequestDate && !rawRequestDate.includes('T') ? `${rawRequestDate}T00:00:00.000Z` : rawRequestDate;
 
+    // Additional warehouse/project lookups for multi-ref forms (MRN, WT, IMSF)
+    const fromWarehouseId = formData.fromWarehouse
+      ? (warehousesRaw.find(w => w.warehouseName === formData.fromWarehouse)?.id as string | undefined)
+      : undefined;
+    const sourceWarehouseId = formData.sourceWarehouse
+      ? (warehousesRaw.find(w => w.warehouseName === formData.sourceWarehouse)?.id as string | undefined)
+      : undefined;
+    const destWarehouseId = formData.destinationWarehouse
+      ? (warehousesRaw.find(w => w.warehouseName === formData.destinationWarehouse)?.id as string | undefined)
+      : undefined;
+    const senderProjectId = formData.senderProject
+      ? (projectsRaw.find(p => p.projectName === formData.senderProject)?.id as string | undefined)
+      : undefined;
+    const receiverProjectId = formData.receiverProject
+      ? (projectsRaw.find(p => p.projectName === formData.receiverProject)?.id as string | undefined)
+      : undefined;
+
     // Map form field names to API field names
     const payload: Record<string, unknown> = {
       ...formData,
@@ -326,6 +343,14 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       qciRequired: Boolean(formData.rfimRequired || formData.qciRequired),
       totalValue,
       type: joType || undefined,
+      // MRN: fromWarehouse → fromWarehouseId
+      ...(fromWarehouseId ? { fromWarehouseId } : {}),
+      // WT: sourceWarehouse/destinationWarehouse → fromWarehouseId/toWarehouseId
+      ...(sourceWarehouseId ? { fromWarehouseId: sourceWarehouseId } : {}),
+      ...(destWarehouseId ? { toWarehouseId: destWarehouseId } : {}),
+      // IMSF: senderProject/receiverProject → senderProjectId/receiverProjectId
+      ...(senderProjectId ? { senderProjectId } : {}),
+      ...(receiverProjectId ? { receiverProjectId } : {}),
     };
 
     // Map frontend condition values to backend enum
@@ -352,6 +377,50 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       delete payload.reportType;
     }
 
+    // MRN: map display returnType → snake_case Prisma enum
+    if (formType === 'mrv' && payload.returnType) {
+      const returnTypeMap: Record<string, string> = {
+        'Return to Warehouse': 'return_to_warehouse',
+        'Return to Supplier': 'return_to_supplier',
+        Scrap: 'scrap',
+        'Transfer to Project': 'transfer_to_project',
+      };
+      payload.returnType =
+        returnTypeMap[String(payload.returnType)] || String(payload.returnType).toLowerCase().replace(/ /g, '_');
+    }
+
+    // WT: map display transferType → snake_case Prisma enum
+    if (formType === 'wt' && payload.transferType) {
+      const transferTypeMap: Record<string, string> = {
+        'Warehouse to Warehouse': 'warehouse_to_warehouse',
+        'Project to Project': 'project_to_project',
+        'Warehouse to Project': 'warehouse_to_project',
+        'Project to Warehouse': 'project_to_warehouse',
+      };
+      payload.transferType =
+        transferTypeMap[String(payload.transferType)] || String(payload.transferType).toLowerCase().replace(/ /g, '_');
+    }
+
+    // IMSF: map display materialType → lowercase Prisma enum
+    if (formType === 'imsf' && payload.materialType) {
+      payload.materialType = String(payload.materialType).toLowerCase();
+    }
+
+    // Scrap: map display materialType → lowercase Prisma enum
+    if (formType === 'scrap' && payload.materialType) {
+      payload.materialType = String(payload.materialType).toLowerCase().replace(/ /g, '_');
+    }
+
+    // Surplus: map display condition → lowercase + disposition → lowercase
+    if (formType === 'surplus') {
+      if (payload.condition) {
+        payload.condition = conditionMap[String(payload.condition)] || String(payload.condition).toLowerCase();
+      }
+      if (payload.disposition) {
+        payload.disposition = String(payload.disposition).toLowerCase();
+      }
+    }
+
     // Map lineItems to the `lines` array format the backend expects
     const mappedLines = lineItems.map(li => ({
       itemId: li.itemId,
@@ -363,6 +432,27 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       notes: li.notes,
     }));
     payload.lines = mappedLines;
+
+    // Remove display-only field names that aren't real Prisma columns
+    const displayOnlyFields = [
+      'supplier',
+      'project',
+      'warehouse',
+      'requester',
+      'receivedBy',
+      'returnedBy',
+      'fromWarehouse',
+      'sourceWarehouse',
+      'destinationWarehouse',
+      'senderProject',
+      'receiverProject',
+      'requestedBy',
+    ];
+    for (const key of displayOnlyFields) {
+      if (payload[key] && typeof payload[key] === 'string') {
+        delete payload[key];
+      }
+    }
 
     submit(payload, lineItems);
   };
