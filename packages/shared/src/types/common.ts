@@ -1,3 +1,26 @@
+// ── Relation Refs (match Prisma nested includes) ────────────────────────
+
+export interface ProjectRef {
+  id: string;
+  projectName: string;
+  projectCode?: string;
+}
+export interface SupplierRef {
+  id: string;
+  supplierName: string;
+  supplierCode?: string;
+}
+export interface WarehouseRef {
+  id: string;
+  warehouseName: string;
+  warehouseCode?: string;
+}
+export interface EmployeeRef {
+  id: string;
+  fullName: string;
+  email?: string;
+}
+
 // ── Auth ─────────────────────────────────────────────────────────────────
 import type { UserRole } from './enums.js';
 

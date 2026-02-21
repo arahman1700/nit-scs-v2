@@ -1,5 +1,12 @@
+import type { ProjectRef, SupplierRef, WarehouseRef, EmployeeRef } from '@nit-scs-v2/shared/types';
+
+/** Any relation ref object that displayStr can extract a name from. */
+type RelationRef = ProjectRef | SupplierRef | WarehouseRef | EmployeeRef | { name: string; [key: string]: unknown };
+
 /** Safely extract a display string from a value that may be a string or a nested Prisma relation object. */
-export const displayStr = (val: unknown): string => {
+export function displayStr(val: RelationRef | string | null | undefined): string;
+export function displayStr(val: unknown): string;
+export function displayStr(val: unknown): string {
   if (val == null) return '';
   if (typeof val === 'string') return val;
   if (typeof val === 'object') {
@@ -17,4 +24,4 @@ export const displayStr = (val: unknown): string => {
     );
   }
   return String(val);
-};
+}

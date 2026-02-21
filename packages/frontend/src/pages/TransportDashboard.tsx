@@ -49,9 +49,9 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
             <div className="flex gap-2">
               <span
                 className={`text-[10px] px-2 py-1 rounded-full font-medium border ${
-                  job.priority === 'High'
+                  job.priority === 'high' || job.priority === 'urgent'
                     ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                    : job.priority === 'Medium'
+                    : job.priority === 'normal'
                       ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
                       : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                 }`}
@@ -64,13 +64,13 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
             </div>
           </div>
           <h4 className="font-bold text-gray-100 mb-3 text-sm leading-snug group-hover:text-nesma-secondary transition-colors">
-            {job.title}
+            {job.description}
           </h4>
 
           <div className="space-y-2 border-t border-white/5 pt-3">
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Truck size={14} className="text-gray-500" />
-              <span>{job.type.replace('_', ' ')}</span>
+              <span>{(job.joType ?? '').replace('_', ' ')}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <User size={14} className="text-gray-500" />
@@ -133,7 +133,8 @@ export const TransportDashboard: React.FC = () => {
     const byType: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     JOBS.forEach(j => {
-      byType[j.type] = (byType[j.type] || 0) + 1;
+      const jt = j.joType ?? '';
+      byType[jt] = (byType[jt] || 0) + 1;
       byStatus[j.status] = (byStatus[j.status] || 0) + 1;
     });
     return { byType, byStatus, total: JOBS.length };
@@ -157,14 +158,14 @@ export const TransportDashboard: React.FC = () => {
     }> = [];
 
     const equipmentJobs = JOBS.filter(
-      j => j.type === 'Equipment' || j.type === 'Transport' || j.type === 'Generator_Maintenance',
+      j => j.joType === 'equipment' || j.joType === 'transport' || j.joType === 'generator_maintenance',
     );
 
     equipmentJobs.forEach(job => {
       vehicles.push({
         id: `FL-${job.id.split('-').pop()}`,
-        name: job.title.split(' - ')[0] || job.title,
-        type: job.type === 'Transport' ? 'Truck' : job.type === 'Generator_Maintenance' ? 'Generator' : 'Equipment',
+        name: job.description.split(' - ')[0] || job.description,
+        type: job.joType === 'transport' ? 'Truck' : job.joType === 'generator_maintenance' ? 'Generator' : 'Equipment',
         project: displayStr(job.project) || '-',
         status:
           job.status === JobStatus.IN_PROGRESS
@@ -174,8 +175,8 @@ export const TransportDashboard: React.FC = () => {
               : job.status === JobStatus.DRAFT
                 ? 'Requested'
                 : 'Standby',
-        lastUsed: job.date,
-        driver: job.driver,
+        lastUsed: job.requestDate,
+        driver: job.driverName,
       });
     });
 
@@ -369,27 +370,27 @@ export const TransportDashboard: React.FC = () => {
               {employees
                 .filter(
                   e =>
-                    (e.department as string) === 'Transport' ||
-                    ((e.title as string) || '').includes('Driver') ||
-                    ((e.title as string) || '').includes('Mechanic'),
+                    (e.department as string) === 'transport' ||
+                    ((e.role as string) || '').includes('driver') ||
+                    ((e.role as string) || '').includes('mechanic'),
                 )
                 .map(emp => (
                   <div key={emp.id as string} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-nesma-primary/30 flex items-center justify-center text-xs text-nesma-secondary font-bold">
-                        {(emp.name as string)
+                        {emp.fullName
                           .split(' ')
                           .map(n => n[0])
                           .join('')
                           .slice(0, 2)}
                       </div>
                       <div>
-                        <span className="text-sm text-gray-200">{emp.name as string}</span>
-                        <span className="text-xs text-gray-500 block">{emp.title as string}</span>
+                        <span className="text-sm text-gray-200">{emp.fullName}</span>
+                        <span className="text-xs text-gray-500 block">{emp.role}</span>
                       </div>
                     </div>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
-                      <MapPin size={12} /> {emp.site as string}
+                      <MapPin size={12} /> {emp.department}
                     </span>
                   </div>
                 ))}

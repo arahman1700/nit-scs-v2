@@ -1,4 +1,4 @@
-import type { StatusHistoryEntry } from './common.js';
+import type { StatusHistoryEntry, ProjectRef, SupplierRef, WarehouseRef, EmployeeRef } from './common.js';
 import type { VoucherLineItem } from './materials.js';
 import type { ApprovalChain } from './approval.js';
 
@@ -6,60 +6,126 @@ import type { ApprovalChain } from './approval.js';
 
 export interface GatePass {
   id: string;
-  type: 'Inbound' | 'Outbound' | 'Transfer';
-  date: string;
-  warehouse: string;
-  linkedDocument?: string;
-  linkedDocumentType?: 'MRRV' | 'MIRV' | 'ST';
-  vehiclePlate?: string;
-  driverName?: string;
+  gatePassNumber?: string;
+  passType: 'inbound' | 'outbound' | 'transfer';
+  warehouseId: string;
+  warehouse?: WarehouseRef;
+  mirvId?: string;
+  projectId?: string;
+  project?: ProjectRef;
+  vehicleNumber: string;
+  vehicleType?: string;
+  driverName: string;
   driverIdNumber?: string;
-  status: 'Draft' | 'Active' | 'Completed' | 'Cancelled';
-  items?: VoucherLineItem[];
-  guardCheckIn?: string;
-  guardCheckOut?: string;
+  destination: string;
+  purpose?: string;
+  issueDate: string;
+  validUntil?: string;
+  status: 'draft' | 'pending' | 'approved' | 'released' | 'returned' | 'expired' | 'cancelled';
+  issuedById?: string;
+  securityOfficer?: string;
+  exitTime?: string;
+  returnTime?: string;
   notes?: string;
+  gatePassItems?: VoucherLineItem[];
   statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use passType */
+  type?: string;
+  /** @deprecated Use issueDate */
+  date?: string;
+  /** @deprecated Use vehicleNumber */
+  vehiclePlate?: string;
+  /** @deprecated Use gatePassItems */
+  items?: VoucherLineItem[];
+  /** @deprecated Use exitTime */
+  guardCheckOut?: string;
+  /** @deprecated Use returnTime */
+  guardCheckIn?: string;
 }
 
 // ── Stock Transfer ───────────────────────────────────────────────────────
 
 export interface StockTransfer {
   id: string;
-  date: string;
-  fromWarehouse: string;
-  toWarehouse: string;
-  fromProject?: string;
-  toProject?: string;
-  status: 'Draft' | 'Pending Approval' | 'Approved' | 'In Transit' | 'Received' | 'Completed' | 'Cancelled';
+  transferNumber?: string;
+  transferType: 'warehouse_to_warehouse' | 'project_to_project' | 'warehouse_to_project' | 'project_to_warehouse';
+  fromWarehouseId: string;
+  fromWarehouse?: WarehouseRef;
+  toWarehouseId: string;
+  toWarehouse?: WarehouseRef;
+  fromProjectId?: string;
+  toProjectId?: string;
+  requestedById: string;
+  requestedBy?: EmployeeRef;
+  transferDate: string;
+  status: 'draft' | 'pending' | 'approved' | 'shipped' | 'received' | 'completed' | 'cancelled';
+  shippedDate?: string;
+  receivedDate?: string;
+  sourceMrvId?: string;
+  destinationMirvId?: string;
+  transportJoId?: string;
+  gatePassId?: string;
+  notes?: string;
   lineItems?: VoucherLineItem[];
   totalValue?: number;
-  transferType: 'inter_warehouse' | 'inter_project';
-  approvalRequired?: boolean;
   approvalChain?: ApprovalChain;
-  notes?: string;
   statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use transferDate */
+  date?: string;
 }
 
 // ── Material Requisition (MRF) ───────────────────────────────────────────
 
 export interface MaterialRequisition {
   id: string;
-  date: string;
-  project: string;
-  requester: string;
-  warehouse?: string;
-  suggestedWarehouse?: string;
-  status: 'Draft' | 'Pending Approval' | 'Approved' | 'Converted to MIRV' | 'Rejected' | 'Cancelled';
-  lineItems?: VoucherLineItem[];
-  totalValue?: number;
+  mrfNumber?: string;
+  requestDate: string;
+  requiredDate?: string;
+  projectId: string;
+  project?: ProjectRef;
+  requestedById: string;
+  requestedBy?: EmployeeRef;
+  department?: 'electrical' | 'mechanical' | 'civil' | 'safety' | 'general';
+  deliveryPoint?: string;
+  workOrder?: string;
+  drawingReference?: string;
+  priority?: 'urgent' | 'high' | 'medium' | 'low';
+  status:
+    | 'draft'
+    | 'submitted'
+    | 'under_review'
+    | 'approved'
+    | 'checking_stock'
+    | 'from_stock'
+    | 'needs_purchase'
+    | 'partially_fulfilled'
+    | 'fulfilled'
+    | 'rejected'
+    | 'cancelled';
+  totalEstimatedValue?: number;
   mirvId?: string;
-  approvalChain?: ApprovalChain;
-  budgetAvailable?: number;
-  budgetImpact?: number;
-  urgency?: 'Normal' | 'Urgent' | 'Critical';
+  reviewedById?: string;
+  reviewDate?: string;
+  approvedById?: string;
+  approvalDate?: string;
+  fulfillmentDate?: string;
+  convertedToImsfId?: string;
   notes?: string;
+  lineItems?: VoucherLineItem[];
+  approvalChain?: ApprovalChain;
   statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use requestDate */
+  date?: string;
+  /** @deprecated Use requestedById */
+  requester?: string;
+  /** @deprecated Use totalEstimatedValue */
+  totalValue?: number;
 }
 
 // ── Shipment ─────────────────────────────────────────────────────────────
@@ -84,21 +150,62 @@ export interface ShipmentDocument {
 
 export interface Shipment {
   id: string;
-  supplier: string;
-  description?: string;
-  etd: string;
-  eta: string;
-  port: string;
-  status: 'New' | 'Booked' | 'In Transit' | 'Arrived' | 'Customs Clearance' | 'In Clearance' | 'Delivered';
-  agent?: string;
-  value?: number;
+  shipmentNumber?: string;
+  supplierId: string;
+  supplier?: SupplierRef;
+  freightForwarderId?: string;
+  projectId?: string;
+  project?: ProjectRef;
+  originCountry?: string;
+  modeOfShipment?: 'sea_fcl' | 'sea_lcl' | 'air' | 'land' | 'courier';
+  portOfLoading?: string;
+  portOfEntryId?: string;
+  destinationWarehouseId?: string;
+  orderDate?: string;
+  expectedShipDate?: string;
+  actualShipDate?: string;
+  etaPort?: string;
+  actualArrivalDate?: string;
+  deliveryDate?: string;
+  status:
+    | 'draft'
+    | 'po_issued'
+    | 'in_production'
+    | 'ready_to_ship'
+    | 'in_transit'
+    | 'at_port'
+    | 'customs_clearing'
+    | 'cleared'
+    | 'in_delivery'
+    | 'delivered'
+    | 'cancelled';
+  awbBlNumber?: string;
   containerNumber?: string;
-  awbNumber?: string;
-  bolNumber?: string;
-  shipmentType?: 'Sea' | 'Air' | 'Land';
+  vesselFlight?: string;
+  trackingUrl?: string;
+  commercialValue?: number;
+  freightCost?: number;
+  insuranceCost?: number;
+  dutiesEstimated?: number;
+  description?: string;
+  mrrvId?: string;
+  transportJoId?: string;
+  notes?: string;
   lineItems?: ShipmentLine[];
   documents?: ShipmentDocument[];
   statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use expectedShipDate */
+  etd?: string;
+  /** @deprecated Use etaPort */
+  eta?: string;
+  /** @deprecated Use commercialValue */
+  value?: number;
+  /** @deprecated Use portOfEntryId */
+  port?: string;
+  /** @deprecated Use modeOfShipment */
+  shipmentType?: string;
 }
 
 // ── Customs ──────────────────────────────────────────────────────────────

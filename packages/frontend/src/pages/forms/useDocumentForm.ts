@@ -301,15 +301,11 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
     e.preventDefault();
 
     // Map display names → IDs for the backend API
-    const supplierId = suppliersRaw.find(s => (s.supplierName || s.name) === formData.supplier)?.id as
-      | string
-      | undefined;
+    const supplierId = suppliersRaw.find(s => s.supplierName === formData.supplier)?.id as string | undefined;
 
-    const projectId = projectsRaw.find(p => (p.projectName || p.name) === formData.project)?.id as string | undefined;
+    const projectId = projectsRaw.find(p => p.projectName === formData.project)?.id as string | undefined;
 
-    const warehouseId = warehousesRaw.find(w => (w.warehouseName || w.name) === formData.warehouse)?.id as
-      | string
-      | undefined;
+    const warehouseId = warehousesRaw.find(w => w.warehouseName === formData.warehouse)?.id as string | undefined;
 
     // Convert date fields to ISO 8601 datetime (fall back to DOM input if React state wasn't updated)
     const formDate = (formData.date as string) || (formData.receiveDate as string) || '';

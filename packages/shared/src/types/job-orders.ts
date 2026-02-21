@@ -1,36 +1,40 @@
 import type { JOType, JobStatus } from './enums.js';
 import type { ApprovalChain } from './approval.js';
+import type { ProjectRef, SupplierRef, EmployeeRef } from './common.js';
 
 export interface JobOrder {
   id: string;
-  type: JOType;
-  title: string;
-  requester: string;
-  date: string;
+  joNumber?: string;
+  joType: JOType;
+  description: string;
+  projectId: string;
+  project?: ProjectRef;
+  supplierId?: string;
+  supplier?: SupplierRef;
+  requestedById: string;
+  requestedBy?: EmployeeRef;
+  requestDate: string;
+  requiredDate?: string;
   status: JobStatus;
-  priority: 'High' | 'Medium' | 'Low' | 'Normal';
-  project?: string;
-  slaStatus?: 'On Track' | 'At Risk' | 'Overdue';
-  vehicle?: string;
-  driver?: string;
-  approvalChain?: ApprovalChain;
-  estimatedCost?: number;
-  actualCost?: number;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  notes?: string;
+  totalAmount?: number;
+  startDate?: string;
+  completionDate?: string;
   // Transport
-  pickupLocationUrl?: string;
-  deliveryLocationUrl?: string;
-  pickupContactName?: string;
-  pickupContactPhone?: string;
-  deliveryContactName?: string;
-  deliveryContactPhone?: string;
-  materialPriceSar?: number;
+  googleMapsPickup?: string;
+  googleMapsDelivery?: string;
+  driverName?: string;
+  driverNationality?: string;
+  driverIdNumber?: string;
+  vehicleBrand?: string;
+  vehicleYear?: number;
+  vehiclePlate?: string;
+  insuranceValue?: number;
   insuranceRequired?: boolean;
-  numberOfTrailers?: number;
-  includeLoadingEquipment?: boolean;
-  loadingEquipmentType?: string;
-  cargoType?: string;
-  cargoWeightTons?: number;
-  numberOfTrips?: number;
+  cnNumber?: string;
+  coaApprovalRequired?: boolean;
+  shiftStartTime?: string;
   // Rental
   rentalStartDate?: string;
   rentalEndDate?: string;
@@ -48,8 +52,25 @@ export interface JobOrder {
   generatorCapacityKva?: number;
   generatorMaintenanceType?: string;
   generatorIssueDescription?: string;
-  shiftStartTime?: string;
   // Approval
   quoteAmount?: number;
   quoteApproved?: boolean;
+  approvalChain?: ApprovalChain;
+  completedById?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use joType */
+  type?: JOType;
+  /** @deprecated Use description */
+  title?: string;
+  /** @deprecated Use requestedById */
+  requester?: string;
+  /** @deprecated Use requestDate */
+  date?: string;
+  /** @deprecated Use vehiclePlate */
+  vehicle?: string;
+  /** @deprecated Use driverName */
+  driver?: string;
+  /** @deprecated Computed server-side */
+  slaStatus?: string;
 }

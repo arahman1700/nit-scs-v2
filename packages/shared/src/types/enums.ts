@@ -88,10 +88,10 @@ export const DOCUMENT_STATUS_LABELS: Record<string, string> = {
 export type ApprovalAction = 'approve' | 'reject' | 'escalate' | 'return';
 
 export type JOType =
-  | 'Transport'
-  | 'Equipment'
-  | 'Generator_Rental'
-  | 'Generator_Maintenance'
-  | 'Rental_Monthly'
-  | 'Rental_Daily'
-  | 'Scrap';
+  | 'transport'
+  | 'equipment'
+  | 'rental_monthly'
+  | 'rental_daily'
+  | 'scrap'
+  | 'generator_rental'
+  | 'generator_maintenance';

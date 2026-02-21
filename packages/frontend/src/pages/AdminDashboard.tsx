@@ -341,9 +341,9 @@ export const AdminDashboard: React.FC = () => {
               onChange={e => setSelectedProject(e.target.value)}
             >
               <option value="All">All Projects</option>
-              {projects.map((p: { id: string; name: string }) => (
-                <option key={p.id} value={p.name}>
-                  {p.name}
+              {projects.map(p => (
+                <option key={p.id} value={p.projectName}>
+                  {p.projectName}
                 </option>
               ))}
             </select>

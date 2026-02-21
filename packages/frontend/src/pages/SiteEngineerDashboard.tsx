@@ -43,7 +43,7 @@ export const SiteEngineerDashboard: React.FC = () => {
   const isLoading = mirvQuery.isLoading;
 
   // Simulated current engineer assignment
-  const myProject = useMemo(() => allProjects.find(p => p.status === 'Active') || null, [allProjects]);
+  const myProject = useMemo(() => allProjects.find(p => p.status === 'active') || null, [allProjects]);
 
   // Combined requests
   const allRequests = useMemo(() => {
@@ -62,7 +62,7 @@ export const SiteEngineerDashboard: React.FC = () => {
         title: (j.title as string) || 'Job Order',
         date: j.date as string,
         status: j.status as string,
-        value: Number(j.materialPriceSar || 0),
+        value: Number(j.totalAmount || 0),
       })),
       ...allMrfs.slice(0, 50).map(m => ({
         id: m.id as string,
@@ -316,7 +316,7 @@ export const SiteEngineerDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Region</p>
-                    <p className="text-sm text-white mt-1">{myProject.region || '-'}</p>
+                    <p className="text-sm text-white mt-1">{myProject.regionId || '-'}</p>
                   </div>
                 </div>
               </div>

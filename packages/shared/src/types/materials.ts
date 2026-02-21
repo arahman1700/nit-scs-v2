@@ -1,5 +1,5 @@
 import type { DocumentStatus } from './enums.js';
-import type { StatusHistoryEntry } from './common.js';
+import type { StatusHistoryEntry, ProjectRef, SupplierRef, WarehouseRef, EmployeeRef } from './common.js';
 import type { ApprovalChain } from './approval.js';
 
 // ── Shared Line Item ─────────────────────────────────────────────────────
@@ -41,65 +41,114 @@ export interface MaterialCatalogItem {
 
 export interface MRRV {
   id: string;
-  formNumber?: string;
-  supplier: string;
-  date: string;
-  warehouse: string;
-  value: number;
+  mrrvNumber?: string;
+  supplierId: string;
+  supplier?: SupplierRef;
+  warehouseId: string;
+  warehouse?: WarehouseRef;
+  projectId?: string;
+  project?: ProjectRef;
+  receivedById: string;
+  receivedBy?: EmployeeRef;
+  receiveDate: string;
+  totalValue: number;
   status: DocumentStatus;
   poNumber?: string;
+  invoiceNumber?: string;
   deliveryNote?: string;
-  receivedBy?: string;
   rfimRequired?: boolean;
-  rfimCreated?: boolean;
-  osdRequired?: boolean;
-  osdCreated?: boolean;
-  project?: string;
+  hasOsd?: boolean;
+  notes?: string;
+  binLocation?: string;
+  receivingDock?: string;
+  qcInspectorId?: string;
+  qcApprovedDate?: string;
   lineItems?: VoucherLineItem[];
   attachments?: string[];
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
+  /** @deprecated Use mrrvNumber */
+  formNumber?: string;
+  /** @deprecated Use receiveDate */
+  date?: string;
+  /** @deprecated Use totalValue */
+  value?: number;
 }
 
 // ── MIRV ─────────────────────────────────────────────────────────────────
 
 export interface MIRV {
   id: string;
-  formNumber?: string;
-  project: string;
-  requester: string;
-  date: string;
-  warehouse: string;
-  value: number;
+  mirvNumber?: string;
+  projectId: string;
+  project?: ProjectRef;
+  requestedById: string;
+  requestedBy?: EmployeeRef;
+  warehouseId: string;
+  warehouse?: WarehouseRef;
+  requestDate: string;
+  requiredDate?: string;
+  estimatedValue: number;
   status: DocumentStatus;
-  approvalLevel?: string;
-  gatePassCreated?: boolean;
-  gatePassId?: string;
-  purpose?: string;
+  priority?: 'normal' | 'urgent' | 'emergency';
+  approvedById?: string;
+  approvedDate?: string;
+  issuedById?: string;
+  issuedDate?: string;
+  rejectionReason?: string;
+  reservationStatus?: 'none' | 'reserved' | 'released';
+  mrfId?: string;
+  slaDueDate?: string;
+  gatePassAutoCreated?: boolean;
+  notes?: string;
+  locationOfWork?: string;
   lineItems?: VoucherLineItem[];
   approvalChain?: ApprovalChain;
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
+  /** @deprecated Use mirvNumber */
+  formNumber?: string;
+  /** @deprecated Use requestDate */
+  date?: string;
+  /** @deprecated Use estimatedValue */
+  value?: number;
+  /** @deprecated Use requestedById */
+  requester?: string;
 }
 
 // ── MRV ──────────────────────────────────────────────────────────────────
 
 export interface MRV {
   id: string;
-  formNumber?: string;
-  returnType: 'Surplus' | 'Damaged' | 'Wrong Item' | 'Project_Complete';
-  date: string;
-  project: string;
-  warehouse: string;
+  mrvNumber?: string;
+  returnType: 'return_to_warehouse' | 'return_to_supplier' | 'scrap' | 'transfer_to_project';
+  returnDate: string;
+  projectId: string;
+  project?: ProjectRef;
+  fromWarehouseId?: string;
+  fromWarehouse?: WarehouseRef;
+  toWarehouseId: string;
+  toWarehouse?: WarehouseRef;
+  returnedById: string;
+  returnedBy?: EmployeeRef;
+  reason: string;
   status: DocumentStatus;
-  reason?: string;
+  receivedById?: string;
+  receivedDate?: string;
   originalMirvId?: string;
+  notes?: string;
   lineItems?: VoucherLineItem[];
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
+  /** @deprecated Use mrvNumber */
+  formNumber?: string;
+  /** @deprecated Use returnDate */
+  date?: string;
+  /** @deprecated Use toWarehouseId */
+  warehouse?: string;
 }
 
 // ── RFIM ─────────────────────────────────────────────────────────────────
@@ -147,16 +196,32 @@ export interface OSDLineItem {
 
 export interface OSDReport {
   id: string;
-  formNumber?: string;
+  osdNumber?: string;
   mrrvId: string;
-  reportType: 'Over' | 'Short' | 'Damage';
-  qtyAffected: number;
-  description: string;
-  actionRequired: string;
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  supplierId?: string;
+  supplier?: SupplierRef;
+  warehouseId?: string;
+  warehouse?: WarehouseRef;
+  reportDate: string;
+  reportTypes: string[];
+  status: 'draft' | 'under_review' | 'claim_sent' | 'awaiting_response' | 'negotiating' | 'resolved' | 'closed';
+  totalOverValue?: number;
+  totalShortValue?: number;
+  totalDamageValue?: number;
+  claimSentDate?: string;
+  claimReference?: string;
+  supplierResponse?: string;
+  responseDate?: string;
+  resolutionType?: 'credit_note' | 'replacement' | 'price_adjustment' | 'insurance_claim' | 'write_off' | 'returned';
+  resolutionAmount?: number;
+  resolutionDate?: string;
+  resolvedById?: string;
   lineItems?: OSDLineItem[];
-  rootCause?: string;
-  costImpact?: number;
-  responsiblePerson?: string;
   statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+  /** @deprecated Use osdNumber */
+  formNumber?: string;
+  /** @deprecated Use reportTypes (array) */
+  reportType?: string;
 }

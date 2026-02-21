@@ -20,13 +20,26 @@ export interface InventoryItem {
 export interface InventoryLot {
   id: string;
   itemId: string;
+  warehouseId: string;
   lotNumber: string;
-  mrrvId: string;
+  mrrvLineId?: string;
   receiptDate: string;
-  quantity: number;
-  remainingQty: number;
-  unitCost: number;
+  initialQty: number;
+  availableQty: number;
+  reservedQty?: number;
+  unitCost?: number;
+  supplierId?: string;
+  binLocation?: string;
   expiryDate?: string;
+  status: 'active' | 'depleted' | 'expired' | 'blocked';
+  version: number;
+  /** @deprecated Use mrrvLineId */
+  mrrvId?: string;
+  /** @deprecated Use initialQty */
+  quantity?: number;
+  /** @deprecated Use availableQty */
+  remainingQty?: number;
+  /** @deprecated Use binLocation */
   location?: string;
 }
 

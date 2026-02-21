@@ -64,7 +64,7 @@ export const ManagerDashboard: React.FC = () => {
   const totalPendingValue = useMemo(
     () =>
       pendingMirvs.reduce((s, m) => s + Number(m.value || 0), 0) +
-      pendingJOs.reduce((s, j) => s + Number(j.materialPriceSar || 0), 0),
+      pendingJOs.reduce((s, j) => s + Number(j.totalAmount || 0), 0),
     [pendingMirvs, pendingJOs],
   );
 
@@ -96,7 +96,7 @@ export const ManagerDashboard: React.FC = () => {
         id: j.id as string,
         type: 'JO',
         title: j.title as string,
-        value: Number(j.materialPriceSar || 0),
+        value: Number(j.totalAmount || 0),
         date: j.date as string,
         status: j.status as string,
       })),
@@ -125,7 +125,7 @@ export const ManagerDashboard: React.FC = () => {
     return items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   }, [pendingMirvs, pendingJOs, pendingMrfs, pendingSTs, search]);
 
-  const activeProjects = useMemo(() => allProjects.filter(p => p.status === 'Active'), [allProjects]);
+  const activeProjects = useMemo(() => allProjects.filter(p => p.status === 'active'), [allProjects]);
 
   const setTab = (t: ManagerTab) => navigate(`/manager/${t}`, { replace: true });
 

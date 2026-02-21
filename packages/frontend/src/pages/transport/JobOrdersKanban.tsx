@@ -114,7 +114,11 @@ const JobCard: React.FC<{ job: JobOrder; borderColor: string; isDragOverlay?: bo
       {/* Priority Stripe */}
       <div
         className={`absolute left-0 top-0 bottom-0 w-1 ${
-          job.priority === 'High' ? 'bg-red-500' : job.priority === 'Medium' ? 'bg-orange-500' : 'bg-emerald-500'
+          job.priority === 'high' || job.priority === 'urgent'
+            ? 'bg-red-500'
+            : job.priority === 'normal'
+              ? 'bg-orange-500'
+              : 'bg-emerald-500'
         }`}
       ></div>
 
@@ -344,10 +348,10 @@ export const JobOrdersKanban: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return jobs.filter(
       j =>
-        j.title?.toLowerCase().includes(term) ||
+        j.description?.toLowerCase().includes(term) ||
         j.id?.toLowerCase().includes(term) ||
-        j.project?.toLowerCase().includes(term) ||
-        j.type?.toLowerCase().includes(term),
+        displayStr(j.project)?.toLowerCase().includes(term) ||
+        j.joType?.toLowerCase().includes(term),
     );
   }, [jobs, searchTerm]);
 

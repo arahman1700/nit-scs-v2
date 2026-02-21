@@ -69,7 +69,7 @@ export const EngineerDashboard: React.FC = () => {
       title: j.title as string,
       date: j.date as string,
       status: j.status as string,
-      value: Number(j.materialPriceSar || 0),
+      value: Number(j.totalAmount || 0),
       warehouse: '',
     }));
     return [...mirvRequests, ...joRequests].sort((a, b) => b.date.localeCompare(a.date));
@@ -96,7 +96,7 @@ export const EngineerDashboard: React.FC = () => {
   // Project inventory (items in engineer's project warehouse)
   const projectInventory = useMemo(() => {
     if (!project) return [];
-    const region = (project.region ?? '').toLowerCase();
+    const region = (project.regionId ?? '').toLowerCase();
     return inventoryItems.filter(i => (i.warehouse ?? '').toLowerCase().includes(region));
   }, [project, inventoryItems]);
 
@@ -199,16 +199,16 @@ export const EngineerDashboard: React.FC = () => {
                 Active
               </span>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">{proj?.name}</h1>
+            <h1 className="text-3xl font-bold text-white mb-2">{proj?.projectName}</h1>
             <div className="flex flex-wrap gap-4 text-sm text-gray-300 mt-4">
               <span className="flex items-center gap-1">
-                <MapPin size={14} className="text-nesma-secondary" /> {proj?.region}
+                <MapPin size={14} className="text-nesma-secondary" /> {proj?.regionId}
               </span>
               <span>
                 Client: <strong className="text-white">{proj?.client}</strong>
               </span>
               <span>
-                PM: <strong className="text-white">{proj?.manager}</strong>
+                PM: <strong className="text-white">{displayStr(proj?.projectManager)}</strong>
               </span>
             </div>
           </div>
@@ -415,10 +415,10 @@ export const EngineerDashboard: React.FC = () => {
             <h1 className="text-3xl font-bold mb-2 text-white glow-text">Welcome, {CURRENT_ENGINEER.name}</h1>
             <p className="text-nesma-secondary text-lg font-medium flex items-center gap-2">
               <MapPin size={16} />
-              {proj?.name || 'No Project'} ({proj?.id})
+              {proj?.projectName || 'No Project'} ({proj?.id})
             </p>
             <p className="text-gray-300 text-sm mt-1">
-              Client: {proj?.client} • Region: {proj?.region}
+              Client: {proj?.client} • Region: {proj?.regionId}
             </p>
           </div>
 

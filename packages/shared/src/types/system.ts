@@ -1,11 +1,18 @@
 import type { UserRole } from './enums.js';
-import type { FormField, ColumnConfig } from './common.js';
+import type { FormField, ColumnConfig, EmployeeRef } from './common.js';
 
 // ── Notifications ────────────────────────────────────────────────────────
 
 export interface Notification {
   id: string;
-  type: 'approval_request' | 'approval_result' | 'sla_warning' | 'sla_breach' | 'stock_alert' | 'status_change' | 'system';
+  type:
+    | 'approval_request'
+    | 'approval_result'
+    | 'sla_warning'
+    | 'sla_breach'
+    | 'stock_alert'
+    | 'status_change'
+    | 'system';
   title: string;
   message: string;
   documentId?: string;
@@ -35,60 +42,106 @@ export interface AuditLogEntry {
 
 export interface Project {
   id: string;
-  name: string;
+  projectCode: string;
+  projectName: string;
   client: string;
-  manager: string;
-  status: 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
-  region?: string;
+  projectManagerId?: string;
+  projectManager?: EmployeeRef;
+  status: 'active' | 'on_hold' | 'completed' | 'cancelled';
+  regionId?: string;
+  cityId?: string;
+  entityId?: string;
   budget?: number;
-  budgetUsed?: number;
   startDate?: string;
   endDate?: string;
-  contractValue?: number;
-  completionPct?: number;
+  description?: string;
+  /** @deprecated Use projectName */
+  name?: string;
+  /** @deprecated Use projectManagerId */
+  manager?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Supplier {
   id: string;
-  name: string;
-  city: string;
-  type: string;
-  status: 'Active' | 'Inactive' | 'Blacklisted';
+  supplierCode: string;
+  supplierName: string;
+  types: string[];
+  status: 'active' | 'inactive' | 'blocked';
+  cityId?: string;
+  contactPerson?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
   crNumber?: string;
   vatNumber?: string;
-  contactName?: string;
-  contactPhone?: string;
-  contactEmail?: string;
   paymentTerms?: string;
   rating?: number;
+  /** @deprecated Use supplierName */
+  name?: string;
+  /** @deprecated Use types */
+  type?: string;
+  /** @deprecated Use contactPerson */
+  contactName?: string;
+  /** @deprecated Use phone */
+  contactPhone?: string;
+  /** @deprecated Use email */
+  contactEmail?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Employee {
   id: string;
-  name: string;
-  employeeId?: string;
+  employeeIdNumber: string;
+  fullName: string;
   department: string;
-  title: string;
-  site: string;
-  email?: string;
+  email: string;
   phone?: string;
-  role?: UserRole;
+  role?: string;
+  systemRole: string;
+  isActive: boolean;
+  assignedProjectId?: string;
+  assignedWarehouseId?: string;
+  managerId?: string;
+  hireDate?: string;
+  /** @deprecated Use fullName */
+  name?: string;
+  /** @deprecated Use employeeIdNumber */
+  employeeId?: string;
+  /** @deprecated Use assignedWarehouseId */
   warehouseId?: string;
-  status?: 'Active' | 'Inactive';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Warehouse {
   id: string;
-  name: string;
-  city: string;
-  type?: string;
+  warehouseCode: string;
+  warehouseName: string;
+  warehouseTypeId: string;
   projectId?: string;
+  regionId: string;
+  cityId?: string;
+  address?: string;
+  managerId?: string;
+  contactPhone?: string;
+  latitude?: number;
+  longitude?: number;
+  status: 'active' | 'inactive' | 'closed';
+  /** @deprecated Use warehouseName */
+  name?: string;
+  /** @deprecated Use warehouseTypeId */
+  type?: string;
+  /** @deprecated Use latitude */
   lat?: number;
+  /** @deprecated Use longitude */
   lng?: number;
+  /** @deprecated Use managerId */
   manager?: string;
-  capacity?: number;
-  usedCapacity?: number;
-  status?: 'Active' | 'Inactive';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Generator {

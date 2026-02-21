@@ -71,7 +71,7 @@ export const ShipmentForm: React.FC = () => {
         ...formData,
         lineItems: shipmentLines,
         documents,
-        status: 'New',
+        status: 'draft',
       },
       {
         onSuccess: res => {
@@ -147,7 +147,7 @@ export const ShipmentForm: React.FC = () => {
                     etd: String(formData.etd ?? ''),
                     eta: String(formData.eta ?? ''),
                     port: String(formData.port ?? ''),
-                    status: 'New',
+                    status: 'draft',
                     items: shipmentLines.map(sl => ({
                       itemCode: sl.itemCode ?? '',
                       itemName: sl.itemName ?? '',
