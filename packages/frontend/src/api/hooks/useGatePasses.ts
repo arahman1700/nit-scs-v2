@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { GatePass } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useGatePassList(params?: ListParams) {
   return useQuery({
     queryKey: ['gate-passes', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/gate-passes', { params });
+      const { data } = await apiClient.get<ApiResponse<GatePass[]>>('/gate-passes', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useGatePass(id: string | undefined) {
   return useQuery({
     queryKey: ['gate-passes', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/gate-passes/${id}`);
+      const { data } = await apiClient.get<ApiResponse<GatePass>>(`/gate-passes/${id}`);
       return data;
     },
     enabled: !!id,
@@ -30,7 +31,7 @@ export function useCreateGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/gate-passes', body);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>('/gate-passes', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -42,7 +43,7 @@ export function useUpdateGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/gate-passes/${id}`, body);
+      const { data } = await apiClient.put<ApiResponse<GatePass>>(`/gate-passes/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -54,7 +55,7 @@ export function useSubmitGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/gate-passes/${id}/submit`);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>(`/gate-passes/${id}/submit`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -65,7 +66,7 @@ export function useApproveGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/gate-passes/${id}/approve`);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>(`/gate-passes/${id}/approve`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -76,7 +77,7 @@ export function useReleaseGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/gate-passes/${id}/release`);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>(`/gate-passes/${id}/release`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -87,7 +88,7 @@ export function useReturnGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/gate-passes/${id}/return`);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>(`/gate-passes/${id}/return`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),
@@ -98,7 +99,7 @@ export function useCancelGatePass() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/gate-passes/${id}/cancel`);
+      const { data } = await apiClient.post<ApiResponse<GatePass>>(`/gate-passes/${id}/cancel`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gate-passes'] }),

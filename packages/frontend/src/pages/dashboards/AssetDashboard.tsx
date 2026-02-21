@@ -16,8 +16,8 @@ export const AssetDashboard: React.FC = () => {
   const { data: scrapResponse, isLoading: scrapLoading } = useScrapList({ pageSize: 100 });
   const { data: toolResponse, isLoading: toolLoading } = useToolList({ pageSize: 100 });
 
-  const surplusRows = (surplusResponse?.data ?? []) as Record<string, unknown>[];
-  const scrapRows = (scrapResponse?.data ?? []) as Record<string, unknown>[];
+  const surplusRows = (surplusResponse?.data ?? []) as unknown as Record<string, unknown>[];
+  const scrapRows = (scrapResponse?.data ?? []) as unknown as Record<string, unknown>[];
   const toolRows = (toolResponse?.data ?? []) as Record<string, unknown>[];
 
   const isLoading = surplusLoading || scrapLoading || toolLoading;

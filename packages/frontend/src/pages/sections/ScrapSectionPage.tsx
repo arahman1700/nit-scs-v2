@@ -104,7 +104,7 @@ export const ScrapSectionPage: React.FC = () => {
             title="Scrap Items"
             icon={Recycle}
             columns={RESOURCE_COLUMNS.scrap.columns}
-            rows={(scrapQuery.data?.data ?? []) as Record<string, unknown>[]}
+            rows={(scrapQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
             loading={scrapQuery.isLoading}
             createLabel="Report Scrap"
             createUrl="/admin/forms/scrap"
@@ -128,7 +128,7 @@ export const ScrapSectionPage: React.FC = () => {
             title="Surplus Items"
             icon={TrendingDown}
             columns={RESOURCE_COLUMNS.surplus.columns}
-            rows={(surplusQuery.data?.data ?? []) as Record<string, unknown>[]}
+            rows={(surplusQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
             loading={surplusQuery.isLoading}
             createLabel="Report Surplus"
             createUrl="/admin/forms/surplus"

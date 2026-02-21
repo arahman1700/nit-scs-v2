@@ -13,7 +13,7 @@ export const SscDashboard: React.FC = () => {
   const { data: scrapResponse, isLoading: scrapLoading } = useScrapList({ status: 'in_ssc' });
 
   const rows = (sscResponse?.data ?? []) as Record<string, unknown>[];
-  const scrapRows = (scrapResponse?.data ?? []) as Record<string, unknown>[];
+  const scrapRows = (scrapResponse?.data ?? []) as unknown as Record<string, unknown>[];
 
   const isLoading = sscLoading || scrapLoading;
 

@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
 import type { ListParams, ApiResponse } from '../types';
+import type { StorekeeperHandover } from '@nit-scs-v2/shared/types';
 
 // ── List ────────────────────────────────────────────────────────────────────
 export function useHandoverList(params?: ListParams) {
   return useQuery({
     queryKey: ['handovers', 'list', params],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/handovers', { params });
+      const { data } = await apiClient.get<ApiResponse<StorekeeperHandover[]>>('/handovers', { params });
       return data;
     },
   });
@@ -18,7 +19,7 @@ export function useHandover(id: string | undefined) {
   return useQuery({
     queryKey: ['handovers', id],
     queryFn: async () => {
-      const { data } = await apiClient.get<ApiResponse<unknown>>(`/handovers/${id}`);
+      const { data } = await apiClient.get<ApiResponse<StorekeeperHandover>>(`/handovers/${id}`);
       return data;
     },
     enabled: !!id,
@@ -30,7 +31,7 @@ export function useCreateHandover() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (body: Record<string, unknown>) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>('/handovers', body);
+      const { data } = await apiClient.post<ApiResponse<StorekeeperHandover>>('/handovers', body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['handovers'] }),
@@ -42,7 +43,7 @@ export function useUpdateHandover() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...body }: Record<string, unknown> & { id: string }) => {
-      const { data } = await apiClient.put<ApiResponse<unknown>>(`/handovers/${id}`, body);
+      const { data } = await apiClient.put<ApiResponse<StorekeeperHandover>>(`/handovers/${id}`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['handovers'] }),
@@ -54,7 +55,7 @@ export function useStartHandoverVerification() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/handovers/${id}/start-verification`);
+      const { data } = await apiClient.post<ApiResponse<StorekeeperHandover>>(`/handovers/${id}/start-verification`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['handovers'] }),
@@ -66,7 +67,7 @@ export function useCompleteHandover() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await apiClient.post<ApiResponse<unknown>>(`/handovers/${id}/complete`);
+      const { data } = await apiClient.post<ApiResponse<StorekeeperHandover>>(`/handovers/${id}/complete`);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['handovers'] }),
