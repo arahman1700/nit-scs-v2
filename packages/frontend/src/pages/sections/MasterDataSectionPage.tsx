@@ -213,7 +213,7 @@ export const MasterDataSectionPage: React.FC = () => {
           <tbody>
             {suppliersData.slice(0, 15).map(s => (
               <tr key={String(s.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{String(s.supplierName || s.name || '-')}</td>
+                <td className="p-4 text-white font-medium">{displayStr(s) || '-'}</td>
                 <td className="p-4 text-gray-300">{displayStr(s.city) || '-'}</td>
                 <td className="p-4 text-gray-300">
                   {Array.isArray(s.types) ? s.types.join(', ') : String(s.type || '-')}
@@ -259,7 +259,7 @@ export const MasterDataSectionPage: React.FC = () => {
             {itemsData.slice(0, 15).map(item => (
               <tr key={String(item.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{String(item.itemCode || item.code || '-')}</td>
-                <td className="p-4 text-gray-300">{String(item.itemDescription || item.name || '-')}</td>
+                <td className="p-4 text-gray-300">{displayStr(item) || '-'}</td>
                 <td className="p-4 text-gray-300">{String(item.category || '-')}</td>
               </tr>
             ))}
@@ -300,7 +300,7 @@ export const MasterDataSectionPage: React.FC = () => {
           <tbody>
             {projectsData.slice(0, 15).map(p => (
               <tr key={String(p.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{String(p.projectName || p.name || '-')}</td>
+                <td className="p-4 text-white font-medium">{displayStr(p) || '-'}</td>
                 <td className="p-4 text-gray-300">{String(p.client || '-')}</td>
                 <td className="p-4 text-gray-300">{displayStr(p.region) || '-'}</td>
                 <td className="p-4 text-gray-300">{displayStr(p.projectManager ?? p.manager) || '-'}</td>
@@ -345,7 +345,7 @@ export const MasterDataSectionPage: React.FC = () => {
           <tbody>
             {employeesData.slice(0, 15).map(e => (
               <tr key={String(e.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                <td className="p-4 text-white font-medium">{String(e.fullName || e.name || '-')}</td>
+                <td className="p-4 text-white font-medium">{displayStr(e) || '-'}</td>
                 <td className="p-4 text-gray-300">{String(e.department || '-')}</td>
                 <td className="p-4 text-gray-300">{String(e.role || e.title || '-')}</td>
                 <td className="p-4 text-gray-300">{String(e.systemRole || e.site || '-')}</td>
@@ -387,7 +387,7 @@ export const MasterDataSectionPage: React.FC = () => {
             {warehousesData.slice(0, 15).map(w => (
               <tr key={String(w.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                 <td className="p-4 text-white font-medium">{String(w.warehouseCode || w.id).slice(0, 12)}</td>
-                <td className="p-4 text-gray-300">{String(w.warehouseName || w.name || '-')}</td>
+                <td className="p-4 text-gray-300">{displayStr(w) || '-'}</td>
                 <td className="p-4 text-gray-300">{displayStr(w.city) || '-'}</td>
               </tr>
             ))}

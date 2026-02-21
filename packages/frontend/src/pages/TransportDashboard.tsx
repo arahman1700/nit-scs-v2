@@ -199,9 +199,7 @@ export const TransportDashboard: React.FC = () => {
       suppliers.filter(
         s =>
           searchTerm === '' ||
-          String(s.supplierName || s.name || '')
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
+          displayStr(s).toLowerCase().includes(searchTerm.toLowerCase()) ||
           displayStr(s.city).toLowerCase().includes(searchTerm.toLowerCase()),
       ),
     [searchTerm, suppliers],
@@ -474,7 +472,7 @@ export const TransportDashboard: React.FC = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-nesma-primary/30 flex items-center justify-center text-sm text-nesma-secondary font-bold border border-nesma-primary/20">
-                    {String(supplier.supplierName || supplier.name || '')
+                    {displayStr(supplier)
                       .split(' ')
                       .map(n => n[0])
                       .join('')
@@ -482,7 +480,7 @@ export const TransportDashboard: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">
-                      {String(supplier.supplierName || supplier.name || '-')}
+                      {displayStr(supplier) || '-'}
                     </h4>
                     <span className="text-xs text-gray-500 font-mono">{String(supplier.id)}</span>
                   </div>

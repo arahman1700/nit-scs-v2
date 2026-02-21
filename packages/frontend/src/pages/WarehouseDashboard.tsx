@@ -62,7 +62,7 @@ export const WarehouseDashboard: React.FC = () => {
     return {
       id: String(inv.id),
       code: String(nested?.itemCode || inv.itemCode || inv.code || '-'),
-      name: String(nested?.itemDescription || inv.itemDescription || inv.name || '-'),
+      name: displayStr(nested) || displayStr(inv) || '-',
       warehouse: inv.warehouse,
       quantity: Number(inv.qtyOnHand ?? inv.quantity ?? 0),
       reserved: Number(inv.qtyReserved ?? inv.reserved ?? 0),

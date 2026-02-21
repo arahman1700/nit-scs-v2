@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Search, Package, Warehouse, Loader2, AlertCircle, ScanLine, Keyboard, Camera, X } from 'lucide-react';
 import { useBarcodeLookup } from '@/api/hooks/useBarcodes';
+import { displayStr } from '@/utils/displayStr';
 
 interface BarcodeScannerProps {
   /** Legacy: called with raw scanned code */
@@ -294,9 +295,7 @@ export default function BarcodeScanner({
                                 key={idx}
                                 className="flex items-center justify-between px-3 py-2 bg-white/[0.02] rounded-lg text-xs"
                               >
-                                <span className="text-gray-300">
-                                  {String(wh?.warehouseName || wh?.warehouseCode || 'Unknown')}
-                                </span>
+                                <span className="text-gray-300">{displayStr(wh) || 'Unknown'}</span>
                                 <span className="text-white font-medium">{Number(inv.quantityOnHand || 0)} units</span>
                               </div>
                             );

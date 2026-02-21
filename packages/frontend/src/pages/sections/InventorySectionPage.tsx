@@ -168,9 +168,7 @@ export const InventorySectionPage: React.FC = () => {
                   {lowStockItems.length > 0 ? (
                     lowStockItems.map(item => (
                       <div key={String(item.id)} className="bg-white/5 rounded-lg p-3 border border-red-500/20">
-                        <p className="text-white text-sm font-medium truncate">
-                          {String(item.itemDescription || item.name || item.itemCode || item.code || '-')}
-                        </p>
+                        <p className="text-white text-sm font-medium truncate">{displayStr(item) || '-'}</p>
                         <p className="text-red-400 text-xs mt-1">Qty: {Number(item.quantity ?? 0).toLocaleString()}</p>
                       </div>
                     ))
@@ -206,7 +204,7 @@ export const InventorySectionPage: React.FC = () => {
                   {inventoryRows.map(r => (
                     <tr key={String(r.id)} className="border-b border-white/5 hover:bg-white/5">
                       <td className="px-4 py-3 text-sm text-gray-300">{String(r.itemCode || r.code || '-')}</td>
-                      <td className="px-4 py-3 text-sm text-white">{String(r.itemDescription || r.name || '-')}</td>
+                      <td className="px-4 py-3 text-sm text-white">{displayStr(r) || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-400">{displayStr(r.warehouse) || '-'}</td>
                       <td className="px-4 py-3 text-sm text-white">{Number(r.quantity ?? 0).toLocaleString()}</td>
                       <td className="px-4 py-3">
@@ -249,7 +247,7 @@ export const InventorySectionPage: React.FC = () => {
                 <tbody>
                   {warehouseRows.map(r => (
                     <tr key={String(r.id)} className="border-b border-white/5 hover:bg-white/5">
-                      <td className="px-4 py-3 text-sm text-white">{String(r.warehouseName || r.name || '-')}</td>
+                      <td className="px-4 py-3 text-sm text-white">{displayStr(r) || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-400">{displayStr(r.city) || '-'}</td>
                       <td className="px-4 py-3 text-sm text-gray-400">{String(r.type || '-')}</td>
                       <td className="px-4 py-3">

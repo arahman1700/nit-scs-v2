@@ -104,7 +104,7 @@ router.post('/:entityType/:recordId', authenticate, (req: Request, res: Response
         fileSize: req.file.size,
         mimeType: req.file.mimetype,
         storagePath: req.file.path,
-        uploadedById: (req as any).user.id,
+        uploadedById: req.user!.userId,
       });
       sendSuccess(res, attachment);
     } catch (serviceErr) {
@@ -129,8 +129,8 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
     res.setHeader('Content-Type', attachment.mimeType);
     res.sendFile(filePath);
   } catch (err) {
-    const status = (err as any).statusCode ?? 500;
-    sendError(res, status, (err as Error).message);
+    const e = err as Error & { statusCode?: number };
+    sendError(res, e.statusCode ?? 500, e.message);
   }
 });
 
@@ -140,8 +140,8 @@ router.delete('/:id', authenticate, async (req: Request, res: Response) => {
     await attachmentService.softDelete(req.params.id as string);
     sendSuccess(res, { deleted: true });
   } catch (err) {
-    const status = (err as any).statusCode ?? 500;
-    sendError(res, status, (err as Error).message);
+    const e = err as Error & { statusCode?: number };
+    sendError(res, e.statusCode ?? 500, e.message);
   }
 });
 

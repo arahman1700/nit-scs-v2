@@ -6,6 +6,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useEmployees } from '@/api/hooks/useMasterData';
+import { displayStr } from '@/utils/displayStr';
 
 const DelegationsPage = React.lazy(() => import('@/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })));
 
@@ -80,7 +81,7 @@ export const EmployeeSectionPage: React.FC = () => {
               <tbody>
                 {employeesData.slice(0, 15).map(e => (
                   <tr key={String(e.id)} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="p-4 text-white font-medium">{String(e.fullName || e.name || '-')}</td>
+                    <td className="p-4 text-white font-medium">{displayStr(e) || '-'}</td>
                     <td className="p-4 text-gray-300">{String(e.department || '-')}</td>
                     <td className="p-4 text-gray-300">{String(e.role || e.title || '-')}</td>
                     <td className="p-4 text-gray-300">{String(e.systemRole || e.site || '-')}</td>

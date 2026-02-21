@@ -16,6 +16,7 @@ export function displayStr(val: unknown): string {
         obj.warehouseName ??
         obj.projectName ??
         obj.fullName ??
+        obj.itemDescription ??
         obj.regionName ??
         obj.cityName ??
         obj.name ??

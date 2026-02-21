@@ -32,13 +32,14 @@ import {
 } from '@/api/hooks/useDemandForecast';
 import type { ItemForecast, SeasonalPattern } from '@/api/hooks/useDemandForecast';
 import { useWarehouses } from '@/api/hooks';
+import { displayStr } from '@/utils/displayStr';
 
 // ── Forecast Dashboard ──────────────────────────────────────────────────────
 
 export const ForecastDashboard: React.FC = () => {
   // Warehouse selector
   const { data: warehouseResponse } = useWarehouses();
-  const warehouses = (warehouseResponse?.data ?? []) as Array<{ id: string; name?: string; warehouseName?: string }>;
+  const warehouses = (warehouseResponse?.data ?? []) as unknown as Array<{ id: string; [key: string]: unknown }>;
   const [warehouseId, setWarehouseId] = useState<string>('');
   const [selectedItemId, setSelectedItemId] = useState<string>('');
 
@@ -185,7 +186,7 @@ export const ForecastDashboard: React.FC = () => {
             <option value="">Select Warehouse</option>
             {warehouses.map(w => (
               <option key={w.id} value={w.id}>
-                {w.name || w.warehouseName || w.id}
+                {displayStr(w)}
               </option>
             ))}
           </select>

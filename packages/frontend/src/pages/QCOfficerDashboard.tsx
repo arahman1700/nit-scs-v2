@@ -27,7 +27,7 @@ export const QCOfficerDashboard: React.FC = () => {
   const allOsds = (osdQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
   const allMrrvs = (mrrvQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
 
-  const isLoading = rfimQuery.isLoading;
+  const isLoading = rfimQuery.isLoading || osdQuery.isLoading || mrrvQuery.isLoading;
 
   const openInspections = useMemo(
     () => allRfims.filter(r => r.status === 'Pending' || r.status === 'pending'),
