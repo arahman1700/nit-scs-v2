@@ -65,9 +65,6 @@ const WarehouseDashboard = React.lazy(() =>
 const TransportDashboard = React.lazy(() =>
   import('@/pages/TransportDashboard').then(m => ({ default: m.TransportDashboard })),
 );
-const EngineerDashboard = React.lazy(() =>
-  import('@/pages/EngineerDashboard').then(m => ({ default: m.EngineerDashboard })),
-);
 const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
 const GatePassForm = React.lazy(() => import('@/pages/GatePassForm').then(m => ({ default: m.GatePassForm })));
 const StockTransferForm = React.lazy(() =>
@@ -673,24 +670,6 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       element={
         <RoleGuard currentRole={currentRole} allowedRoles={TRANSPORT_ROLES}>
           <TransportDashboard />
-        </RoleGuard>
-      }
-    />
-
-    {/* ENGINEER ROUTES */}
-    <Route
-      path="/engineer"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
-          <EngineerDashboard />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/engineer/*"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={ENGINEER_ROLES}>
-          <EngineerDashboard />
         </RoleGuard>
       }
     />

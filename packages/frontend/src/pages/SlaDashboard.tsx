@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   ResponsiveContainer,
   PieChart,
@@ -14,22 +14,43 @@ import {
 } from 'recharts';
 import { Download, Filter, Calendar, CheckCircle, Clock, AlertOctagon, TrendingUp } from 'lucide-react';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
+import { useScrapList } from '@/api/hooks/useScrap';
 import { useProjects } from '@/api/hooks/useMasterData';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
+import { SLA_HOURS } from '@nit-scs-v2/shared';
 
 export const SlaDashboard: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('All');
   const [selectedMonth] = useState('Jan 2026');
 
   const jobsQuery = useJobOrderList({ pageSize: 200 });
+  const scrapQuery = useScrapList({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
   const projects = (projectQuery.data?.data ?? []) as Project[];
   const allJobs = (jobsQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const allScrap = (scrapQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+
+  // Compute SLA status from JO dates — stable function (no hooks deps)
+  const slaHours = SLA_HOURS.jo_execution || 48;
+  const computeSlaStatus = useCallback(
+    (job: Record<string, unknown>): string => {
+      const status = (job.status as string) || '';
+      if (['completed', 'closure_approved', 'invoiced'].includes(status)) return 'On Track';
+      if (['cancelled', 'rejected'].includes(status)) return 'N/A';
+      const requestDate = job.requestDate || job.date;
+      if (!requestDate) return 'On Track';
+      const hoursSince = (Date.now() - new Date(requestDate as string).getTime()) / 3_600_000;
+      if (hoursSince <= slaHours * 0.75) return 'On Track';
+      if (hoursSince <= slaHours) return 'At Risk';
+      return 'Overdue';
+    },
+    [slaHours],
+  );
 
   // Filter Data
   const filteredJobs = useMemo(() => {
-    return allJobs.filter(job => selectedProject === 'All' || job.project === selectedProject);
+    return allJobs.filter(job => selectedProject === 'All' || job.projectId === selectedProject);
   }, [allJobs, selectedProject]);
 
   // Loading / error
@@ -38,10 +59,24 @@ export const SlaDashboard: React.FC = () => {
 
   // Derived Metrics
   const totalJobs = filteredJobs.length;
-  const onTrack = filteredJobs.filter(j => j.slaStatus === 'On Track').length;
-  const atRisk = filteredJobs.filter(j => j.slaStatus === 'At Risk').length;
-  const overdue = filteredJobs.filter(j => j.slaStatus === 'Overdue').length;
-  const onTimePercentage = totalJobs > 0 ? ((onTrack / totalJobs) * 100).toFixed(1) : '0.0';
+  const slaResults = useMemo(() => filteredJobs.map(j => computeSlaStatus(j)), [filteredJobs, computeSlaStatus]);
+  const onTrack = slaResults.filter(s => s === 'On Track').length;
+  const atRisk = slaResults.filter(s => s === 'At Risk').length;
+  const overdue = slaResults.filter(s => s === 'Overdue').length;
+  const trackableJobs = onTrack + atRisk + overdue;
+  const onTimePercentage = trackableJobs > 0 ? ((onTrack / trackableJobs) * 100).toFixed(1) : '0.0';
+
+  // Total value from job orders
+  const totalValue = useMemo(
+    () => filteredJobs.reduce((sum, j) => sum + Number(j.estimatedValue || j.totalAmount || 0), 0),
+    [filteredJobs],
+  );
+  const totalValueLabel =
+    totalValue >= 1_000_000
+      ? `${(totalValue / 1_000_000).toFixed(1)}M`
+      : totalValue >= 1_000
+        ? `${(totalValue / 1_000).toFixed(0)}k`
+        : String(totalValue);
 
   // Chart Data
   const statusData = [
@@ -50,18 +85,39 @@ export const SlaDashboard: React.FC = () => {
     { name: 'Overdue', value: overdue },
   ].filter(d => d.value > 0);
 
-  const _companyData = [
-    { name: 'NIT', value: Math.floor(totalJobs * 0.7) },
-    { name: 'NP', value: Math.floor(totalJobs * 0.2) },
-    { name: 'Logistic', value: Math.floor(totalJobs * 0.1) },
-  ];
+  // Weekly delivery performance from JO data
+  const deliveryPerformanceData = useMemo(() => {
+    const now = Date.now();
+    const weeks: { name: string; actual: number; target: number }[] = [];
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = now - (w + 1) * 7 * 86_400_000;
+      const weekEnd = now - w * 7 * 86_400_000;
+      const weekJobs = filteredJobs.filter(j => {
+        const d = new Date((j.requestDate as string) || (j.createdAt as string) || '').getTime();
+        return d >= weekStart && d < weekEnd;
+      });
+      const onTime = weekJobs.filter(j => computeSlaStatus(j) === 'On Track').length;
+      const pct = weekJobs.length > 0 ? Math.round((onTime / weekJobs.length) * 100) : 0;
+      weeks.push({ name: `Week ${4 - w}`, actual: pct, target: 95 });
+    }
+    return weeks;
+  }, [filteredJobs, computeSlaStatus]);
 
-  const deliveryPerformanceData = [
-    { name: 'Week 1', actual: 95, target: 95 },
-    { name: 'Week 2', actual: 88, target: 95 },
-    { name: 'Week 3', actual: 92, target: 95 },
-    { name: 'Week 4', actual: 97, target: 95 },
-  ];
+  // Scrap summary from API
+  const scrapSummary = useMemo(() => {
+    let cableValue = 0;
+    let woodValue = 0;
+    let otherValue = 0;
+    for (const s of allScrap) {
+      const val = Number(s.estimatedValue || s.soldAmount || 0);
+      const type = String(s.materialType || '').toLowerCase();
+      if (type.includes('cable')) cableValue += val;
+      else if (type.includes('wood')) woodValue += val;
+      else otherValue += val;
+    }
+    const total = cableValue + woodValue + otherValue;
+    return { count: allScrap.length, cableValue, woodValue, otherValue, total };
+  }, [allScrap]);
 
   const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#2E3192', '#80D1E9'];
 
@@ -93,7 +149,7 @@ export const SlaDashboard: React.FC = () => {
             >
               <option value="All">All Projects</option>
               {projects.map(p => (
-                <option key={p.id as string} value={displayStr(p)}>
+                <option key={p.id} value={p.id}>
                   {displayStr(p)}
                 </option>
               ))}
@@ -155,14 +211,14 @@ export const SlaDashboard: React.FC = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-gray-400 text-sm font-medium mb-1">Total Orders</p>
-              <h3 className="text-3xl font-bold text-white">{totalJobs + 150}</h3>
+              <h3 className="text-3xl font-bold text-white">{totalJobs}</h3>
             </div>
             <div className="p-3 bg-nesma-primary/20 rounded-xl text-nesma-secondary">
               <TrendingUp size={24} />
             </div>
           </div>
           <p className="text-xs text-gray-400">
-            NIT: {Math.floor((totalJobs + 150) * 0.7)} | NP: {Math.floor((totalJobs + 150) * 0.3)}
+            {trackableJobs} trackable | {totalJobs - trackableJobs} N/A
           </p>
         </div>
 
@@ -170,7 +226,7 @@ export const SlaDashboard: React.FC = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-gray-400 text-sm font-medium mb-1">Total Value</p>
-              <h3 className="text-3xl font-bold text-white">5.1M</h3>
+              <h3 className="text-3xl font-bold text-white">{totalValueLabel || '0'}</h3>
             </div>
             <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400">
               <span className="font-bold text-lg">SAR</span>
@@ -276,50 +332,60 @@ export const SlaDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="text-gray-300 divide-y divide-white/5">
-                  <tr className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">Equipment Request</td>
-                    <td className="px-4 py-3">≤1 Day</td>
-                    <td className="px-4 py-3">≥95%</td>
-                    <td className="px-4 py-3 text-emerald-400 font-bold">98.5%</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
-                        Excellent
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">Equipment Delivery</td>
-                    <td className="px-4 py-3">2-3 Days</td>
-                    <td className="px-4 py-3">≥95%</td>
-                    <td className="px-4 py-3 text-amber-400 font-bold">88.0%</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded text-xs">
-                        Improve
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">Scrap Removal</td>
-                    <td className="px-4 py-3">≤3 Days</td>
-                    <td className="px-4 py-3">≥95%</td>
-                    <td className="px-4 py-3 text-emerald-400 font-bold">97.8%</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
-                        Target Met
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 font-medium text-white">Material Movement</td>
-                    <td className="px-4 py-3">≤2 Days</td>
-                    <td className="px-4 py-3">≥95%</td>
-                    <td className="px-4 py-3 text-emerald-400 font-bold">95.7%</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded text-xs">
-                        Target Met
-                      </span>
-                    </td>
-                  </tr>
+                  {[
+                    { service: 'Job Order Execution', standard: `≤${SLA_HOURS.jo_execution}h`, slaKey: 'jo_execution' },
+                    { service: 'Gate Pass Processing', standard: `≤${SLA_HOURS.gate_pass}h`, slaKey: 'gate_pass' },
+                    {
+                      service: 'QC Inspection',
+                      standard: `≤${SLA_HOURS.qc_inspection / 24}d`,
+                      slaKey: 'qc_inspection',
+                    },
+                    {
+                      service: 'Scrap Buyer Pickup',
+                      standard: `≤${SLA_HOURS.scrap_buyer_pickup / 24}d`,
+                      slaKey: 'scrap_buyer_pickup',
+                    },
+                  ].map(row => {
+                    const pct = trackableJobs > 0 ? parseFloat(onTimePercentage) : 0;
+                    const tier = pct >= 95 ? 'met' : pct >= 85 ? 'warn' : 'crit';
+                    const SLA_TIER_STYLES: Record<string, { text: string; bg: string; border: string; label: string }> =
+                      {
+                        met: {
+                          text: 'text-emerald-400',
+                          bg: 'bg-emerald-500/10',
+                          border: 'border-emerald-500/20',
+                          label: 'Target Met',
+                        },
+                        warn: {
+                          text: 'text-amber-400',
+                          bg: 'bg-amber-500/10',
+                          border: 'border-amber-500/20',
+                          label: 'Improve',
+                        },
+                        crit: {
+                          text: 'text-red-400',
+                          bg: 'bg-red-500/10',
+                          border: 'border-red-500/20',
+                          label: 'Critical',
+                        },
+                      };
+                    const style = SLA_TIER_STYLES[tier];
+                    return (
+                      <tr key={row.slaKey} className="hover:bg-white/5 transition-colors">
+                        <td className="px-4 py-3 font-medium text-white">{row.service}</td>
+                        <td className="px-4 py-3">{row.standard}</td>
+                        <td className="px-4 py-3">≥95%</td>
+                        <td className={`px-4 py-3 font-bold ${style.text}`}>{pct.toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-right">
+                          <span
+                            className={`${style.bg} ${style.text} ${style.border} border px-2 py-1 rounded text-xs`}
+                          >
+                            {style.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -354,24 +420,48 @@ export const SlaDashboard: React.FC = () => {
 
           <div className="glass-card p-6 rounded-xl">
             <h3 className="text-lg font-bold text-white mb-4">Scrap Summary</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                <span className="text-sm text-gray-400">Total Jobs</span>
-                <span className="font-bold text-white">306</span>
+            {scrapQuery.isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="animate-pulse bg-white/10 h-6 rounded" />
+                ))}
               </div>
-              <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                <span className="text-sm text-gray-400">Cable Scrap</span>
-                <span className="font-bold text-purple-400">673k SAR</span>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                  <span className="text-sm text-gray-400">Total Items</span>
+                  <span className="font-bold text-white">{scrapSummary.count}</span>
+                </div>
+                {scrapSummary.cableValue > 0 && (
+                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                    <span className="text-sm text-gray-400">Cable Scrap</span>
+                    <span className="font-bold text-purple-400">
+                      {(scrapSummary.cableValue / 1000).toFixed(0)}k SAR
+                    </span>
+                  </div>
+                )}
+                {scrapSummary.woodValue > 0 && (
+                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                    <span className="text-sm text-gray-400">Wood Scrap</span>
+                    <span className="font-bold text-amber-400">{(scrapSummary.woodValue / 1000).toFixed(0)}k SAR</span>
+                  </div>
+                )}
+                {scrapSummary.otherValue > 0 && (
+                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
+                    <span className="text-sm text-gray-400">Other Scrap</span>
+                    <span className="font-bold text-gray-300">{(scrapSummary.otherValue / 1000).toFixed(0)}k SAR</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-sm text-gray-300 font-bold">Total Value</span>
+                  <span className="font-bold text-xl text-nesma-secondary">
+                    {scrapSummary.total >= 1_000_000
+                      ? `${(scrapSummary.total / 1_000_000).toFixed(2)}M SAR`
+                      : `${(scrapSummary.total / 1_000).toFixed(0)}k SAR`}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                <span className="text-sm text-gray-400">Wood Scrap</span>
-                <span className="font-bold text-amber-400">407k SAR</span>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-sm text-gray-300 font-bold">Total Revenue</span>
-                <span className="font-bold text-xl text-nesma-secondary">1.08M SAR</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

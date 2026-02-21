@@ -366,13 +366,84 @@ export const ManagerDashboard: React.FC = () => {
       {activeTab === 'documents' && (
         <div className="glass-card rounded-2xl p-6 border border-white/10">
           <h3 className="text-white font-bold mb-4">Recent Documents</h3>
-          <p className="text-gray-500 text-sm">View company documents from the Documents page in the sidebar.</p>
-          <button
-            onClick={() => navigate('/manager/documents')}
-            className="mt-4 px-4 py-2 bg-nesma-primary/20 text-nesma-secondary rounded-lg text-sm hover:bg-nesma-primary/30 transition-colors border border-nesma-primary/30"
-          >
-            Go to Documents
-          </button>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-gray-400 text-xs uppercase">
+                  <th className="px-4 py-3">Type</th>
+                  <th className="px-4 py-3">Number</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Date</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-300 divide-y divide-white/5">
+                {[
+                  ...allMirvs
+                    .slice(0, 5)
+                    .map(d => ({
+                      type: 'MI',
+                      number: (d as unknown as Record<string, unknown>).mirvNumber || d.id,
+                      status: d.status,
+                      date:
+                        (d as unknown as Record<string, unknown>).requestDate ||
+                        (d as unknown as Record<string, unknown>).createdAt,
+                    })),
+                  ...allJOs
+                    .slice(0, 5)
+                    .map(d => ({
+                      type: 'JO',
+                      number: (d as unknown as Record<string, unknown>).joNumber || d.id,
+                      status: d.status,
+                      date:
+                        (d as unknown as Record<string, unknown>).requestDate ||
+                        (d as unknown as Record<string, unknown>).createdAt,
+                    })),
+                  ...allMrfs
+                    .slice(0, 5)
+                    .map(d => ({
+                      type: 'MR',
+                      number: d.mrfNumber || d.id,
+                      status: d.status,
+                      date: d.requestDate || d.createdAt,
+                    })),
+                  ...allSTs
+                    .slice(0, 5)
+                    .map(d => ({
+                      type: 'WT',
+                      number: d.transferNumber || d.id,
+                      status: d.status,
+                      date: d.transferDate || d.createdAt,
+                    })),
+                ]
+                  .sort(
+                    (a, b) =>
+                      new Date((b.date as string) || '').getTime() - new Date((a.date as string) || '').getTime(),
+                  )
+                  .slice(0, 15)
+                  .map((doc, i) => (
+                    <tr key={i} className="hover:bg-white/5 transition-colors">
+                      <td className="px-4 py-3">
+                        <span className="bg-nesma-primary/20 text-nesma-secondary px-2 py-0.5 rounded text-xs font-medium">
+                          {doc.type}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-white text-xs">{String(doc.number).slice(0, 12)}</td>
+                      <td className="px-4 py-3 capitalize text-xs">{String(doc.status || '').replace(/_/g, ' ')}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400">
+                        {doc.date ? new Date(doc.date as string).toLocaleDateString() : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                {allMirvs.length === 0 && allJOs.length === 0 && allMrfs.length === 0 && allSTs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                      No recent documents
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
