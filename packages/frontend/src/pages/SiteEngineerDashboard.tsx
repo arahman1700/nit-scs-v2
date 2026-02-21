@@ -300,7 +300,7 @@ export const SiteEngineerDashboard: React.FC = () => {
           {myProject ? (
             <>
               <div className="glass-card rounded-2xl p-6 border border-white/10">
-                <h3 className="text-xl font-bold text-white mb-4">{myProject.name}</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{displayStr(myProject)}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
                     <p className="text-xs text-gray-500">Client</p>

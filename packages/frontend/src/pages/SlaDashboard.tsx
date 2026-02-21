@@ -16,6 +16,7 @@ import { Download, Filter, Calendar, CheckCircle, Clock, AlertOctagon, TrendingU
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useProjects } from '@/api/hooks/useMasterData';
 import type { Project } from '@nit-scs-v2/shared/types';
+import { displayStr } from '@/utils/displayStr';
 
 export const SlaDashboard: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('All');
@@ -92,8 +93,8 @@ export const SlaDashboard: React.FC = () => {
             >
               <option value="All">All Projects</option>
               {projects.map(p => (
-                <option key={p.id as string} value={p.name as string}>
-                  {p.name as string}
+                <option key={p.id as string} value={displayStr(p)}>
+                  {displayStr(p)}
                 </option>
               ))}
             </select>

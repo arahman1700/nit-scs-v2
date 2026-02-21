@@ -406,9 +406,13 @@ export const ManagerDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5">
                 {activeProjects.slice(0, 20).map(p => (
                   <tr key={p.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 text-sm text-white font-medium">{p.name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">{p.client}</td>
-                    <td className="px-4 py-3 text-sm text-gray-400">{p.manager}</td>
+                    <td className="px-4 py-3 text-sm text-white font-medium">{displayStr(p)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-300">
+                      {(p as unknown as Record<string, unknown>).client as string}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-400">
+                      {displayStr((p as unknown as Record<string, unknown>).projectManager)}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
                         {p.status}
