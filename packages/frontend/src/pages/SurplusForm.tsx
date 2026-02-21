@@ -5,6 +5,7 @@ import type { Project, Warehouse } from '@nit-scs-v2/shared/types';
 import { useCreateSurplus } from '@/api/hooks';
 import { useProjects, useWarehouses, useItems } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { displayStr } from '@/utils/displayStr';
 
 export const SurplusForm: React.FC = () => {
   const navigate = useNavigate();
@@ -83,7 +84,7 @@ export const SurplusForm: React.FC = () => {
               <option value="">Select project...</option>
               {projects.map(p => (
                 <option key={p.id} value={p.id}>
-                  {p.name}
+                  {displayStr(p)}
                 </option>
               ))}
             </select>
@@ -99,7 +100,7 @@ export const SurplusForm: React.FC = () => {
               <option value="">Select warehouse...</option>
               {warehouses.map(w => (
                 <option key={w.id} value={w.id}>
-                  {w.name}
+                  {displayStr(w)}
                 </option>
               ))}
             </select>
@@ -115,7 +116,7 @@ export const SurplusForm: React.FC = () => {
               <option value="">Select item...</option>
               {items.map(i => (
                 <option key={i.id} value={i.id}>
-                  {i.name}
+                  {displayStr(i)}
                 </option>
               ))}
             </select>
