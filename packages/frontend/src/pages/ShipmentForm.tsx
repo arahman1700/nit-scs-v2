@@ -8,6 +8,7 @@ import { useSuppliers } from '@/api/hooks/useMasterData';
 import type { Supplier } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { generateShipmentPdf } from '@/utils/pdfExport';
+import { displayStr } from '@/utils/displayStr';
 
 const PORTS = [
   'Dammam (King Abdulaziz Port)',
@@ -185,8 +186,8 @@ export const ShipmentForm: React.FC = () => {
                 >
                   <option value="">Select...</option>
                   {suppliers.map(s => (
-                    <option key={s.id as string} value={s.name as string}>
-                      {s.name as string}
+                    <option key={s.id as string} value={s.id as string}>
+                      {displayStr(s)}
                     </option>
                   ))}
                 </select>
