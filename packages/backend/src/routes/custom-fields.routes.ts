@@ -111,7 +111,7 @@ router.get('/values/:entityType/:entityId', async (req, res, next) => {
 });
 
 // PUT /values/:entityType/:entityId
-router.put('/values/:entityType/:entityId', async (req, res, next) => {
+router.put('/values/:entityType/:entityId', requirePermission('custom_field', 'update'), async (req, res, next) => {
   try {
     const entityType = req.params.entityType as string;
     const entityId = req.params.entityId as string;

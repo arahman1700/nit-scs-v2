@@ -97,9 +97,21 @@ interface UseDocumentFormReturn {
   getCheckboxValue: (key: string) => boolean;
 }
 
+// V2 display names → V1 internal model names used by formConfigs and API hooks
+const V2_TO_V1: Record<string, string> = {
+  grn: 'mrrv',
+  mi: 'mirv',
+  mrn: 'mrv',
+  qci: 'rfim',
+  dr: 'osd',
+  mr: 'mrf',
+};
+
 // ── Hook ───────────────────────────────────────────────────────────────────
 
-export function useDocumentForm(formType: string | undefined, id: string | undefined): UseDocumentFormReturn {
+export function useDocumentForm(rawFormType: string | undefined, id: string | undefined): UseDocumentFormReturn {
+  // Normalize V2 route names to V1 internal names
+  const formType = rawFormType ? (V2_TO_V1[rawFormType] ?? rawFormType) : rawFormType;
   const isEditMode = !!id;
   const meQuery = useCurrentUser();
   const currentUserName = meQuery.data?.data?.fullName ?? '';

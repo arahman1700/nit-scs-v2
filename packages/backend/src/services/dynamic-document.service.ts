@@ -3,6 +3,7 @@ import { NotFoundError } from '@nit-scs-v2/shared';
 import { generateDocumentNumber } from './document-number.service.js';
 import { validateDynamicData, validateDynamicLines, type FieldError } from './dynamic-validation.service.js';
 import { getDocumentTypeByCode } from './dynamic-document-type.service.js';
+import { isAuthorizedApprover, getApprovalSteps } from './approval.service.js';
 import { log } from '../config/logger.js';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -11,6 +12,23 @@ interface StatusFlowConfig {
   initialStatus: string;
   statuses: Array<{ key: string; label: string; color: string }>;
   transitions: Record<string, string[]>;
+}
+
+interface ApprovalConfigLevel {
+  role: string;
+  level: number;
+}
+
+interface ApprovalConfig {
+  levels: ApprovalConfigLevel[];
+  amountField?: string;
+}
+
+function parseApprovalConfig(raw: unknown): ApprovalConfig | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const config = raw as ApprovalConfig;
+  if (!config.levels || !Array.isArray(config.levels) || config.levels.length === 0) return null;
+  return config;
 }
 
 // ── List ────────────────────────────────────────────────────────────────
@@ -112,36 +130,60 @@ export async function createDocument(
 
   const initialStatus = statusFlow.initialStatus || 'draft';
 
-  const doc = await prisma.dynamicDocument.create({
-    data: {
-      documentTypeId: docType.id,
-      documentNumber,
-      status: initialStatus,
-      data: body.data as any,
-      projectId: body.projectId,
-      warehouseId: body.warehouseId,
-      createdById: userId,
-      updatedById: userId,
-      lines: body.lines
-        ? {
-            create: body.lines.map((line, i) => ({
-              lineNumber: i + 1,
-              data: line as any,
-            })),
-          }
-        : undefined,
-      history: {
-        create: {
-          fromStatus: null,
-          toStatus: initialStatus,
-          performedById: userId,
-          comment: 'Document created',
+  const approvalConfig = parseApprovalConfig(docType.approvalConfig);
+
+  const doc = await prisma.$transaction(async tx => {
+    const created = await tx.dynamicDocument.create({
+      data: {
+        documentTypeId: docType.id,
+        documentNumber,
+        status: initialStatus,
+        data: body.data as any,
+        projectId: body.projectId,
+        warehouseId: body.warehouseId,
+        createdById: userId,
+        updatedById: userId,
+        lines: body.lines
+          ? {
+              create: body.lines.map((line, i) => ({
+                lineNumber: i + 1,
+                data: line as any,
+              })),
+            }
+          : undefined,
+        history: {
+          create: {
+            fromStatus: null,
+            toStatus: initialStatus,
+            performedById: userId,
+            comment: 'Document created',
+          },
         },
       },
-    },
-    include: {
-      lines: true,
-    },
+      include: {
+        lines: true,
+      },
+    });
+
+    // Create ApprovalStep records if approvalConfig has levels
+    if (approvalConfig) {
+      const docTypeKey = `dynamic_${typeCode}`;
+      await tx.approvalStep.createMany({
+        data: approvalConfig.levels.map(level => ({
+          documentType: docTypeKey,
+          documentId: created.id,
+          level: level.level,
+          approverRole: level.role,
+          status: 'pending' as const,
+        })),
+      });
+      log(
+        'info',
+        `[DynDoc] Created ${approvalConfig.levels.length} approval steps for ${docTypeKey}:${created.documentNumber}`,
+      );
+    }
+
+    return created;
   });
 
   log('info', `[DynDoc] Created ${typeCode} document: ${doc.documentNumber}`);
@@ -238,6 +280,27 @@ export async function transitionDocument(
     throw new Error(`Invalid status transition: '${doc.status}' → '${targetStatus}'. Allowed: ${allowedStr}`);
   }
 
+  // Check approval requirements before allowing transition
+  const approvalConfig = parseApprovalConfig(doc.documentType.approvalConfig);
+  if (approvalConfig) {
+    const docTypeKey = `dynamic_${typeCode}`;
+    const pendingSteps = await prisma.approvalStep.findMany({
+      where: {
+        documentType: docTypeKey,
+        documentId,
+        status: 'pending',
+      },
+    });
+
+    if (pendingSteps.length > 0) {
+      const pendingLevels = pendingSteps.map(s => s.level).sort((a, b) => a - b);
+      throw new Error(
+        `Cannot transition: document has ${pendingSteps.length} pending approval(s) at level(s) ${pendingLevels.join(', ')}. ` +
+          `All approval steps must be completed before status transition.`,
+      );
+    }
+  }
+
   const updated = await prisma.$transaction(async tx => {
     // Update document status
     const result = await tx.dynamicDocument.update({
@@ -265,6 +328,98 @@ export async function transitionDocument(
 
   log('info', `[DynDoc] ${typeCode}:${doc.documentNumber} ${doc.status} → ${targetStatus}`);
   return updated;
+}
+
+// ── Approve Document ──────────────────────────────────────────────────
+
+export async function approveDocument(typeCode: string, documentId: string, userId: string, comments?: string) {
+  const doc = await prisma.dynamicDocument.findUnique({
+    where: { id: documentId },
+    include: { documentType: true },
+  });
+  if (!doc) throw new NotFoundError('Document not found');
+
+  const approvalConfig = parseApprovalConfig(doc.documentType.approvalConfig);
+  if (!approvalConfig) {
+    throw new Error(`Document type '${typeCode}' does not have approval configuration`);
+  }
+
+  const docTypeKey = `dynamic_${typeCode}`;
+
+  // Find the next pending approval step (lowest level that is still pending)
+  const currentStep = await prisma.approvalStep.findFirst({
+    where: {
+      documentType: docTypeKey,
+      documentId,
+      status: 'pending',
+    },
+    orderBy: { level: 'asc' },
+  });
+
+  if (!currentStep) {
+    throw new Error('No pending approval steps for this document — it may already be fully approved');
+  }
+
+  // Verify the user is authorized (direct role match, admin, or delegation)
+  const authorized = await isAuthorizedApprover(userId, currentStep.approverRole, docTypeKey);
+  if (!authorized) {
+    throw new Error(
+      `User is not authorized to approve at level ${currentStep.level}. Required role: ${currentStep.approverRole}`,
+    );
+  }
+
+  // Approve the step
+  await prisma.approvalStep.update({
+    where: { id: currentStep.id },
+    data: {
+      status: 'approved',
+      approverId: userId,
+      notes: comments ?? null,
+      decidedAt: new Date(),
+    },
+  });
+
+  // Check if all steps are now approved
+  const remainingPending = await prisma.approvalStep.count({
+    where: {
+      documentType: docTypeKey,
+      documentId,
+      status: 'pending',
+    },
+  });
+
+  const allApproved = remainingPending === 0;
+
+  // Add history entry
+  await prisma.dynamicDocumentHistory.create({
+    data: {
+      documentId,
+      fromStatus: doc.status,
+      toStatus: allApproved ? doc.status : doc.status, // status unchanged until all approved
+      performedById: userId,
+      comment: allApproved
+        ? `All approval levels completed (level ${currentStep.level} approved)`
+        : `Approval level ${currentStep.level} approved by ${currentStep.approverRole}`,
+    },
+  });
+
+  log(
+    'info',
+    `[DynDoc] ${typeCode}:${doc.documentNumber} approval level ${currentStep.level} approved by user ${userId}` +
+      (allApproved ? ' — all levels complete' : ''),
+  );
+
+  // Get all steps for the response
+  const steps = await getApprovalSteps(docTypeKey, documentId);
+
+  return {
+    documentId,
+    approvedLevel: currentStep.level,
+    approverRole: currentStep.approverRole,
+    allApproved,
+    remainingLevels: remainingPending,
+    steps,
+  };
 }
 
 // ── Get History ────────────────────────────────────────────────────────

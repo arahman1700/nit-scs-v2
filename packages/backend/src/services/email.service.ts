@@ -1,7 +1,9 @@
 import { Resend } from 'resend';
 import Handlebars from 'handlebars';
+import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma.js';
 import { log } from '../config/logger.js';
+import { getEnv } from '../config/env.js';
 
 // ── Resend Client (lazy init) ───────────────────────────────────────────
 
@@ -28,6 +30,103 @@ function getFromEmail(): string {
 
 const MAX_RETRIES = 3;
 const BATCH_SIZE = 50;
+const UNSUBSCRIBE_TOKEN_EXPIRY = '365d';
+
+// ── Unsubscribe Token ────────────────────────────────────────────────────
+
+export interface UnsubscribePayload {
+  email: string;
+  templateCode: string;
+  purpose: 'unsubscribe';
+}
+
+/**
+ * Generate a signed JWT for email unsubscribe links.
+ * The token contains the recipient email and template code, and expires in 1 year.
+ */
+export function generateUnsubscribeToken(recipientEmail: string, templateCode: string): string {
+  const env = getEnv();
+  const payload: UnsubscribePayload = {
+    email: recipientEmail,
+    templateCode,
+    purpose: 'unsubscribe',
+  };
+  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: UNSUBSCRIBE_TOKEN_EXPIRY });
+}
+
+/**
+ * Verify and decode an unsubscribe JWT token.
+ * Returns the payload or null if invalid/expired.
+ */
+export function verifyUnsubscribeToken(token: string): UnsubscribePayload | null {
+  try {
+    const env = getEnv();
+    const decoded = jwt.verify(token, env.JWT_SECRET) as UnsubscribePayload;
+    if (decoded.purpose !== 'unsubscribe') return null;
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build the unsubscribe URL for a given recipient and template.
+ */
+function buildUnsubscribeUrl(recipientEmail: string, templateCode: string): string {
+  const env = getEnv();
+  const token = generateUnsubscribeToken(recipientEmail, templateCode);
+  const baseUrl = env.CORS_ORIGIN || 'http://localhost:4000';
+  return `${baseUrl}/api/v1/notifications/unsubscribe?token=${token}`;
+}
+
+/**
+ * Append a GDPR-compliant unsubscribe footer to the email HTML body.
+ */
+function appendUnsubscribeFooter(html: string, recipientEmail: string, templateCode: string): string {
+  const unsubscribeUrl = buildUnsubscribeUrl(recipientEmail, templateCode);
+  const footer = `
+<hr style="border:none;border-top:1px solid #333;margin:32px 0 16px 0;" />
+<p style="color:#888;font-size:11px;line-height:1.5;">
+  You received this email because of your role in NIT Supply Chain.
+  To manage your notification preferences, visit your settings page.
+  To unsubscribe from this type of notification,
+  <a href="${unsubscribeUrl}" style="color:#80D1E9;text-decoration:underline;">click here</a>.
+</p>`;
+  return html + footer;
+}
+
+// ── Preference Check ────────────────────────────────────────────────────
+
+/**
+ * Check if a recipient has opted out of email notifications for a given template.
+ * Returns true if the email should be sent (i.e., not unsubscribed).
+ */
+async function isEmailEnabledForRecipient(recipientEmail: string, templateCode: string): Promise<boolean> {
+  // Find the employee by email
+  const employee = await prisma.employee.findUnique({
+    where: { email: recipientEmail },
+    select: { id: true },
+  });
+  if (!employee) {
+    // Unknown employee — send anyway (could be external recipient)
+    return true;
+  }
+
+  const pref = await prisma.notificationPreference.findUnique({
+    where: {
+      employeeId_templateCode: {
+        employeeId: employee.id,
+        templateCode,
+      },
+    },
+    select: { emailEnabled: true },
+  });
+
+  // No preference record means default (enabled)
+  if (!pref) return true;
+
+  return pref.emailEnabled;
+}
 
 // ── Send Templated Email ────────────────────────────────────────────────
 
@@ -46,6 +145,8 @@ export interface SendTemplatedEmailParams {
  *   all active employees with that system role.
  * - Creates an EmailLog entry with the fully rendered HTML (for reliable retries).
  * - On failure, the email remains queued for retry by processQueuedEmails().
+ * - Checks NotificationPreference before sending; skips if emailEnabled is false.
+ * - Appends a GDPR-compliant unsubscribe footer to every outgoing email.
  */
 export async function sendTemplatedEmail(params: SendTemplatedEmailParams): Promise<void> {
   const { templateCode, variables = {}, referenceTable, referenceId } = params;
@@ -72,10 +173,21 @@ export async function sendTemplatedEmail(params: SendTemplatedEmailParams): Prom
   const subjectCompiled = Handlebars.compile(template.subject);
   const bodyCompiled = Handlebars.compile(template.bodyHtml);
   const subject = subjectCompiled(variables);
-  const html = bodyCompiled(variables);
+  const baseHtml = bodyCompiled(variables);
 
   // Send to each recipient
   for (const email of recipients) {
+    // Check notification preference — skip if unsubscribed
+    const enabled = await isEmailEnabledForRecipient(email, templateCode);
+    if (!enabled) {
+      log('info', `[Email] Skipping '${templateCode}' for ${email} — unsubscribed`);
+      continue;
+    }
+
+    // Append unsubscribe footer per-recipient (unique token per recipient)
+    const html = appendUnsubscribeFooter(baseHtml, email, templateCode);
+    const unsubscribeUrl = buildUnsubscribeUrl(email, templateCode);
+
     // Store the rendered HTML so retries don't need the original variables
     const emailLog = await prisma.emailLog.create({
       data: {
@@ -90,23 +202,47 @@ export async function sendTemplatedEmail(params: SendTemplatedEmailParams): Prom
       },
     });
 
-    // Attempt immediate send
-    await attemptSend(emailLog.id, email, subject, html);
+    // Attempt immediate send (with List-Unsubscribe header)
+    await attemptSend(emailLog.id, email, subject, html, unsubscribeUrl);
   }
 }
 
 /**
  * Attempt to send a single email. Updates the EmailLog record.
+ * Includes RFC 2369 List-Unsubscribe header when unsubscribeUrl is provided.
  */
-async function attemptSend(logId: string, toEmail: string, subject: string, html: string): Promise<boolean> {
+async function attemptSend(
+  logId: string,
+  toEmail: string,
+  subject: string,
+  html: string,
+  unsubscribeUrl?: string,
+): Promise<boolean> {
   try {
     const resend = getResend();
-    const result = await resend.emails.send({
+
+    const sendPayload: {
+      from: string;
+      to: string;
+      subject: string;
+      html: string;
+      headers?: Record<string, string>;
+    } = {
       from: getFromEmail(),
       to: toEmail,
       subject,
       html,
-    });
+    };
+
+    // RFC 2369: List-Unsubscribe header for email client integration
+    if (unsubscribeUrl) {
+      sendPayload.headers = {
+        'List-Unsubscribe': `<${unsubscribeUrl}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+      };
+    }
+
+    const result = await resend.emails.send(sendPayload);
 
     await prisma.emailLog.update({
       where: { id: logId },

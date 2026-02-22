@@ -366,6 +366,9 @@ model Employee {
   packingSessions    PackingSession[]    @relation("PackedBy")
   stagingAssignments StagingAssignment[] @relation("StagingAssignedBy")
 
+  // Reverse relations — Notification Preferences
+  notificationPreferences NotificationPreference[]
+
   @@index([systemRole], map: "idx_employees_system_role")
   @@index([isActive], map: "idx_employees_active")
   @@index([assignedProjectId], map: "idx_employees_project")
@@ -3176,11 +3179,13 @@ model CustomFieldDefinition {
   fieldKey   String   @map("field_key") @db.VarChar(50)
   label      String   @db.VarChar(200)
   fieldType  String   @map("field_type") @db.VarChar(30)
-  options    Json?    @db.JsonB
-  isRequired Boolean  @default(false) @map("is_required")
-  showInGrid Boolean  @default(false) @map("show_in_grid")
-  sortOrder  Int      @default(0) @map("sort_order")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  options         Json?    @db.JsonB
+  isRequired      Boolean  @default(false) @map("is_required")
+  showInGrid      Boolean  @default(false) @map("show_in_grid")
+  sortOrder       Int      @default(0) @map("sort_order")
+  /// Validation rules: { min?, max?, minLength?, maxLength?, pattern? }
+  validationRules Json?    @map("validation_rules") @db.JsonB
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
   values CustomFieldValue[]
@@ -3450,4 +3455,25 @@ model SemanticDimension {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
   @@map("semantic_dimensions")
+}
+
+// ############################################################################
+// SECTION: NOTIFICATION PREFERENCES (GDPR Unsubscribe)
+// ############################################################################
+
+/// Per-employee, per-template notification channel preferences (GDPR compliant)
+model NotificationPreference {
+  id           String   @id @default(uuid()) @db.Uuid
+  employeeId   String   @map("employee_id") @db.Uuid
+  templateCode String   @map("template_code") @db.VarChar(50)
+  emailEnabled Boolean  @default(true) @map("email_enabled")
+  pushEnabled  Boolean  @default(true) @map("push_enabled")
+  inAppEnabled Boolean  @default(true) @map("in_app_enabled")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, templateCode])
+  @@map("notification_preferences")
 }

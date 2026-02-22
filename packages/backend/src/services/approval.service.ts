@@ -83,7 +83,11 @@ async function hasActiveDelegation(userId: string, requiredRole: string, documen
  * Check if a user is authorized to approve at a given step.
  * Checks direct role match OR active delegation.
  */
-async function isAuthorizedApprover(userId: string, requiredRole: string, documentType: string): Promise<boolean> {
+export async function isAuthorizedApprover(
+  userId: string,
+  requiredRole: string,
+  documentType: string,
+): Promise<boolean> {
   // Check direct role
   const user = await prisma.employee.findUnique({
     where: { id: userId },

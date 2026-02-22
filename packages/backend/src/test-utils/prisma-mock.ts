@@ -118,6 +118,7 @@ export interface PrismaMock {
   workflowRule: PrismaModelMock;
   workflowExecutionLog: PrismaModelMock;
   surplusDeclaration: PrismaModelMock;
+  notificationPreference: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -207,6 +208,7 @@ export function createPrismaMock(): PrismaMock {
     workflowRule: createModelMock(),
     workflowExecutionLog: createModelMock(),
     surplusDeclaration: createModelMock(),
+    notificationPreference: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),

@@ -17,7 +17,7 @@ const router = Router();
 
 router.get('/vapid-key', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const publicKey = pushService.getVapidPublicKey();
+    const publicKey = await pushService.getVapidPublicKey();
     sendSuccess(res, { publicKey });
   } catch (err) {
     next(err);

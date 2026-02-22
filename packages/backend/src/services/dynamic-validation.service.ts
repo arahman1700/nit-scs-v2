@@ -111,26 +111,68 @@ function validateFieldType(field: DynamicFieldDefinition, value: unknown, rules:
     }
 
     case 'email': {
+      const str = String(value);
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(String(value))) {
+      if (!emailRegex.test(str)) {
         errors.push({ field: key, message: `${field.label} must be a valid email` });
+        break;
+      }
+      if (rules?.minLength !== undefined && str.length < rules.minLength) {
+        errors.push({ field: key, message: `${field.label} must be at least ${rules.minLength} characters` });
+      }
+      if (rules?.maxLength !== undefined && str.length > rules.maxLength) {
+        errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
+      }
+      if (rules?.pattern) {
+        const regex = new RegExp(rules.pattern);
+        if (!regex.test(str)) {
+          errors.push({ field: key, message: `${field.label} format is invalid` });
+        }
       }
       break;
     }
 
     case 'phone': {
+      const str = String(value);
       const phoneRegex = /^\+?[\d\s\-()]{7,20}$/;
-      if (!phoneRegex.test(String(value))) {
+      if (!phoneRegex.test(str)) {
         errors.push({ field: key, message: `${field.label} must be a valid phone number` });
+        break;
+      }
+      if (rules?.minLength !== undefined && str.length < rules.minLength) {
+        errors.push({ field: key, message: `${field.label} must be at least ${rules.minLength} characters` });
+      }
+      if (rules?.maxLength !== undefined && str.length > rules.maxLength) {
+        errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
+      }
+      if (rules?.pattern) {
+        const regex = new RegExp(rules.pattern);
+        if (!regex.test(str)) {
+          errors.push({ field: key, message: `${field.label} format is invalid` });
+        }
       }
       break;
     }
 
     case 'url': {
+      const str = String(value);
       try {
-        new URL(String(value));
+        new URL(str);
       } catch {
         errors.push({ field: key, message: `${field.label} must be a valid URL` });
+        break;
+      }
+      if (rules?.minLength !== undefined && str.length < rules.minLength) {
+        errors.push({ field: key, message: `${field.label} must be at least ${rules.minLength} characters` });
+      }
+      if (rules?.maxLength !== undefined && str.length > rules.maxLength) {
+        errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
+      }
+      if (rules?.pattern) {
+        const regex = new RegExp(rules.pattern);
+        if (!regex.test(str)) {
+          errors.push({ field: key, message: `${field.label} format is invalid` });
+        }
       }
       break;
     }

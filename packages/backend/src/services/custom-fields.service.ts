@@ -8,6 +8,21 @@
 import { prisma } from '../utils/prisma.js';
 import { Prisma } from '@prisma/client';
 
+// ── Types ───────────────────────────────────────────────────────────────
+
+export interface CustomFieldError {
+  field: string;
+  message: string;
+}
+
+interface ValidationRules {
+  min?: number;
+  max?: number;
+  minLength?: number;
+  maxLength?: number;
+  pattern?: string;
+}
+
 // ── Field Definitions CRUD ───────────────────────────────────────────
 
 export async function listFieldDefinitions(entityType?: string) {
@@ -27,6 +42,7 @@ export async function createFieldDefinition(data: {
   label: string;
   fieldType: string;
   options?: unknown;
+  validationRules?: unknown;
   isRequired?: boolean;
   showInGrid?: boolean;
   sortOrder?: number;
@@ -38,6 +54,7 @@ export async function createFieldDefinition(data: {
       label: data.label,
       fieldType: data.fieldType,
       options: data.options ? (data.options as Prisma.InputJsonValue) : Prisma.JsonNull,
+      validationRules: data.validationRules ? (data.validationRules as Prisma.InputJsonValue) : Prisma.JsonNull,
       isRequired: data.isRequired ?? false,
       showInGrid: data.showInGrid ?? false,
       sortOrder: data.sortOrder ?? 0,
@@ -51,6 +68,7 @@ export async function updateFieldDefinition(
     label?: string;
     fieldType?: string;
     options?: unknown;
+    validationRules?: unknown;
     isRequired?: boolean;
     showInGrid?: boolean;
     sortOrder?: number;
@@ -63,6 +81,9 @@ export async function updateFieldDefinition(
       ...(data.fieldType !== undefined && { fieldType: data.fieldType }),
       ...(data.options !== undefined && {
         options: data.options ? (data.options as Prisma.InputJsonValue) : Prisma.JsonNull,
+      }),
+      ...(data.validationRules !== undefined && {
+        validationRules: data.validationRules ? (data.validationRules as Prisma.InputJsonValue) : Prisma.JsonNull,
       }),
       ...(data.isRequired !== undefined && { isRequired: data.isRequired }),
       ...(data.showInGrid !== undefined && { showInGrid: data.showInGrid }),
@@ -97,8 +118,92 @@ export async function getCustomFieldValues(entityType: string, entityId: string)
 }
 
 /**
+ * Validate custom field values against their definitions' validationRules.
+ * Returns an array of field-level errors (empty = valid).
+ */
+export function validateCustomFieldValues(
+  definitions: Array<{
+    fieldKey: string;
+    label: string;
+    fieldType: string;
+    isRequired: boolean;
+    validationRules?: unknown;
+  }>,
+  values: Record<string, unknown>,
+): CustomFieldError[] {
+  const errors: CustomFieldError[] = [];
+
+  for (const def of definitions) {
+    const value = values[def.fieldKey];
+    const rules = (def.validationRules ?? null) as ValidationRules | null;
+
+    // Required check
+    if (def.isRequired && (value === undefined || value === null || value === '')) {
+      errors.push({ field: def.fieldKey, message: `${def.label} is required` });
+      continue;
+    }
+
+    // Skip further validation if value is empty and not required
+    if (value === undefined || value === null || value === '') continue;
+
+    // Type-specific + validationRules checks
+    switch (def.fieldType) {
+      case 'number':
+      case 'currency': {
+        const num = Number(value);
+        if (isNaN(num)) {
+          errors.push({ field: def.fieldKey, message: `${def.label} must be a number` });
+          break;
+        }
+        if (rules?.min !== undefined && num < rules.min) {
+          errors.push({ field: def.fieldKey, message: `${def.label} must be at least ${rules.min}` });
+        }
+        if (rules?.max !== undefined && num > rules.max) {
+          errors.push({ field: def.fieldKey, message: `${def.label} must be at most ${rules.max}` });
+        }
+        break;
+      }
+
+      case 'text':
+      case 'textarea':
+      case 'email':
+      case 'url':
+      case 'phone': {
+        const str = String(value);
+        if (rules?.minLength !== undefined && str.length < rules.minLength) {
+          errors.push({
+            field: def.fieldKey,
+            message: `${def.label} must be at least ${rules.minLength} characters`,
+          });
+        }
+        if (rules?.maxLength !== undefined && str.length > rules.maxLength) {
+          errors.push({
+            field: def.fieldKey,
+            message: `${def.label} must be at most ${rules.maxLength} characters`,
+          });
+        }
+        if (rules?.pattern) {
+          const regex = new RegExp(rules.pattern);
+          if (!regex.test(str)) {
+            errors.push({ field: def.fieldKey, message: `${def.label} format is invalid` });
+          }
+        }
+        break;
+      }
+
+      // No validationRules applicable for date, select, multiselect, checkbox, file, etc.
+      default:
+        break;
+    }
+  }
+
+  return errors;
+}
+
+/**
  * Set custom field values for an entity.
  * Accepts a flat object: { fieldKey: value, ... }
+ * Validates against field definitions' validationRules before persisting.
  * Creates or updates each value.
  */
 export async function setCustomFieldValues(
@@ -112,6 +217,15 @@ export async function setCustomFieldValues(
   });
 
   const defMap = new Map(definitions.map(d => [d.fieldKey, d]));
+
+  // Validate before persisting
+  const validationErrors = validateCustomFieldValues(definitions, values);
+  if (validationErrors.length > 0) {
+    const err = new Error('Custom field validation failed');
+    (err as Error & { status: number; errors: CustomFieldError[] }).status = 400;
+    (err as Error & { errors: CustomFieldError[] }).errors = validationErrors;
+    throw err;
+  }
 
   for (const [fieldKey, value] of Object.entries(values)) {
     const def = defMap.get(fieldKey);

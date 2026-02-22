@@ -21,6 +21,7 @@ import {
   getCustomFieldValues,
   setCustomFieldValues,
   deleteCustomFieldValues,
+  validateCustomFieldValues,
 } from './custom-fields.service.js';
 
 describe('custom-fields.service', () => {
@@ -133,6 +134,7 @@ describe('custom-fields.service', () => {
           label: 'Custom Note',
           fieldType: 'text',
           options: ['Option A', 'Option B'],
+          validationRules: MockJsonNull,
           isRequired: true,
           showInGrid: true,
           sortOrder: 5,
