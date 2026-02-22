@@ -12,6 +12,7 @@ const APPROVE_ROLES = ['admin', 'logistics_coordinator', 'transport_supervisor']
 export default createDocumentRouter({
   docType: 'generator_maintenance',
   tableName: 'generator_maintenance',
+  resource: 'generator_maintenance',
   scopeMapping: { createdByField: 'performedById' },
 
   list: genMaintService.list,

@@ -8,12 +8,26 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type {
   RentalContractCreateDto,
   RentalContractUpdateDto,
   RentalContractLineDto,
   ListParams,
 } from '../types/dto.js';
+
+/** Helper to emit EventBus events for rental contracts */
+function emitEvent(action: string, entityId: string, payload: Record<string, unknown>, performedById?: string) {
+  eventBus.publish({
+    type: action === 'create' ? 'document:created' : 'document:status_changed',
+    entityType: 'rental_contract',
+    entityId,
+    action,
+    payload,
+    performedById,
+    timestamp: new Date().toISOString(),
+  });
+}
 
 const DOC_TYPE = 'rental_contract';
 
@@ -66,7 +80,7 @@ export async function create(
 ) {
   return prisma.$transaction(async tx => {
     const contractNumber = await generateDocumentNumber('rental_contract');
-    return tx.rentalContract.create({
+    const created = await tx.rentalContract.create({
       data: {
         contractNumber,
         supplierId: headerData.supplierId,
@@ -94,6 +108,10 @@ export async function create(
         supplier: { select: { id: true, supplierName: true } },
       },
     });
+
+    emitEvent('create', created.id, { contractNumber, supplierId: headerData.supplierId }, userId);
+
+    return created;
   });
 }
 
@@ -127,10 +145,14 @@ export async function submit(id: string) {
     throw new BusinessRuleError('Cannot submit rental contract with no line items');
   }
 
-  return prisma.rentalContract.update({
+  const updated = await prisma.rentalContract.update({
     where: { id: contract.id },
     data: { status: 'pending_approval' },
   });
+
+  emitEvent('status_change', contract.id, { from: contract.status, to: 'pending_approval' });
+
+  return updated;
 }
 
 export async function approve(id: string) {
@@ -138,10 +160,14 @@ export async function approve(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'active');
 
-  return prisma.rentalContract.update({
+  const updated = await prisma.rentalContract.update({
     where: { id: contract.id },
     data: { status: 'active' },
   });
+
+  emitEvent('status_change', contract.id, { from: contract.status, to: 'active' });
+
+  return updated;
 }
 
 export async function activate(id: string) {
@@ -149,10 +175,14 @@ export async function activate(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'active');
 
-  return prisma.rentalContract.update({
+  const updated = await prisma.rentalContract.update({
     where: { id: contract.id },
     data: { status: 'active' },
   });
+
+  emitEvent('status_change', contract.id, { from: contract.status, to: 'active' });
+
+  return updated;
 }
 
 export async function extend(id: string, newEndDate: string) {
@@ -160,10 +190,14 @@ export async function extend(id: string, newEndDate: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'extended');
 
-  return prisma.rentalContract.update({
+  const updated = await prisma.rentalContract.update({
     where: { id: contract.id },
     data: { status: 'extended', endDate: new Date(newEndDate) },
   });
+
+  emitEvent('status_change', contract.id, { from: contract.status, to: 'extended', newEndDate });
+
+  return updated;
 }
 
 export async function terminate(id: string) {
@@ -171,8 +205,12 @@ export async function terminate(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'terminated');
 
-  return prisma.rentalContract.update({
+  const updated = await prisma.rentalContract.update({
     where: { id: contract.id },
     data: { status: 'terminated' },
   });
+
+  emitEvent('status_change', contract.id, { from: contract.status, to: 'terminated' });
+
+  return updated;
 }

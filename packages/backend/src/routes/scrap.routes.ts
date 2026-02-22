@@ -12,6 +12,7 @@ const APPROVE_ROLES = ['admin', 'manager', 'warehouse_supervisor', 'scrap_commit
 export default createDocumentRouter({
   docType: 'scrap',
   tableName: 'scrap_items',
+  resource: 'scrap',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'createdById' },
 
   list: scrapService.list,

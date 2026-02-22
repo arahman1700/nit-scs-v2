@@ -7,30 +7,78 @@ import { sendTemplatedEmail } from './email.service.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 
-// ── Token Blacklist (Redis) ─────────────────────────────────────────────
+// ── Token Blacklist (Redis + in-memory fallback) ────────────────────────
 
 const TOKEN_BLACKLIST_PREFIX = 'bl:';
 
 /**
- * Blacklist an access token's jti in Redis until its natural expiry.
- * Falls back silently if Redis is unavailable.
+ * In-memory LRU blacklist as a fallback when Redis is unavailable.
+ * Limited to 10,000 entries to prevent memory leaks.
+ * Each entry stores the expiry timestamp (ms) so stale entries can be pruned.
+ */
+const MEM_BLACKLIST_MAX = 10_000;
+const memBlacklist = new Map<string, number>();
+
+function memBlacklistPrune(): void {
+  if (memBlacklist.size < MEM_BLACKLIST_MAX / 2) return;
+  const now = Date.now();
+  for (const [key, expiry] of memBlacklist) {
+    if (expiry <= now) memBlacklist.delete(key);
+  }
+  // If still over limit after pruning expired, remove oldest entries
+  if (memBlacklist.size >= MEM_BLACKLIST_MAX) {
+    const excess = memBlacklist.size - MEM_BLACKLIST_MAX + 100;
+    const keys = memBlacklist.keys();
+    for (let i = 0; i < excess; i++) {
+      const next = keys.next();
+      if (next.done) break;
+      memBlacklist.delete(next.value);
+    }
+  }
+}
+
+/**
+ * Blacklist an access token's jti.
+ * Writes to Redis (primary) AND in-memory (fallback) so that token revocation
+ * works even when Redis is temporarily unavailable.
  */
 async function blacklistToken(jti: string, ttlSeconds: number): Promise<void> {
+  if (!jti) return;
+
+  // Always write to in-memory fallback
+  memBlacklistPrune();
+  memBlacklist.set(jti, Date.now() + ttlSeconds * 1000);
+
+  // Try Redis as the primary store
   const redis = getRedis();
-  if (!redis || !jti) return;
+  if (!redis) {
+    log('warn', '[Auth] Redis unavailable — token blacklisted in memory only (single-instance)');
+    return;
+  }
   try {
     await redis.setex(`${TOKEN_BLACKLIST_PREFIX}${jti}`, ttlSeconds, '1');
   } catch (err) {
-    log('warn', `[Auth] Failed to blacklist token: ${(err as Error).message}`);
+    log('warn', `[Auth] Failed to blacklist token in Redis: ${(err as Error).message} — using memory fallback`);
   }
 }
 
 /**
  * Check if a token jti is blacklisted.
+ * Checks Redis first, then falls back to in-memory blacklist.
  */
 export async function isTokenBlacklisted(jti: string): Promise<boolean> {
+  if (!jti) return false;
+
+  // Check in-memory first (fastest, always available)
+  const memExpiry = memBlacklist.get(jti);
+  if (memExpiry !== undefined) {
+    if (Date.now() < memExpiry) return true;
+    memBlacklist.delete(jti); // expired
+  }
+
+  // Check Redis
   const redis = getRedis();
-  if (!redis || !jti) return false;
+  if (!redis) return false;
   try {
     const result = await redis.get(`${TOKEN_BLACKLIST_PREFIX}${jti}`);
     return result !== null;

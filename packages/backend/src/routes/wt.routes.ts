@@ -14,6 +14,7 @@ const ROLES = ['admin', 'manager', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'wt',
   tableName: 'stock_transfers',
+  resource: 'wt',
   // StockTransfer uses fromWarehouseId/toWarehouseId — the service handles OR logic
   scopeMapping: { warehouseField: 'fromWarehouseId', createdByField: 'requestedById' },
 

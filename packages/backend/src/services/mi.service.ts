@@ -9,7 +9,8 @@ import { submitForApproval, processApproval } from './approval.service.js';
 import { reserveStockBatch } from './inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
-import { assertTransition } from '@nit-scs-v2/shared';
+import { assertTransition, canTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { Server as SocketIOServer } from 'socket.io';
 import type {
   MirvCreateDto as MiCreateDto,
@@ -153,6 +154,17 @@ export async function submit(id: string, userId: string, io?: SocketIOServer) {
     submittedById: userId,
     io,
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mirv',
+    entityId: mi.id,
+    action: 'status_change',
+    payload: { from: mi.status, to: 'pending_approval', approverRole: approval.approverRole },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: mi.id, approverRole: approval.approverRole, slaHours: approval.slaHours };
 }
 
@@ -205,10 +217,21 @@ export async function approve(
     });
   }
 
+  const newStatus = action === 'approve' ? 'approved' : 'rejected';
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mirv',
+    entityId: mi.id,
+    action: 'status_change',
+    payload: { from: 'pending_approval', to: newStatus, warehouseId: mi.warehouseId },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return {
     id: mi.id,
     action,
-    status: action === 'approve' ? 'approved' : 'rejected',
+    status: newStatus,
     warehouseId: mi.warehouseId,
   };
 }
@@ -225,8 +248,82 @@ export async function signQc(id: string, qcUserId: string) {
  * Issue materials for an approved MI.
  * Delegates to shared mirv-operations.
  */
-export async function issue(id: string, userId: string) {
-  return issueMirv(prisma, id, userId);
+export async function issue(
+  id: string,
+  userId: string,
+  partialItems?: import('./mirv-operations.js').PartialIssueItem[],
+) {
+  const result = await issueMirv(prisma, id, userId, partialItems);
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mirv',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: 'approved', to: result.status ?? 'issued' },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  // Auto-advance parent MR to fulfilled when MI is fully issued
+  if (result.status === 'issued') {
+    await autoFulfillParentMr(id, userId);
+  }
+
+  return result;
+}
+
+/**
+ * When an MI is issued and it was created from an MR (mrfId),
+ * auto-advance the parent MR to 'fulfilled' if all its from_stock
+ * lines have been issued.
+ */
+async function autoFulfillParentMr(mirvId: string, userId: string): Promise<void> {
+  try {
+    const mirv = await prisma.mirv.findUnique({
+      where: { id: mirvId },
+      select: { mrfId: true, status: true },
+    });
+    if (!mirv?.mrfId) return; // No parent MR
+
+    const mr = await prisma.materialRequisition.findUnique({
+      where: { id: mirv.mrfId },
+      select: { id: true, status: true, mrfNumber: true },
+    });
+    if (!mr) return;
+
+    // Only advance if MR is in a fulfillable state
+    const fulfillable = ['from_stock', 'needs_purchase', 'partially_fulfilled', 'checking_stock'];
+    if (!fulfillable.includes(mr.status)) return;
+
+    // Check if all MIRVs linked to this MR are issued/completed
+    const linkedMirvs = await prisma.mirv.findMany({
+      where: { mrfId: mr.id },
+      select: { status: true },
+    });
+
+    const allIssued = linkedMirvs.every(m => m.status === 'issued' || m.status === 'completed');
+    if (!allIssued) return;
+
+    await prisma.materialRequisition.update({
+      where: { id: mr.id },
+      data: { status: 'fulfilled', fulfillmentDate: new Date() },
+    });
+
+    eventBus.publish({
+      type: 'document:status_changed',
+      entityType: 'mrf',
+      entityId: mr.id,
+      action: 'status_change',
+      payload: { from: mr.status, to: 'fulfilled', autoFulfilledByMi: mirvId },
+      performedById: userId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    // Non-critical — log but don't fail the MI issuance
+     
+    console.error('[MI] Failed to auto-fulfill parent MR:', err);
+  }
 }
 
 /**
@@ -234,5 +331,16 @@ export async function issue(id: string, userId: string) {
  * Delegates to shared mirv-operations.
  */
 export async function cancel(id: string) {
-  return cancelMirv(prisma, id);
+  const result = await cancelMirv(prisma, id);
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mirv',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: 'unknown', to: 'cancelled' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return result;
 }

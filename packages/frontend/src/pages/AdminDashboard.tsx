@@ -26,6 +26,8 @@ import {
   ShieldCheck,
   Briefcase,
   Database,
+  Brain,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   useDashboardStats,
@@ -34,6 +36,8 @@ import {
   useDocumentCounts,
   useSLACompliance,
   useTopProjects,
+  useInventoryHealth,
+  useAnomalies,
 } from '@/api/hooks';
 import { useProjects } from '@/api/hooks';
 import { Link, useNavigate } from 'react-router-dom';
@@ -287,8 +291,26 @@ export const AdminDashboard: React.FC = () => {
   const docCountsQuery = useDocumentCounts({ project: projectFilter, timeRange });
   const slaQuery = useSLACompliance({ project: projectFilter });
   const topProjectsQuery = useTopProjects({ limit: 5 });
+  const healthQuery = useInventoryHealth();
+  const anomaliesQuery = useAnomalies();
 
   const projects = projectsQuery.data?.data ?? [];
+  const health = healthQuery.data?.data as
+    | {
+        totalItems?: number;
+        negativeStockCount?: number;
+        lowStockCount?: number;
+        overstockCount?: number;
+        dormantItemCount?: number;
+      }
+    | undefined;
+  const anomalies = (anomaliesQuery.data?.data ?? []) as Array<{
+    severity: string;
+    type: string;
+    description: string;
+    detectedAt: string;
+  }>;
+  const highSeverityAnomalies = anomalies.filter(a => a.severity === 'high');
 
   // Extract raw data from queries
   const stats = statsQuery.data?.data as DashboardStats | undefined;
@@ -559,8 +581,55 @@ export const AdminDashboard: React.FC = () => {
             loading={false}
             metrics={[{ label: 'Scope', value: 'Suppliers, Items, Projects' }]}
           />
+          <SectionCard
+            title="Intelligence"
+            icon={Brain}
+            path="/admin/intelligence"
+            loading={healthQuery.isLoading}
+            metrics={[
+              { label: 'Anomalies', value: anomalies.length },
+              { label: 'Critical', value: highSeverityAnomalies.length },
+              { label: 'Low Stock', value: health?.lowStockCount ?? 0 },
+            ]}
+          />
         </div>
       </div>
+
+      {/* Anomaly Alert Banner */}
+      {highSeverityAnomalies.length > 0 && (
+        <div
+          onClick={() => navigate('/admin/intelligence')}
+          onKeyDown={e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              navigate('/admin/intelligence');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          className="glass-card p-4 rounded-xl border border-red-500/20 bg-red-500/5 cursor-pointer hover:bg-red-500/10 transition-all duration-300 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-500/20 rounded-lg">
+              <ShieldAlert size={20} className="text-red-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-red-400 font-semibold">
+                {highSeverityAnomalies.length} High-Severity Anomal{highSeverityAnomalies.length === 1 ? 'y' : 'ies'}{' '}
+                Detected
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {highSeverityAnomalies
+                  .slice(0, 2)
+                  .map(a => a.description)
+                  .join(' | ')}
+                {highSeverityAnomalies.length > 2 && ` and ${highSeverityAnomalies.length - 2} more...`}
+              </p>
+            </div>
+            <ArrowRight size={16} className="text-red-400" />
+          </div>
+        </div>
+      )}
 
       {/* Document Counts Row */}
       <div>

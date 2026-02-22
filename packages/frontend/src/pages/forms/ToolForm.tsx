@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Wrench, CheckCircle, Loader2 } from 'lucide-react';
 import type { Warehouse } from '@nit-scs-v2/shared/types';
+import { toast } from '@/components/Toaster';
 import { useCreateTool, useTool, useUpdateTool } from '@/api/hooks';
 import { useWarehouses } from '@/api/hooks/useMasterData';
 
@@ -53,6 +54,10 @@ export const ToolForm: React.FC = () => {
         onSuccess: () => {
           setDocumentNumber(existingDoc?.formNumber ?? id);
           setSubmitted(true);
+          toast.success('Tool Updated', 'Tool record has been saved successfully');
+        },
+        onError: (err: Error) => {
+          toast.error('Update Failed', err.message || 'Failed to update tool');
         },
       });
     } else {
@@ -60,6 +65,10 @@ export const ToolForm: React.FC = () => {
         onSuccess: res => {
           setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'NEW');
           setSubmitted(true);
+          toast.success('Tool Registered', 'New tool has been added to inventory');
+        },
+        onError: (err: Error) => {
+          toast.error('Registration Failed', err.message || 'Failed to register tool');
         },
       });
     }

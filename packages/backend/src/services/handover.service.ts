@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { HandoverCreateDto, HandoverUpdateDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'storekeeper_handover';
@@ -84,10 +85,21 @@ export async function startVerification(id: string, _userId: string) {
   if (!record) throw new NotFoundError('StorekeeperHandover', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  return prisma.storekeeperHandover.update({
+  const updated = await prisma.storekeeperHandover.update({
     where: { id: record.id },
     data: { status: 'in_progress' },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'storekeeper_handover',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: record.status, to: 'in_progress' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function complete(id: string, _userId: string) {
@@ -99,8 +111,19 @@ export async function complete(id: string, _userId: string) {
     throw new BusinessRuleError('Inventory must be verified before completing the handover');
   }
 
-  return prisma.storekeeperHandover.update({
+  const updated = await prisma.storekeeperHandover.update({
     where: { id: record.id },
     data: { status: 'completed' },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'storekeeper_handover',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: record.status, to: 'completed' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }

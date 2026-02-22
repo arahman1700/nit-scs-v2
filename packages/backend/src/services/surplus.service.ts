@@ -3,12 +3,15 @@
  * Prisma model: SurplusItem (table: surplus_items)
  * State flow: identified → evaluated → approved → actioned → closed
  */
-import type { Prisma } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { SurplusCreateDto, SurplusUpdateDto, ListParams } from '../types/dto.js';
+
+type TransactionClient = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 const DOC_TYPE = 'surplus';
 
@@ -142,6 +145,10 @@ export async function scmApprove(id: string, _scmUserId: string) {
  *   - 'return'   → MRN with returnType='return_to_supplier'
  *   - 'sell'     → proceeds to SSC (status update only)
  */
+/**
+ * Action a surplus item based on its disposition.
+ * Wrapped in a transaction to prevent orphaned downstream documents.
+ */
 export async function action(id: string, userId: string) {
   const surplus = await prisma.surplusItem.findUnique({ where: { id } });
   if (!surplus) throw new NotFoundError('Surplus', id);
@@ -151,56 +158,77 @@ export async function action(id: string, userId: string) {
     throw new BusinessRuleError('Disposition must be set before actioning surplus item');
   }
 
-  let linkedDocumentId: string | null = null;
-  let linkedDocumentType: string | null = null;
+  const result = await prisma.$transaction(async (tx: TransactionClient) => {
+    let linkedDocumentId: string | null = null;
+    let linkedDocumentType: string | null = null;
 
-  if (surplus.disposition === 'transfer') {
-    // Auto-create Warehouse Transfer (WT)
-    const wtNumber = await generateDocumentNumber('wt');
-    const wt = await prisma.stockTransfer.create({
-      data: {
-        transferNumber: wtNumber,
-        transferType: 'warehouse_to_warehouse',
-        fromWarehouseId: surplus.warehouseId,
-        toWarehouseId: surplus.warehouseId,
-        status: 'draft',
-        requestedById: userId,
-        transferDate: new Date(),
-        notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
-      },
-    });
-    linkedDocumentId = wt.id;
-    linkedDocumentType = 'wt';
-  } else if (surplus.disposition === 'return') {
-    if (!surplus.projectId) {
-      throw new BusinessRuleError('Project is required to create a return MRN from surplus');
+    if (surplus.disposition === 'transfer') {
+      // Auto-create Warehouse Transfer (WT)
+      const wtNumber = await generateDocumentNumber('wt');
+      const wt = await tx.stockTransfer.create({
+        data: {
+          transferNumber: wtNumber,
+          transferType: 'warehouse_to_warehouse',
+          fromWarehouseId: surplus.warehouseId,
+          toWarehouseId: surplus.warehouseId,
+          status: 'draft',
+          requestedById: userId,
+          transferDate: new Date(),
+          notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
+        },
+      });
+      linkedDocumentId = wt.id;
+      linkedDocumentType = 'wt';
+    } else if (surplus.disposition === 'return') {
+      if (!surplus.projectId) {
+        throw new BusinessRuleError('Project is required to create a return MRN from surplus');
+      }
+      // Auto-create MRN with returnType='return_to_supplier'
+      const mrvNumber = await generateDocumentNumber('mrv');
+      const mrn = await tx.mrv.create({
+        data: {
+          mrvNumber,
+          returnType: 'return_to_supplier',
+          toWarehouseId: surplus.warehouseId,
+          projectId: surplus.projectId,
+          returnedById: userId,
+          returnDate: new Date(),
+          reason: 'Return from surplus disposition',
+          status: 'draft',
+          notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
+        },
+      });
+      linkedDocumentId = mrn.id;
+      linkedDocumentType = 'mrn';
     }
-    // Auto-create MRN with returnType='return_to_supplier'
-    const mrvNumber = await generateDocumentNumber('mrv');
-    const mrn = await prisma.mrv.create({
-      data: {
-        mrvNumber,
-        returnType: 'return_to_supplier',
-        toWarehouseId: surplus.warehouseId,
-        projectId: surplus.projectId,
-        returnedById: userId,
-        returnDate: new Date(),
-        reason: 'Return from surplus disposition',
-        status: 'draft',
-        notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
-      },
-    });
-    linkedDocumentId = mrn.id;
-    linkedDocumentType = 'mrn';
-  }
-  // 'sell' disposition: no downstream document — proceeds to SSC workflow
+    // 'sell' disposition: no downstream document — proceeds to SSC workflow
 
-  const updated = await prisma.surplusItem.update({
-    where: { id: surplus.id },
-    data: { status: 'actioned' },
+    const updated = await tx.surplusItem.update({
+      where: { id: surplus.id },
+      data: { status: 'actioned' },
+    });
+
+    return { updated, linkedDocumentId, linkedDocumentType };
   });
 
-  return { updated, linkedDocumentId, linkedDocumentType };
+  // Publish event after transaction commits
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'surplus_item',
+    entityId: id,
+    action: 'status_change',
+    payload: {
+      from: surplus.status,
+      to: 'actioned',
+      disposition: surplus.disposition,
+      linkedDocumentId: result.linkedDocumentId,
+      linkedDocumentType: result.linkedDocumentType,
+    },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return result;
 }
 
 export async function close(id: string) {

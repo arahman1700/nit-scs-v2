@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import {
   listCustomDataSources,
   getCustomDataSource,
@@ -13,6 +13,13 @@ import { createAuditLog } from '../services/audit.service.js';
 import { logger } from '../config/logger.js';
 
 const router = Router();
+
+function canAccessSource(
+  source: { isPublic: boolean; createdById: string | null },
+  user: { userId: string; systemRole: string },
+) {
+  return user.systemRole === 'admin' || source.isPublic || source.createdById === user.userId;
+}
 
 // All routes require authentication
 router.use(authenticate);
@@ -31,14 +38,18 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     const source = await getCustomDataSource(req.params.id as string);
+    if (!canAccessSource(source, req.user!)) {
+      res.status(403).json({ success: false, message: 'Access denied' });
+      return;
+    }
     res.json({ success: true, data: source });
   } catch (err) {
     next(err);
   }
 });
 
-// POST / — Create data source (admin only)
-router.post('/', requireRole('admin'), async (req, res, next) => {
+// POST / — Create data source
+router.post('/', requirePermission('custom_data_source', 'create'), async (req, res, next) => {
   try {
     const source = await createCustomDataSource({
       ...req.body,
@@ -60,8 +71,8 @@ router.post('/', requireRole('admin'), async (req, res, next) => {
   }
 });
 
-// PUT /:id — Update data source (admin only)
-router.put('/:id', requireRole('admin'), async (req, res, next) => {
+// PUT /:id — Update data source
+router.put('/:id', requirePermission('custom_data_source', 'update'), async (req, res, next) => {
   try {
     const source = await updateCustomDataSource(req.params.id as string, req.body);
     createAuditLog({
@@ -80,8 +91,8 @@ router.put('/:id', requireRole('admin'), async (req, res, next) => {
   }
 });
 
-// DELETE /:id — Delete data source (admin only)
-router.delete('/:id', requireRole('admin'), async (req, res, next) => {
+// DELETE /:id — Delete data source
+router.delete('/:id', requirePermission('custom_data_source', 'delete'), async (req, res, next) => {
   try {
     await deleteCustomDataSource(req.params.id as string);
     createAuditLog({
@@ -99,8 +110,8 @@ router.delete('/:id', requireRole('admin'), async (req, res, next) => {
   }
 });
 
-// POST /:id/test — Preview/test execution (admin only)
-router.post('/:id/test', requireRole('admin'), async (req, res, next) => {
+// POST /:id/test — Preview/test execution
+router.post('/:id/test', requirePermission('custom_data_source', 'update'), async (req, res, next) => {
   try {
     const source = await getCustomDataSource(req.params.id as string);
     const result = await executeCustomDataSource(source);
@@ -111,7 +122,7 @@ router.post('/:id/test', requireRole('admin'), async (req, res, next) => {
 });
 
 // POST /preview — Test a query template without saving
-router.post('/preview', requireRole('admin'), async (req, res, next) => {
+router.post('/preview', requirePermission('custom_data_source', 'update'), async (req, res, next) => {
   try {
     const result = await executeCustomDataSource({
       entityType: req.body.entityType,

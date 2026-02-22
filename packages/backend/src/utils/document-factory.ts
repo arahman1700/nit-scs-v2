@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { ZodSchema } from 'zod';
 import { sendSuccess, sendCreated, sendError } from './response.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validate.js';
 import { auditAndEmit } from './routeHelpers.js';
@@ -41,6 +41,13 @@ export interface DocumentRouteConfig {
   docType: string;
   /** Audit table name, e.g. 'mrrv', 'osd_reports' */
   tableName: string;
+  /**
+   * RBAC resource name (must match a key in the permissions matrix, e.g. 'grn', 'mi', 'dr').
+   * When provided, the factory uses DB-backed `requirePermission(resource, action)` instead of
+   * role-list–based `requireRole(...roles)`. The `createRoles`, `updateRoles`, and action `roles`
+   * fields become fallbacks only used when `resource` is NOT set (backward-compat).
+   */
+  resource?: string;
 
   // ── List ─────────────────────────────────────
   /** Service function for listing. Receives pagination params. */
@@ -101,39 +108,52 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
 
   const scopeMapping = config.scopeMapping ?? { warehouseField: 'warehouseId', projectField: 'projectId' };
 
+  // ── Helper: build RBAC middleware from resource or fallback roles ──
+  const rbac = (action: 'read' | 'create' | 'update' | 'delete' | 'approve', fallbackRoles?: string[]) => {
+    if (config.resource) return requirePermission(config.resource, action);
+    if (fallbackRoles?.length) return requireRole(...fallbackRoles);
+    return (_req: Request, _res: Response, next: NextFunction) => next(); // no restriction
+  };
+
   // ── GET / — List with pagination ─────────────────────────────────
-  router.get('/', authenticate, paginate(defaultSort), async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { skip, pageSize, sortBy, sortDir, search, page } = req.pagination!;
+  router.get(
+    '/',
+    authenticate,
+    rbac('read'),
+    paginate(defaultSort),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const { skip, pageSize, sortBy, sortDir, search, page } = req.pagination!;
 
-      // Row-level security: inject scope filter based on user role
-      const scopeFilter = buildScopeFilter(req.user!, scopeMapping);
+        // Row-level security: inject scope filter based on user role
+        const scopeFilter = buildScopeFilter(req.user!, scopeMapping);
 
-      // Collect extra query filters (status, etc.)
-      const extra: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(req.query)) {
-        if (['page', 'pageSize', 'sortBy', 'sortDir', 'search'].includes(key)) continue;
-        if (value && typeof value === 'string') extra[key] = value;
+        // Collect extra query filters (status, etc.)
+        const extra: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(req.query)) {
+          if (['page', 'pageSize', 'sortBy', 'sortDir', 'search'].includes(key)) continue;
+          if (value && typeof value === 'string') extra[key] = value;
+        }
+
+        const { data, total } = await config.list({
+          skip,
+          pageSize,
+          sortBy,
+          sortDir,
+          search,
+          ...extra,
+          ...scopeFilter,
+        });
+
+        sendSuccess(res, data, { page, pageSize, total });
+      } catch (err) {
+        next(err);
       }
-
-      const { data, total } = await config.list({
-        skip,
-        pageSize,
-        sortBy,
-        sortDir,
-        search,
-        ...extra,
-        ...scopeFilter,
-      });
-
-      sendSuccess(res, data, { page, pageSize, total });
-    } catch (err) {
-      next(err);
-    }
-  });
+    },
+  );
 
   // ── GET /:id — Get by ID ────────────────────────────────────────
-  router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/:id', authenticate, rbac('read'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await config.getById(req.params.id as string);
       // Row-level security: verify user has access to this record
@@ -149,7 +169,7 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
 
   // ── POST / — Create ─────────────────────────────────────────────
   if (config.create && config.createSchema) {
-    const mw = [authenticate, requireRole(...config.createRoles), validate(config.createSchema)];
+    const mw = [authenticate, rbac('create', config.createRoles), validate(config.createSchema)];
     router.post('/', ...mw, async (req: Request, res: Response, next: NextFunction) => {
       try {
         const result = await config.create!(req.body, req.user!.userId, req);
@@ -172,7 +192,7 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
 
   // ── PUT /:id — Update ───────────────────────────────────────────
   if (config.update && config.updateSchema) {
-    const mw = [authenticate, requireRole(...config.updateRoles), validate(config.updateSchema)];
+    const mw = [authenticate, rbac('update', config.updateRoles), validate(config.updateSchema)];
     router.put('/:id', ...mw, async (req: Request, res: Response, next: NextFunction) => {
       try {
         const { existing, updated } = await config.update!(req.params.id as string, req.body);
@@ -196,10 +216,15 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
 
   // ── Status-transition action routes ──────────────────────────────
   if (config.actions) {
+    const APPROVE_ACTIONS = new Set(['approve', 'reject', 'review']);
+
     for (const action of config.actions) {
-      const mw: Array<(req: Request, res: Response, next: NextFunction) => void> = [
+      // Map action path to permission: approve/reject/review → 'approve', everything else → 'update'
+      const permAction = APPROVE_ACTIONS.has(action.path) ? ('approve' as const) : ('update' as const);
+
+      const mw: Array<(req: Request, res: Response, next: NextFunction) => void | Promise<void>> = [
         authenticate,
-        requireRole(...action.roles),
+        config.resource ? requirePermission(config.resource, permAction) : requireRole(...action.roles),
       ];
       if (action.bodySchema) {
         mw.push(validate(action.bodySchema));

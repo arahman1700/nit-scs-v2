@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { createCrudRouter } from '../utils/crud-factory.js';
 import { sscBidCreateSchema, sscBidUpdateSchema } from '../schemas/document.schema.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { sendSuccess } from '../utils/response.js';
 import { auditAndEmit } from '../utils/routeHelpers.js';
 import * as sscService from '../services/ssc.service.js';
@@ -18,6 +18,7 @@ const ALLOWED_ROLES = ['admin', 'scrap_committee_member'];
 const crudRouter = createCrudRouter({
   modelName: 'sscBid',
   tableName: 'ssc_bids',
+  resource: 'ssc',
   createSchema: sscBidCreateSchema,
   updateSchema: sscBidUpdateSchema,
   searchFields: ['bidderName'],
@@ -41,7 +42,7 @@ const actionRouter = Router();
 actionRouter.post(
   '/:id/accept',
   authenticate,
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('ssc', 'approve'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await sscService.acceptBid(req.params.id as string, req.user!.userId);
@@ -67,7 +68,7 @@ actionRouter.post(
 actionRouter.post(
   '/:id/reject',
   authenticate,
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('ssc', 'approve'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await sscService.rejectBid(req.params.id as string, req.user!.userId);
@@ -93,7 +94,7 @@ actionRouter.post(
 actionRouter.post(
   '/:id/sign-memo',
   authenticate,
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('ssc', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await sscService.signMemo(req.params.id as string, req.user!.userId);
@@ -119,7 +120,7 @@ actionRouter.post(
 actionRouter.post(
   '/:id/notify-finance',
   authenticate,
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('ssc', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await sscService.notifyFinance(req.params.id as string);

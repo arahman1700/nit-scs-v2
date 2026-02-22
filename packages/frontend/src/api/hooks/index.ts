@@ -422,6 +422,16 @@ export {
 } from './useSensors';
 export type { Sensor, SensorReading, SensorAlert, ZoneHeatmapEntry } from './useSensors';
 
+// Intelligence — smart defaults, anomaly detection, reorder predictions
+export {
+  useSmartDefaults,
+  useAnomalies,
+  useInventoryHealth,
+  useReorderPredictions,
+  useAutoUpdateReorderPoints,
+} from './useIntelligence';
+export type { SmartDefaults, Anomaly, InventoryHealthSummary, ReorderPrediction } from './useIntelligence';
+
 // Yard Management
 export {
   useDockDoorList,

@@ -7,10 +7,9 @@
 // ---------------------------------------------------------------------------
 
 import type { Request, Response, NextFunction } from 'express';
-import { logger } from '../config/logger.js';
-import { createLogger } from '../utils/logger.js';
+import { logger, createChildLogger } from '../config/logger.js';
 
-const log = createLogger('http');
+const log = createChildLogger({ module: 'http' });
 
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const correlationId = crypto.randomUUID();

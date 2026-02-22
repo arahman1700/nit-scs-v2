@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
 import { invalidateRuleCache } from '../events/rule-cache.js';
@@ -8,8 +8,8 @@ import { createWorkflowSchema, updateWorkflowSchema } from '../schemas/workflow.
 
 const router = Router();
 
-// All workflow routes require admin/manager
-router.use(authenticate, requireRole('admin', 'manager'));
+// All workflow routes require authentication + read permission
+router.use(authenticate, requirePermission('workflow', 'read'));
 
 // GET /api/workflows — list all workflows
 router.get('/', async (_req, res, next) => {
@@ -45,7 +45,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/workflows — create workflow
-router.post('/', async (req, res, next) => {
+router.post('/', requirePermission('workflow', 'create'), async (req, res, next) => {
   try {
     const parsed = createWorkflowSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -61,7 +61,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // PUT /api/workflows/:id — update workflow
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requirePermission('workflow', 'update'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     const parsed = updateWorkflowSchema.safeParse(req.body);
@@ -81,7 +81,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/workflows/:id — delete workflow and all its rules
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requirePermission('workflow', 'delete'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     await prisma.workflow.delete({ where: { id } });
@@ -92,8 +92,8 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
-// PUT /api/workflows/:id/activate — activate a workflow
-router.put('/:id/activate', async (req, res, next) => {
+// PUT /api/workflows/:id/activate — activate a workflow (admin only)
+router.put('/:id/activate', requireRole('admin'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     const workflow = await prisma.workflow.update({
@@ -107,8 +107,8 @@ router.put('/:id/activate', async (req, res, next) => {
   }
 });
 
-// PUT /api/workflows/:id/deactivate — deactivate a workflow
-router.put('/:id/deactivate', async (req, res, next) => {
+// PUT /api/workflows/:id/deactivate — deactivate a workflow (admin only)
+router.put('/:id/deactivate', requireRole('admin'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     const workflow = await prisma.workflow.update({

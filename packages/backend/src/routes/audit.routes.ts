@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { getAuditLogs } from '../services/audit.service.js';
@@ -10,8 +10,8 @@ import { auditLogQuerySchema } from '../schemas/system.schema.js';
 
 const router = Router();
 
-// All routes require authenticate + admin/manager role
-router.use(authenticate, requireRole('admin', 'manager'));
+// All routes require authenticate + audit-log read permission
+router.use(authenticate, requirePermission('audit-log', 'read'));
 
 // ── GET / — List audit logs with filters ────────────────────────────────
 

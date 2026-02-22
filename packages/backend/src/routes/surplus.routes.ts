@@ -12,6 +12,7 @@ const APPROVE_ROLES = ['admin', 'manager'];
 export default createDocumentRouter({
   docType: 'surplus',
   tableName: 'surplus_items',
+  resource: 'surplus',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'createdById' },
 
   list: surplusService.list,

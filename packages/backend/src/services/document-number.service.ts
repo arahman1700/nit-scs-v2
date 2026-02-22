@@ -1,12 +1,18 @@
 import { prisma } from '../utils/prisma.js';
-import { DOC_PREFIXES } from '@nit-scs-v2/shared/constants';
+import { getDocPrefix, getDocNumberFormat, getDocNumberPadding } from './system-config.service.js';
 
 /**
- * Generate a sequential document number: PREFIX-YYYY-NNNN
+ * Generate a sequential document number.
+ * Format is DB-configurable (default: PREFIX-YYYY-NNNN).
+ * Prefix and padding are also configurable via SystemSetting.
  * Uses upsert on document_counters for concurrency safety.
  */
 export async function generateDocumentNumber(documentType: string): Promise<string> {
-  const prefix = DOC_PREFIXES[documentType] || documentType.toUpperCase();
+  const [prefix, format, padding] = await Promise.all([
+    getDocPrefix(documentType),
+    getDocNumberFormat(),
+    getDocNumberPadding(),
+  ]);
   const year = new Date().getFullYear();
 
   // Atomically increment the counter
@@ -19,5 +25,14 @@ export async function generateDocumentNumber(documentType: string): Promise<stri
   `;
 
   const lastNumber = counter[0].last_number;
-  return `${prefix}-${year}-${String(lastNumber).padStart(4, '0')}`;
+  const paddedNumber = String(lastNumber).padStart(padding, '0');
+
+  // Apply format pattern: {PREFIX}-{YYYY}-{NNNN}
+  return format
+    .replace('{PREFIX}', prefix)
+    .replace('{YYYY}', String(year))
+    .replace('{YY}', String(year).slice(-2))
+    .replace('{MM}', String(new Date().getMonth() + 1).padStart(2, '0'))
+    .replace('{NNNN}', paddedNumber)
+    .replace('{N}', String(lastNumber));
 }

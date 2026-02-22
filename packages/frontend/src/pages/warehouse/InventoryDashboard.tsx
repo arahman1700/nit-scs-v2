@@ -1,354 +1,209 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Search, Package, MapPin, Layers, BarChart3, X, Eye } from 'lucide-react';
+import { Search, Package, MapPin, Layers, BarChart3, X, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
 import { generateInventoryReportPdf } from '@/utils/pdfExport';
 import { exportToExcel } from '@/lib/excelExport';
+import { useInventory, useWarehouses } from '@/api/hooks/useMasterData';
+import { useInventorySummary } from '@/api/hooks/useDashboard';
+import { displayStr } from '@/utils/displayStr';
 
-// Real data from Inventory.ods (Dammam Warehouse - Wadi Dhahran & Qalah projects)
-const INVENTORY_DATA = [
-  {
-    sn: 1,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSBBNDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BL CRS-FRO',
-    size: '7x2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 299,
-  },
-  {
-    sn: 2,
-    project: 'WADI DHAHRAN',
-    itemCode: 'NO STICKER # 18',
-    description: 'CU/XLPE/LPAD/PVC/ 0.06/1KV',
-    size: '4X2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 512,
-  },
-  {
-    sn: 3,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C213XA107NOS83NDR',
-    description: 'CU/XLPE/CT/ PVC-NFR GREY CRS',
-    size: '7X6',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 23,
-  },
-  {
-    sn: 4,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C418XA104',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV',
-    size: '4X50',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 409,
-  },
-  {
-    sn: 5,
-    project: 'WADI DHAHRAN',
-    itemCode: '23015613',
-    description: 'CU/XLPE/LAT/PVC-FROR',
-    size: '1X630/200 15KV',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 30,
-  },
-  {
-    sn: 6,
-    project: 'WADI DHAHRAN',
-    itemCode: '23015613',
-    description: 'CU/XLPE/LAT/PVC-FROR',
-    size: '1X630/200 15KV',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 241,
-  },
-  {
-    sn: 7,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C345XA101',
-    description: 'XLPE/PVC-0.6 1KV',
-    size: '1X95',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 149,
-  },
-  {
-    sn: 8,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C349XA101',
-    description: 'CU/XLPE/PVC-0.6 1KV',
-    size: '1X240',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 804,
-  },
-  {
-    sn: 9,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSBBNDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BL CRS-FRO',
-    size: '7x2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 1035,
-  },
-  {
-    sn: 10,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSBBNDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BL CRS-FRO',
-    size: '7x2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 1042,
-  },
-  {
-    sn: 11,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C212XA1020WSB01NDR',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV-NDFR',
-    size: '2X4',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 281,
-  },
-  {
-    sn: 12,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSB83NDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BK GY CORE',
-    size: '7X2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 1035,
-  },
-  {
-    sn: 13,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSB83NDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BK GY CORE',
-    size: '7X2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 1020,
-  },
-  {
-    sn: 14,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C210XA107NOSB83NDR',
-    description: 'CU/XLPE/CT/PVC-NFDR-BK GY CORE',
-    size: '7X2.5',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 988,
-  },
-  {
-    sn: 15,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C212XA1020WSB01NDR',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV-NDFR',
-    size: '2X4',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 886,
-  },
-  {
-    sn: 16,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C314XA1020WSB01NDR',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV-NDFR',
-    size: '2X10',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 88,
-  },
-  {
-    sn: 17,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C314XA1020WSB01NDR',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV-NDFR',
-    size: '2X10',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 809,
-  },
-  {
-    sn: 18,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C213XA1010WSB08NDR',
-    description: 'CU/XLPE/SWA/PVC-0.6/1KV-NDFR',
-    size: '4X6',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 47,
-  },
-  {
-    sn: 19,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C351XA101OOSB',
-    description: 'CU/XLPE/PVC-FR-0.6/1KV',
-    size: '1X400',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 668,
-  },
-  {
-    sn: 20,
-    project: 'WADI DHAHRAN',
-    itemCode: 'C349XA101',
-    description: 'CU/XLPE/PVC-0.6 1KV',
-    size: '1X240',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 1',
-    balance: 811,
-  },
-  {
-    sn: 21,
-    project: 'QALAH 115 KV SUB',
-    itemCode: 'C420XA104',
-    description: 'CU/XLPE/SWA/PVC-0.6/1KV',
-    size: '4X95',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 2',
-    balance: 520,
-  },
-  {
-    sn: 22,
-    project: 'QALAH 115 KV SUB',
-    itemCode: 'C418XA104',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV',
-    size: '4X50',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 2',
-    balance: 345,
-  },
-  {
-    sn: 23,
-    project: 'QALAH 115 KV SUB',
-    itemCode: 'C416XA104',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV',
-    size: '4X35',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 2',
-    balance: 210,
-  },
-  {
-    sn: 24,
-    project: 'QALAH 115 KV SUB',
-    itemCode: 'C212XA1020',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV',
-    size: '2X4',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 2',
-    balance: 1250,
-  },
-  {
-    sn: 25,
-    project: 'QALAH 115 KV SUB',
-    itemCode: 'C314XA1020',
-    description: 'CU/XLPE/SWA/PVC/ 0.6/1KV',
-    size: '2X10',
-    unit: 'Mt',
-    location: 'Yard',
-    subLocation: 'Zone 2',
-    balance: 980,
-  },
-];
+// ── Types for the API response shape ──────────────────────────────────────
 
-const getStockStatus = (balance: number): { label: string; color: string } => {
-  if (balance === 0) return { label: 'Out of Stock', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
-  if (balance < 100) return { label: 'Low Stock', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
-  if (balance < 500) return { label: 'Medium', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
+interface InventoryRow {
+  id: string;
+  itemCode: string;
+  description: string;
+  category: string;
+  warehouseName: string;
+  warehouseCode: string;
+  warehouseId: string;
+  unit: string;
+  qtyOnHand: number;
+  qtyReserved: number;
+  available: number;
+  minLevel: number;
+  reorderPoint: number;
+  lastMovementDate: string | null;
+}
+
+/** Parse a single InventoryLevel API record into a flat display row */
+function parseInventoryRow(raw: Record<string, unknown>): InventoryRow {
+  const item = (raw.item as Record<string, unknown>) ?? {};
+  const wh = (raw.warehouse as Record<string, unknown>) ?? {};
+  const uom = (item.uom as Record<string, unknown>) ?? {};
+  const qtyOnHand = Number(raw.qtyOnHand ?? 0);
+  const qtyReserved = Number(raw.qtyReserved ?? 0);
+
+  return {
+    id: String(raw.id ?? ''),
+    itemCode: String(item.itemCode ?? item.code ?? '-'),
+    description: String(item.itemDescription ?? item.name ?? displayStr(item) ?? '-'),
+    category: String(item.category ?? item.mainCategory ?? '-'),
+    warehouseName: String(wh.warehouseName ?? displayStr(wh) ?? '-'),
+    warehouseCode: String(wh.warehouseCode ?? '-'),
+    warehouseId: String(raw.warehouseId ?? wh.id ?? ''),
+    unit: String(uom.uomCode ?? uom.uomName ?? 'EA'),
+    qtyOnHand,
+    qtyReserved,
+    available: qtyOnHand - qtyReserved,
+    minLevel: Number(raw.minLevel ?? item.minStock ?? 0),
+    reorderPoint: Number(raw.reorderPoint ?? item.reorderPoint ?? 0),
+    lastMovementDate: raw.lastMovementDate ? String(raw.lastMovementDate) : null,
+  };
+}
+
+const getStockStatus = (available: number, minLevel: number): { label: string; color: string } => {
+  if (available <= 0) return { label: 'Out of Stock', color: 'bg-red-500/20 text-red-400 border-red-500/30' };
+  if (minLevel > 0 && available <= minLevel)
+    return { label: 'Low Stock', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
+  if (minLevel > 0 && available <= minLevel * 2)
+    return { label: 'Medium', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
   return { label: 'In Stock', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' };
 };
 
 export const InventoryDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterProject, setFilterProject] = useState('');
-  const [filterLocation, setFilterLocation] = useState('');
+  const [filterWarehouse, setFilterWarehouse] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [selectedItem, setSelectedItem] = useState<(typeof INVENTORY_DATA)[0] | null>(null);
+  const [selectedItem, setSelectedItem] = useState<InventoryRow | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 50;
 
-  // Get unique values
-  const projects = useMemo(() => [...new Set(INVENTORY_DATA.map(d => d.project))], []);
-  const locations = useMemo(() => [...new Set(INVENTORY_DATA.map(d => d.subLocation))], []);
+  // ── API hooks ─────────────────────────────────────────────────────────
 
-  // Filter data
+  const inventoryQuery = useInventory({ page, pageSize, sortBy: 'updatedAt', sortDir: 'desc' } as Record<
+    string,
+    unknown
+  >);
+  const summaryQuery = useInventorySummary();
+  const warehousesQuery = useWarehouses({ pageSize: 100 });
+
+  const isLoading = inventoryQuery.isLoading;
+  const isError = inventoryQuery.isError;
+
+  // Parse raw API data into display rows
+  const allRows: InventoryRow[] = useMemo(() => {
+    const raw = (inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+    return raw.map(parseInventoryRow);
+  }, [inventoryQuery.data]);
+
+  const meta = (inventoryQuery.data as Record<string, unknown> | undefined)?.meta as
+    | { page: number; pageSize: number; total: number; totalPages: number }
+    | undefined;
+
+  // Warehouse list for the filter dropdown
+  const warehouses = useMemo(() => {
+    const raw = (warehousesQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+    return raw.map(w => ({
+      id: String(w.id),
+      name: String(w.warehouseName ?? displayStr(w) ?? '-'),
+    }));
+  }, [warehousesQuery.data]);
+
+  // Unique categories from current page
+  const categories = useMemo(() => [...new Set(allRows.map(r => r.category).filter(c => c !== '-'))], [allRows]);
+
+  // Client-side filtering (API doesn't support filter params for inventory)
   const filteredData = useMemo(() => {
-    return INVENTORY_DATA.filter(item => {
+    return allRows.filter(row => {
       const matchesSearch =
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.itemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.size.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesProject = !filterProject || item.project === filterProject;
-      const matchesLocation = !filterLocation || item.subLocation === filterLocation;
-      return matchesSearch && matchesProject && matchesLocation;
+        !searchQuery ||
+        row.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        row.itemCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        row.category.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesWarehouse = !filterWarehouse || row.warehouseId === filterWarehouse;
+      const matchesCategory = !filterCategory || row.category === filterCategory;
+      return matchesSearch && matchesWarehouse && matchesCategory;
     });
-  }, [searchQuery, filterProject, filterLocation]);
+  }, [allRows, searchQuery, filterWarehouse, filterCategory]);
 
-  const handleExportPdf = useCallback(() => {
-    generateInventoryReportPdf(filteredData, 'Dammam Warehouse');
-  }, [filteredData]);
+  // KPI data from the summary endpoint (or compute from current page as fallback)
+  const summary = (summaryQuery.data?.data ?? null) as {
+    totalItems: number;
+    totalQty: number;
+    lowStock: number;
+    outOfStock: number;
+    totalValue: number;
+  } | null;
 
-  const handleExportExcel = useCallback(() => {
-    exportToExcel(
-      filteredData as unknown as Record<string, unknown>[],
-      [
-        { header: '#', key: 'sn' },
-        { header: 'Project', key: 'project' },
-        { header: 'Item Code', key: 'itemCode' },
-        { header: 'Description', key: 'description' },
-        { header: 'Size', key: 'size' },
-        { header: 'Unit', key: 'unit' },
-        { header: 'Location', key: 'location' },
-        { header: 'Sub-Location', key: 'subLocation' },
-        { header: 'Balance', key: 'balance' },
-      ],
-      'Inventory_Dammam_Warehouse',
-    );
-  }, [filteredData]);
-
-  // Stats
   const stats = useMemo(() => {
-    const totalBalance = filteredData.reduce((acc, item) => acc + item.balance, 0);
-    const lowStock = filteredData.filter(item => item.balance < 100 && item.balance > 0).length;
-    const outOfStock = filteredData.filter(item => item.balance === 0).length;
+    if (summary) {
+      return {
+        totalItems: summary.totalItems,
+        totalBalance: summary.totalQty,
+        lowStock: summary.lowStock,
+        outOfStock: summary.outOfStock,
+        inStock: summary.totalItems - summary.lowStock - summary.outOfStock,
+        totalValue: summary.totalValue,
+      };
+    }
+    // Fallback: compute from the current visible page
+    const lowStock = filteredData.filter(r => r.available > 0 && r.minLevel > 0 && r.available <= r.minLevel).length;
+    const outOfStock = filteredData.filter(r => r.available <= 0).length;
     return {
-      totalItems: filteredData.length,
-      totalBalance,
+      totalItems: meta?.total ?? filteredData.length,
+      totalBalance: filteredData.reduce((acc, r) => acc + r.qtyOnHand, 0),
       lowStock,
       outOfStock,
       inStock: filteredData.length - lowStock - outOfStock,
+      totalValue: 0,
     };
+  }, [summary, filteredData, meta]);
+
+  // ── Export handlers ───────────────────────────────────────────────────
+
+  const handleExportPdf = useCallback(() => {
+    const exportData = filteredData.map((r, i) => ({
+      sn: i + 1,
+      project: '-',
+      itemCode: r.itemCode,
+      description: r.description,
+      size: '-',
+      unit: r.unit,
+      location: r.warehouseName,
+      subLocation: '-',
+      balance: r.qtyOnHand,
+    }));
+    generateInventoryReportPdf(exportData, 'Inventory Levels');
   }, [filteredData]);
+
+  const handleExportExcel = useCallback(() => {
+    const exportData = filteredData.map((r, i) => ({
+      sn: i + 1,
+      itemCode: r.itemCode,
+      description: r.description,
+      category: r.category,
+      warehouse: r.warehouseName,
+      unit: r.unit,
+      onHand: r.qtyOnHand,
+      reserved: r.qtyReserved,
+      available: r.available,
+      minLevel: r.minLevel,
+    }));
+    exportToExcel(
+      exportData as unknown as Record<string, unknown>[],
+      [
+        { header: '#', key: 'sn' },
+        { header: 'Item Code', key: 'itemCode' },
+        { header: 'Description', key: 'description' },
+        { header: 'Category', key: 'category' },
+        { header: 'Warehouse', key: 'warehouse' },
+        { header: 'Unit', key: 'unit' },
+        { header: 'On Hand', key: 'onHand' },
+        { header: 'Reserved', key: 'reserved' },
+        { header: 'Available', key: 'available' },
+        { header: 'Min Level', key: 'minLevel' },
+      ],
+      'Inventory_Levels',
+    );
+  }, [filteredData]);
+
+  // ── Pagination helpers ────────────────────────────────────────────────
+
+  const totalPages = meta?.totalPages ?? 1;
+  const canPrev = page > 1;
+  const canNext = page < totalPages;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -359,9 +214,24 @@ export const InventoryDashboard: React.FC = () => {
             <Package className="text-nesma-secondary" />
             Inventory Levels
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Real-time inventory levels - Dammam Warehouse</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Real-time inventory levels across all warehouses
+            {meta?.total != null && (
+              <span className="text-gray-500 ml-2">({meta.total.toLocaleString()} total items)</span>
+            )}
+          </p>
         </div>
-        <ExportButton onExportPdf={handleExportPdf} onExportExcel={handleExportExcel} />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => inventoryQuery.refetch()}
+            disabled={inventoryQuery.isFetching}
+            className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw size={16} className={inventoryQuery.isFetching ? 'animate-spin' : ''} />
+          </button>
+          <ExportButton onExportPdf={handleExportPdf} onExportExcel={handleExportExcel} />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -372,7 +242,13 @@ export const InventoryDashboard: React.FC = () => {
               <Package size={20} className="text-nesma-secondary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.totalItems}</p>
+              <p className="text-2xl font-bold text-white">
+                {isLoading ? (
+                  <span className="animate-pulse bg-white/10 rounded w-12 h-7 inline-block" />
+                ) : (
+                  stats.totalItems.toLocaleString()
+                )}
+              </p>
               <p className="text-xs text-gray-400">Total Items</p>
             </div>
           </div>
@@ -383,8 +259,14 @@ export const InventoryDashboard: React.FC = () => {
               <Layers size={20} className="text-blue-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-white">{stats.totalBalance.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">Total Balance (Mt)</p>
+              <p className="text-2xl font-bold text-white">
+                {isLoading ? (
+                  <span className="animate-pulse bg-white/10 rounded w-16 h-7 inline-block" />
+                ) : (
+                  stats.totalBalance.toLocaleString()
+                )}
+              </p>
+              <p className="text-xs text-gray-400">Total Qty on Hand</p>
             </div>
           </div>
         </div>
@@ -394,7 +276,13 @@ export const InventoryDashboard: React.FC = () => {
               <BarChart3 size={20} className="text-emerald-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-emerald-400">{stats.inStock}</p>
+              <p className="text-2xl font-bold text-emerald-400">
+                {isLoading ? (
+                  <span className="animate-pulse bg-white/10 rounded w-10 h-7 inline-block" />
+                ) : (
+                  stats.inStock
+                )}
+              </p>
               <p className="text-xs text-gray-400">In Stock</p>
             </div>
           </div>
@@ -402,10 +290,16 @@ export const InventoryDashboard: React.FC = () => {
         <div className="glass-card p-4 rounded-xl border border-amber-500/20">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-amber-500/20 rounded-lg">
-              <BarChart3 size={20} className="text-amber-400" />
+              <AlertCircle size={20} className="text-amber-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-amber-400">{stats.lowStock}</p>
+              <p className="text-2xl font-bold text-amber-400">
+                {isLoading ? (
+                  <span className="animate-pulse bg-white/10 rounded w-8 h-7 inline-block" />
+                ) : (
+                  stats.lowStock
+                )}
+              </p>
               <p className="text-xs text-gray-400">Low Stock</p>
             </div>
           </div>
@@ -413,184 +307,270 @@ export const InventoryDashboard: React.FC = () => {
         <div className="glass-card p-4 rounded-xl border border-red-500/20">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-500/20 rounded-lg">
-              <BarChart3 size={20} className="text-red-400" />
+              <AlertCircle size={20} className="text-red-400" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-red-400">{stats.outOfStock}</p>
+              <p className="text-2xl font-bold text-red-400">
+                {isLoading ? (
+                  <span className="animate-pulse bg-white/10 rounded w-8 h-7 inline-block" />
+                ) : (
+                  stats.outOfStock
+                )}
+              </p>
               <p className="text-xs text-gray-400">Out of Stock</p>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Error state */}
+      {isError && (
+        <div className="glass-card rounded-2xl p-6 border border-red-500/20 text-center">
+          <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
+          <p className="text-red-400 font-medium">Failed to load inventory data</p>
+          <p className="text-gray-500 text-sm mt-1">Check your connection and try again</p>
+          <button
+            onClick={() => inventoryQuery.refetch()}
+            className="mt-4 px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Filters & Table */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <div className="p-4 border-b border-white/10 bg-white/5">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search code, description, size..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
-              />
-            </div>
+      {!isError && (
+        <div className="glass-card rounded-2xl overflow-hidden">
+          <div className="p-4 border-b border-white/10 bg-white/5">
+            <div className="flex flex-col lg:flex-row gap-4">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search code, description, category..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
+                />
+              </div>
 
-            {/* Filters */}
-            <div className="flex flex-wrap gap-3">
-              <select
-                value={filterProject}
-                onChange={e => setFilterProject(e.target.value)}
-                className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
-              >
-                <option value="">All Projects</option>
-                {projects.map(p => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filterLocation}
-                onChange={e => setFilterLocation(e.target.value)}
-                className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
-              >
-                <option value="">All Locations</option>
-                {locations.map(l => (
-                  <option key={l} value={l}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-
-              {/* View Toggle */}
-              <div className="flex border border-white/10 rounded-lg overflow-hidden">
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`px-3 py-2 text-sm ${viewMode === 'table' ? 'bg-nesma-primary text-white' : 'text-gray-400 hover:bg-white/5'}`}
+              {/* Filters */}
+              <div className="flex flex-wrap gap-3">
+                <select
+                  value={filterWarehouse}
+                  onChange={e => setFilterWarehouse(e.target.value)}
+                  className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
                 >
-                  Table
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3 py-2 text-sm ${viewMode === 'grid' ? 'bg-nesma-primary text-white' : 'text-gray-400 hover:bg-white/5'}`}
+                  <option value="">All Warehouses</option>
+                  {warehouses.map(w => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={filterCategory}
+                  onChange={e => setFilterCategory(e.target.value)}
+                  className="bg-black/20 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50"
                 >
-                  Grid
-                </button>
+                  <option value="">All Categories</option>
+                  {categories.map(c => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+
+                {/* View Toggle */}
+                <div className="flex border border-white/10 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`px-3 py-2 text-sm ${viewMode === 'table' ? 'bg-nesma-primary text-white' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    Table
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`px-3 py-2 text-sm ${viewMode === 'grid' ? 'bg-nesma-primary text-white' : 'text-gray-400 hover:bg-white/5'}`}
+                  >
+                    Grid
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Table View */}
-        {viewMode === 'table' && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="nesma-table-head text-nesma-secondary text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-4 py-4">#</th>
-                  <th className="px-4 py-4">Project</th>
-                  <th className="px-4 py-4">Code</th>
-                  <th className="px-4 py-4">Description</th>
-                  <th className="px-4 py-4">Size</th>
-                  <th className="px-4 py-4">Location</th>
-                  <th className="px-4 py-4">Balance</th>
-                  <th className="px-4 py-4">Status</th>
-                  <th className="px-4 py-4"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm text-gray-300">
-                {filteredData.map((row, idx) => {
-                  const status = getStockStatus(row.balance);
-                  return (
-                    <tr key={idx} className="hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3 text-gray-500">{row.sn}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-1 bg-nesma-primary/20 text-nesma-secondary rounded text-xs">
-                          {row.project}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-white text-xs">{row.itemCode}</td>
-                      <td className="px-4 py-3 max-w-xs truncate" title={row.description}>
-                        {row.description}
-                      </td>
-                      <td className="px-4 py-3 text-gray-400">{row.size}</td>
-                      <td className="px-4 py-3">
-                        <span className="flex items-center gap-1 text-xs text-gray-400">
-                          <MapPin size={12} />
-                          {row.location} - {row.subLocation}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-lg text-white">{row.balance.toLocaleString()}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs border ${status.color}`}>{status.label}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => setSelectedItem(row)}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-nesma-secondary hover:text-white transition-colors"
-                        >
-                          <Eye size={16} />
-                        </button>
+          {/* Loading skeleton */}
+          {isLoading && (
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="animate-pulse flex gap-4">
+                  <div className="bg-white/10 rounded h-5 w-24" />
+                  <div className="bg-white/10 rounded h-5 flex-1" />
+                  <div className="bg-white/10 rounded h-5 w-20" />
+                  <div className="bg-white/10 rounded h-5 w-16" />
+                  <div className="bg-white/10 rounded h-5 w-16" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Table View */}
+          {!isLoading && viewMode === 'table' && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="nesma-table-head text-nesma-secondary text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-4 py-4">#</th>
+                    <th className="px-4 py-4">Code</th>
+                    <th className="px-4 py-4">Description</th>
+                    <th className="px-4 py-4">Category</th>
+                    <th className="px-4 py-4">Warehouse</th>
+                    <th className="px-4 py-4">Unit</th>
+                    <th className="px-4 py-4 text-right">On Hand</th>
+                    <th className="px-4 py-4 text-right">Reserved</th>
+                    <th className="px-4 py-4 text-right">Available</th>
+                    <th className="px-4 py-4">Status</th>
+                    <th className="px-4 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-sm text-gray-300">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="px-4 py-12 text-center text-gray-500">
+                        <Package size={32} className="mx-auto mb-3 text-gray-600" />
+                        <p>No inventory records found</p>
+                        {searchQuery && <p className="text-xs mt-1">Try adjusting your search or filters</p>}
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                  ) : (
+                    filteredData.map((row, idx) => {
+                      const status = getStockStatus(row.available, row.minLevel);
+                      return (
+                        <tr key={row.id} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 text-gray-500">{(page - 1) * pageSize + idx + 1}</td>
+                          <td className="px-4 py-3 font-mono text-white text-xs">{row.itemCode}</td>
+                          <td className="px-4 py-3 max-w-xs truncate" title={row.description}>
+                            {row.description}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="px-2 py-1 bg-nesma-primary/20 text-nesma-secondary rounded text-xs">
+                              {row.category}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                              <MapPin size={12} />
+                              {row.warehouseName}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">{row.unit}</td>
+                          <td className="px-4 py-3 text-right font-mono text-white">
+                            {row.qtyOnHand.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-gray-400">
+                            {row.qtyReserved.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-lg font-bold text-nesma-secondary">
+                            {row.available.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded text-xs border ${status.color}`}>{status.label}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => setSelectedItem(row)}
+                              className="p-1.5 rounded-lg hover:bg-white/10 text-nesma-secondary hover:text-white transition-colors"
+                            >
+                              <Eye size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {/* Grid View */}
-        {viewMode === 'grid' && (
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredData.map((row, idx) => {
-              const status = getStockStatus(row.balance);
-              return (
-                <div
-                  key={idx}
-                  className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all cursor-pointer"
-                  onClick={() => setSelectedItem(row)}
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="px-2 py-1 bg-nesma-primary/20 text-nesma-secondary rounded text-xs">
-                      {row.project}
-                    </span>
-                    <span className={`px-2 py-1 rounded text-xs border ${status.color}`}>{status.label}</span>
-                  </div>
-                  <p className="text-white font-medium text-sm mb-1 line-clamp-2">{row.description}</p>
-                  <p className="text-gray-400 text-xs mb-3 font-mono">{row.itemCode}</p>
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-xs text-gray-500">Size: {row.size}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <MapPin size={10} />
-                        {row.subLocation}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-white">{row.balance.toLocaleString()}</p>
-                      <p className="text-xs text-gray-400">{row.unit}</p>
-                    </div>
-                  </div>
+          {/* Grid View */}
+          {!isLoading && viewMode === 'grid' && (
+            <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredData.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  <Package size={32} className="mx-auto mb-3 text-gray-600" />
+                  <p>No inventory records found</p>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ) : (
+                filteredData.map(row => {
+                  const status = getStockStatus(row.available, row.minLevel);
+                  return (
+                    <div
+                      key={row.id}
+                      className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all cursor-pointer"
+                      onClick={() => setSelectedItem(row)}
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <span className="px-2 py-1 bg-nesma-primary/20 text-nesma-secondary rounded text-xs">
+                          {row.category}
+                        </span>
+                        <span className={`px-2 py-1 rounded text-xs border ${status.color}`}>{status.label}</span>
+                      </div>
+                      <p className="text-white font-medium text-sm mb-1 line-clamp-2">{row.description}</p>
+                      <p className="text-gray-400 text-xs mb-3 font-mono">{row.itemCode}</p>
+                      <div className="flex justify-between items-end">
+                        <div>
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin size={10} />
+                            {row.warehouseName}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-0.5">Reserved: {row.qtyReserved.toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-white">{row.available.toLocaleString()}</p>
+                          <p className="text-xs text-gray-400">{row.unit}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
-        {/* Footer */}
-        <div className="p-4 border-t border-white/10 bg-white/5 flex justify-between items-center text-xs text-gray-400">
-          <span>
-            Showing {filteredData.length} of {INVENTORY_DATA.length} items
-          </span>
-          <span>Dammam Warehouse Inventory</span>
+          {/* Footer with pagination */}
+          <div className="p-4 border-t border-white/10 bg-white/5 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-gray-400">
+            <span>
+              Showing {filteredData.length} of {meta?.total ?? filteredData.length} items
+              {filterWarehouse || filterCategory || searchQuery ? ' (filtered)' : ''}
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={!canPrev}
+                  className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-300">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={!canNext}
+                  className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Detail Modal */}
       {selectedItem && (
@@ -604,7 +584,10 @@ export const InventoryDashboard: React.FC = () => {
           >
             <div className="p-6 border-b border-white/10 bg-white/5 flex justify-between items-center">
               <h3 className="text-xl font-bold text-white">Item Details</h3>
-              <button onClick={() => setSelectedItem(null)} className="p-2 hover:bg-white/10 rounded-lg">
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
                 <X size={20} className="text-gray-400" />
               </button>
             </div>
@@ -615,8 +598,8 @@ export const InventoryDashboard: React.FC = () => {
                   <p className="text-white font-mono">{selectedItem.itemCode}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Project</p>
-                  <p className="text-nesma-secondary">{selectedItem.project}</p>
+                  <p className="text-xs text-gray-400 mb-1">Category</p>
+                  <p className="text-nesma-secondary">{selectedItem.category}</p>
                 </div>
               </div>
               <div>
@@ -625,25 +608,37 @@ export const InventoryDashboard: React.FC = () => {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Size</p>
-                  <p className="text-white">{selectedItem.size}</p>
+                  <p className="text-xs text-gray-400 mb-1">Warehouse</p>
+                  <p className="text-white text-sm">{selectedItem.warehouseName}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 mb-1">Unit</p>
                   <p className="text-white">{selectedItem.unit}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Location</p>
-                  <p className="text-white">
-                    {selectedItem.location} - {selectedItem.subLocation}
-                  </p>
+                  <p className="text-xs text-gray-400 mb-1">Min Level</p>
+                  <p className="text-white">{selectedItem.minLevel || '-'}</p>
                 </div>
               </div>
-              <div className="bg-white/5 rounded-xl p-4 text-center">
-                <p className="text-xs text-gray-400 mb-1">Current Balance</p>
-                <p className="text-4xl font-bold text-nesma-secondary">{selectedItem.balance.toLocaleString()}</p>
-                <p className="text-sm text-gray-400">{selectedItem.unit}</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">On Hand</p>
+                  <p className="text-2xl font-bold text-white">{selectedItem.qtyOnHand.toLocaleString()}</p>
+                </div>
+                <div className="bg-white/5 rounded-xl p-3 text-center">
+                  <p className="text-xs text-gray-400 mb-1">Reserved</p>
+                  <p className="text-2xl font-bold text-amber-400">{selectedItem.qtyReserved.toLocaleString()}</p>
+                </div>
+                <div className="bg-nesma-primary/10 rounded-xl p-3 text-center border border-nesma-primary/20">
+                  <p className="text-xs text-gray-400 mb-1">Available</p>
+                  <p className="text-2xl font-bold text-nesma-secondary">{selectedItem.available.toLocaleString()}</p>
+                </div>
               </div>
+              {selectedItem.lastMovementDate && (
+                <div className="text-xs text-gray-500 text-center pt-2">
+                  Last movement: {new Date(selectedItem.lastMovementDate).toLocaleDateString()}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { sendSuccess } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
 
 const router = Router();
 
-// Email logs are viewable by admin and manager
-router.use(authenticate, requireRole('admin', 'manager'));
+// Email logs require authentication + read permission
+router.use(authenticate, requirePermission('email_log', 'read'));
 
 // GET /api/email-logs — list email logs with filters
 router.get('/', async (req, res, next) => {

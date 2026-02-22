@@ -4,6 +4,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { submitForApproval } from './approval.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { Server as SocketIOServer } from 'socket.io';
 import type { JoCreateDto, JoUpdateDto, ListParams } from '../types/dto.js';
 
@@ -271,6 +272,16 @@ export async function submit(id: string, userId: string, io?: SocketIOServer) {
     },
   });
 
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: 'draft', to: 'pending_approval', joType: jo.joType },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: jo.id, approverRole: approval.approverRole, slaHours: approval.slaHours };
 }
 
@@ -322,6 +333,16 @@ export async function approve(id: string, userId: string, approved: boolean, quo
     });
   }
 
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'approved', joType: jo.joType },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: jo.id, status: 'approved' };
 }
 
@@ -345,6 +366,17 @@ export async function reject(id: string, userId: string, comments?: string) {
     });
     await tx.jobOrder.update({ where: { id: jo.id }, data: { status: 'rejected' } });
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'rejected' },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: jo.id, status: 'rejected' };
 }
 
@@ -353,10 +385,21 @@ export async function assign(id: string, supplierId?: string) {
   if (!jo) throw new NotFoundError('Job Order', id);
   assertTransition(DOC_TYPE, jo.status, 'assigned');
 
-  return prisma.jobOrder.update({
+  const updated = await prisma.jobOrder.update({
     where: { id: jo.id },
     data: { status: 'assigned', supplierId: supplierId ?? jo.supplierId },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'assigned', joType: jo.joType, supplierId: supplierId ?? jo.supplierId },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function start(id: string) {
@@ -364,10 +407,21 @@ export async function start(id: string) {
   if (!jo) throw new NotFoundError('Job Order', id);
   assertTransition(DOC_TYPE, jo.status, 'in_progress');
 
-  return prisma.jobOrder.update({
+  const updated = await prisma.jobOrder.update({
     where: { id: jo.id },
     data: { status: 'in_progress', startDate: new Date() },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'in_progress', joType: jo.joType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function hold(id: string, reason?: string) {
@@ -428,6 +482,16 @@ export async function complete(id: string, userId: string) {
     }
   });
 
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'completed', joType: jo.joType, slaMet },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: jo.id, slaMet };
 }
 
@@ -453,6 +517,16 @@ export async function invoice(id: string, paymentData: Record<string, unknown>) 
     });
     return { updated, payment };
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'invoiced', joType: jo.joType },
+    timestamp: new Date().toISOString(),
+  });
+
   return result;
 }
 
@@ -465,7 +539,18 @@ export async function cancel(id: string) {
     throw new BusinessRuleError(`Job Order cannot be cancelled from status: ${jo.status}`);
   }
 
-  return prisma.jobOrder.update({ where: { id: jo.id }, data: { status: 'cancelled' } });
+  const updated = await prisma.jobOrder.update({ where: { id: jo.id }, data: { status: 'cancelled' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'jo',
+    entityId: jo.id,
+    action: 'status_change',
+    payload: { from: jo.status, to: 'cancelled', joType: jo.joType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function addPayment(id: string, paymentData: Record<string, unknown>) {

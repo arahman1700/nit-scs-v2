@@ -8,6 +8,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch } from './inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { GrnCreateDto, GrnUpdateDto, GrnLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'grn';
@@ -211,6 +212,16 @@ export async function submit(id: string) {
     }
   });
 
+  const hasDamage = grn.mrrvLines.some(l => Number(l.qtyDamaged ?? 0) > 0);
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mrrv',
+    entityId: grn.id,
+    action: 'status_change',
+    payload: { from: 'draft', to: 'pending_qc', qciRequired: !!grn.rfimRequired, hasDamage },
+    timestamp: new Date().toISOString(),
+  });
+
   return { id: grn.id, qciRequired: !!grn.rfimRequired };
 }
 
@@ -227,10 +238,21 @@ export async function approveQc(id: string, userId: string) {
       qcApprovedDate: new Date(),
     },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mrrv',
+    entityId: grn.id,
+    action: 'status_change',
+    payload: { from: grn.status, to: 'qc_approved' },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return updated;
 }
 
-export async function receive(id: string) {
+export async function receive(id: string, userId?: string) {
   const grn = await prisma.mrrv.findUnique({ where: { id } });
   if (!grn) throw new NotFoundError('GRN', id);
   assertTransition(DOC_TYPE, grn.status, 'received');
@@ -239,6 +261,17 @@ export async function receive(id: string) {
     where: { id: grn.id },
     data: { status: 'received' },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mrrv',
+    entityId: grn.id,
+    action: 'status_change',
+    payload: { from: grn.status, to: 'received' },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return updated;
 }
 
@@ -269,6 +302,16 @@ export async function store(id: string, userId: string) {
     .filter(item => item.qty > 0);
 
   await addStockBatch(stockItems);
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'mrrv',
+    entityId: grn.id,
+    action: 'status_change',
+    payload: { from: grn.status, to: 'stored', warehouseId: grn.warehouseId, linesStored: grn.mrrvLines.length },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
 
   return { id: grn.id, warehouseId: grn.warehouseId, linesStored: grn.mrrvLines.length };
 }

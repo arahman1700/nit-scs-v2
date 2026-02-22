@@ -721,6 +721,52 @@ export function validateGeneratorMaintenance(data: Record<string, unknown>): Val
   return { valid: errors.length === 0, errors, warnings };
 }
 
+// ── Tool Validators ────────────────────────────────────────────────────
+
+export function validateTool(data: Record<string, unknown>): ValidationResult {
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  if (!data.toolName || !(data.toolName as string).trim()) {
+    errors.push({ field: 'toolName', rule: 'TOOL-V001', message: 'Tool name is required' });
+  }
+
+  if (!data.toolCode || !(data.toolCode as string).trim()) {
+    errors.push({ field: 'toolCode', rule: 'TOOL-V002', message: 'Tool code is required' });
+  }
+
+  if (
+    data.condition &&
+    !['good', 'under_maintenance', 'damaged', 'decommissioned'].includes(data.condition as string)
+  ) {
+    errors.push({
+      field: 'condition',
+      rule: 'TOOL-V003',
+      message: 'Condition must be one of: good, under_maintenance, damaged, decommissioned',
+    });
+  }
+
+  if (data.warrantyExpiry && data.purchaseDate) {
+    if (new Date(data.warrantyExpiry as string) < new Date(data.purchaseDate as string)) {
+      errors.push({
+        field: 'warrantyExpiry',
+        rule: 'TOOL-V004',
+        message: 'Warranty expiry cannot be before purchase date',
+      });
+    }
+  }
+
+  if (data.warrantyExpiry && new Date(data.warrantyExpiry as string) < new Date()) {
+    warnings.push({
+      field: 'warrantyExpiry',
+      rule: 'TOOL-W001',
+      message: 'Tool warranty has expired',
+    });
+  }
+
+  return { valid: errors.length === 0, errors, warnings };
+}
+
 // ── Generic ─────────────────────────────────────────────────────────────
 
 export function validateRequired(

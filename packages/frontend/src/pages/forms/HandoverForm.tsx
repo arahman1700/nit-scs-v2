@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeftRight, CheckCircle, Loader2, PlayCircle } from 'lucide-react';
 import type { Warehouse, Employee } from '@nit-scs-v2/shared/types';
+import { toast } from '@/components/Toaster';
 import { ExportButton } from '@/components/ExportButton';
 import {
   useCreateHandover,
@@ -71,6 +72,10 @@ export const HandoverForm: React.FC = () => {
         onSuccess: () => {
           setDocumentNumber(existingDoc?.formNumber ?? id);
           setSubmitted(true);
+          toast.success('Handover Updated', 'Document has been saved successfully');
+        },
+        onError: (err: Error) => {
+          toast.error('Update Failed', err.message || 'Failed to update handover');
         },
       });
     } else {
@@ -78,6 +83,10 @@ export const HandoverForm: React.FC = () => {
         onSuccess: res => {
           setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? nextNumber);
           setSubmitted(true);
+          toast.success('Handover Created', 'New handover document has been created');
+        },
+        onError: (err: Error) => {
+          toast.error('Creation Failed', err.message || 'Failed to create handover');
         },
       });
     }
@@ -286,7 +295,17 @@ export const HandoverForm: React.FC = () => {
             {existingDoc.status === 'initiated' && (
               <button
                 type="button"
-                onClick={() => startVerification.mutate(id!, { onSuccess: () => detailQuery.refetch() })}
+                onClick={() =>
+                  startVerification.mutate(id!, {
+                    onSuccess: () => {
+                      detailQuery.refetch();
+                      toast.success('Verification Started');
+                    },
+                    onError: (err: Error) => {
+                      toast.error('Action Failed', err.message);
+                    },
+                  })
+                }
                 disabled={startVerification.isPending}
                 className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
               >
@@ -297,7 +316,17 @@ export const HandoverForm: React.FC = () => {
             {existingDoc.status === 'in_progress' && (
               <button
                 type="button"
-                onClick={() => completeMutation.mutate(id!, { onSuccess: () => detailQuery.refetch() })}
+                onClick={() =>
+                  completeMutation.mutate(id!, {
+                    onSuccess: () => {
+                      detailQuery.refetch();
+                      toast.success('Handover Completed');
+                    },
+                    onError: (err: Error) => {
+                      toast.error('Action Failed', err.message);
+                    },
+                  })
+                }
                 disabled={completeMutation.isPending || !existingDoc.inventoryVerified}
                 className="btn-primary px-4 py-2 rounded-lg flex items-center gap-2"
               >

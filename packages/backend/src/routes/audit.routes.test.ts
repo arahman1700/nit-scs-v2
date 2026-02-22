@@ -26,6 +26,14 @@ vi.mock('../socket/setup.js', () => ({
 }));
 vi.mock('../utils/routeHelpers.js', () => ({ auditAndEmit: vi.fn() }));
 
+// ── Permission mock (requirePermission calls hasPermissionDB) ─────────────
+vi.mock('../services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockImplementation(async (role: string, _resource: string, _action: string) => {
+    // admin and manager can read audit-log; others cannot
+    return role === 'admin' || role === 'manager';
+  }),
+}));
+
 // ── Service mock ──────────────────────────────────────────────────────────
 vi.mock('../services/audit.service.js', () => ({
   getAuditLogs: vi.fn(),

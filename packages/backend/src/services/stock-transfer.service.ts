@@ -4,6 +4,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { addStockBatch, deductStockBatch } from './inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { StockTransferCreateDto, StockTransferUpdateDto, StockTransferLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'stock_transfer';
@@ -127,14 +128,36 @@ export async function submit(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'pending');
-  return prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'pending' } });
+  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'pending' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'pending', transferType: st.transferType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function approve(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'approved');
-  return prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'approved' } });
+  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'approved' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'approved', transferType: st.transferType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function ship(id: string) {
@@ -156,6 +179,15 @@ export async function ship(id: string) {
   const updated = await prisma.stockTransfer.update({
     where: { id: st.id },
     data: { status: 'shipped', shippedDate: new Date() },
+  });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'shipped', fromWarehouseId: st.fromWarehouseId, toWarehouseId: st.toWarehouseId },
+    timestamp: new Date().toISOString(),
   });
 
   return { updated, fromWarehouseId: st.fromWarehouseId };
@@ -182,6 +214,16 @@ export async function receive(id: string, userId: string) {
     data: { status: 'received', receivedDate: new Date() },
   });
 
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'received', fromWarehouseId: st.fromWarehouseId, toWarehouseId: st.toWarehouseId },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return { updated, toWarehouseId: st.toWarehouseId };
 }
 
@@ -189,7 +231,18 @@ export async function complete(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'completed');
-  return prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'completed' } });
+  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'completed' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'completed' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function cancel(id: string) {
@@ -201,5 +254,16 @@ export async function cancel(id: string) {
     throw new BusinessRuleError(`Stock Transfer cannot be cancelled from status: ${st.status}`);
   }
 
-  return prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'cancelled' } });
+  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'cancelled' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'stock_transfer',
+    entityId: st.id,
+    action: 'status_change',
+    payload: { from: st.status, to: 'cancelled' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }

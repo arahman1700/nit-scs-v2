@@ -113,6 +113,9 @@ import searchRoutes from './search.routes.js';
 // ── Semantic Analytics Layer ────────────────────────────────────────────
 import semanticRoutes from './semantic.routes.js';
 
+// ── Intelligence (Smart Features) ──────────────────────────────────────
+import intelligenceRoutes from './intelligence.routes.js';
+
 const router = Router();
 
 // ── Rate limiter (applied to all /api/v1 routes) ─────────────────────────
@@ -282,5 +285,8 @@ router.use('/search', searchRoutes);
 
 // ── Semantic Analytics Layer ────────────────────────────────────────────
 router.use('/semantic', semanticRoutes);
+
+// ── Intelligence (Smart Features) ──────────────────────────────────────
+router.use('/intelligence', intelligenceRoutes);
 
 export default router;

@@ -26,7 +26,14 @@ interface MirvWithLines {
     itemId: string;
     qtyRequested: Prisma.Decimal;
     qtyApproved: Prisma.Decimal | null;
+    qtyIssued: Prisma.Decimal | null;
   }>;
+}
+
+/** Optional per-line quantities for partial issuance */
+export interface PartialIssueItem {
+  lineId: string;
+  qty: number;
 }
 
 /**
@@ -50,7 +57,18 @@ export async function signQcForMirv(tx: TxClient | PrismaClient, mirvId: string,
  * Consumes reservations, updates line costs, sets status to issued,
  * and auto-creates an outbound GatePass if not already created.
  */
-export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, userId: string) {
+/**
+ * Issue materials for an approved MIRV.
+ * Supports full issuance (default) and partial issuance via `partialItems`.
+ * When partial items are provided, only those lines/quantities are consumed.
+ * Status is set to 'partially_issued' or 'issued' depending on fulfillment.
+ */
+export async function issueMirv(
+  tx: TxClient | PrismaClient,
+  mirvId: string,
+  userId: string,
+  partialItems?: PartialIssueItem[],
+) {
   const mirv: MirvWithLines | null = await tx.mirv.findUnique({
     where: { id: mirvId },
     include: { mirvLines: true },
@@ -65,36 +83,75 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
     throw new BusinessRuleError('QC counter-signature is required before issuing materials (V5 requirement)');
   }
 
-  const consumeItems = mirv.mirvLines.map(line => ({
-    itemId: line.itemId,
-    warehouseId: mirv.warehouseId,
-    qty: Number(line.qtyApproved ?? line.qtyRequested),
-    mirvLineId: line.id,
-  }));
+  // Build per-line quantities to issue
+  const partialMap = partialItems ? new Map(partialItems.map(p => [p.lineId, p.qty])) : null;
+
+  const consumeItems = mirv.mirvLines
+    .map(line => {
+      const approvedQty = Number(line.qtyApproved ?? line.qtyRequested);
+      const alreadyIssued = Number(line.qtyIssued ?? 0);
+      const remaining = approvedQty - alreadyIssued;
+
+      if (remaining <= 0) return null; // Already fully issued
+
+      let qtyToIssue: number;
+      if (partialMap) {
+        qtyToIssue = partialMap.get(line.id) ?? 0;
+        if (qtyToIssue <= 0) return null; // Not included in this partial issue
+        qtyToIssue = Math.min(qtyToIssue, remaining); // Cap at remaining
+      } else {
+        qtyToIssue = remaining; // Full issue of remaining qty
+      }
+
+      return {
+        itemId: line.itemId,
+        warehouseId: mirv.warehouseId,
+        qty: qtyToIssue,
+        mirvLineId: line.id,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  if (consumeItems.length === 0) {
+    throw new BusinessRuleError('No items remaining to issue');
+  }
+
   const { totalCost, lineCosts } = await consumeReservationBatch(consumeItems);
 
-  // Update line costs from batch result
+  // Update line costs and qtyIssued from batch result
   await Promise.all(
-    mirv.mirvLines.map(line => {
-      const qtyToIssue = Number(line.qtyApproved ?? line.qtyRequested);
-      const cost = lineCosts.get(line.id) ?? 0;
+    consumeItems.map(item => {
+      const line = mirv.mirvLines.find(l => l.id === item.mirvLineId)!;
+      const prevIssued = Number(line.qtyIssued ?? 0);
+      const newIssued = prevIssued + item.qty;
+      const cost = lineCosts.get(item.mirvLineId) ?? 0;
       return tx.mirvLine.update({
-        where: { id: line.id },
+        where: { id: item.mirvLineId },
         data: {
-          qtyIssued: qtyToIssue,
-          unitCost: qtyToIssue > 0 ? cost / qtyToIssue : 0,
+          qtyIssued: newIssued,
+          unitCost: newIssued > 0 ? cost / item.qty : 0,
         },
       });
     }),
   );
 
+  // Determine final status: check if ALL lines are fully issued
+  const allFullyIssued = mirv.mirvLines.every(line => {
+    const approvedQty = Number(line.qtyApproved ?? line.qtyRequested);
+    const prevIssued = Number(line.qtyIssued ?? 0);
+    const issuedNow = consumeItems.find(c => c.mirvLineId === line.id)?.qty ?? 0;
+    return prevIssued + issuedNow >= approvedQty;
+  });
+
+  const newStatus = allFullyIssued ? 'issued' : 'partially_issued';
+
   await tx.mirv.update({
     where: { id: mirv.id },
     data: {
-      status: 'issued',
+      status: newStatus,
       issuedById: userId,
       issuedDate: new Date(),
-      reservationStatus: 'released',
+      reservationStatus: allFullyIssued ? 'released' : mirv.reservationStatus,
     },
   });
 
@@ -123,7 +180,7 @@ export async function issueMirv(tx: TxClient | PrismaClient, mirvId: string, use
     });
   }
 
-  return { id: mirv.id, totalCost, warehouseId: mirv.warehouseId };
+  return { id: mirv.id, totalCost, warehouseId: mirv.warehouseId, status: newStatus };
 }
 
 /**

@@ -9,6 +9,8 @@ import {
   Clipboard,
   Ship,
   Users,
+  Wrench,
+  Zap,
 } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import {
@@ -27,6 +29,8 @@ import {
   validateGatePass,
   validateShipment,
   validateHandover,
+  validateTool,
+  validateGeneratorMaintenance,
 } from '@nit-scs-v2/shared/validators';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -201,6 +205,22 @@ export const VALIDATOR_MAP: Record<
     errors: { field: string; rule: string; message: string }[];
     warnings: { field: string; rule: string; message: string }[];
   },
+  tool: validateTool as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
+  generator_maintenance: validateGeneratorMaintenance as (
+    data: Record<string, unknown>,
+    lineItems: VoucherLineItem[],
+  ) => {
+    valid: boolean;
+    errors: { field: string; rule: string; message: string }[];
+    warnings: { field: string; rule: string; message: string }[];
+  },
 };
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -267,7 +287,7 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 key: 'priority',
                 label: 'Priority',
                 type: 'select',
-                options: ['low', 'normal', 'high', 'urgent'],
+                options: ['normal', 'urgent', 'emergency'],
               },
               { key: 'locationOfWork', label: 'Location of Work', type: 'text', placeholder: 'Building 3, Floor 2' },
               {
@@ -351,7 +371,7 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 key: 'priority',
                 label: 'Priority',
                 type: 'select',
-                options: ['Normal', 'High', 'Critical'],
+                options: ['low', 'normal', 'high', 'urgent'],
                 required: true,
               },
             ],
@@ -364,13 +384,13 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 label: 'Job Order Type',
                 type: 'select',
                 options: [
-                  'Transport',
-                  'Equipment',
-                  'Generator_Rental',
-                  'Generator_Maintenance',
-                  'Rental_Daily',
-                  'Rental_Monthly',
-                  'Scrap',
+                  'transport',
+                  'equipment',
+                  'generator_rental',
+                  'generator_maintenance',
+                  'rental_daily',
+                  'rental_monthly',
+                  'scrap',
                 ],
                 required: true,
                 onChange: 'joType',
@@ -748,7 +768,7 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
                 key: 'modeOfShipment',
                 label: 'Mode',
                 type: 'select',
-                options: ['Sea FCL', 'Sea LCL', 'Air', 'Land', 'Courier'],
+                options: ['sea_fcl', 'sea_lcl', 'air', 'land', 'courier'],
                 required: true,
               },
             ],
@@ -953,6 +973,95 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
           },
         ],
       };
+    case 'tool':
+      return {
+        title: isEditMode ? 'Edit Tool' : 'Register Tool',
+        titleEn: 'Tool Registration',
+        code: 'TOOL',
+        subtitle: 'N-MS-NIT-WH-FRM-0601',
+        icon: Wrench,
+        sections: [
+          {
+            title: 'Tool Details',
+            fields: [
+              { key: 'toolCode', label: 'Tool Code', type: 'text', required: true, placeholder: 'e.g. TL-001' },
+              { key: 'toolName', label: 'Tool Name', type: 'text', required: true, placeholder: 'e.g. Power Drill' },
+              { key: 'category', label: 'Category', type: 'text', placeholder: 'e.g. Power Tools, Hand Tools' },
+              { key: 'serialNumber', label: 'Serial Number', type: 'text', placeholder: 'Optional' },
+              {
+                key: 'condition',
+                label: 'Condition',
+                type: 'select',
+                options: ['good', 'under_maintenance', 'damaged', 'decommissioned'],
+                defaultValue: 'good',
+              },
+              { key: 'warehouse', label: 'Warehouse', type: 'select', options: warehouseOptions },
+            ],
+          },
+          {
+            title: 'Dates & Warranty',
+            fields: [
+              { key: 'purchaseDate', label: 'Purchase Date', type: 'date' },
+              { key: 'warrantyExpiry', label: 'Warranty Expiry', type: 'date' },
+            ],
+          },
+        ],
+      };
+    case 'generator':
+      return {
+        title: isEditMode ? 'Edit Generator' : 'Register Generator',
+        titleEn: 'Generator Registration',
+        code: 'GEN',
+        subtitle: 'N-MS-NIT-EQ-FRM-0701',
+        icon: Zap,
+        sections: [
+          {
+            title: 'Generator Details',
+            fields: [
+              {
+                key: 'generatorCode',
+                label: 'Generator Code',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g. GEN-001',
+              },
+              {
+                key: 'generatorName',
+                label: 'Generator Name',
+                type: 'text',
+                required: true,
+                placeholder: 'e.g. CAT 250KVA',
+              },
+              { key: 'capacityKva', label: 'Capacity (KVA)', type: 'number', required: true },
+              {
+                key: 'status',
+                label: 'Status',
+                type: 'select',
+                options: ['available', 'assigned', 'maintenance', 'decommissioned'],
+                defaultValue: 'available',
+              },
+              { key: 'warehouse', label: 'Current Warehouse', type: 'select', options: warehouseOptions },
+              { key: 'project', label: 'Current Project', type: 'select', options: projectOptions },
+            ],
+          },
+          {
+            title: 'Financial & Depreciation',
+            fields: [
+              { key: 'purchaseDate', label: 'Purchase Date', type: 'date' },
+              { key: 'purchaseValue', label: 'Purchase Value (SAR)', type: 'number' },
+              { key: 'salvageValue', label: 'Salvage Value (SAR)', type: 'number' },
+              { key: 'usefulLifeMonths', label: 'Useful Life (Months)', type: 'number' },
+              {
+                key: 'depreciationMethod',
+                label: 'Depreciation Method',
+                type: 'select',
+                options: ['straight_line', 'usage_based'],
+              },
+              { key: 'inServiceDate', label: 'In Service Date', type: 'date' },
+            ],
+          },
+        ],
+      };
     default:
       return {
         title: 'Generic Form',
@@ -975,9 +1084,9 @@ export function getFormConfig(formType: string | undefined, options: FormConfigO
 export function getJoTypeSections(joType: string): FormSectionConfig[] {
   if (!joType) return [];
 
-  const typeKey = joType.split(' - ')[0];
+  const typeKey = joType.split(' - ')[0].toLowerCase();
   switch (typeKey) {
-    case 'Transport':
+    case 'transport':
       return [
         {
           title: 'Transport Details',
@@ -1046,7 +1155,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Equipment':
+    case 'equipment':
       return [
         {
           title: 'Equipment Details',
@@ -1078,7 +1187,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Generator_Rental':
+    case 'generator_rental':
       return [
         {
           title: 'Generator Rental Details',
@@ -1101,7 +1210,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Generator_Maintenance':
+    case 'generator_maintenance':
       return [
         {
           title: 'Generator Maintenance Details',
@@ -1129,7 +1238,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Scrap':
+    case 'scrap':
       return [
         {
           title: 'Scrap Details',
@@ -1152,7 +1261,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Rental_Daily':
+    case 'rental_daily':
       return [
         {
           title: 'Daily Rental Details',
@@ -1175,7 +1284,7 @@ export function getJoTypeSections(joType: string): FormSectionConfig[] {
           fields: [{ key: 'projectBudgetApproved', label: 'Project Budget Approved?', type: 'checkbox' }],
         },
       ];
-    case 'Rental_Monthly':
+    case 'rental_monthly':
       return [
         {
           title: 'Monthly Rental Details',

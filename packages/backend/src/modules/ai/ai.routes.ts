@@ -43,7 +43,7 @@ router.get('/conversations', async (req, res, next) => {
 
 router.get('/conversations/:id', async (req, res, next) => {
   try {
-    const conversation = await getConversation(req.params.id as string);
+    const conversation = await getConversation(req.params.id as string, req.user!.userId);
     if (!conversation) {
       res.status(404).json({ success: false, message: 'Conversation not found' });
       return;
@@ -56,7 +56,11 @@ router.get('/conversations/:id', async (req, res, next) => {
 
 router.delete('/conversations/:id', async (req, res, next) => {
   try {
-    await deleteConversation(req.params.id as string);
+    const deleted = await deleteConversation(req.params.id as string, req.user!.userId);
+    if (!deleted) {
+      res.status(404).json({ success: false, message: 'Conversation not found' });
+      return;
+    }
     res.json({ success: true, message: 'Conversation deleted' });
   } catch (err) {
     next(err);

@@ -622,6 +622,7 @@ export const AdminResourceList: React.FC = () => {
         }}
         className={`p-1.5 rounded-lg hover:bg-white/10 text-nesma-secondary ${inCard ? '' : 'hover:text-white'} transition-colors`}
         title="View"
+        aria-label={`View ${(row.name as string) || (row.id as string) || 'record'}`}
       >
         <Eye size={size} />
       </button>
@@ -633,6 +634,7 @@ export const AdminResourceList: React.FC = () => {
           }}
           className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
           title="PDF"
+          aria-label={`Export PDF for ${(row.name as string) || (row.id as string) || 'record'}`}
         >
           <Download size={size} />
         </button>
@@ -645,6 +647,7 @@ export const AdminResourceList: React.FC = () => {
           }}
           className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
           title="Edit"
+          aria-label={`Edit ${(row.name as string) || (row.id as string) || 'record'}`}
         >
           <Edit3 size={size} />
         </button>
@@ -665,6 +668,7 @@ export const AdminResourceList: React.FC = () => {
           }}
           className="p-1.5 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
           title="Delete"
+          aria-label={`Delete ${(row.name as string) || (row.id as string) || 'record'}`}
         >
           <Trash2 size={size} />
         </button>

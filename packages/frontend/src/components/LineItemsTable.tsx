@@ -49,7 +49,17 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   };
   const MATERIAL_CATALOG = (itemsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
   const uomsQuery = useUoms({ pageSize: 100 });
-  const UNIT_OPTIONS = (uomsQuery.data?.data ?? []).map(u => u.uomName || u.uomCode);
+  const UNIT_OPTIONS = useMemo(() => {
+    const uoms = (uomsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+    const seen = new Set<string>();
+    return uoms
+      .map(u => ({ id: String(u.id ?? ''), label: String(u.uomName || u.uomCode || '') }))
+      .filter(u => {
+        if (!u.label || seen.has(u.label)) return false;
+        seen.add(u.label);
+        return true;
+      });
+  }, [uomsQuery.data]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [showCatalog, setShowCatalog] = useState(false);
@@ -364,8 +374,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                         className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
                       >
                         {UNIT_OPTIONS.map(u => (
-                          <option key={u} value={u}>
-                            {u}
+                          <option key={u.id} value={u.label}>
+                            {u.label}
                           </option>
                         ))}
                       </select>

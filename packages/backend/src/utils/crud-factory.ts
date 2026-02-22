@@ -5,7 +5,7 @@ import { ZodSchema } from 'zod';
 import { prisma } from './prisma.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from './response.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validate.js';
 import { createAuditLog } from '../services/audit.service.js';
@@ -31,6 +31,12 @@ export interface CrudConfig {
   modelName: string;
   /** Database table name (for audit log). */
   tableName: string;
+  /**
+   * RBAC resource name (must match a key in the permissions matrix, e.g. 'items', 'warehouses').
+   * When provided, uses DB-backed `requirePermission(resource, action)` instead of
+   * role-list–based `requireRole(...allowedRoles)`.
+   */
+  resource?: string;
   /** Zod schema for POST (create). */
   createSchema: ZodSchema;
   /** Zod schema for PUT (update). */
@@ -58,6 +64,11 @@ export interface CrudConfig {
    * If omitted, no scope filter is applied (master data is typically unscoped).
    */
   scopeMapping?: ScopeFieldMapping;
+  /**
+   * Fields to omit from query results (e.g. `['passwordHash']` for the Employee model).
+   * Applied to both list and detail queries.
+   */
+  omitFields?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -83,10 +94,19 @@ export function createCrudRouter(config: CrudConfig): Router {
   const delegate = getDelegate(config.modelName);
   const softDelete = config.softDelete === true; // default false — only enable for models with deletedAt column
 
+  // ── Helper: build RBAC middleware from resource or fallback roles ──
+  type PermAction = 'read' | 'create' | 'update' | 'delete';
+  const rbac = (action: PermAction, fallbackRoles?: string[]) => {
+    if (config.resource) return requirePermission(config.resource, action);
+    if (fallbackRoles?.length) return requireRole(...fallbackRoles);
+    return (_req: Request, _res: Response, next: NextFunction) => next();
+  };
+
   // ── GET / — List with pagination, search, sort, filter ──────────────
   router.get(
     '/',
     authenticate,
+    rbac('read'),
     paginate(config.defaultSort || 'createdAt'),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -122,6 +142,11 @@ export function createCrudRouter(config: CrudConfig): Router {
           }
         }
 
+        // Build omit clause to exclude sensitive fields (e.g. passwordHash)
+        const omitClause = config.omitFields?.length
+          ? Object.fromEntries(config.omitFields.map(f => [f, true]))
+          : undefined;
+
         const [data, total] = await Promise.all([
           delegate.findMany({
             where,
@@ -129,6 +154,7 @@ export function createCrudRouter(config: CrudConfig): Router {
             skip,
             take: pageSize,
             ...(config.includes ? { include: config.includes } : {}),
+            ...(omitClause ? { omit: omitClause } : {}),
           }),
           delegate.count({ where }),
         ]);
@@ -141,7 +167,7 @@ export function createCrudRouter(config: CrudConfig): Router {
   );
 
   // ── GET /:id — Get by ID ────────────────────────────────────────────
-  router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  router.get('/:id', authenticate, rbac('read'), async (req: Request, res: Response, next: NextFunction) => {
     try {
       const detailInclude = config.detailIncludes ?? config.includes;
       const findWhere: Record<string, unknown> = { id: req.params.id as string };
@@ -149,9 +175,13 @@ export function createCrudRouter(config: CrudConfig): Router {
       if (softDelete) {
         findWhere.deletedAt = null;
       }
+      const omitClause = config.omitFields?.length
+        ? Object.fromEntries(config.omitFields.map(f => [f, true]))
+        : undefined;
       const record = await delegate.findUnique({
         where: findWhere,
         ...(detailInclude ? { include: detailInclude } : {}),
+        ...(omitClause ? { omit: omitClause } : {}),
       });
       if (!record) {
         sendError(res, 404, 'Record not found');
@@ -168,13 +198,11 @@ export function createCrudRouter(config: CrudConfig): Router {
     }
   });
 
-  // Build write middleware chain (authenticate + optional RBAC)
-  const writeMw = config.allowedRoles?.length ? [authenticate, requireRole(...config.allowedRoles)] : [authenticate];
-
   // ── POST / — Create ─────────────────────────────────────────────────
   router.post(
     '/',
-    ...writeMw,
+    authenticate,
+    rbac('create', config.allowedRoles),
     validate(config.createSchema),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -202,7 +230,8 @@ export function createCrudRouter(config: CrudConfig): Router {
   // ── PUT /:id — Update ───────────────────────────────────────────────
   router.put(
     '/:id',
-    ...writeMw,
+    authenticate,
+    rbac('update', config.allowedRoles),
     validate(config.updateSchema),
     async (req: Request, res: Response, next: NextFunction) => {
       try {
@@ -243,49 +272,54 @@ export function createCrudRouter(config: CrudConfig): Router {
   );
 
   // ── DELETE /:id — Soft-delete (or hard-delete for lookup tables) ─────
-  router.delete('/:id', ...writeMw, async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const id = req.params.id as string;
+  router.delete(
+    '/:id',
+    authenticate,
+    rbac('delete', config.allowedRoles),
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        const id = req.params.id as string;
 
-      // Row-level security check before delete
-      if (config.scopeMapping) {
-        const existing = await delegate.findUnique({ where: { id } });
-        if (!existing) {
-          sendError(res, 404, 'Record not found');
-          return;
+        // Row-level security check before delete
+        if (config.scopeMapping) {
+          const existing = await delegate.findUnique({ where: { id } });
+          if (!existing) {
+            sendError(res, 404, 'Record not found');
+            return;
+          }
+          if (!canAccessRecord(req.user!, existing as Record<string, unknown>, config.scopeMapping)) {
+            sendError(res, 403, 'You do not have access to this record');
+            return;
+          }
         }
-        if (!canAccessRecord(req.user!, existing as Record<string, unknown>, config.scopeMapping)) {
-          sendError(res, 403, 'You do not have access to this record');
-          return;
-        }
-      }
 
-      if (softDelete) {
-        // Soft-delete: set deletedAt timestamp
-        await delegate.update({
-          where: { id },
-          data: { deletedAt: new Date() },
+        if (softDelete) {
+          // Soft-delete: set deletedAt timestamp
+          await delegate.update({
+            where: { id },
+            data: { deletedAt: new Date() },
+          });
+        } else {
+          await delegate.delete({ where: { id } });
+        }
+
+        await createAuditLog({
+          tableName: config.tableName,
+          recordId: id,
+          action: 'delete',
+          performedById: req.user!.userId,
+          ipAddress: clientIp(req),
         });
-      } else {
-        await delegate.delete({ where: { id } });
+
+        const io = req.app.get('io') as SocketIOServer | undefined;
+        if (io) emitEntityEvent(io, 'entity:deleted', { entity: entityFromUrl(req) });
+
+        sendNoContent(res);
+      } catch (err) {
+        next(err);
       }
-
-      await createAuditLog({
-        tableName: config.tableName,
-        recordId: id,
-        action: 'delete',
-        performedById: req.user!.userId,
-        ipAddress: clientIp(req),
-      });
-
-      const io = req.app.get('io') as SocketIOServer | undefined;
-      if (io) emitEntityEvent(io, 'entity:deleted', { entity: entityFromUrl(req) });
-
-      sendNoContent(res);
-    } catch (err) {
-      next(err);
-    }
-  });
+    },
+  );
 
   return router;
 }

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import * as laborStandardService from '../services/labor-standard.service.js';
 
 const router = Router();
@@ -18,7 +18,7 @@ router.get('/standards', async (_req, res, next) => {
 });
 
 // PUT /labor/standards/:taskType
-router.put('/standards/:taskType', requireRole('admin', 'manager'), async (req, res, next) => {
+router.put('/standards/:taskType', requirePermission('labor', 'update'), async (req, res, next) => {
   try {
     const taskType = req.params.taskType as string;
     const { standardMinutes, description, unitOfMeasure } = req.body;

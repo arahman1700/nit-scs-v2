@@ -13,6 +13,7 @@ import {
   Plus,
   ChevronRight,
   ScanLine,
+  Undo2,
 } from 'lucide-react';
 import { useInventory } from '@/api/hooks/useMasterData';
 import { useMrrvList } from '@/api/hooks/useMrrv';
@@ -23,6 +24,38 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { displayStr } from '@/utils/displayStr';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
+
+// ── Helper to format dates safely ─────────────────────────────────────────
+function fmtDate(val: unknown): string {
+  if (!val) return '-';
+  const d = new Date(String(val));
+  if (isNaN(d.getTime())) return String(val);
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ── Helper to format currency ──────────────────────────────────────────────
+function fmtCurrency(val: unknown): string {
+  const n = Number(val ?? 0);
+  if (n === 0) return '-';
+  return `${n.toLocaleString()} SAR`;
+}
+
+// ── Helper to format return type enum ──────────────────────────────────────
+function fmtReturnType(val: unknown): { label: string; color: string } {
+  const str = String(val ?? '');
+  switch (str) {
+    case 'return_to_warehouse':
+      return { label: 'Return to Warehouse', color: 'text-emerald-400' };
+    case 'return_to_supplier':
+      return { label: 'Return to Supplier', color: 'text-blue-400' };
+    case 'scrap':
+      return { label: 'Scrap', color: 'text-red-400' };
+    case 'transfer_to_project':
+      return { label: 'Transfer to Project', color: 'text-amber-400' };
+    default:
+      return { label: str.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), color: 'text-gray-400' };
+  }
+}
 
 const StatCard: React.FC<{
   title: string;
@@ -47,7 +80,7 @@ const StatCard: React.FC<{
 export const WarehouseDashboard: React.FC = () => {
   const { tab } = useParams<{ tab: string }>();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'overview' | 'receive' | 'issue' | 'inventory' | 'return'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'receive' | 'issue' | 'return' | 'inventory'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
 
@@ -56,6 +89,7 @@ export const WarehouseDashboard: React.FC = () => {
   const mirvQuery = useMirvList({ pageSize: 100 });
   const mrvQuery = useMrvList({ pageSize: 100 });
   const inventoryQuery = useInventory({ pageSize: 100 });
+
   // Normalize InventoryLevel records (API shape) into display-friendly objects
   const inventoryItems = ((inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[]).map(inv => {
     const nested = inv.item as Record<string, unknown> | undefined;
@@ -69,7 +103,15 @@ export const WarehouseDashboard: React.FC = () => {
       minLevel: Number(inv.minLevel ?? 0),
       category: String(nested?.category || inv.category || '-'),
       location: String(inv.location || '-'),
-      stockStatus: String(inv.status || inv.stockStatus || 'In Stock'),
+      stockStatus: (() => {
+        const qty = Number(inv.qtyOnHand ?? 0);
+        const reserved = Number(inv.qtyReserved ?? 0);
+        const available = qty - reserved;
+        const min = Number(inv.minLevel ?? 0);
+        if (available <= 0) return 'Out of Stock';
+        if (min > 0 && available <= min) return 'Low Stock';
+        return 'In Stock';
+      })(),
     };
   });
 
@@ -93,10 +135,10 @@ export const WarehouseDashboard: React.FC = () => {
     navigate(`/warehouse/${newTab}`);
   };
 
-  // Computed stats from API data
-  const pendingMRRV = mrrvData.filter(m => m.status === 'Draft' || m.status === 'Pending Approval');
-  const approvedMIRV = mirvData.filter(m => m.status === 'Approved');
-  const pendingMRV = mrvData.filter(m => m.status === 'Pending');
+  // Computed stats from API data (using lowercase snake_case status values)
+  const pendingMRRV = mrrvData.filter(m => m.status === 'draft' || m.status === 'pending_qc');
+  const approvedMIRV = mirvData.filter(m => m.status === 'approved');
+  const pendingMRV = mrvData.filter(m => m.status === 'pending');
   const lowStockItems = inventoryItems.filter(i => i.stockStatus === 'Low Stock' || i.stockStatus === 'Out of Stock');
 
   const filteredInventory = useMemo(() => {
@@ -208,26 +250,30 @@ export const WarehouseDashboard: React.FC = () => {
                 </button>
               </h3>
               <div className="space-y-3">
+                {mrrvData.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">No GRN records found</p>
+                )}
                 {mrrvData.slice(0, 3).map(mrrv => (
                   <div
                     key={mrrv.id as string}
                     className="flex justify-between items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors border border-transparent hover:border-emerald-500/30 group"
+                    onClick={() => navigate(`/admin/forms/mrrv/${mrrv.id}`)}
                   >
                     <div className="flex items-center gap-4">
                       <div className="bg-emerald-500/20 p-2.5 rounded-lg border border-emerald-500/30">
                         <ArrowDown size={18} className="text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-200 group-hover:text-white">{mrrv.id as string}</p>
+                        <p className="text-sm font-bold text-gray-200 group-hover:text-white">
+                          {(mrrv.mrrvNumber as string) || (mrrv.id as string)}
+                        </p>
                         <p className="text-xs text-gray-500">
-                          {displayStr(mrrv.supplier)} • {mrrv.date as string}
+                          {displayStr(mrrv.supplier)} &bull; {fmtDate(mrrv.receiveDate)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-nesma-secondary font-medium">
-                        {Number(mrrv.value || 0).toLocaleString()} SAR
-                      </span>
+                      <span className="text-xs text-nesma-secondary font-medium">{fmtCurrency(mrrv.totalValue)}</span>
                       <StatusBadge status={mrrv.status as string} />
                     </div>
                   </div>
@@ -247,25 +293,29 @@ export const WarehouseDashboard: React.FC = () => {
                 </button>
               </h3>
               <div className="space-y-3">
+                {mirvData.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No MI records found</p>}
                 {mirvData.slice(0, 3).map(mirv => (
                   <div
                     key={mirv.id as string}
                     className="flex justify-between items-center p-3 bg-white/5 rounded-xl hover:bg-white/10 cursor-pointer transition-colors border border-transparent hover:border-blue-500/30 group"
+                    onClick={() => navigate(`/admin/forms/mirv/${mirv.id}`)}
                   >
                     <div className="flex items-center gap-4">
                       <div className="bg-blue-500/20 p-2.5 rounded-lg border border-blue-500/30">
                         <ArrowUp size={18} className="text-blue-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-200 group-hover:text-white">{mirv.id as string}</p>
+                        <p className="text-sm font-bold text-gray-200 group-hover:text-white">
+                          {(mirv.mirvNumber as string) || (mirv.id as string)}
+                        </p>
                         <p className="text-xs text-gray-500">
-                          {displayStr(mirv.project)} • {displayStr(mirv.requester)}
+                          {displayStr(mirv.project)} &bull; {displayStr(mirv.requestedBy)}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-nesma-secondary font-medium">
-                        {Number(mirv.value || 0).toLocaleString()} SAR
+                        {fmtCurrency(mirv.estimatedValue)}
                       </span>
                       <StatusBadge status={mirv.status as string} />
                     </div>
@@ -291,7 +341,7 @@ export const WarehouseDashboard: React.FC = () => {
                     <div>
                       <p className="text-sm font-medium text-gray-200">{item.name}</p>
                       <p className="text-xs text-gray-500">
-                        {item.code} • {displayStr(item.warehouse)}
+                        {item.code} &bull; {displayStr(item.warehouse)}
                       </p>
                     </div>
                     <div className="text-right">
@@ -313,32 +363,28 @@ export const WarehouseDashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-white">Material Receiving (GRN)</h2>
-            <Link
-              to="/warehouse/forms/mrrv"
-              onClick={e => {
-                e.preventDefault();
-                navigate('/admin/forms/mrrv');
-              }}
+            <button
+              onClick={() => navigate('/admin/forms/mrrv')}
               className="flex items-center gap-2 px-4 py-2 bg-nesma-primary text-white rounded-xl text-sm hover:bg-nesma-accent transition-all shadow-lg shadow-nesma-primary/20"
             >
               <Plus size={16} />
               New Receipt
-            </Link>
+            </button>
           </div>
 
           {/* Stats Row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { label: 'All', count: mrrvData.length, color: 'text-white' },
-              { label: 'Draft', count: mrrvData.filter(m => m.status === 'Draft').length, color: 'text-gray-400' },
+              { label: 'Draft', count: mrrvData.filter(m => m.status === 'draft').length, color: 'text-gray-400' },
               {
-                label: 'Approved',
-                count: mrrvData.filter(m => m.status === 'Approved').length,
+                label: 'QC Approved',
+                count: mrrvData.filter(m => m.status === 'qc_approved').length,
                 color: 'text-emerald-400',
               },
               {
-                label: 'Inspected',
-                count: mrrvData.filter(m => m.status === 'Inspected').length,
+                label: 'Stored',
+                count: mrrvData.filter(m => m.status === 'stored').length,
                 color: 'text-blue-400',
               },
             ].map((stat, i) => (
@@ -358,7 +404,7 @@ export const WarehouseDashboard: React.FC = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider">
-                    <th className="px-6 py-4 font-medium">ID</th>
+                    <th className="px-6 py-4 font-medium">GRN #</th>
                     <th className="px-6 py-4 font-medium">Supplier</th>
                     <th className="px-6 py-4 font-medium">Date</th>
                     <th className="px-6 py-4 font-medium">Warehouse</th>
@@ -370,34 +416,46 @@ export const WarehouseDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
+                  {mrrvData.length === 0 && !isLoading && (
+                    <tr>
+                      <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                        No GRN records found
+                      </td>
+                    </tr>
+                  )}
                   {mrrvData.map(mrrv => (
                     <tr key={mrrv.id as string} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">{mrrv.id as string}</td>
-                      <td className="px-6 py-4 text-gray-200">{displayStr(mrrv.supplier)}</td>
-                      <td className="px-6 py-4 text-gray-400">{mrrv.date as string}</td>
-                      <td className="px-6 py-4 text-gray-400">{displayStr(mrrv.warehouse)}</td>
-                      <td className="px-6 py-4 text-white font-medium">
-                        {Number(mrrv.value || 0).toLocaleString()} SAR
+                      <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">
+                        {(mrrv.mrrvNumber as string) || (mrrv.id as string)}
                       </td>
+                      <td className="px-6 py-4 text-gray-200">{displayStr(mrrv.supplier)}</td>
+                      <td className="px-6 py-4 text-gray-400">{fmtDate(mrrv.receiveDate)}</td>
+                      <td className="px-6 py-4 text-gray-400">{displayStr(mrrv.warehouse)}</td>
+                      <td className="px-6 py-4 text-white font-medium">{fmtCurrency(mrrv.totalValue)}</td>
                       <td className="px-6 py-4 text-gray-400 font-mono text-xs">{(mrrv.poNumber as string) || '-'}</td>
                       <td className="px-6 py-4">
-                        {mrrv.rfimCreated ? (
-                          <span className="text-emerald-400 flex items-center gap-1 text-xs">
-                            <CheckCircle size={12} /> Created
-                          </span>
-                        ) : mrrv.rfimRequired ? (
-                          <span className="text-amber-400 flex items-center gap-1 text-xs">
-                            <Clock size={12} /> Required
-                          </span>
+                        {mrrv.rfimRequired ? (
+                          mrrv.status === 'qc_approved' || mrrv.status === 'stored' ? (
+                            <span className="text-emerald-400 flex items-center gap-1 text-xs">
+                              <CheckCircle size={12} /> Completed
+                            </span>
+                          ) : (
+                            <span className="text-amber-400 flex items-center gap-1 text-xs">
+                              <Clock size={12} /> Required
+                            </span>
+                          )
                         ) : (
-                          <span className="text-gray-600 text-xs">-</span>
+                          <span className="text-gray-600 text-xs">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
                         <StatusBadge status={mrrv.status as string} />
                       </td>
                       <td className="px-6 py-4">
-                        <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={() => navigate(`/admin/forms/mrrv/${mrrv.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
+                        >
                           <Eye size={16} />
                         </button>
                       </td>
@@ -428,18 +486,18 @@ export const WarehouseDashboard: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
               { label: 'All', count: mirvData.length, color: 'text-white' },
-              { label: 'Draft', count: mirvData.filter(m => m.status === 'Draft').length, color: 'text-gray-400' },
+              { label: 'Draft', count: mirvData.filter(m => m.status === 'draft').length, color: 'text-gray-400' },
               {
                 label: 'Pending',
-                count: mirvData.filter(m => m.status === 'Pending Approval').length,
+                count: mirvData.filter(m => m.status === 'pending_approval').length,
                 color: 'text-amber-400',
               },
               {
                 label: 'Approved',
-                count: mirvData.filter(m => m.status === 'Approved').length,
+                count: mirvData.filter(m => m.status === 'approved').length,
                 color: 'text-emerald-400',
               },
-              { label: 'Issued', count: mirvData.filter(m => m.status === 'Issued').length, color: 'text-blue-400' },
+              { label: 'Issued', count: mirvData.filter(m => m.status === 'issued').length, color: 'text-blue-400' },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -457,34 +515,53 @@ export const WarehouseDashboard: React.FC = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-white/10 text-xs text-gray-400 uppercase tracking-wider">
-                    <th className="px-6 py-4 font-medium">ID</th>
+                    <th className="px-6 py-4 font-medium">MI #</th>
                     <th className="px-6 py-4 font-medium">Project</th>
                     <th className="px-6 py-4 font-medium">Requester</th>
                     <th className="px-6 py-4 font-medium">Date</th>
                     <th className="px-6 py-4 font-medium">Warehouse</th>
                     <th className="px-6 py-4 font-medium">Value</th>
-                    <th className="px-6 py-4 font-medium">Approval</th>
+                    <th className="px-6 py-4 font-medium">Priority</th>
                     <th className="px-6 py-4 font-medium">Gate Pass</th>
                     <th className="px-6 py-4 font-medium">Status</th>
                     <th className="px-6 py-4 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-sm">
+                  {mirvData.length === 0 && !isLoading && (
+                    <tr>
+                      <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                        No MI records found
+                      </td>
+                    </tr>
+                  )}
                   {mirvData.map(mirv => (
                     <tr key={mirv.id as string} className="hover:bg-white/5 transition-colors group">
-                      <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">{mirv.id as string}</td>
+                      <td className="px-6 py-4 font-mono text-nesma-secondary font-medium">
+                        {(mirv.mirvNumber as string) || (mirv.id as string)}
+                      </td>
                       <td className="px-6 py-4 text-gray-200 max-w-[200px] truncate" title={displayStr(mirv.project)}>
                         {displayStr(mirv.project)}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">{displayStr(mirv.requester)}</td>
-                      <td className="px-6 py-4 text-gray-400">{mirv.date as string}</td>
+                      <td className="px-6 py-4 text-gray-300">{displayStr(mirv.requestedBy)}</td>
+                      <td className="px-6 py-4 text-gray-400">{fmtDate(mirv.requestDate)}</td>
                       <td className="px-6 py-4 text-gray-400">{displayStr(mirv.warehouse)}</td>
-                      <td className="px-6 py-4 text-white font-medium">
-                        {Number(mirv.value || 0).toLocaleString()} SAR
-                      </td>
-                      <td className="px-6 py-4 text-xs text-gray-400">{(mirv.approvalLevel as string) || '-'}</td>
+                      <td className="px-6 py-4 text-white font-medium">{fmtCurrency(mirv.estimatedValue)}</td>
                       <td className="px-6 py-4">
-                        {mirv.gatePassCreated ? (
+                        {mirv.priority === 'urgent' ? (
+                          <span className="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                            Urgent
+                          </span>
+                        ) : mirv.priority === 'emergency' ? (
+                          <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-400 border border-red-500/30">
+                            Emergency
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 text-xs">Normal</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        {mirv.gatePassAutoCreated ? (
                           <span className="text-emerald-400 flex items-center gap-1 text-xs">
                             <CheckCircle size={12} /> Yes
                           </span>
@@ -496,7 +573,10 @@ export const WarehouseDashboard: React.FC = () => {
                         <StatusBadge status={mirv.status as string} />
                       </td>
                       <td className="px-6 py-4">
-                        <button className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all">
+                        <button
+                          onClick={() => navigate(`/admin/forms/mirv/${mirv.id}`)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
+                        >
                           <Eye size={16} />
                         </button>
                       </td>
@@ -523,61 +603,87 @@ export const WarehouseDashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* MRN Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mrvData.map(mrv => (
+          {/* Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'All', count: mrvData.length, color: 'text-white' },
+              { label: 'Draft', count: mrvData.filter(m => m.status === 'draft').length, color: 'text-gray-400' },
+              {
+                label: 'Pending',
+                count: mrvData.filter(m => m.status === 'pending').length,
+                color: 'text-amber-400',
+              },
+              {
+                label: 'Completed',
+                count: mrvData.filter(m => m.status === 'completed').length,
+                color: 'text-emerald-400',
+              },
+            ].map((stat, i) => (
               <div
-                key={mrv.id as string}
-                className="glass-card p-6 rounded-xl hover:border-nesma-secondary/30 transition-all group cursor-pointer"
+                key={i}
+                className="glass-card p-4 rounded-xl text-center hover:bg-white/5 transition-all cursor-pointer"
               >
-                <div className="flex justify-between items-start mb-4">
-                  <span className="font-mono text-nesma-secondary font-medium text-sm">{mrv.id as string}</span>
-                  <StatusBadge status={mrv.status as string} />
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <span className="text-xs text-gray-500 block">Return Type</span>
-                    <span
-                      className={`text-sm font-medium ${
-                        mrv.returnType === 'Surplus'
-                          ? 'text-blue-400'
-                          : mrv.returnType === 'Damaged'
-                            ? 'text-red-400'
-                            : mrv.returnType === 'Wrong Item'
-                              ? 'text-amber-400'
-                              : 'text-emerald-400'
-                      }`}
-                    >
-                      {mrv.returnType as string}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500 block">Project</span>
-                    <span className="text-sm text-gray-200">{displayStr(mrv.project)}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-gray-500 block">Warehouse</span>
-                    <span className="text-sm text-gray-300">{displayStr(mrv.warehouse)}</span>
-                  </div>
-                  <div className="pt-3 border-t border-white/10">
-                    <span className="text-xs text-gray-500 block">Reason</span>
-                    <span className="text-sm text-gray-400">{mrv.reason as string}</span>
-                  </div>
-                </div>
-                <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                  <span className="text-xs text-gray-500">{mrv.date as string}</span>
-                  <button className="text-xs text-nesma-secondary hover:text-white flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                    Details <ChevronRight size={12} />
-                  </button>
-                </div>
+                <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
+                <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
               </div>
             ))}
+          </div>
+
+          {/* MRN Cards */}
+          {mrvData.length === 0 && !isLoading && (
+            <div className="text-center py-12 text-gray-500">
+              <Undo2 size={32} className="mx-auto mb-3 text-gray-600" />
+              <p>No MRN records found</p>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mrvData.map(mrv => {
+              const returnInfo = fmtReturnType(mrv.returnType);
+              return (
+                <div
+                  key={mrv.id as string}
+                  className="glass-card p-6 rounded-xl hover:border-nesma-secondary/30 transition-all group cursor-pointer"
+                  onClick={() => navigate(`/admin/forms/mrv/${mrv.id}`)}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="font-mono text-nesma-secondary font-medium text-sm">
+                      {(mrv.mrvNumber as string) || (mrv.id as string)}
+                    </span>
+                    <StatusBadge status={mrv.status as string} />
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="text-xs text-gray-500 block">Return Type</span>
+                      <span className={`text-sm font-medium ${returnInfo.color}`}>{returnInfo.label}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 block">Project</span>
+                      <span className="text-sm text-gray-200">{displayStr(mrv.project)}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 block">Warehouse</span>
+                      <span className="text-sm text-gray-300">{displayStr(mrv.toWarehouse)}</span>
+                    </div>
+                    <div className="pt-3 border-t border-white/10">
+                      <span className="text-xs text-gray-500 block">Reason</span>
+                      <span className="text-sm text-gray-400">{(mrv.reason as string) || '-'}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
+                    <span className="text-xs text-gray-500">{fmtDate(mrv.returnDate)}</span>
+                    <button className="text-xs text-nesma-secondary hover:text-white flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      Details <ChevronRight size={12} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* ======================== INVENTORY TAB ======================== */}
-      {(activeTab === 'inventory' || activeTab === 'overview') && activeTab === 'inventory' && (
+      {activeTab === 'inventory' && (
         <div className="glass-card rounded-2xl overflow-hidden">
           <div className="p-6 border-b border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/5">
             <h3 className="font-bold text-lg text-white">Inventory Status</h3>
@@ -616,6 +722,13 @@ export const WarehouseDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
+                {filteredInventory.length === 0 && !isLoading && (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                      No inventory records found
+                    </td>
+                  </tr>
+                )}
                 {filteredInventory.map(item => {
                   const isLow = item.stockStatus === 'Low Stock' || item.stockStatus === 'Out of Stock';
                   return (

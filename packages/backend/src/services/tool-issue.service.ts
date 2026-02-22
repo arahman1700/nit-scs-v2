@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { ToolIssueCreateDto, ToolIssueReturnDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'tool_issue';
@@ -69,7 +70,7 @@ export async function create(data: ToolIssueCreateDto, userId: string) {
     throw new BusinessRuleError('Tool is already issued and has not been returned');
   }
 
-  return prisma.toolIssue.create({
+  const created = await prisma.toolIssue.create({
     data: {
       toolId: data.toolId,
       issuedToId: data.issuedToId,
@@ -83,6 +84,18 @@ export async function create(data: ToolIssueCreateDto, userId: string) {
       issuedTo: { select: { id: true, fullName: true } },
     },
   });
+
+  eventBus.publish({
+    type: 'document:created',
+    entityType: 'tool_issue',
+    entityId: created.id,
+    action: 'create',
+    payload: { toolId: data.toolId, issuedToId: data.issuedToId },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return created;
 }
 
 export async function update(id: string, data: Record<string, unknown>) {
@@ -106,7 +119,7 @@ export async function returnTool(id: string, returnData: ToolIssueReturnDto, use
   if (!issue) throw new NotFoundError('ToolIssue', id);
   assertTransition(DOC_TYPE, issue.status, 'returned');
 
-  return prisma.$transaction(async tx => {
+  const result = await prisma.$transaction(async tx => {
     const updated = await tx.toolIssue.update({
       where: { id: issue.id },
       data: {
@@ -127,4 +140,16 @@ export async function returnTool(id: string, returnData: ToolIssueReturnDto, use
 
     return updated;
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'tool_issue',
+    entityId: issue.id,
+    action: 'status_change',
+    payload: { from: issue.status, to: 'returned', returnCondition: returnData.returnCondition },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return result;
 }

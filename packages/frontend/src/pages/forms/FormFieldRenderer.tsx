@@ -29,14 +29,17 @@ export const FormFieldRenderer: React.FC<FormFieldRendererProps> = ({
   onFileUpload,
   onRemoveFile,
 }) => {
+  const fieldId = `field-${field.key}`;
+
   return (
     <div className={`flex flex-col gap-2 ${field.type === 'textarea' || field.type === 'file' ? 'md:col-span-2' : ''}`}>
-      <label className="text-sm font-medium text-gray-300 ml-1">
+      <label htmlFor={fieldId} className="text-sm font-medium text-gray-300 ml-1">
         {field.label} {field.required && <span className="text-red-400">*</span>}
       </label>
 
       {field.type === 'select' ? (
         <select
+          id={fieldId}
           className="nesma-input px-4 py-3 w-full appearance-none bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"
           required={field.required}
           disabled={isEditMode && !isEditable}
@@ -52,6 +55,7 @@ export const FormFieldRenderer: React.FC<FormFieldRendererProps> = ({
         </select>
       ) : field.type === 'textarea' ? (
         <textarea
+          id={fieldId}
           className="nesma-input px-4 py-3 w-full min-h-[120px] bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"
           required={field.required}
           disabled={isEditMode && !isEditable}
@@ -136,6 +140,7 @@ export const FormFieldRenderer: React.FC<FormFieldRendererProps> = ({
         )
       ) : (
         <input
+          id={fieldId}
           type={field.type}
           className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"
           required={field.required}

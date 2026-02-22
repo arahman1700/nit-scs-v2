@@ -8,6 +8,7 @@ import { warehouseZoneCreateSchema, warehouseZoneUpdateSchema } from '../schemas
 export default createCrudRouter({
   modelName: 'warehouseZone',
   tableName: 'warehouse_zones',
+  resource: 'warehouse_zone',
   createSchema: warehouseZoneCreateSchema,
   updateSchema: warehouseZoneUpdateSchema,
   searchFields: ['zoneName', 'zoneCode'],

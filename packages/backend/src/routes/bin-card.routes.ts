@@ -13,6 +13,7 @@ import {
 const binCardCrud = createCrudRouter({
   modelName: 'binCard',
   tableName: 'bin_cards',
+  resource: 'bin_card',
   createSchema: binCardCreateSchema,
   updateSchema: binCardUpdateSchema,
   searchFields: ['binNumber'],

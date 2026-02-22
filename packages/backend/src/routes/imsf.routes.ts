@@ -12,6 +12,7 @@ const APPROVE_ROLES = ['admin', 'warehouse_supervisor', 'logistics_coordinator']
 export default createDocumentRouter({
   docType: 'imsf',
   tableName: 'imsf',
+  resource: 'imsf',
   scopeMapping: { projectField: 'senderProjectId', createdByField: 'createdById' },
 
   list: imsfService.list,

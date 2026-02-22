@@ -302,7 +302,7 @@ describe('shipment.service', () => {
 
   describe('updateStatus', () => {
     it('updates status on an existing shipment', async () => {
-      const existing = makeShipment();
+      const existing = makeShipment({ status: 'ready_to_ship' });
       mockPrisma.shipment.findUnique.mockResolvedValue(existing);
       const updated = { ...existing, status: 'in_transit' };
       mockPrisma.shipment.update.mockResolvedValue(updated);
@@ -325,8 +325,8 @@ describe('shipment.service', () => {
     });
 
     it('includes extra date fields when provided', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment());
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment());
+      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'ready_to_ship' }));
+      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'in_transit' }));
 
       await updateStatus('ship-1', 'in_transit', {
         actualShipDate: '2025-04-05',
@@ -341,8 +341,8 @@ describe('shipment.service', () => {
     });
 
     it('does not include date fields when not provided', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment());
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment());
+      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'ready_to_ship' }));
+      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'in_transit' }));
 
       await updateStatus('ship-1', 'in_transit', {});
 
@@ -479,10 +479,10 @@ describe('shipment.service', () => {
       await expect(deliver('nonexistent')).rejects.toThrow(NotFoundError);
     });
 
-    it('throws BusinessRuleError when status is not deliverable', async () => {
+    it('throws Error when status is not deliverable', async () => {
       mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'draft' }));
 
-      await expect(deliver('ship-1')).rejects.toThrow(BusinessRuleError);
+      await expect(deliver('ship-1')).rejects.toThrow(/Invalid status transition/);
     });
 
     it('delivers from cleared status', async () => {
@@ -554,16 +554,16 @@ describe('shipment.service', () => {
       await expect(cancel('nonexistent')).rejects.toThrow(NotFoundError);
     });
 
-    it('throws BusinessRuleError when status is delivered', async () => {
+    it('throws Error when status is delivered', async () => {
       mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'delivered' }));
 
-      await expect(cancel('ship-1')).rejects.toThrow(BusinessRuleError);
+      await expect(cancel('ship-1')).rejects.toThrow(/Invalid status transition/);
     });
 
-    it('throws BusinessRuleError when status is already cancelled', async () => {
+    it('throws Error when status is already cancelled', async () => {
       mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'cancelled' }));
 
-      await expect(cancel('ship-1')).rejects.toThrow(BusinessRuleError);
+      await expect(cancel('ship-1')).rejects.toThrow(/Invalid status transition/);
     });
 
     it('cancels from a valid status', async () => {

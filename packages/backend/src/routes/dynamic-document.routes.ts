@@ -41,7 +41,12 @@ router.get(
 // ── Get document by ID ───────────────────────────────────────────────
 router.get('/:typeCode/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const typeCode = req.params.typeCode as string;
     const doc = await svc.getDocumentById(req.params.id as string);
+    if ((doc.documentType as { code?: string } | undefined)?.code !== typeCode) {
+      sendError(res, 404, 'Document not found for the specified type');
+      return;
+    }
     if (!canAccessRecord(req.user!, doc as unknown as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
@@ -78,6 +83,15 @@ router.post('/:typeCode', authenticate, async (req: Request, res: Response, next
 router.put('/:typeCode/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const typeCode = req.params.typeCode as string;
+    const existingDoc = await svc.getDocumentById(req.params.id as string);
+    if ((existingDoc.documentType as { code?: string } | undefined)?.code !== typeCode) {
+      sendError(res, 404, 'Document not found for the specified type');
+      return;
+    }
+    if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
+      sendError(res, 403, 'You do not have access to this record');
+      return;
+    }
     const { existing, updated } = await svc.updateDocument(req.params.id as string, req.body, req.user!.userId);
 
     await auditAndEmit(req, {
@@ -105,6 +119,10 @@ router.post('/:typeCode/:id/transition', authenticate, async (req: Request, res:
 
     // Pre-check access
     const existingDoc = await svc.getDocumentById(req.params.id as string);
+    if ((existingDoc.documentType as { code?: string } | undefined)?.code !== typeCode) {
+      sendError(res, 404, 'Document not found for the specified type');
+      return;
+    }
     if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
@@ -137,6 +155,16 @@ router.post('/:typeCode/:id/transition', authenticate, async (req: Request, res:
 // ── Get document history ─────────────────────────────────────────────
 router.get('/:typeCode/:id/history', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const typeCode = req.params.typeCode as string;
+    const existingDoc = await svc.getDocumentById(req.params.id as string);
+    if ((existingDoc.documentType as { code?: string } | undefined)?.code !== typeCode) {
+      sendError(res, 404, 'Document not found for the specified type');
+      return;
+    }
+    if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
+      sendError(res, 403, 'You do not have access to this record');
+      return;
+    }
     const history = await svc.getDocumentHistory(req.params.id as string);
     sendSuccess(res, history);
   } catch (err) {

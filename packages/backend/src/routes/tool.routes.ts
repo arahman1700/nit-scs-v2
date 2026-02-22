@@ -8,6 +8,7 @@ import { toolCreateSchema, toolUpdateSchema } from '../schemas/document.schema.j
 export default createCrudRouter({
   modelName: 'tool',
   tableName: 'tools',
+  resource: 'tool',
   createSchema: toolCreateSchema,
   updateSchema: toolUpdateSchema,
   searchFields: ['toolCode', 'toolName', 'serialNumber'],

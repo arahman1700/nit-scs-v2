@@ -206,5 +206,39 @@ export async function pmApprove(id: string, pmUserId: string, comments?: string)
       pmApprovalDate: new Date(),
     },
   });
-  return { updated, mrrvId: qci.mrrvId, pmApprovedBy: pmUserId };
+
+  // Auto-advance parent GRN to qc_approved (mirrors the pass path in complete())
+  let grnAdvanced = false;
+  if (qci.mrrvId) {
+    const parentGrn = await prisma.mrrv.findUnique({ where: { id: qci.mrrvId } });
+    if (parentGrn && canTransition('grn', parentGrn.status, 'qc_approved')) {
+      await prisma.mrrv.update({
+        where: { id: parentGrn.id },
+        data: { status: 'qc_approved' },
+      });
+      grnAdvanced = true;
+
+      eventBus.publish({
+        type: 'document:status_changed',
+        entityType: 'mrrv',
+        entityId: parentGrn.id,
+        action: 'status_change',
+        payload: { from: parentGrn.status, to: 'qc_approved', triggeredBy: 'qci_pm_approval' },
+        performedById: pmUserId,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'rfim',
+    entityId: qci.id,
+    action: 'status_change',
+    payload: { from: 'completed_conditional', to: 'completed', pmApprovedBy: pmUserId, grnAdvanced },
+    performedById: pmUserId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return { updated, mrrvId: qci.mrrvId, pmApprovedBy: pmUserId, grnAdvanced };
 }

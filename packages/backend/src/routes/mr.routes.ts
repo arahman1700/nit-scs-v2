@@ -1,12 +1,12 @@
 /**
  * MR (Material Request) Routes — V2 rename of MRF
- * Delegates to V1 mrf.service internally.
+ * Now delegates to V2 mr.service with EventBus events & assertTransition.
  */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { mrfCreateSchema, mrfUpdateSchema } from '../schemas/logistics.schema.js';
 import { emitToAll } from '../socket/setup.js';
-import * as mrfService from '../services/mrf.service.js';
+import * as mrService from '../services/mr.service.js';
 import type { MrCreateDto, MrUpdateDto } from '../types/dto.js';
 
 const WRITE_ROLES = ['admin', 'manager', 'site_engineer', 'warehouse_supervisor'];
@@ -15,48 +15,49 @@ const APPROVE_ROLES = ['admin', 'manager', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'mr',
   tableName: 'material_requisitions',
+  resource: 'mr',
   scopeMapping: { projectField: 'projectId', createdByField: 'requestedById' },
 
-  list: mrfService.list,
-  getById: mrfService.getById,
+  list: mrService.list,
+  getById: mrService.getById,
 
   createSchema: mrfCreateSchema,
   createRoles: WRITE_ROLES,
   create: (body, userId) => {
     const { lines, ...headerData } = body as MrCreateDto;
-    return mrfService.create(headerData, lines, userId);
+    return mrService.create(headerData, lines, userId);
   },
 
   updateSchema: mrfUpdateSchema,
   updateRoles: WRITE_ROLES,
-  update: (id, body) => mrfService.update(id, body as MrUpdateDto),
+  update: (id, body) => mrService.update(id, body as MrUpdateDto),
 
   actions: [
     {
       path: 'submit',
       roles: WRITE_ROLES,
-      handler: id => mrfService.submit(id),
+      handler: id => mrService.submit(id),
       socketEvent: 'mr:submitted',
       socketData: () => ({ status: 'submitted' }),
     },
     {
       path: 'review',
       roles: APPROVE_ROLES,
-      handler: (id, req) => mrfService.review(id, req.user!.userId),
+      handler: (id, req) => mrService.review(id, req.user!.userId),
       socketEvent: 'mr:under_review',
       socketData: () => ({ status: 'under_review' }),
     },
     {
       path: 'approve',
       roles: APPROVE_ROLES,
-      handler: (id, req) => mrfService.approve(id, req.user!.userId),
+      handler: (id, req) => mrService.approve(id, req.user!.userId),
       socketEvent: 'mr:approved',
       socketData: () => ({ status: 'approved' }),
     },
     {
       path: 'check-stock',
       roles: APPROVE_ROLES,
-      handler: id => mrfService.checkStock(id),
+      handler: id => mrService.checkStock(id),
       socketEvent: 'mr:stock_checked',
       socketData: r => {
         const res = r as { stockResults: unknown };
@@ -68,7 +69,7 @@ export default createDocumentRouter({
       roles: APPROVE_ROLES,
       handler: async (id, req) => {
         const { warehouseId } = req.body as { warehouseId?: string };
-        const result = await mrfService.convertToMirv(id, req.user!.userId, warehouseId);
+        const result = await mrService.convertToMirv(id, req.user!.userId, warehouseId);
         if (result.mirv) {
           const io = req.app.get('io') as SocketIOServer | undefined;
           if (io) {
@@ -89,7 +90,7 @@ export default createDocumentRouter({
       roles: APPROVE_ROLES,
       handler: async (id, req) => {
         const { receiverProjectId } = req.body as { receiverProjectId: string };
-        const result = await mrfService.convertToImsf(id, req.user!.userId, receiverProjectId);
+        const result = await mrService.convertToImsf(id, req.user!.userId, receiverProjectId);
         const io = req.app.get('io') as SocketIOServer | undefined;
         if (io) {
           emitToAll(io, 'imsf:created', { id: result.id, imsfNumber: result.imsfNumber });
@@ -108,7 +109,7 @@ export default createDocumentRouter({
       roles: APPROVE_ROLES,
       handler: async (id, req) => {
         const { joType } = req.body as { joType?: string };
-        const result = await mrfService.convertToJo(id, req.user!.userId, joType);
+        const result = await mrService.convertToJo(id, req.user!.userId, joType);
         const io = req.app.get('io') as SocketIOServer | undefined;
         if (io) {
           emitToAll(io, 'jo:created', { id: result.jo.id, joNumber: result.jo.joNumber });
@@ -125,21 +126,21 @@ export default createDocumentRouter({
     {
       path: 'fulfill',
       roles: APPROVE_ROLES,
-      handler: id => mrfService.fulfill(id),
+      handler: id => mrService.fulfill(id),
       socketEvent: 'mr:fulfilled',
       socketData: () => ({ status: 'fulfilled' }),
     },
     {
       path: 'reject',
       roles: APPROVE_ROLES,
-      handler: id => mrfService.reject(id),
+      handler: id => mrService.reject(id),
       socketEvent: 'mr:rejected',
       socketData: () => ({ status: 'rejected' }),
     },
     {
       path: 'cancel',
       roles: ['admin', 'manager'],
-      handler: id => mrfService.cancel(id),
+      handler: id => mrService.cancel(id),
       socketEvent: 'mr:cancelled',
       socketData: () => ({ status: 'cancelled' }),
     },

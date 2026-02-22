@@ -8,7 +8,7 @@ import {
   customsStageUpdateSchema,
 } from '../schemas/logistics.schema.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { sendSuccess, sendCreated } from '../utils/response.js';
 import { auditAndEmit, emitDocumentEvent } from '../utils/routeHelpers.js';
@@ -21,6 +21,7 @@ const ROLES = ['admin', 'manager', 'logistics_coordinator', 'freight_forwarder']
 const baseRouter = createDocumentRouter({
   docType: 'shipments',
   tableName: 'shipments',
+  resource: 'shipment',
   scopeMapping: { projectField: 'projectId' },
 
   list: shipmentService.list,
@@ -61,7 +62,7 @@ const baseRouter = createDocumentRouter({
 baseRouter.put(
   '/:id/status',
   authenticate,
-  requireRole(...ROLES),
+  requirePermission('shipment', 'update'),
   validate(shipmentStatusSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -94,7 +95,7 @@ baseRouter.put(
 baseRouter.post(
   '/:id/customs',
   authenticate,
-  requireRole(...ROLES),
+  requirePermission('customs', 'create'),
   validate(customsStageSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -129,7 +130,7 @@ baseRouter.post(
 baseRouter.put(
   '/:id/customs/:cid',
   authenticate,
-  requireRole(...ROLES),
+  requirePermission('customs', 'update'),
   validate(customsStageUpdateSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

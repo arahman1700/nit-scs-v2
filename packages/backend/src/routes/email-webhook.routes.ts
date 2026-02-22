@@ -21,6 +21,11 @@ router.post('/resend', raw({ type: 'application/json' }), async (req, res) => {
     const webhookSecret = env.RESEND_WEBHOOK_SECRET;
 
     let payload: { type: string; data: { email_id: string; to: string[] } };
+    const rawBody = Buffer.isBuffer(req.body)
+      ? req.body.toString('utf8')
+      : typeof req.body === 'string'
+        ? req.body
+        : JSON.stringify(req.body);
 
     if (webhookSecret) {
       // Verify Svix signature in production
@@ -35,10 +40,8 @@ router.post('/resend', raw({ type: 'application/json' }), async (req, res) => {
       }
 
       const wh = new Webhook(webhookSecret);
-      const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-
       try {
-        payload = wh.verify(body, {
+        payload = wh.verify(rawBody, {
           'svix-id': svixId,
           'svix-timestamp': svixTimestamp,
           'svix-signature': svixSignature,
@@ -55,7 +58,7 @@ router.post('/resend', raw({ type: 'application/json' }), async (req, res) => {
         res.status(500).json({ error: 'Webhook secret not configured' });
         return;
       }
-      payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      payload = typeof req.body === 'object' && !Buffer.isBuffer(req.body) ? req.body : JSON.parse(rawBody);
     }
 
     const { type, data } = payload;

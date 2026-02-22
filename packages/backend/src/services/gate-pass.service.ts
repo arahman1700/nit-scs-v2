@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { GatePassCreateDto, GatePassUpdateDto, GatePassItemDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'gate_pass';
@@ -119,14 +120,36 @@ export async function submit(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'pending');
-  return prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'pending' } });
+  const updated = await prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'pending' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'status_change',
+    payload: { from: gp.status, to: 'pending', passType: gp.passType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function approve(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'approved');
-  return prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'approved' } });
+  const updated = await prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'approved' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'status_change',
+    payload: { from: gp.status, to: 'approved', passType: gp.passType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function release(id: string, securityOfficer?: string) {
@@ -134,10 +157,21 @@ export async function release(id: string, securityOfficer?: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'released');
 
-  return prisma.gatePass.update({
+  const updated = await prisma.gatePass.update({
     where: { id: gp.id },
     data: { status: 'released', exitTime: new Date(), securityOfficer: securityOfficer ?? null },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'status_change',
+    payload: { from: gp.status, to: 'released', passType: gp.passType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function returnPass(id: string) {
@@ -145,10 +179,21 @@ export async function returnPass(id: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'returned');
 
-  return prisma.gatePass.update({
+  const updated = await prisma.gatePass.update({
     where: { id: gp.id },
     data: { status: 'returned', returnTime: new Date() },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'status_change',
+    payload: { from: gp.status, to: 'returned', passType: gp.passType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function cancel(id: string) {
@@ -160,5 +205,16 @@ export async function cancel(id: string) {
     throw new BusinessRuleError(`Gate Pass cannot be cancelled from status: ${gp.status}`);
   }
 
-  return prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'cancelled' } });
+  const updated = await prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'cancelled' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'status_change',
+    payload: { from: gp.status, to: 'cancelled', passType: gp.passType },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }

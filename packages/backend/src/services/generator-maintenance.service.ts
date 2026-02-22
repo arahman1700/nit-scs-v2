@@ -7,7 +7,21 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { GeneratorMaintenanceCreateDto, GeneratorMaintenanceUpdateDto, ListParams } from '../types/dto.js';
+
+/** Helper to emit EventBus events for generator maintenance */
+function emitEvent(action: string, entityId: string, payload: Record<string, unknown>, performedById?: string) {
+  eventBus.publish({
+    type: action === 'create' ? 'document:created' : 'document:status_changed',
+    entityType: 'generator_maintenance',
+    entityId,
+    action,
+    payload,
+    performedById,
+    timestamp: new Date().toISOString(),
+  });
+}
 
 const DOC_TYPE = 'generator_maintenance';
 
@@ -57,7 +71,7 @@ export async function create(data: GeneratorMaintenanceCreateDto, _userId: strin
   const generator = await prisma.generator.findUnique({ where: { id: data.generatorId } });
   if (!generator) throw new NotFoundError('Generator', data.generatorId);
 
-  return prisma.generatorMaintenance.create({
+  const created = await prisma.generatorMaintenance.create({
     data: {
       generatorId: data.generatorId,
       maintenanceType: data.maintenanceType,
@@ -71,6 +85,10 @@ export async function create(data: GeneratorMaintenanceCreateDto, _userId: strin
       generator: { select: { id: true, generatorCode: true, generatorName: true } },
     },
   });
+
+  emitEvent('create', created.id, { generatorId: data.generatorId, maintenanceType: data.maintenanceType });
+
+  return created;
 }
 
 export async function update(id: string, data: GeneratorMaintenanceUpdateDto) {
@@ -92,10 +110,14 @@ export async function startProgress(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  return prisma.generatorMaintenance.update({
+  const updated = await prisma.generatorMaintenance.update({
     where: { id: record.id },
     data: { status: 'in_progress', performedById: userId },
   });
+
+  emitEvent('status_change', record.id, { from: record.status, to: 'in_progress' }, userId);
+
+  return updated;
 }
 
 export async function complete(id: string, userId: string) {
@@ -103,7 +125,7 @@ export async function complete(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'completed');
 
-  return prisma.generatorMaintenance.update({
+  const updated = await prisma.generatorMaintenance.update({
     where: { id: record.id },
     data: {
       status: 'completed',
@@ -111,6 +133,10 @@ export async function complete(id: string, userId: string) {
       performedById: userId,
     },
   });
+
+  emitEvent('status_change', record.id, { from: record.status, to: 'completed' }, userId);
+
+  return updated;
 }
 
 export async function markOverdue(id: string) {
@@ -118,8 +144,12 @@ export async function markOverdue(id: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'overdue');
 
-  return prisma.generatorMaintenance.update({
+  const updated = await prisma.generatorMaintenance.update({
     where: { id: record.id },
     data: { status: 'overdue' },
   });
+
+  emitEvent('status_change', record.id, { from: record.status, to: 'overdue' });
+
+  return updated;
 }

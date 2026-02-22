@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
 import { invalidateRuleCache } from '../events/rule-cache.js';
@@ -40,7 +40,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // ── POST /:id/install — Install a template (creates Workflow + Rules) ──
-router.post('/:id/install', requireRole('admin', 'manager'), async (req, res, next) => {
+router.post('/:id/install', requirePermission('workflow_template', 'create'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     const template = await prisma.workflowTemplate.findUnique({ where: { id } });

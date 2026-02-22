@@ -3,7 +3,7 @@ import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { joCreateSchema, joUpdateSchema, joApprovalSchema, joPaymentSchema } from '../schemas/job-order.schema.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { sendSuccess, sendCreated } from '../utils/response.js';
 import { auditAndEmit } from '../utils/routeHelpers.js';
@@ -19,6 +19,7 @@ const COORD_ROLES = ['admin', 'manager', 'logistics_coordinator'];
 const baseRouter = createDocumentRouter({
   docType: 'job-orders',
   tableName: 'job_orders',
+  resource: 'jo',
   scopeMapping: { projectField: 'projectId', createdByField: 'requestedById' },
 
   list: joService.list,
@@ -154,7 +155,7 @@ const baseRouter = createDocumentRouter({
 baseRouter.post(
   '/:id/payments',
   authenticate,
-  requireRole(...COORD_ROLES),
+  requirePermission('jo', 'update'),
   validate(joPaymentSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -178,7 +179,7 @@ baseRouter.post(
 baseRouter.put(
   '/:id/payments/:pid',
   authenticate,
-  requireRole(...COORD_ROLES),
+  requirePermission('jo', 'update'),
   validate(joPaymentSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

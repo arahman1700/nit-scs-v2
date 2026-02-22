@@ -114,6 +114,7 @@ router.use(
   createCrudRouter({
     modelName: 'project',
     tableName: 'projects',
+    resource: 'projects',
     createSchema: s.projectCreateSchema,
     updateSchema: s.projectUpdateSchema,
     searchFields: ['projectCode', 'projectName', 'client'],
@@ -128,11 +129,13 @@ router.use(
   createCrudRouter({
     modelName: 'employee',
     tableName: 'employees',
+    resource: 'employees',
     createSchema: s.employeeCreateSchema,
     updateSchema: s.employeeUpdateSchema,
     searchFields: ['fullName', 'email', 'employeeIdNumber'],
     defaultSort: 'createdAt',
     allowedRoles: MASTER_DATA_ROLES,
+    omitFields: ['passwordHash'],
   }),
 );
 
@@ -141,6 +144,7 @@ router.use(
   createCrudRouter({
     modelName: 'supplier',
     tableName: 'suppliers',
+    resource: 'suppliers',
     createSchema: s.supplierCreateSchema,
     updateSchema: s.supplierUpdateSchema,
     searchFields: ['supplierCode', 'supplierName'],
@@ -154,6 +158,7 @@ router.use(
   createCrudRouter({
     modelName: 'warehouse',
     tableName: 'warehouses',
+    resource: 'warehouses',
     createSchema: s.warehouseCreateSchema,
     updateSchema: s.warehouseUpdateSchema,
     searchFields: ['warehouseCode', 'warehouseName'],
@@ -168,6 +173,7 @@ router.use(
   createCrudRouter({
     modelName: 'item',
     tableName: 'items',
+    resource: 'items',
     createSchema: s.itemCreateSchema,
     updateSchema: s.itemUpdateSchema,
     searchFields: ['itemCode', 'itemDescription'],
@@ -182,6 +188,7 @@ router.use(
   createCrudRouter({
     modelName: 'generator',
     tableName: 'generators',
+    resource: 'generators',
     createSchema: s.generatorCreateSchema,
     updateSchema: s.generatorUpdateSchema,
     searchFields: ['generatorCode', 'generatorName'],
@@ -195,6 +202,7 @@ router.use(
   createCrudRouter({
     modelName: 'equipmentFleet',
     tableName: 'equipment_fleet',
+    resource: 'fleet',
     createSchema: s.equipmentFleetCreateSchema,
     updateSchema: s.equipmentFleetUpdateSchema,
     searchFields: ['vehicleCode', 'vehicleType', 'plateNumber'],
@@ -220,6 +228,7 @@ router.use(
   createCrudRouter({
     modelName: 'inventoryLevel',
     tableName: 'inventory_levels',
+    resource: 'inventory',
     createSchema: s.inventoryLevelCreateSchema,
     updateSchema: s.inventoryLevelUpdateSchema,
     searchFields: [],
@@ -234,6 +243,7 @@ router.use(
   createCrudRouter({
     modelName: 'customsTracking',
     tableName: 'customs_tracking',
+    resource: 'customs',
     createSchema: s.customsTrackingCreateSchema,
     updateSchema: s.customsTrackingUpdateSchema,
     searchFields: ['customsDeclaration', 'customsRef'],

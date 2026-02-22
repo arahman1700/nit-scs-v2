@@ -15,7 +15,15 @@ declare global {
   }
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction) {
+/**
+ * JWT authentication middleware.
+ * Verifies the access token, checks the Redis blacklist for revoked tokens,
+ * and attaches the decoded payload to `req.user`.
+ *
+ * Express 5 supports async middleware — errors are automatically forwarded to
+ * the global error handler.
+ */
+export async function authenticate(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
@@ -25,40 +33,32 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.slice(7);
 
+  let payload: JwtPayload;
   try {
-    const payload = verifyAccessToken(token);
-
-    // Check Redis blacklist for revoked tokens (async, non-blocking)
-    if (payload.jti) {
-      isTokenBlacklisted(payload.jti)
-        .then(blacklisted => {
-          if (blacklisted) {
-            sendError(res, 401, 'Token has been revoked');
-            return;
-          }
-          req.user = payload;
-          req.rawAccessToken = token;
-          Sentry.setUser({ id: payload.userId, email: payload.email });
-          next();
-        })
-        .catch(err => {
-          // Redis failure — allow request (graceful degradation)
-          logger.warn({ err }, 'Redis blacklist check failed');
-          req.user = payload;
-          req.rawAccessToken = token;
-          Sentry.setUser({ id: payload.userId, email: payload.email });
-          next();
-        });
-    } else {
-      // No jti (legacy token) — allow but mark for future revocation
-      req.user = payload;
-      req.rawAccessToken = token;
-      Sentry.setUser({ id: payload.userId, email: payload.email });
-      next();
-    }
+    payload = verifyAccessToken(token);
   } catch {
     sendError(res, 401, 'Invalid or expired token');
+    return;
   }
+
+  // Check Redis blacklist for revoked tokens
+  if (payload.jti) {
+    try {
+      const blacklisted = await isTokenBlacklisted(payload.jti);
+      if (blacklisted) {
+        sendError(res, 401, 'Token has been revoked');
+        return;
+      }
+    } catch (err) {
+      // Redis failure — in-memory blacklist still checked inside isTokenBlacklisted
+      logger.warn({ err, jti: payload.jti }, 'Redis blacklist check failed — in-memory fallback used');
+    }
+  }
+
+  req.user = payload;
+  req.rawAccessToken = token;
+  Sentry.setUser({ id: payload.userId, email: payload.email });
+  next();
 }
 
 export function optionalAuth(req: Request, _res: Response, next: NextFunction) {

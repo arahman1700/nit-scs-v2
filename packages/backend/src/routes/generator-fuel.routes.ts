@@ -8,6 +8,7 @@ import { generatorFuelLogCreateSchema } from '../schemas/document.schema.js';
 export default createCrudRouter({
   modelName: 'generatorFuelLog',
   tableName: 'generator_fuel_logs',
+  resource: 'generator_fuel',
   createSchema: generatorFuelLogCreateSchema,
   updateSchema: generatorFuelLogCreateSchema.partial(),
   searchFields: ['fuelSupplier'],

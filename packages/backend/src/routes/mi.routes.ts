@@ -14,6 +14,7 @@ const WRITE_ROLES = ['admin', 'manager', 'site_engineer', 'warehouse_supervisor'
 export default createDocumentRouter({
   docType: 'mi',
   tableName: 'mirv',
+  resource: 'mi',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'requestedById' },
 
   list: mirvService.list,

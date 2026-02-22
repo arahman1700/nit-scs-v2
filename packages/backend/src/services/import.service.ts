@@ -2,6 +2,17 @@ import * as XLSX from 'xlsx';
 import { prisma } from '../utils/prisma.js';
 import type { ImportableEntity } from '../schemas/import.schema.js';
 
+const MAX_IMPORT_ROWS = 5000;
+const XLSX_READ_OPTIONS: XLSX.ParsingOptions = {
+  type: 'buffer',
+  dense: true,
+  cellFormula: false,
+  cellHTML: false,
+  cellNF: false,
+  cellStyles: false,
+  bookVBA: false,
+};
+
 // ── Column Mapping Definitions ──────────────────────────────────────────
 
 interface FieldDef {
@@ -149,14 +160,25 @@ export function getExpectedFields(entity: ImportableEntity) {
  * Parse an Excel file and return a preview.
  */
 export function parseExcelPreview(buffer: Buffer, entity: ImportableEntity): ImportPreviewResult {
-  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  if (!buffer.length) {
+    throw new Error('Uploaded file is empty');
+  }
+
+  const workbook = XLSX.read(buffer, XLSX_READ_OPTIONS);
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) throw new Error('No sheets found in the Excel file');
 
   const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' });
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+    defval: '',
+    raw: true,
+    blankrows: false,
+  });
 
   if (rows.length === 0) throw new Error('No data rows found in the Excel file');
+  if (rows.length > MAX_IMPORT_ROWS) {
+    throw new Error(`Import file exceeds the maximum supported rows (${MAX_IMPORT_ROWS})`);
+  }
 
   const headers = Object.keys(rows[0]);
 
@@ -176,6 +198,10 @@ export async function executeImport(
   mapping: Record<string, string>,
   rows: Record<string, unknown>[],
 ): Promise<ImportResult> {
+  if (rows.length > MAX_IMPORT_ROWS) {
+    throw new Error(`Import request exceeds the maximum supported rows (${MAX_IMPORT_ROWS})`);
+  }
+
   const fields = ENTITY_FIELDS[entity];
   const modelName = PRISMA_MODEL[entity];
 

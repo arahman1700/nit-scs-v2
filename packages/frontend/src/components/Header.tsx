@@ -47,8 +47,11 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, u
       <div className="flex items-center gap-3 md:gap-4 w-full md:w-auto">
         <span className="lg:hidden font-bold text-lg text-white tracking-wider">NIT</span>
 
-        {/* Desktop Search */}
-        <div className="relative hidden md:block" ref={searchRef}>
+        {/* Search — visible on desktop always, on mobile when toggled */}
+        <div
+          className={`relative ${searchOpen ? 'block absolute left-0 right-0 top-full mt-2 px-4 md:px-0 md:relative md:top-auto md:mt-0' : 'hidden md:block'}`}
+          ref={searchRef}
+        >
           <div className="flex items-center bg-white/5 border border-white/10 rounded-full px-4 py-2 w-64 lg:w-96 focus-within:bg-white/10 focus-within:border-nesma-secondary/50 transition-all focus-within:w-full focus-within:max-w-md group">
             <Search size={18} className="text-gray-400 group-focus-within:text-nesma-secondary transition-colors" />
             <input
@@ -75,7 +78,11 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, u
 
       <div className="flex items-center gap-3 md:gap-6 pl-2">
         {/* Mobile Search Icon */}
-        <button className="md:hidden p-2 text-gray-300 hover:text-white" aria-label="Search">
+        <button
+          className="md:hidden p-2 text-gray-300 hover:text-white"
+          aria-label="Search"
+          onClick={() => setSearchOpen(prev => !prev)}
+        >
           <Search size={20} />
         </button>
 

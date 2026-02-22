@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { paginate } from '../middleware/pagination.js';
 import { sendSuccess, sendCreated } from '../utils/response.js';
 import { auditAndEmit } from '../utils/routeHelpers.js';
@@ -50,62 +50,77 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
 });
 
 // ── Create ───────────────────────────────────────────────────────────
-router.post('/', authenticate, requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const result = await svc.createDocumentType(req.body, req.user!.userId);
-    await auditAndEmit(req, {
-      action: 'create',
-      tableName: 'dynamic_document_types',
-      recordId: result.id,
-      newValues: req.body,
-      entityEvent: 'created',
-      entityName: 'dynamic_document_type',
-    });
-    sendCreated(res, result);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/',
+  authenticate,
+  requirePermission('dynamic_document_type', 'create'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await svc.createDocumentType(req.body, req.user!.userId);
+      await auditAndEmit(req, {
+        action: 'create',
+        tableName: 'dynamic_document_types',
+        recordId: result.id,
+        newValues: req.body,
+        entityEvent: 'created',
+        entityName: 'dynamic_document_type',
+      });
+      sendCreated(res, result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── Update ───────────────────────────────────────────────────────────
-router.put('/:id', authenticate, requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { existing, updated } = await svc.updateDocumentType(req.params.id as string, req.body);
-    await auditAndEmit(req, {
-      action: 'update',
-      tableName: 'dynamic_document_types',
-      recordId: req.params.id as string,
-      oldValues: existing as Record<string, unknown>,
-      newValues: req.body,
-      entityEvent: 'updated',
-      entityName: 'dynamic_document_type',
-    });
-    sendSuccess(res, updated);
-  } catch (err) {
-    next(err);
-  }
-});
+router.put(
+  '/:id',
+  authenticate,
+  requirePermission('dynamic_document_type', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { existing, updated } = await svc.updateDocumentType(req.params.id as string, req.body);
+      await auditAndEmit(req, {
+        action: 'update',
+        tableName: 'dynamic_document_types',
+        recordId: req.params.id as string,
+        oldValues: existing as Record<string, unknown>,
+        newValues: req.body,
+        entityEvent: 'updated',
+        entityName: 'dynamic_document_type',
+      });
+      sendSuccess(res, updated);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── Delete ───────────────────────────────────────────────────────────
-router.delete('/:id', authenticate, requireRole('admin'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await svc.deleteDocumentType(req.params.id as string);
-    await auditAndEmit(req, {
-      action: 'delete',
-      tableName: 'dynamic_document_types',
-      recordId: req.params.id as string,
-    });
-    sendSuccess(res, { deleted: true });
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete(
+  '/:id',
+  authenticate,
+  requirePermission('dynamic_document_type', 'delete'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await svc.deleteDocumentType(req.params.id as string);
+      await auditAndEmit(req, {
+        action: 'delete',
+        tableName: 'dynamic_document_types',
+        recordId: req.params.id as string,
+      });
+      sendSuccess(res, { deleted: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── Add field to type ────────────────────────────────────────────────
 router.post(
   '/:id/fields',
   authenticate,
-  requireRole('admin'),
+  requirePermission('dynamic_document_type', 'create'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const field = await svc.addField(req.params.id as string, req.body);
@@ -120,7 +135,7 @@ router.post(
 router.put(
   '/:id/fields/:fieldId',
   authenticate,
-  requireRole('admin'),
+  requirePermission('dynamic_document_type', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const field = await svc.updateField(req.params.fieldId as string, req.body);
@@ -135,7 +150,7 @@ router.put(
 router.delete(
   '/:id/fields/:fieldId',
   authenticate,
-  requireRole('admin'),
+  requirePermission('dynamic_document_type', 'delete'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await svc.deleteField(req.params.fieldId as string);
@@ -150,7 +165,7 @@ router.delete(
 router.post(
   '/:id/fields/reorder',
   authenticate,
-  requireRole('admin'),
+  requirePermission('dynamic_document_type', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { fieldIds } = req.body as { fieldIds: string[] };

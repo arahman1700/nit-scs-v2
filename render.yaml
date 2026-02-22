@@ -5,7 +5,7 @@ services:
     dockerfilePath: packages/backend/Dockerfile
     dockerContext: .
     plan: free
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -22,9 +22,9 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 4000
+        value: '4000'
       - key: CORS_ORIGIN
-        value: 'https://nit-scs.onrender.com'
+        sync: false
 
 databases:
   - name: nit-scs-v2-db

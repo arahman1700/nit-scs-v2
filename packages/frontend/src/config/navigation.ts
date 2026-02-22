@@ -82,7 +82,10 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
 
-    // ── 6. Interactive Map ──
+    // ── 6. Intelligence ──
+    { label: 'Intelligence', path: '/admin/intelligence' },
+
+    // ── 7. Interactive Map ──
     { label: 'Interactive Map', path: '/admin/map' },
 
     // ── 7. Documents ──
@@ -162,6 +165,7 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
+    { label: 'Intelligence', path: '/warehouse/intelligence' },
     { label: 'Labor Dashboard', path: '/warehouse/labor' },
   ],
   [UserRole.WAREHOUSE_STAFF]: [
@@ -180,6 +184,7 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
+    { label: 'Intelligence', path: '/warehouse/intelligence' },
   ],
   [UserRole.FREIGHT_FORWARDER]: [
     { label: 'Dashboard', path: '/transport' },

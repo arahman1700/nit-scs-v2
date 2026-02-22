@@ -9,6 +9,7 @@ import {
   useEmployees,
   useUpload,
   useCurrentUser,
+  useSmartDefaults,
 } from '@/api/hooks';
 import {
   useCreateMrrv,
@@ -165,6 +166,43 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
   const mrrvListQuery = useMrrvList({ pageSize: 200 });
   const employeesQuery = useEmployees({ pageSize: 200 });
 
+  // Smart defaults — pre-populate warehouse/project/supplier for new documents
+  const smartDefaultsQuery = useSmartDefaults();
+
+  useEffect(() => {
+    if (isEditMode || initialized) return; // Only for new documents
+    const defaults = (
+      smartDefaultsQuery.data as
+        | {
+            data?: {
+              warehouses?: Array<{ name: string }>;
+              projects?: Array<{ name: string }>;
+              suppliers?: Array<{ name: string }>;
+            };
+          }
+        | undefined
+    )?.data;
+    if (!defaults) return;
+
+    setFormData(prev => {
+      const updates: Record<string, unknown> = {};
+      // Pre-fill warehouse if form has a warehouse field and user hasn't set one
+      if (!prev.warehouse && defaults.warehouses?.[0]?.name) {
+        updates.warehouse = defaults.warehouses[0].name;
+      }
+      // Pre-fill project if form has a project field and user hasn't set one
+      if (!prev.project && defaults.projects?.[0]?.name) {
+        updates.project = defaults.projects[0].name;
+      }
+      // Pre-fill supplier if form has a supplier field and user hasn't set one
+      if (!prev.supplier && defaults.suppliers?.[0]?.name) {
+        updates.supplier = defaults.suppliers[0].name;
+      }
+      if (Object.keys(updates).length === 0) return prev;
+      return { ...prev, ...updates };
+    });
+  }, [isEditMode, initialized, smartDefaultsQuery.data]);
+
   // Create mutations
   const createMrrv = useCreateMrrv();
   const createMirv = useCreateMirv();
@@ -307,9 +345,10 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
 
     const warehouseId = warehousesRaw.find(w => w.warehouseName === formData.warehouse)?.id as string | undefined;
 
-    // Convert date fields to ISO 8601 datetime (fall back to DOM input if React state wasn't updated)
-    const formDate = (formData.date as string) || (formData.receiveDate as string) || '';
-    const rawDate = formDate || (document.querySelector('input[type="date"]') as HTMLInputElement | null)?.value || '';
+    // Convert date fields to ISO 8601 datetime
+    const formDate =
+      (formData.date as string) || (formData.receiveDate as string) || (formData.returnDate as string) || '';
+    const rawDate = formDate;
     const receiveDate = rawDate && !rawDate.includes('T') ? `${rawDate}T00:00:00.000Z` : rawDate;
     const rawRequestDate = (formData.requestDate as string) || '';
     const requestDate =
@@ -342,7 +381,7 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       requestDate: requestDate || undefined,
       qciRequired: Boolean(formData.rfimRequired || formData.qciRequired),
       totalValue,
-      type: joType || undefined,
+      type: joType ? joType.toLowerCase() : undefined,
       // MRN: fromWarehouse → fromWarehouseId
       ...(fromWarehouseId ? { fromWarehouseId } : {}),
       // WT: sourceWarehouse/destinationWarehouse → fromWarehouseId/toWarehouseId
@@ -371,9 +410,13 @@ export function useDocumentForm(formType: string | undefined, id: string | undef
       delete payload.purpose;
     }
 
-    // DR: Prisma OsdReport expects `reportTypes` (String[]), not `reportType` (String)
-    if (formType === 'osd' && formData.reportType) {
-      payload.reportTypes = [String(formData.reportType)];
+    // DR: Prisma OsdReport expects `reportTypes` (String[]).
+    // formConfigs uses key `reportTypes` as a single-select, so wrap in array if it's a string.
+    if (formType === 'osd') {
+      const rt = formData.reportTypes ?? formData.reportType;
+      if (rt && !Array.isArray(rt)) {
+        payload.reportTypes = [String(rt)];
+      }
       delete payload.reportType;
     }
 

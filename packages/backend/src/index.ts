@@ -48,7 +48,17 @@ app.set('trust proxy', 1);
 // ── Global Middleware ─────────────────────────────────────────────────────
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: '2mb' }));
+const jsonParser = express.json({ limit: '2mb' });
+app.use((req, res, next) => {
+  // Keep raw body intact for signed webhooks (Svix/Resend).
+  const isResendWebhook =
+    req.method === 'POST' && (req.path === '/api/v1/webhooks/resend' || req.path === '/api/webhooks/resend');
+  if (isResendWebhook) {
+    next();
+    return;
+  }
+  jsonParser(req, res, next);
+});
 app.use(compression());
 app.use(cookieParser());
 app.use(sanitizeInput());

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import * as navigationService from '../services/navigation.service.js';
 
 const router = Router();
@@ -17,8 +17,8 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// PUT /navigation/order — admin-only: reorder items for a role
-router.put('/order', requireRole('admin'), async (req, res, next) => {
+// PUT /navigation/order — reorder items for a role
+router.put('/order', requirePermission('navigation', 'update'), async (req, res, next) => {
   try {
     const { role, overrides } = req.body;
     await navigationService.updateNavigationOrder(role, overrides);
@@ -28,8 +28,8 @@ router.put('/order', requireRole('admin'), async (req, res, next) => {
   }
 });
 
-// PUT /navigation/visibility — admin-only: toggle item visibility
-router.put('/visibility', requireRole('admin'), async (req, res, next) => {
+// PUT /navigation/visibility — toggle item visibility
+router.put('/visibility', requirePermission('navigation', 'update'), async (req, res, next) => {
   try {
     const { role, path, hidden } = req.body;
     if (hidden) {

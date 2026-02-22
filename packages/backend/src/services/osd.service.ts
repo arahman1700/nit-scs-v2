@@ -2,7 +2,11 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../events/event-bus.js';
 import type { OsdCreateDto, OsdUpdateDto, OsdLineDto, ListParams } from '../types/dto.js';
+
+const DOC_TYPE = 'dr';
 
 const LIST_INCLUDE = {
   mrrv: { select: { id: true, mrrvNumber: true } },
@@ -133,14 +137,23 @@ export async function update(id: string, data: OsdUpdateDto) {
 export async function sendClaim(id: string, claimReference?: string) {
   const osd = await prisma.osdReport.findUnique({ where: { id } });
   if (!osd) throw new NotFoundError('OSD report', id);
-  if (osd.status !== 'draft' && osd.status !== 'under_review') {
-    throw new BusinessRuleError('OSD must be draft or under review to send claim');
-  }
+  assertTransition(DOC_TYPE, osd.status, 'claim_sent');
 
-  return prisma.osdReport.update({
+  const updated = await prisma.osdReport.update({
     where: { id: osd.id },
     data: { status: 'claim_sent', claimSentDate: new Date(), claimReference: claimReference ?? null },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'osd_report',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: osd.status, to: 'claim_sent' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function resolve(
@@ -151,12 +164,9 @@ export async function resolve(
   const osd = await prisma.osdReport.findUnique({ where: { id } });
   if (!osd) throw new NotFoundError('OSD report', id);
 
-  const validStatuses = ['claim_sent', 'awaiting_response', 'negotiating'];
-  if (!validStatuses.includes(osd.status)) {
-    throw new BusinessRuleError(`OSD cannot be resolved from status: ${osd.status}`);
-  }
+  assertTransition(DOC_TYPE, osd.status, 'resolved');
 
-  return prisma.osdReport.update({
+  const updated = await prisma.osdReport.update({
     where: { id: osd.id },
     data: {
       status: 'resolved',
@@ -168,4 +178,16 @@ export async function resolve(
       responseDate: params.supplierResponse ? new Date() : null,
     },
   });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'osd_report',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: osd.status, to: 'resolved', resolutionType: params.resolutionType },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }

@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../types/dto.js';
 import { log } from '../config/logger.js';
@@ -137,6 +138,7 @@ export async function updateStatus(
 ) {
   const existing = await prisma.shipment.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('Shipment', id);
+  assertTransition('shipment', existing.status, status);
 
   const updateData: Record<string, unknown> = { status };
   if (extra.actualShipDate) updateData.actualShipDate = new Date(extra.actualShipDate);
@@ -144,6 +146,16 @@ export async function updateStatus(
   if (extra.actualArrivalDate) updateData.actualArrivalDate = new Date(extra.actualArrivalDate);
 
   const updated = await prisma.shipment.update({ where: { id }, data: updateData });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'shipment',
+    entityId: id,
+    action: 'status_change',
+    payload: { from: existing.status, to: status },
+    timestamp: new Date().toISOString(),
+  });
+
   return { existing, updated };
 }
 
@@ -228,10 +240,7 @@ export async function deliver(id: string, userId?: string) {
   });
   if (!shipment) throw new NotFoundError('Shipment', id);
 
-  const deliverable = ['cleared', 'in_delivery'];
-  if (!deliverable.includes(shipment.status)) {
-    throw new BusinessRuleError(`Shipment cannot be delivered from status: ${shipment.status}`);
-  }
+  assertTransition('shipment', shipment.status, 'delivered');
 
   const result = await prisma.$transaction(async tx => {
     const updated = await tx.shipment.update({
@@ -322,10 +331,18 @@ export async function cancel(id: string) {
   const shipment = await prisma.shipment.findUnique({ where: { id } });
   if (!shipment) throw new NotFoundError('Shipment', id);
 
-  const nonCancellable = ['delivered', 'cancelled'];
-  if (nonCancellable.includes(shipment.status)) {
-    throw new BusinessRuleError(`Shipment cannot be cancelled from status: ${shipment.status}`);
-  }
+  assertTransition('shipment', shipment.status, 'cancelled');
 
-  return prisma.shipment.update({ where: { id: shipment.id }, data: { status: 'cancelled' } });
+  const updated = await prisma.shipment.update({ where: { id: shipment.id }, data: { status: 'cancelled' } });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'shipment',
+    entityId: shipment.id,
+    action: 'status_change',
+    payload: { from: shipment.status, to: 'cancelled' },
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }

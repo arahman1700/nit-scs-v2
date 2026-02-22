@@ -3,6 +3,7 @@ import { generateDocumentNumber } from './document-number.service.js';
 import { createAuditLog } from './audit.service.js';
 import { log } from '../config/logger.js';
 import { invalidateCachePattern } from '../utils/cache.js';
+import { eventBus } from '../events/event-bus.js';
 
 /** Invalidate dashboard caches that depend on inventory data */
 async function invalidateInventoryCache(): Promise<void> {
@@ -148,12 +149,40 @@ async function checkLowStockAlert(
       data: { alertSent: true },
     });
 
-    log(
-      alertType === 'critical' ? 'warn' : 'info',
-      `[Inventory] Low stock ${alertType}: ${level.item.itemCode} (${level.item.itemDescription}) ` +
-        `at ${level.warehouse.warehouseCode} — available: ${available}, ` +
-        `${alertType === 'critical' ? `minLevel: ${minLevel}` : `reorderPoint: ${reorderPoint}`}`,
-    );
+    const title =
+      alertType === 'critical'
+        ? `Critical: ${level.item.itemCode} below minimum at ${level.warehouse.warehouseCode}`
+        : `Low Stock: ${level.item.itemCode} at reorder point in ${level.warehouse.warehouseCode}`;
+
+    const body =
+      `${level.item.itemDescription} — available: ${available}. ` +
+      (alertType === 'critical' ? `Min level: ${minLevel}.` : `Reorder point: ${reorderPoint}.`);
+
+    log(alertType === 'critical' ? 'warn' : 'info', `[Inventory] Low stock ${alertType}: ${title}`);
+
+    // Create real Notification records for warehouse supervisors (fire-and-forget outside tx)
+    // We schedule this after the transaction commits by queueing to event bus
+    eventBus.publish({
+      type: 'inventory:low_stock',
+      entityType: 'inventory_level',
+      entityId: `${itemId}:${warehouseId}`,
+      action: alertType === 'critical' ? 'critical_low_stock' : 'low_stock_warning',
+      payload: {
+        itemId,
+        warehouseId,
+        itemCode: level.item.itemCode,
+        itemDescription: level.item.itemDescription,
+        warehouseCode: level.warehouse.warehouseCode,
+        warehouseName: level.warehouse.warehouseName,
+        available,
+        minLevel,
+        reorderPoint,
+        alertType,
+        title,
+        body,
+      },
+      timestamp: new Date().toISOString(),
+    });
   }
 }
 

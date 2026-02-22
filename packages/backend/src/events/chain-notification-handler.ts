@@ -222,6 +222,87 @@ async function handleDocumentStatusChange(event: SystemEvent): Promise<void> {
   }
 }
 
+// ── Damaged Return Inspection Handler ──────────────────────────────────
+
+async function handleBlockedLotsCreated(event: SystemEvent): Promise<void> {
+  if (event.type !== 'inventory:blocked_lots_created') return;
+
+  const { mrvNumber, damagedLineCount } = event.payload as {
+    mrvNumber: string;
+    damagedLineCount: number;
+  };
+
+  try {
+    const recipients = await prisma.employee.findMany({
+      where: {
+        systemRole: { in: ['qc_inspector', 'warehouse_supervisor', 'quality_manager'] },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    if (recipients.length === 0) return;
+
+    await prisma.notification.createMany({
+      data: recipients.map(r => ({
+        recipientId: r.id,
+        title: `Inspection Required: ${damagedLineCount} damaged item(s) from MRN ${mrvNumber}`.slice(0, 200),
+        body: `Material return ${mrvNumber} has ${damagedLineCount} damaged/used item(s) stored as blocked lots. Quality inspection is required before these items can be released for use.`,
+        notificationType: 'inspection_required',
+        referenceTable: 'mrv',
+        referenceId: event.entityId,
+      })),
+    });
+
+    log('info', `[ChainNotification] Created ${recipients.length} inspection notification(s) for MRN ${mrvNumber}`);
+  } catch (err) {
+    log('error', `[ChainNotification] Failed to create inspection notifications: ${err}`);
+  }
+}
+
+// ── Low Stock Alert Handler ────────────────────────────────────────────
+
+async function handleLowStockAlert(event: SystemEvent): Promise<void> {
+  if (event.type !== 'inventory:low_stock') return;
+
+  const { title, body, alertType } = event.payload as {
+    title: string;
+    body: string;
+    alertType: string;
+  };
+
+  try {
+    // Notify warehouse supervisors and managers
+    const recipientRoles =
+      alertType === 'critical' ? ['warehouse_supervisor', 'manager', 'admin'] : ['warehouse_supervisor'];
+
+    const recipients = await prisma.employee.findMany({
+      where: {
+        systemRole: { in: recipientRoles },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    if (recipients.length === 0) return;
+
+    await prisma.notification.createMany({
+      data: recipients.map(r => ({
+        recipientId: r.id,
+        title: title.slice(0, 200),
+        body,
+        notificationType: alertType === 'critical' ? 'low_stock_critical' : 'low_stock_warning',
+        referenceTable: 'inventory_levels',
+        referenceId: null, // composite key — no single UUID
+      })),
+    });
+
+    log('info', `[ChainNotification] Created ${recipients.length} low-stock notification(s): ${title}`);
+  } catch (err) {
+    log('error', `[ChainNotification] Failed to create low-stock notifications: ${err}`);
+  }
+}
+
 // ── Start / Stop ───────────────────────────────────────────────────────
 
 let started = false;
@@ -230,6 +311,8 @@ export function startChainNotifications(): void {
   if (started) return;
   started = true;
   eventBus.on('document:status_changed', handleDocumentStatusChange);
+  eventBus.on('inventory:low_stock', handleLowStockAlert);
+  eventBus.on('inventory:blocked_lots_created', handleBlockedLotsCreated);
   // Also listen on wildcard for events that use action: 'status_change' pattern
   eventBus.on('*', (event: SystemEvent) => {
     if (event.type !== 'document:status_changed' && event.action === 'status_change') {

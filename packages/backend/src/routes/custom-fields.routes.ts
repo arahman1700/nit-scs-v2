@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import {
   listFieldDefinitions,
   getFieldDefinition,
@@ -40,7 +40,7 @@ router.get('/definitions/:id', async (req, res, next) => {
 });
 
 // POST /definitions
-router.post('/definitions', requireRole('admin'), async (req, res, next) => {
+router.post('/definitions', requirePermission('custom_field', 'create'), async (req, res, next) => {
   try {
     const def = await createFieldDefinition(req.body);
     createAuditLog({
@@ -60,7 +60,7 @@ router.post('/definitions', requireRole('admin'), async (req, res, next) => {
 });
 
 // PUT /definitions/:id
-router.put('/definitions/:id', requireRole('admin'), async (req, res, next) => {
+router.put('/definitions/:id', requirePermission('custom_field', 'update'), async (req, res, next) => {
   try {
     const def = await updateFieldDefinition(req.params.id as string, req.body);
     createAuditLog({
@@ -80,7 +80,7 @@ router.put('/definitions/:id', requireRole('admin'), async (req, res, next) => {
 });
 
 // DELETE /definitions/:id
-router.delete('/definitions/:id', requireRole('admin'), async (req, res, next) => {
+router.delete('/definitions/:id', requirePermission('custom_field', 'delete'), async (req, res, next) => {
   try {
     await deleteFieldDefinition(req.params.id as string);
     createAuditLog({

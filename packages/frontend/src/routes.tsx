@@ -99,6 +99,9 @@ const OperationsDashboard = React.lazy(() =>
 const ExceptionDashboard = React.lazy(() =>
   import('@/pages/dashboards/ExceptionDashboard').then(m => ({ default: m.ExceptionDashboard })),
 );
+const DepreciationDashboard = React.lazy(() =>
+  import('@/pages/dashboards/DepreciationDashboard').then(m => ({ default: m.DepreciationDashboard })),
+);
 
 // V2 Form imports (additional)
 const HandoverForm = React.lazy(() => import('@/pages/forms/HandoverForm').then(m => ({ default: m.HandoverForm })));
@@ -296,6 +299,11 @@ const AiInsightsPage = React.lazy(() =>
   import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
 );
 
+// Inventory Intelligence — anomaly detection, reorder predictions, health
+const IntelligencePage = React.lazy(() =>
+  import('@/pages/warehouse/IntelligencePage').then(m => ({ default: m.IntelligencePage })),
+);
+
 // Features Showcase & ROI Calculator (Admin)
 const FeaturesShowcasePage = React.lazy(() =>
   import('@/pages/admin/FeaturesShowcasePage').then(m => ({ default: m.FeaturesShowcasePage })),
@@ -396,6 +404,7 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/dashboards/forecast" element={<ForecastDashboard />} />
     <Route path="/admin/dashboards/operations" element={<OperationsDashboard />} />
     <Route path="/admin/dashboards/exceptions" element={<ExceptionDashboard />} />
+    <Route path="/admin/dashboards/depreciation" element={<DepreciationDashboard />} />
     <Route path="/admin/warehouse/putaway-rules" element={<PutAwayRulesPage />} />
     <Route path="/admin/warehouse/cycle-counts" element={<CycleCountListPage />} />
     <Route path="/admin/warehouse/cycle-counts/:id" element={<CycleCountDetailPage />} />
@@ -428,6 +437,9 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
 
     {/* AI Insights (optional) */}
     <Route path="/admin/ai-insights" element={<AiInsightsPage />} />
+
+    {/* Inventory Intelligence */}
+    <Route path="/admin/intelligence" element={<IntelligencePage />} />
 
     {/* Features Showcase & ROI Calculator */}
     <Route path="/admin/features" element={<FeaturesShowcasePage />} />
@@ -532,6 +544,14 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
       element={
         <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
           <PutAwayRulesPage />
+        </RoleGuard>
+      }
+    />
+    <Route
+      path="/warehouse/intelligence"
+      element={
+        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+          <IntelligencePage />
         </RoleGuard>
       }
     />

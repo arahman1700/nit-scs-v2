@@ -187,6 +187,28 @@ export async function complete(id: string, userId: string) {
     timestamp: new Date().toISOString(),
   });
 
+  // If damaged items were returned, notify QC team for inspection of blocked lots
+  if (damagedLines.length > 0) {
+    eventBus.publish({
+      type: 'inventory:blocked_lots_created',
+      entityType: 'mrv',
+      entityId: mrn.id,
+      action: 'damaged_return_inspection_needed',
+      payload: {
+        mrvNumber: mrn.mrvNumber,
+        toWarehouseId: mrn.toWarehouseId,
+        damagedLineCount: damagedLines.length,
+        items: damagedLines.map(l => ({
+          itemId: l.itemId,
+          qty: Number(l.qtyReturned),
+          condition: l.condition,
+        })),
+      },
+      performedById: userId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   return {
     id: mrn.id,
     toWarehouseId: mrn.toWarehouseId,

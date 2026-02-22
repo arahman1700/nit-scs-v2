@@ -11,6 +11,7 @@ const WRITE_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
 export default createDocumentRouter({
   docType: 'tool_issue',
   tableName: 'tool_issues',
+  resource: 'tool_issue',
   scopeMapping: { createdByField: 'issuedById' },
 
   list: toolIssueService.list,

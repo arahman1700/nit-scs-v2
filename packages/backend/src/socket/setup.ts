@@ -73,7 +73,21 @@ export function setupSocketIO(io: SocketIOServer) {
   });
 
   io.on('connection', socket => {
-    const { userId, role } = socket.data.user;
+    const {
+      userId,
+      systemRole,
+      role: legacyRole,
+    } = socket.data.user as {
+      userId: string;
+      systemRole?: string;
+      role?: string;
+    };
+    const role = systemRole || legacyRole;
+    if (!role) {
+      log('warn', `[Socket.IO] Missing role in JWT payload for user ${userId}, disconnecting`);
+      socket.disconnect(true);
+      return;
+    }
     log('info', `[Socket.IO] Connected: ${userId} (${role})`);
 
     // Join role-based room

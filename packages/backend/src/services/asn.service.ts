@@ -236,6 +236,14 @@ export async function receiveAsn(id: string, userId: string) {
   const result = await prisma.$transaction(async (tx: TransactionClient) => {
     const grnNumber = await generateDocumentNumber('grn');
 
+    // Resolve each item's default UOM for GRN lines
+    const itemIds = existing.lines.map(l => l.itemId);
+    const items = await tx.item.findMany({
+      where: { id: { in: itemIds } },
+      select: { id: true, uomId: true },
+    });
+    const itemUomMap = new Map(items.map(i => [i.id, i.uomId]));
+
     const grn = await tx.mrrv.create({
       data: {
         mrrvNumber: grnNumber,
@@ -251,7 +259,7 @@ export async function receiveAsn(id: string, userId: string) {
             itemId: line.itemId,
             qtyOrdered: Number(line.qtyExpected),
             qtyReceived: Number(line.qtyExpected),
-            uomId: line.itemId, // placeholder — resolved by item's default UOM
+            uomId: itemUomMap.get(line.itemId) ?? line.itemId, // use item's default UOM
             condition: 'good',
             lotNumber: line.lotNumber || null,
           })),

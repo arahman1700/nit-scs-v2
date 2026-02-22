@@ -12,6 +12,7 @@ const APPROVE_ROLES = ['admin', 'manager'];
 export default createDocumentRouter({
   docType: 'rental_contract',
   tableName: 'rental_contracts',
+  resource: 'rental_contract',
   scopeMapping: { createdByField: 'createdById' },
 
   list: rentalContractService.list,

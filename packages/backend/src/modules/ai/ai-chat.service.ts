@@ -79,7 +79,7 @@ export async function chat(
   userId: string,
   conversationId: string | undefined,
   message: string,
-  _userRole: string,
+  userRole: string,
   _userProjectId?: string,
 ): Promise<ChatResult> {
   // Get or create conversation
@@ -147,19 +147,28 @@ export async function chat(
         finalContent = `I generated a query but it was blocked for safety: ${validation.reason}\n\n${explanation || ''}`;
         generatedQuery = undefined;
       } else {
-        // Execute the query inside a read-only transaction with 5s timeout
-        try {
-          resultData = await prisma.$transaction(
-            async tx => {
-              await tx.$queryRawUnsafe('SET TRANSACTION READ ONLY');
-              return tx.$queryRawUnsafe(query);
-            },
-            { timeout: 5000 },
-          );
-          finalContent = explanation || 'Here are the results.';
-        } catch (queryErr) {
-          logger.warn({ err: queryErr, query }, 'AI query execution failed');
-          finalContent = `I tried to run a query but it failed. ${explanation || 'Let me try differently.'}`;
+        const sqlExecutionEnabled = process.env.AI_ALLOW_SQL_EXECUTION === 'true';
+        const canExecuteQuery = sqlExecutionEnabled && userRole === 'admin';
+
+        if (!canExecuteQuery) {
+          finalContent =
+            `${explanation || 'I generated a query for your question.'}\n\n` +
+            'Query execution is disabled or restricted to admin for safety.';
+        } else {
+          // Execute the query inside a read-only transaction with 5s timeout
+          try {
+            resultData = await prisma.$transaction(
+              async tx => {
+                await tx.$queryRawUnsafe('SET TRANSACTION READ ONLY');
+                return tx.$queryRawUnsafe(query);
+              },
+              { timeout: 5000 },
+            );
+            finalContent = explanation || 'Here are the results.';
+          } catch (queryErr) {
+            logger.warn({ err: queryErr, query }, 'AI query execution failed');
+            finalContent = `I tried to run a query but it failed. ${explanation || 'Let me try differently.'}`;
+          }
         }
       }
     } else {
@@ -203,15 +212,16 @@ export async function listConversations(userId: string) {
   });
 }
 
-export async function getConversation(conversationId: string) {
-  return prisma.aiConversation.findUnique({
-    where: { id: conversationId },
+export async function getConversation(conversationId: string, userId: string) {
+  return prisma.aiConversation.findFirst({
+    where: { id: conversationId, userId },
     include: {
       messages: { orderBy: { createdAt: 'asc' } },
     },
   });
 }
 
-export async function deleteConversation(conversationId: string) {
-  await prisma.aiConversation.delete({ where: { id: conversationId } });
+export async function deleteConversation(conversationId: string, userId: string) {
+  const result = await prisma.aiConversation.deleteMany({ where: { id: conversationId, userId } });
+  return result.count > 0;
 }

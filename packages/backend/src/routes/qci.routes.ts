@@ -1,12 +1,13 @@
 /**
  * QCI (Quality Control Inspection) Routes — V2 rename of RFIM
- * Delegates to V1 rfim.service internally.
+ * Now delegates to V2 qci.service which has EventBus events, transactions,
+ * conditional completion flow, and auto-advance GRN/auto-create DR.
  */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../utils/document-factory.js';
 import { qciUpdateSchema } from '../schemas/document.schema.js';
 import { emitToDocument } from '../socket/setup.js';
-import * as rfimService from '../services/rfim.service.js';
+import * as qciService from '../services/qci.service.js';
 import type { QciUpdateDto } from '../types/dto.js';
 
 const ROLES = ['admin', 'manager', 'qc_officer', 'warehouse_supervisor'];
@@ -14,24 +15,23 @@ const ROLES = ['admin', 'manager', 'qc_officer', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'qci',
   tableName: 'rfim',
-  // QCI scoping: list filtering is via mrrv.warehouseId (handled in service),
-  // getById/action access check uses inspectorId as creator field
+  resource: 'qci',
   scopeMapping: { warehouseField: 'warehouseId', createdByField: 'inspectorId' },
 
-  list: rfimService.list,
-  getById: rfimService.getById,
+  list: qciService.list,
+  getById: qciService.getById,
 
   // QCI is auto-created from GRN submit — no create route
   createRoles: ROLES,
   updateSchema: qciUpdateSchema,
   updateRoles: ROLES,
-  update: (id, body) => rfimService.update(id, body as QciUpdateDto),
+  update: (id, body) => qciService.update(id, body as QciUpdateDto),
 
   actions: [
     {
       path: 'start',
       roles: ['admin', 'qc_officer'],
-      handler: (id, req) => rfimService.start(id, req.user!.userId),
+      handler: (id, req) => qciService.start(id, req.user!.userId),
       socketEvent: 'qci:started',
       socketData: r => ({ status: 'in_progress', ...(r as Record<string, unknown>) }),
     },
@@ -40,14 +40,14 @@ export default createDocumentRouter({
       roles: ['admin', 'qc_officer'],
       handler: async (id, req) => {
         const { result, comments } = req.body as { result?: string; comments?: string };
-        const svcResult = await rfimService.complete(id, result!, comments);
+        const svcResult = await qciService.complete(id, result!, comments);
         const { updated, mrrvId } = svcResult;
         // Notify the linked GRN
         const io = req.app.get('io') as SocketIOServer | undefined;
         const effectiveStatus = (svcResult as { pmApprovalRequired?: boolean }).pmApprovalRequired
           ? 'completed_conditional'
           : 'completed';
-        if (io) emitToDocument(io, mrrvId, 'qci:completed', { qciId: id, result, status: effectiveStatus });
+        if (io && mrrvId) emitToDocument(io, mrrvId, 'qci:completed', { qciId: id, result, status: effectiveStatus });
         return updated;
       },
       socketEvent: 'qci:completed',
@@ -58,10 +58,10 @@ export default createDocumentRouter({
       roles: ['admin', 'manager'],
       handler: async (id, req) => {
         const { comments } = req.body as { comments?: string };
-        const { updated, mrrvId } = await rfimService.pmApprove(id, req.user!.userId, comments);
+        const svcResult = await qciService.pmApprove(id, req.user!.userId, comments);
         const io = req.app.get('io') as SocketIOServer | undefined;
-        if (io) emitToDocument(io, mrrvId, 'qci:pm_approved', { qciId: id });
-        return updated;
+        if (io && svcResult.mrrvId) emitToDocument(io, svcResult.mrrvId, 'qci:pm_approved', { qciId: id });
+        return svcResult.updated;
       },
       socketEvent: 'qci:pm_approved',
       socketData: r => ({ status: 'completed', ...(r as Record<string, unknown>) }),

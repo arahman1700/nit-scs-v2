@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
 import { previewTemplate } from '../services/email.service.js';
 
 const router = Router();
 
-// All template routes require admin
-router.use(authenticate, requireRole('admin'));
+// All template routes require authentication + read permission
+router.use(authenticate, requirePermission('email_template', 'read'));
 
 // GET /api/email-templates — list all templates
 router.get('/', async (_req, res, next) => {
@@ -39,7 +39,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/email-templates — create a template
-router.post('/', async (req, res, next) => {
+router.post('/', requirePermission('email_template', 'create'), async (req, res, next) => {
   try {
     const { code, name, subject, bodyHtml, variables, isActive } = req.body;
     if (!code || !name || !subject || !bodyHtml) {
@@ -63,7 +63,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // PUT /api/email-templates/:id — update a template
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', requirePermission('email_template', 'update'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     const { name, subject, bodyHtml, variables, isActive } = req.body;
@@ -84,7 +84,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // DELETE /api/email-templates/:id — delete a template
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requirePermission('email_template', 'delete'), async (req, res, next) => {
   try {
     const id = req.params.id as string;
     await prisma.emailTemplate.delete({ where: { id } });

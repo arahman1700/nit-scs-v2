@@ -85,7 +85,10 @@ describe('import.service', () => {
 
       const result = parseExcelPreview(Buffer.from('data'), 'items');
 
-      expect(XLSX.read).toHaveBeenCalledWith(Buffer.from('data'), { type: 'buffer' });
+      expect(XLSX.read).toHaveBeenCalledWith(
+        Buffer.from('data'),
+        expect.objectContaining({ type: 'buffer', dense: true, cellFormula: false }),
+      );
       expect(result.headers).toEqual(['Code', 'Name']);
       expect(result.sampleRows).toEqual(mockRows);
       expect(result.totalRows).toBe(3);

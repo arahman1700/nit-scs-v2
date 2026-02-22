@@ -9,6 +9,7 @@ const APPROVE_ROLES = ['admin', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'gate-passes',
   tableName: 'gate_passes',
+  resource: 'gatepass',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'issuedById' },
 
   list: gatePassService.list,

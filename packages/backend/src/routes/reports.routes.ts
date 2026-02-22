@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { prisma } from '../utils/prisma.js';
 import { sendSuccess } from '../utils/response.js';
 
@@ -43,9 +43,13 @@ router.get('/inventory-summary', authenticate, async (req: Request, res: Respons
 
     // Resolve warehouse names
     const warehouseIds = byWarehouse.map(w => w.warehouseId);
-    const warehouses = warehouseIds.length > 0
-      ? await prisma.warehouse.findMany({ where: { id: { in: warehouseIds } }, select: { id: true, warehouseName: true } })
-      : [];
+    const warehouses =
+      warehouseIds.length > 0
+        ? await prisma.warehouse.findMany({
+            where: { id: { in: warehouseIds } },
+            select: { id: true, warehouseName: true },
+          })
+        : [];
     const whMap = new Map(warehouses.map(w => [w.id, w.warehouseName]));
 
     sendSuccess(res, {
@@ -172,100 +176,117 @@ router.get('/material-movement', authenticate, async (req: Request, res: Respons
 });
 
 // GET /api/reports/supplier-performance — Admin/Manager only
-router.get('/supplier-performance', authenticate, requireRole('admin', 'manager'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { dateFrom, dateTo } = parseDateFilters(req.query as Record<string, unknown>);
-    const where: Record<string, unknown> = {};
-    if (dateFrom || dateTo) {
-      where.receiveDate = {};
-      if (dateFrom) (where.receiveDate as Record<string, unknown>).gte = dateFrom;
-      if (dateTo) (where.receiveDate as Record<string, unknown>).lte = dateTo;
-    }
+router.get(
+  '/supplier-performance',
+  authenticate,
+  requirePermission('reports', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { dateFrom, dateTo } = parseDateFilters(req.query as Record<string, unknown>);
+      const where: Record<string, unknown> = {};
+      if (dateFrom || dateTo) {
+        where.receiveDate = {};
+        if (dateFrom) (where.receiveDate as Record<string, unknown>).gte = dateFrom;
+        if (dateTo) (where.receiveDate as Record<string, unknown>).lte = dateTo;
+      }
 
-    const supplierMrrv = await prisma.mrrv.groupBy({
-      by: ['supplierId'],
-      where,
-      _count: { id: true },
-      _sum: { totalValue: true },
-    });
-
-    const supplierIds = supplierMrrv.map(s => s.supplierId);
-    const suppliers = supplierIds.length > 0
-      ? await prisma.supplier.findMany({ where: { id: { in: supplierIds } }, select: { id: true, supplierName: true, rating: true } })
-      : [];
-    const suppMap = new Map(suppliers.map(s => [s.id, s]));
-
-    // Count OSD reports per supplier
-    const osdCounts = await prisma.osdReport.groupBy({
-      by: ['supplierId'],
-      where: { supplierId: { in: supplierIds } },
-      _count: { id: true },
-    });
-    const osdMap = new Map(osdCounts.map(o => [o.supplierId, o._count.id]));
-
-    sendSuccess(res, supplierMrrv.map(s => ({
-      supplierId: s.supplierId,
-      supplierName: suppMap.get(s.supplierId)?.supplierName ?? 'Unknown',
-      rating: suppMap.get(s.supplierId)?.rating ?? null,
-      deliveries: s._count.id,
-      totalValue: s._sum.totalValue ?? 0,
-      osdReports: osdMap.get(s.supplierId) ?? 0,
-    })));
-  } catch (err) {
-    next(err);
-  }
-});
-
-// GET /api/reports/financial-summary — Admin/Manager only
-router.get('/financial-summary', authenticate, requireRole('admin', 'manager'), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { dateFrom, dateTo, projectId } = parseDateFilters(req.query as Record<string, unknown>);
-    const joWhere: Record<string, unknown> = {};
-    const mrrvWhere: Record<string, unknown> = {};
-    if (projectId) {
-      joWhere.projectId = projectId;
-      mrrvWhere.projectId = projectId;
-    }
-    if (dateFrom || dateTo) {
-      const dateRange: Record<string, unknown> = {};
-      if (dateFrom) dateRange.gte = dateFrom;
-      if (dateTo) dateRange.lte = dateTo;
-      joWhere.requestDate = dateRange;
-      mrrvWhere.receiveDate = dateRange;
-    }
-
-    const [joTotals, mrrvTotals, paymentTotals, inventoryValue] = await Promise.all([
-      prisma.jobOrder.aggregate({ where: joWhere, _sum: { totalAmount: true }, _count: { id: true } }),
-      prisma.mrrv.aggregate({ where: mrrvWhere, _sum: { totalValue: true }, _count: { id: true } }),
-      prisma.joPayment.aggregate({
-        where: { jobOrder: joWhere },
-        _sum: { grandTotal: true },
+      const supplierMrrv = await prisma.mrrv.groupBy({
+        by: ['supplierId'],
+        where,
         _count: { id: true },
-      }),
-      prisma.inventoryLot.aggregate({
-        where: { status: 'active' },
-        _sum: { availableQty: true },
-      }),
-    ]);
+        _sum: { totalValue: true },
+      });
 
-    sendSuccess(res, {
-      jobOrders: {
-        count: joTotals._count.id,
-        totalAmount: joTotals._sum.totalAmount ?? 0,
-      },
-      receipts: {
-        count: mrrvTotals._count.id,
-        totalValue: mrrvTotals._sum.totalValue ?? 0,
-      },
-      payments: {
-        count: paymentTotals._count.id,
-        totalPaid: paymentTotals._sum.grandTotal ?? 0,
-      },
-      inventoryValue: inventoryValue._sum.availableQty ?? 0,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+      const supplierIds = supplierMrrv.map(s => s.supplierId);
+      const suppliers =
+        supplierIds.length > 0
+          ? await prisma.supplier.findMany({
+              where: { id: { in: supplierIds } },
+              select: { id: true, supplierName: true, rating: true },
+            })
+          : [];
+      const suppMap = new Map(suppliers.map(s => [s.id, s]));
+
+      // Count OSD reports per supplier
+      const osdCounts = await prisma.osdReport.groupBy({
+        by: ['supplierId'],
+        where: { supplierId: { in: supplierIds } },
+        _count: { id: true },
+      });
+      const osdMap = new Map(osdCounts.map(o => [o.supplierId, o._count.id]));
+
+      sendSuccess(
+        res,
+        supplierMrrv.map(s => ({
+          supplierId: s.supplierId,
+          supplierName: suppMap.get(s.supplierId)?.supplierName ?? 'Unknown',
+          rating: suppMap.get(s.supplierId)?.rating ?? null,
+          deliveries: s._count.id,
+          totalValue: s._sum.totalValue ?? 0,
+          osdReports: osdMap.get(s.supplierId) ?? 0,
+        })),
+      );
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// GET /api/reports/financial-summary — requires reports read permission
+router.get(
+  '/financial-summary',
+  authenticate,
+  requirePermission('reports', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { dateFrom, dateTo, projectId } = parseDateFilters(req.query as Record<string, unknown>);
+      const joWhere: Record<string, unknown> = {};
+      const mrrvWhere: Record<string, unknown> = {};
+      if (projectId) {
+        joWhere.projectId = projectId;
+        mrrvWhere.projectId = projectId;
+      }
+      if (dateFrom || dateTo) {
+        const dateRange: Record<string, unknown> = {};
+        if (dateFrom) dateRange.gte = dateFrom;
+        if (dateTo) dateRange.lte = dateTo;
+        joWhere.requestDate = dateRange;
+        mrrvWhere.receiveDate = dateRange;
+      }
+
+      const [joTotals, mrrvTotals, paymentTotals, inventoryValue] = await Promise.all([
+        prisma.jobOrder.aggregate({ where: joWhere, _sum: { totalAmount: true }, _count: { id: true } }),
+        prisma.mrrv.aggregate({ where: mrrvWhere, _sum: { totalValue: true }, _count: { id: true } }),
+        prisma.joPayment.aggregate({
+          where: { jobOrder: joWhere },
+          _sum: { grandTotal: true },
+          _count: { id: true },
+        }),
+        prisma.inventoryLot.aggregate({
+          where: { status: 'active' },
+          _sum: { availableQty: true },
+        }),
+      ]);
+
+      sendSuccess(res, {
+        jobOrders: {
+          count: joTotals._count.id,
+          totalAmount: joTotals._sum.totalAmount ?? 0,
+        },
+        receipts: {
+          count: mrrvTotals._count.id,
+          totalValue: mrrvTotals._sum.totalValue ?? 0,
+        },
+        payments: {
+          count: paymentTotals._count.id,
+          totalPaid: paymentTotals._sum.grandTotal ?? 0,
+        },
+        inventoryValue: inventoryValue._sum.availableQty ?? 0,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

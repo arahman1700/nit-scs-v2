@@ -8,6 +8,7 @@ import { importExecuteSchema } from '../schemas/import.schema.js';
 import { parseExcelPreview, executeImport, getExpectedFields } from '../services/import.service.js';
 import { createAuditLog } from '../services/audit.service.js';
 import { clientIp } from '../utils/helpers.js';
+import { extname } from 'node:path';
 import type { Request, Response, NextFunction } from 'express';
 import type { ImportableEntity } from '../schemas/import.schema.js';
 
@@ -18,16 +19,18 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
   fileFilter: (_req, file, cb) => {
-    const allowed = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-      'text/csv',
-    ];
-    if (allowed.includes(file.mimetype)) {
+    const extension = extname(file.originalname || '').toLowerCase();
+    const isXlsx =
+      extension === '.xlsx' && file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const isCsv =
+      extension === '.csv' && ['text/csv', 'application/csv', 'application/vnd.ms-excel'].includes(file.mimetype);
+
+    if (isXlsx || isCsv) {
       cb(null, true);
-    } else {
-      cb(new Error('Only .xlsx, .xls, and .csv files are accepted'));
+      return;
     }
+
+    cb(new Error('Only .xlsx and .csv files are accepted'));
   },
 });
 

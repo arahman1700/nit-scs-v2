@@ -203,8 +203,8 @@ describe('osd.service', () => {
   // sendClaim
   // ─────────────────────────────────────────────────────────────────────────
   describe('sendClaim', () => {
-    it('should send claim from draft status', async () => {
-      const osd = { id: 'osd-1', status: 'draft' };
+    it('should send claim from under_review status', async () => {
+      const osd = { id: 'osd-1', status: 'under_review' };
       mockPrisma.osdReport.findUnique.mockResolvedValue(osd);
       mockPrisma.osdReport.update.mockResolvedValue({ ...osd, status: 'claim_sent' });
 
@@ -237,10 +237,10 @@ describe('osd.service', () => {
       await expect(sendClaim('nonexistent')).rejects.toThrow(NotFoundError);
     });
 
-    it('should throw BusinessRuleError when status is invalid', async () => {
+    it('should throw Error when status is invalid for sendClaim', async () => {
       mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'resolved' });
 
-      await expect(sendClaim('osd-1')).rejects.toThrow('OSD must be draft or under review to send claim');
+      await expect(sendClaim('osd-1')).rejects.toThrow(/Invalid status transition/);
     });
   });
 
@@ -248,8 +248,8 @@ describe('osd.service', () => {
   // resolve
   // ─────────────────────────────────────────────────────────────────────────
   describe('resolve', () => {
-    it('should resolve from claim_sent status', async () => {
-      const osd = { id: 'osd-1', status: 'claim_sent' };
+    it('should resolve from awaiting_response status with full data', async () => {
+      const osd = { id: 'osd-1', status: 'awaiting_response' };
       mockPrisma.osdReport.findUnique.mockResolvedValue(osd);
       mockPrisma.osdReport.update.mockResolvedValue({ ...osd, status: 'resolved' });
 
@@ -296,14 +296,14 @@ describe('osd.service', () => {
       await expect(resolve('nonexistent', 'user-1', {})).rejects.toThrow(NotFoundError);
     });
 
-    it('should throw BusinessRuleError from invalid status', async () => {
+    it('should throw Error from invalid status for resolve', async () => {
       mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'draft' });
 
-      await expect(resolve('osd-1', 'user-1', {})).rejects.toThrow('OSD cannot be resolved from status: draft');
+      await expect(resolve('osd-1', 'user-1', {})).rejects.toThrow(/Invalid status transition/);
     });
 
     it('should set responseDate when supplierResponse is provided', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'claim_sent' });
+      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'awaiting_response' });
       mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
 
       await resolve('osd-1', 'user-1', { supplierResponse: 'We accept' });
@@ -313,7 +313,7 @@ describe('osd.service', () => {
     });
 
     it('should set responseDate to null when supplierResponse is not provided', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'claim_sent' });
+      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'negotiating' });
       mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
 
       await resolve('osd-1', 'user-1', {});
