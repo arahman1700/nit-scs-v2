@@ -5,6 +5,7 @@
  *       Claude generates SQL → validate → execute → format response
  */
 
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../utils/prisma.js';
 import { logger } from '../../config/logger.js';
 import { buildSchemaPrompt, validateQuery } from './ai-schema-context.js';
@@ -159,8 +160,8 @@ export async function chat(
           try {
             resultData = await prisma.$transaction(
               async tx => {
-                await tx.$queryRawUnsafe('SET TRANSACTION READ ONLY');
-                return tx.$queryRawUnsafe(query);
+                await tx.$executeRaw`SET TRANSACTION READ ONLY`;
+                return tx.$queryRaw(Prisma.raw(query));
               },
               { timeout: 5000 },
             );

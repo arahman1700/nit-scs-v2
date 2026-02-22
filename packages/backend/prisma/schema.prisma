@@ -26,7 +26,6 @@ datasource db {
 model Region {
   id           String  @id @default(uuid()) @db.Uuid
   regionName   String  @unique @map("region_name") @db.VarChar(100)
-  regionNameAr String? @map("region_name_ar") @db.VarChar(100)
 
   // Relations
   cities     City[]
@@ -40,7 +39,6 @@ model Region {
 model City {
   id         String  @id @default(uuid()) @db.Uuid
   cityName   String  @map("city_name") @db.VarChar(100)
-  cityNameAr String? @map("city_name_ar") @db.VarChar(100)
   regionId   String  @map("region_id") @db.Uuid
 
   // Relations
@@ -77,7 +75,6 @@ model UnitOfMeasure {
   id        String  @id @default(uuid()) @db.Uuid
   uomCode   String  @unique @map("uom_code") @db.VarChar(20)
   uomName   String  @map("uom_name") @db.VarChar(50)
-  uomNameAr String? @map("uom_name_ar") @db.VarChar(50)
   category  String? @db.VarChar(30)
 
   // Relations
@@ -99,7 +96,6 @@ model UnitOfMeasure {
 model WarehouseType {
   id          String  @id @default(uuid()) @db.Uuid
   typeName    String  @unique @map("type_name") @db.VarChar(50)
-  typeNameAr  String? @map("type_name_ar") @db.VarChar(50)
   description String?
 
   // Relations
@@ -112,7 +108,6 @@ model WarehouseType {
 model EquipmentCategory {
   id             String  @id @default(uuid()) @db.Uuid
   categoryName   String  @unique @map("category_name") @db.VarChar(100)
-  categoryNameAr String? @map("category_name_ar") @db.VarChar(100)
 
   // Relations
   equipmentTypes EquipmentType[]
@@ -124,7 +119,6 @@ model EquipmentCategory {
 model EquipmentType {
   id         String  @id @default(uuid()) @db.Uuid
   typeName   String  @unique @map("type_name") @db.VarChar(100)
-  typeNameAr String? @map("type_name_ar") @db.VarChar(100)
   categoryId String? @map("category_id") @db.Uuid
 
   // Relations
@@ -161,7 +155,6 @@ model Entity {
   id             String   @id @default(uuid()) @db.Uuid
   entityCode     String   @unique @map("entity_code") @db.VarChar(20)
   entityName     String   @map("entity_name") @db.VarChar(200)
-  entityNameAr   String?  @map("entity_name_ar") @db.VarChar(200)
   parentEntityId String?  @map("parent_entity_id") @db.Uuid
   /// CHECK: status IN ('active', 'inactive')
   status         String   @default("active") @map("status") @db.VarChar(20)
@@ -184,7 +177,6 @@ model Project {
   id               String    @id @default(uuid()) @db.Uuid
   projectCode      String    @unique @map("project_code") @db.VarChar(50)
   projectName      String    @map("project_name") @db.VarChar(300)
-  projectNameAr    String?   @map("project_name_ar") @db.VarChar(300)
   client           String    @db.VarChar(200)
   entityId         String?   @map("entity_id") @db.Uuid
   regionId         String?   @map("region_id") @db.Uuid
@@ -235,7 +227,6 @@ model Employee {
   /// HR employee ID
   employeeIdNumber    String    @unique @map("employee_id_number") @db.VarChar(20)
   fullName            String    @map("full_name") @db.VarChar(200)
-  fullNameAr          String?   @map("full_name_ar") @db.VarChar(200)
   email               String    @unique @db.VarChar(200)
   phone               String?   @db.VarChar(20)
   /// CHECK: department IN ('logistics', 'warehouse', 'transport', 'projects', 'quality', 'finance', 'admin')
@@ -388,7 +379,6 @@ model Supplier {
   id             String   @id @default(uuid()) @db.Uuid
   supplierCode   String   @unique @map("supplier_code") @db.VarChar(50)
   supplierName   String   @map("supplier_name") @db.VarChar(300)
-  supplierNameAr String?  @map("supplier_name_ar") @db.VarChar(300)
   /// Supplier type tags (array)
   types          String[] @db.VarChar(200)
   contactPerson  String?  @map("contact_person") @db.VarChar(200)
@@ -431,7 +421,6 @@ model Warehouse {
   id              String   @id @default(uuid()) @db.Uuid
   warehouseCode   String   @unique @map("warehouse_code") @db.VarChar(50)
   warehouseName   String   @map("warehouse_name") @db.VarChar(200)
-  warehouseNameAr String?  @map("warehouse_name_ar") @db.VarChar(200)
   warehouseTypeId String   @map("warehouse_type_id") @db.Uuid
   projectId       String?  @map("project_id") @db.Uuid
   regionId        String   @map("region_id") @db.Uuid
@@ -499,7 +488,6 @@ model Item {
   id                String    @id @default(uuid()) @db.Uuid
   itemCode          String    @unique @map("item_code") @db.VarChar(50)
   itemDescription   String    @map("item_description") @db.VarChar(500)
-  itemDescriptionAr String?   @map("item_description_ar") @db.VarChar(500)
   /// CHECK: category IN ('construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts')
   category          String    @db.VarChar(50)
   subCategory       String?   @map("sub_category") @db.VarChar(100)
@@ -1712,7 +1700,6 @@ model Notification {
   id               String   @id @default(uuid()) @db.Uuid
   recipientId      String   @map("recipient_id") @db.Uuid
   title            String   @db.VarChar(200)
-  titleAr          String?  @map("title_ar") @db.VarChar(200)
   body             String?
   notificationType String   @map("notification_type") @db.VarChar(30)
   referenceTable   String?  @map("reference_table") @db.VarChar(50)
@@ -1813,7 +1800,6 @@ model PasswordResetCode {
 model CompanyDocument {
   id           String   @id @default(uuid()) @db.Uuid
   title        String   @db.VarChar(300)
-  titleAr      String?  @map("title_ar") @db.VarChar(300)
   description  String?
   /// CHECK: category IN ('policy', 'procedure', 'contract', 'certificate', 'template', 'sop', 'other')
   category     String   @db.VarChar(20)
@@ -3021,7 +3007,6 @@ model DynamicDocumentType {
   /// Unique code slug (e.g. 'safety_inspection', 'vehicle_checklist')
   code             String   @unique @db.VarChar(50)
   name             String   @db.VarChar(200)
-  nameAr           String?  @map("name_ar") @db.VarChar(200)
   description      String?
   icon             String?  @db.VarChar(50)
   /// Grouping category (e.g. 'safety', 'quality', 'hr', 'custom')
@@ -3057,7 +3042,6 @@ model DynamicFieldDefinition {
   documentTypeId     String  @map("document_type_id") @db.Uuid
   fieldKey           String  @map("field_key") @db.VarChar(50)
   label              String  @db.VarChar(200)
-  labelAr            String? @map("label_ar") @db.VarChar(200)
   /// text|number|date|datetime|select|multiselect|textarea|checkbox|file
   /// |lookup_project|lookup_warehouse|lookup_supplier|lookup_employee|lookup_item
   /// |signature|currency|email|phone|url
@@ -3191,7 +3175,6 @@ model CustomFieldDefinition {
   entityType String   @map("entity_type") @db.VarChar(50)
   fieldKey   String   @map("field_key") @db.VarChar(50)
   label      String   @db.VarChar(200)
-  labelAr    String?  @map("label_ar") @db.VarChar(200)
   fieldType  String   @map("field_type") @db.VarChar(30)
   options    Json?    @db.JsonB
   isRequired Boolean  @default(false) @map("is_required")
@@ -3230,7 +3213,6 @@ model CustomFieldValue {
 model WorkflowTemplate {
   id           String   @id @default(uuid()) @db.Uuid
   name         String   @db.VarChar(200)
-  nameAr       String?  @map("name_ar") @db.VarChar(200)
   description  String?
   category     String   @default("general") @db.VarChar(50)
   /// Full template: { workflow: {...}, rules: [...] }
@@ -3292,7 +3274,6 @@ model AiSuggestion {
   /// 1=critical, 2=high, 3=medium, 4=low
   priority       Int       @default(3)
   title          String    @db.VarChar(300)
-  titleAr        String?   @map("title_ar") @db.VarChar(300)
   description    String?
   /// Action payload for one-click apply: { type, params }
   actionPayload  Json?     @map("action_payload") @db.JsonB

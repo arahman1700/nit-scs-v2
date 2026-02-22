@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole, requirePermission } from '../middleware/rbac.js';
+import { requireRole } from '../middleware/rbac.js';
 import { getApprovalSteps, getPendingApprovalsForUser, getApprovalChain } from '../services/approval.service.js';
 import { sendSuccess, sendError } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';

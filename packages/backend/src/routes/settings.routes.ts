@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole, requirePermission } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { sendSuccess } from '../utils/response.js';
 import { prisma } from '../utils/prisma.js';
 import {
@@ -10,7 +10,7 @@ import {
   getDocPrefix,
   getThreshold,
 } from '../services/system-config.service.js';
-import { DOC_PREFIXES, SLA_HOURS } from '@nit-scs-v2/shared/constants';
+import { DOC_PREFIXES } from '@nit-scs-v2/shared/constants';
 
 const router = Router();
 

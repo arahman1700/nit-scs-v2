@@ -19,7 +19,7 @@ import { useInventory } from '@/api/hooks/useMasterData';
 import { useMrrvList } from '@/api/hooks/useMrrv';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useMrvList } from '@/api/hooks/useMrv';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { displayStr } from '@/utils/displayStr';
 

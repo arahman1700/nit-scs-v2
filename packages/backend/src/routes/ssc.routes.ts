@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { createCrudRouter } from '../utils/crud-factory.js';
 import { sscBidCreateSchema, sscBidUpdateSchema } from '../schemas/document.schema.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole, requirePermission } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { sendSuccess } from '../utils/response.js';
 import { auditAndEmit } from '../utils/routeHelpers.js';
 import * as sscService from '../services/ssc.service.js';

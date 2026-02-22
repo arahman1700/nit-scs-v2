@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { canTransition } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
@@ -196,7 +197,7 @@ async function handleCreateFollowUp(params: Record<string, unknown>, event: Syst
             requestDate: new Date(),
             status: 'pending',
             comments: `Auto-created from GRN ${grn.mrrvNumber} via workflow rule`,
-          } as any,
+          } as Prisma.RfimUncheckedCreateInput,
         });
         log('info', `[Action:create_follow_up] Created QCI ${qci.id} from GRN ${sourceId}`);
         break;

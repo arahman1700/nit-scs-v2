@@ -25,6 +25,18 @@ services:
         value: '4000'
       - key: CORS_ORIGIN
         sync: false
+      # Optional: Redis for rate limiting, caching, token blacklisting
+      # Sign up at https://upstash.com (free tier: 10k commands/day)
+      # - key: REDIS_URL
+      #   sync: false
+      # Optional: Sentry error monitoring (https://sentry.io)
+      # - key: SENTRY_DSN
+      #   sync: false
+      # Optional: Web Push VAPID keys (generate with: node scripts/generate-vapid-keys.js)
+      # - key: VAPID_PUBLIC_KEY
+      #   sync: false
+      # - key: VAPID_PRIVATE_KEY
+      #   sync: false
 
 databases:
   - name: nit-scs-v2-db

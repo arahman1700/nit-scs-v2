@@ -23,6 +23,9 @@ const envSchema = z.object({
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional().default('mailto:admin@nit-scs.com'),
 
+  // Error Monitoring (Sentry) — optional, recommended for production
+  SENTRY_DSN: z.string().url().optional(),
+
   // Email (Resend) — optional in development
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().email().optional(),

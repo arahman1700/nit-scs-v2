@@ -9,7 +9,7 @@ import { submitForApproval, processApproval } from './approval.service.js';
 import { reserveStockBatch } from './inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
-import { assertTransition, canTransition } from '@nit-scs-v2/shared';
+import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
 import type { Server as SocketIOServer } from 'socket.io';
 import type {
@@ -321,7 +321,7 @@ async function autoFulfillParentMr(mirvId: string, userId: string): Promise<void
     });
   } catch (err) {
     // Non-critical — log but don't fail the MI issuance
-     
+
     console.error('[MI] Failed to auto-fulfill parent MR:', err);
   }
 }

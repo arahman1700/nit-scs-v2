@@ -8,7 +8,7 @@ import {
   customsStageUpdateSchema,
 } from '../schemas/logistics.schema.js';
 import { authenticate } from '../middleware/auth.js';
-import { requireRole, requirePermission } from '../middleware/rbac.js';
+import { requirePermission } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { sendSuccess, sendCreated } from '../utils/response.js';
 import { auditAndEmit, emitDocumentEvent } from '../utils/routeHelpers.js';
