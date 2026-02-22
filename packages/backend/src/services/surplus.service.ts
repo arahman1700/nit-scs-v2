@@ -129,11 +129,9 @@ export async function scmApprove(id: string, _scmUserId: string) {
     throw new BusinessRuleError('2-week timeout period has not elapsed');
   }
 
-  // TODO: Once scmApprovedById and scmApprovalDate columns are added via migration,
-  // include them in the update data: { scmApprovedById: scmUserId, scmApprovalDate: new Date() }
   return prisma.surplusItem.update({
     where: { id: surplus.id },
-    data: {},
+    data: { scmApprovalDate: new Date() },
   });
 }
 
@@ -162,20 +160,21 @@ export async function action(id: string, userId: string) {
     const wt = await prisma.stockTransfer.create({
       data: {
         transferNumber: wtNumber,
+        transferType: 'warehouse_to_warehouse',
         fromWarehouseId: surplus.warehouseId,
-        // NOTE: toWarehouseId should be determined by user input in a future enhancement
         toWarehouseId: surplus.warehouseId,
         status: 'draft',
         requestedById: userId,
-        requestDate: new Date(),
+        transferDate: new Date(),
         notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
-        // NOTE: surplusId field pending schema migration on stock_transfers table
-        // surplusId: surplus.id,
-      } as any,
+      },
     });
     linkedDocumentId = wt.id;
     linkedDocumentType = 'wt';
   } else if (surplus.disposition === 'return') {
+    if (!surplus.projectId) {
+      throw new BusinessRuleError('Project is required to create a return MRN from surplus');
+    }
     // Auto-create MRN with returnType='return_to_supplier'
     const mrvNumber = await generateDocumentNumber('mrv');
     const mrn = await prisma.mrv.create({
@@ -186,11 +185,10 @@ export async function action(id: string, userId: string) {
         projectId: surplus.projectId,
         returnedById: userId,
         returnDate: new Date(),
+        reason: 'Return from surplus disposition',
         status: 'draft',
         notes: `Auto-created from Surplus ${surplus.surplusNumber}`,
-        // NOTE: surplusId field pending schema migration on mrv table
-        // surplusId: surplus.id,
-      } as any,
+      },
     });
     linkedDocumentId = mrn.id;
     linkedDocumentType = 'mrn';

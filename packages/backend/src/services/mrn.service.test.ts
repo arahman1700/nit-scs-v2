@@ -290,7 +290,6 @@ describe('complete', () => {
       toWarehouseId: 'wh-1',
       goodLinesRestocked: 2,
       totalLines: 3,
-      surplusItemId: null,
     });
   });
 

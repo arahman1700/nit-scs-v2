@@ -171,41 +171,6 @@ export async function complete(id: string, userId: string) {
 
   await addStockBatch([...goodStockItems, ...blockedStockItems]);
 
-  // Auto-create QCI for damaged items requiring inspection
-  let qciId: string | null = null;
-  if (damagedLines.length > 0 && mrn.returnType === 'Damaged') {
-    const qciNumber = await generateDocumentNumber('qci');
-    const qci = await prisma.rfim.create({
-      data: {
-        rfimNumber: qciNumber,
-        mrrvId: mrn.originalMirvId ?? mrn.id, // Link to original MI or use MRN id
-        requestDate: new Date(),
-        status: 'pending',
-        comments: `Auto-created from MRN ${mrn.mrvNumber} — damaged return inspection`,
-      } as any,
-    });
-    qciId = qci.id;
-  }
-
-  // Auto-create SurplusItem when returnType is 'surplus'
-  let surplusItemId: string | null = null;
-  if (mrn.returnType === 'surplus') {
-    const totalReturnQty = mrn.mrvLines.reduce((sum, l) => sum + Number(l.qtyReturned), 0);
-    const surplusNumber = await generateDocumentNumber('surplus');
-    const surplus = await prisma.surplusItem.create({
-      data: {
-        surplusNumber,
-        itemId: mrn.mrvLines[0]?.itemId,
-        warehouseId: mrn.toWarehouseId,
-        projectId: mrn.projectId,
-        qty: totalReturnQty,
-        status: 'identified',
-        createdById: userId,
-      } as any,
-    });
-    surplusItemId = surplus.id;
-  }
-
   // Publish event for downstream listeners
   eventBus.publish({
     type: 'document:status_changed',
@@ -217,8 +182,6 @@ export async function complete(id: string, userId: string) {
       to: 'completed',
       goodLinesRestocked: goodLines.length,
       blockedLinesRestocked: damagedLines.length,
-      surplusItemId,
-      qciId,
     },
     performedById: userId,
     timestamp: new Date().toISOString(),
@@ -230,7 +193,5 @@ export async function complete(id: string, userId: string) {
     goodLinesRestocked: goodLines.length,
     blockedLinesRestocked: damagedLines.length,
     totalLines: mrn.mrvLines.length,
-    surplusItemId,
-    qciId,
   };
 }

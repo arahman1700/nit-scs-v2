@@ -116,8 +116,7 @@ export async function completeConditional(id: string, comments?: string) {
       status: 'completed_conditional',
       result: 'conditional',
       comments: comments ?? rfim.comments,
-      // NOTE: pmApprovalRequired field pending schema migration — will be set to true
-      // pmApprovalRequired: true,
+      pmApprovalRequired: true,
     },
   });
   return { updated, mrrvId: rfim.mrrvId, pmApprovalRequired: true };
@@ -141,9 +140,8 @@ export async function pmApprove(id: string, pmUserId: string, comments?: string)
     data: {
       status: 'completed',
       comments: comments ? `${rfim.comments ?? ''}\n[PM Approval] ${comments}`.trim() : rfim.comments,
-      // NOTE: pmApprovedById and pmApprovalDate fields pending schema migration
-      // pmApprovedById: pmUserId,
-      // pmApprovalDate: new Date(),
+      pmApprovalById: pmUserId,
+      pmApprovalDate: new Date(),
     },
   });
   return { updated, mrrvId: rfim.mrrvId, pmApprovedBy: pmUserId };

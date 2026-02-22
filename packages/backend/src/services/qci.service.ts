@@ -178,8 +178,7 @@ export async function completeConditional(id: string, comments?: string) {
       status: 'completed_conditional',
       result: 'conditional',
       comments: comments ?? qci.comments,
-      // NOTE: pmApprovalRequired field pending schema migration — will be set to true
-      // pmApprovalRequired: true,
+      pmApprovalRequired: true,
     },
   });
   return { updated, mrrvId: qci.mrrvId, pmApprovalRequired: true };
@@ -203,9 +202,8 @@ export async function pmApprove(id: string, pmUserId: string, comments?: string)
     data: {
       status: 'completed',
       comments: comments ? `${qci.comments ?? ''}\n[PM Approval] ${comments}`.trim() : qci.comments,
-      // NOTE: pmApprovedById and pmApprovalDate fields pending schema migration
-      // pmApprovedById: pmUserId,
-      // pmApprovalDate: new Date(),
+      pmApprovalById: pmUserId,
+      pmApprovalDate: new Date(),
     },
   });
   return { updated, mrrvId: qci.mrrvId, pmApprovedBy: pmUserId };

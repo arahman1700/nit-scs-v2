@@ -27,7 +27,7 @@ export const MrfForm: React.FC = () => {
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('mrf'), []);
-  const approvalLevel = useMemo(() => getRequiredApprovalLevel('mi', totalValue), [totalValue]);
+  const approvalLevel = useMemo(() => getRequiredApprovalLevel('mr', totalValue), [totalValue]);
 
   const [submitted, setSubmitted] = useState(false);
   const [documentNumber, setDocumentNumber] = useState<string | null>(null);
