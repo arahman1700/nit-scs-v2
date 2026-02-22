@@ -84,7 +84,7 @@ export async function create(headerData: Omit<MrnCreateDto, 'lines'>, lines: Mrn
         returnedById: userId,
         returnDate: new Date(headerData.returnDate),
         reason: headerData.reason ?? null,
-        originalMirvId: (headerData as any).originalMiId ?? (headerData as any).originalMirvId ?? null,
+        originalMirvId: headerData.originalMiId ?? null,
         status: 'draft',
         notes: headerData.notes ?? null,
         mrvLines: {

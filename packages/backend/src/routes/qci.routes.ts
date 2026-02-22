@@ -44,7 +44,9 @@ export default createDocumentRouter({
         const { updated, mrrvId } = svcResult;
         // Notify the linked GRN
         const io = req.app.get('io') as SocketIOServer | undefined;
-        const effectiveStatus = (svcResult as any).pmApprovalRequired ? 'completed_conditional' : 'completed';
+        const effectiveStatus = (svcResult as { pmApprovalRequired?: boolean }).pmApprovalRequired
+          ? 'completed_conditional'
+          : 'completed';
         if (io) emitToDocument(io, mrrvId, 'qci:completed', { qciId: id, result, status: effectiveStatus });
         return updated;
       },
