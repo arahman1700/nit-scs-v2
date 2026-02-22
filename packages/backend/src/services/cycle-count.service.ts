@@ -236,9 +236,10 @@ export async function recordCount(lineId: string, countedQty: number, countedByI
     throw new Error('Cycle count must be in progress to record counts');
   }
 
-  const varianceQty = countedQty - line.expectedQty;
+  const expectedQty = Number(line.expectedQty);
+  const varianceQty = countedQty - expectedQty;
   const variancePercent =
-    line.expectedQty !== 0 ? Math.round((varianceQty / line.expectedQty) * 10000) / 100 : countedQty !== 0 ? 100 : 0;
+    expectedQty !== 0 ? Math.round((varianceQty / expectedQty) * 10000) / 100 : countedQty !== 0 ? 100 : 0;
 
   const updated = await prisma.cycleCountLine.update({
     where: { id: lineId },
@@ -350,7 +351,7 @@ export async function applyAdjustments(cycleCountId: string, userId: string) {
 
   await prisma.$transaction(async tx => {
     for (const line of cycleCount.lines) {
-      if (line.varianceQty === null || line.varianceQty === 0) continue;
+      if (line.varianceQty === null || Number(line.varianceQty) === 0) continue;
 
       // Update inventory level
       const level = await tx.inventoryLevel.findUnique({

@@ -85,7 +85,7 @@ export async function getPerformanceReport(days: number = 30, _warehouseId?: str
 
       for (const [taskType, count] of Object.entries(data.taskCounts)) {
         const std = standardMap.get(taskType);
-        const stdMinutes = std ? std.standardMinutes * count : 0;
+        const stdMinutes = std ? Number(std.standardMinutes) * count : 0;
         totalStandardMinutes += stdMinutes;
         taskBreakdown.push({ taskType, count, standardMinutes: stdMinutes });
       }
