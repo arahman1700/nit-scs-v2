@@ -10,13 +10,12 @@ export const notificationListSchema = z.object({
   unreadOnly: z
     .enum(['true', 'false'])
     .optional()
-    .transform((val) => val === 'true'),
+    .transform(val => val === 'true'),
 });
 
 export const notificationCreateSchema = z.object({
   recipientId: uuid,
   title: z.string().min(1, 'Title is required').max(200),
-  titleAr: z.string().max(200).optional(),
   body: z.string().optional(),
   notificationType: z.string().min(1, 'Notification type is required').max(30),
   referenceTable: z.string().max(50).optional(),

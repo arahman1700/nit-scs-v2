@@ -160,7 +160,6 @@ router.post('/', authenticate, requireRole('admin', 'manager'), (req: Request, r
       const doc = await prisma.companyDocument.create({
         data: {
           title: String(req.body.title || req.file.originalname),
-          titleAr: req.body.titleAr || undefined,
           description: req.body.description || undefined,
           category: req.body.category || 'other',
           filePath: `/uploads/documents/${req.file.filename}`,

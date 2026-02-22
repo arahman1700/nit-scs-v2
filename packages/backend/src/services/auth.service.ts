@@ -355,7 +355,6 @@ export async function getMe(userId: string) {
       id: true,
       employeeIdNumber: true,
       fullName: true,
-      fullNameAr: true,
       email: true,
       phone: true,
       department: true,

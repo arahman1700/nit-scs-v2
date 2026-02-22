@@ -8,7 +8,6 @@ import { log } from '../config/logger.js';
 export interface CreateDocumentTypeInput {
   code: string;
   name: string;
-  nameAr?: string;
   description?: string;
   icon?: string;
   category?: string;
@@ -21,7 +20,6 @@ export interface CreateDocumentTypeInput {
 
 export interface UpdateDocumentTypeInput {
   name?: string;
-  nameAr?: string;
   description?: string;
   icon?: string;
   category?: string;
@@ -68,7 +66,6 @@ export async function listDocumentTypes(params: {
     where.OR = [
       { name: { contains: params.search, mode: 'insensitive' } },
       { code: { contains: params.search, mode: 'insensitive' } },
-      { nameAr: { contains: params.search, mode: 'insensitive' } },
     ];
   }
   if (params.category) where.category = params.category;
@@ -116,7 +113,6 @@ export async function createDocumentType(input: CreateDocumentTypeInput, userId:
     data: {
       code: input.code,
       name: input.name,
-      nameAr: input.nameAr,
       description: input.description,
       icon: input.icon,
       category: input.category ?? 'custom',
@@ -145,7 +141,6 @@ export async function updateDocumentType(id: string, input: UpdateDocumentTypeIn
     version: { increment: 1 },
   };
   if (input.name !== undefined) data.name = input.name;
-  if (input.nameAr !== undefined) data.nameAr = input.nameAr;
   if (input.description !== undefined) data.description = input.description;
   if (input.icon !== undefined) data.icon = input.icon;
   if (input.category !== undefined) data.category = input.category;
@@ -262,7 +257,7 @@ export async function reorderFields(documentTypeId: string, fieldIds: string[]) 
 export async function getActiveTypesForRole(role: string) {
   const types = await prisma.dynamicDocumentType.findMany({
     where: { isActive: true },
-    select: { code: true, name: true, nameAr: true, icon: true, category: true, visibleToRoles: true },
+    select: { code: true, name: true, icon: true, category: true, visibleToRoles: true },
     orderBy: [{ category: 'asc' }, { name: 'asc' }],
   });
 

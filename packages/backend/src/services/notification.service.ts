@@ -7,7 +7,6 @@ import { sendPushToUser } from './push-notification.service.js';
 export interface CreateNotificationParams {
   recipientId: string;
   title: string;
-  titleAr?: string;
   body?: string;
   notificationType: string;
   referenceTable?: string;
@@ -19,7 +18,6 @@ export async function createNotification(params: CreateNotificationParams, io?: 
     data: {
       recipientId: params.recipientId,
       title: params.title,
-      titleAr: params.titleAr,
       body: params.body,
       notificationType: params.notificationType,
       referenceTable: params.referenceTable,

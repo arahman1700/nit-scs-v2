@@ -30,7 +30,6 @@ describe('notification.service', () => {
   const baseParams: CreateNotificationParams = {
     recipientId: 'user-001',
     title: 'New MRRV',
-    titleAr: 'MRRV جديد',
     body: 'A new MRRV has been created',
     notificationType: 'mrrv_created',
     referenceTable: 'mrrv',
@@ -52,7 +51,6 @@ describe('notification.service', () => {
         data: {
           recipientId: 'user-001',
           title: 'New MRRV',
-          titleAr: 'MRRV جديد',
           body: 'A new MRRV has been created',
           notificationType: 'mrrv_created',
           referenceTable: 'mrrv',
@@ -95,7 +93,6 @@ describe('notification.service', () => {
       await createNotification(minimalParams);
 
       const callArgs = mockPrisma.notification.create.mock.calls[0][0];
-      expect(callArgs.data.titleAr).toBeUndefined();
       expect(callArgs.data.body).toBeUndefined();
       expect(callArgs.data.referenceTable).toBeUndefined();
       expect(callArgs.data.referenceId).toBeUndefined();

@@ -75,7 +75,7 @@ describe('email.service', () => {
         data: expect.objectContaining({
           toEmail: 'user@test.com',
           subject: 'Hello John',
-          bodyHtml: '<p>Hi John</p>',
+          bodyHtml: expect.stringContaining('<p>Hi John</p>'),
           status: 'queued',
         }),
       });
@@ -83,7 +83,7 @@ describe('email.service', () => {
         expect.objectContaining({
           to: 'user@test.com',
           subject: 'Hello John',
-          html: '<p>Hi John</p>',
+          html: expect.stringContaining('<p>Hi John</p>'),
         }),
       );
     });

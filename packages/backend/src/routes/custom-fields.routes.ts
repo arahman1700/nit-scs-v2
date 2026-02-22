@@ -119,6 +119,16 @@ router.put('/values/:entityType/:entityId', requirePermission('custom_field', 'u
     const values = await getCustomFieldValues(entityType, entityId);
     res.json({ success: true, data: values });
   } catch (err) {
+    const error = err as Error & { status?: number; errors?: unknown[] };
+    if (error.status === 400 && error.errors) {
+      res.status(400).json({
+        success: false,
+        message: error.message,
+        code: 'CUSTOM_FIELD_VALIDATION_ERROR',
+        errors: error.errors,
+      });
+      return;
+    }
     next(err);
   }
 });

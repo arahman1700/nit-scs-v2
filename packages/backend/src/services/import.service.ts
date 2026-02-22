@@ -62,7 +62,6 @@ const ENTITY_FIELDS: Record<ImportableEntity, FieldDef[]> = {
   employees: [
     { dbField: 'employeeIdNumber', label: 'Employee ID', required: true },
     { dbField: 'fullName', label: 'Full Name', required: true },
-    { dbField: 'fullNameAr', label: 'Full Name (Arabic)', required: false },
     { dbField: 'email', label: 'Email', required: true },
     { dbField: 'phone', label: 'Phone', required: false },
     { dbField: 'department', label: 'Department', required: false },
