@@ -361,17 +361,8 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/system/dashboards" element={<Navigate to="/admin/settings?tab=dashboard-builder" replace />} />
     <Route path="/admin/system/reports" element={<Navigate to="/admin/settings?tab=report-builder" replace />} />
 
-    {/* V2 Form Routes */}
-    <Route path="/admin/forms/grn" element={<ResourceForm />} />
-    <Route path="/admin/forms/grn/:id" element={<ResourceForm />} />
-    <Route path="/admin/forms/qci" element={<ResourceForm />} />
-    <Route path="/admin/forms/qci/:id" element={<ResourceForm />} />
-    <Route path="/admin/forms/dr" element={<ResourceForm />} />
-    <Route path="/admin/forms/dr/:id" element={<ResourceForm />} />
-    <Route path="/admin/forms/mi" element={<ResourceForm />} />
-    <Route path="/admin/forms/mi/:id" element={<ResourceForm />} />
-    <Route path="/admin/forms/mrn" element={<ResourceForm />} />
-    <Route path="/admin/forms/mrn/:id" element={<ResourceForm />} />
+    {/* V2 form names (grn, mi, mrn, qci, dr) are handled by the catch-all
+        :formType route below — useDocumentForm maps V2→V1 names internally */}
     <Route path="/admin/forms/mr" element={<MrfForm />} />
     <Route path="/admin/forms/mr/:id" element={<MrfForm />} />
     <Route path="/admin/forms/wt" element={<StockTransferForm />} />
