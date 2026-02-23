@@ -32,7 +32,7 @@ import { startScheduler, stopScheduler } from './services/scheduler.service.js';
 import { registerDynamicDataSources, register as registerDataSource } from './services/widget-data.service.js';
 import { loadCustomDataSources } from './services/custom-data-source.service.js';
 import apiRoutes from './routes/index.js';
-import { healthCheck } from './routes/health.routes.js';
+import { healthCheck, authDiagnostic } from './routes/health.routes.js';
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 dotenv.config({ path: '../../.env' });
@@ -111,13 +111,23 @@ app.use('/api/v1', rateLimiter(100, 60_000));
 app.use('/api/v1', apiRoutes);
 
 // Backward-compatible redirect: /api/* → /api/v1/*
-app.use('/api', (req, res, _next) => {
+app.use('/api', (req, res, next) => {
   // Health check shortcut (no redirect needed)
   if (req.path === '/health') {
     healthCheck(req, res);
     return;
   }
-  res.redirect(302, `/api/v1${req.url}`);
+  // TEMP: auth diagnostic (remove after debugging)
+  if (req.path === '/debug/auth') {
+    authDiagnostic(req, res);
+    return;
+  }
+  // Only redirect non-versioned paths to avoid double /v1/
+  if (!req.path.startsWith('/v1')) {
+    res.redirect(302, `/api/v1${req.url}`);
+    return;
+  }
+  next();
 });
 
 // ── Socket.IO ─────────────────────────────────────────────────────────────
