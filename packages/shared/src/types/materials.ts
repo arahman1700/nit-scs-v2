@@ -1,10 +1,11 @@
-import type { DocumentStatus } from './enums.js';
+import type { GrnStatus, MiStatus, MrnStatus } from './enums.js';
 import type { StatusHistoryEntry, ProjectRef, SupplierRef, WarehouseRef, EmployeeRef } from './common.js';
 import type { ApprovalChain } from './approval.js';
 
 // ── Shared Line Item ─────────────────────────────────────────────────────
 
-export interface VoucherLineItem {
+/** Base fields common to all document line items. */
+export interface BaseLineItem {
   id: string;
   itemId?: string;
   itemCode: string;
@@ -16,13 +17,37 @@ export interface VoucherLineItem {
   totalPrice: number;
   condition?: 'New' | 'Good' | 'Fair' | 'Damaged';
   notes?: string;
-  // MRRV specifics
+}
+
+/** GRN-specific line item with receiving quantities. */
+export interface GrnLineItem extends BaseLineItem {
   qtyExpected?: number;
   qtyReceived?: number;
   overDeliveryPct?: number;
   storageLocation?: string;
   lotNumber?: string;
-  // MIRV specifics
+}
+
+/** MI-specific line item with issuance quantities. */
+export interface MiLineItem extends BaseLineItem {
+  qtyApproved?: number;
+  qtyIssued?: number;
+  qtyAvailable?: number;
+  reservationId?: string;
+}
+
+/**
+ * Union line item type — backward compatible.
+ * Prefer using GrnLineItem / MiLineItem / BaseLineItem in new code.
+ */
+export interface VoucherLineItem extends BaseLineItem {
+  // GRN specifics
+  qtyExpected?: number;
+  qtyReceived?: number;
+  overDeliveryPct?: number;
+  storageLocation?: string;
+  lotNumber?: string;
+  // MI specifics
   qtyApproved?: number;
   qtyIssued?: number;
   qtyAvailable?: number;
@@ -52,7 +77,7 @@ export interface MRRV {
   receivedBy?: EmployeeRef;
   receiveDate: string;
   totalValue: number;
-  status: DocumentStatus;
+  status: GrnStatus;
   poNumber?: string;
   invoiceNumber?: string;
   deliveryNote?: string;
@@ -68,12 +93,6 @@ export interface MRRV {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use mrrvNumber */
-  formNumber?: string;
-  /** @deprecated Use receiveDate */
-  date?: string;
-  /** @deprecated Use totalValue */
-  value?: number;
 }
 
 // ── MIRV ─────────────────────────────────────────────────────────────────
@@ -90,7 +109,7 @@ export interface MIRV {
   requestDate: string;
   requiredDate?: string;
   estimatedValue: number;
-  status: DocumentStatus;
+  status: MiStatus;
   priority?: 'normal' | 'urgent' | 'emergency';
   approvedById?: string;
   approvedDate?: string;
@@ -108,13 +127,11 @@ export interface MIRV {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use mirvNumber */
-  formNumber?: string;
-  /** @deprecated Use requestDate */
+  /** @deprecated Use requestDate — still used in SiteEngineerDashboard */
   date?: string;
-  /** @deprecated Use estimatedValue */
+  /** @deprecated Use estimatedValue — still used in pdfExport.ts */
   value?: number;
-  /** @deprecated Use requestedById */
+  /** @deprecated Use requestedById — still used in pdfExport.ts */
   requester?: string;
 }
 
@@ -134,7 +151,7 @@ export interface MRV {
   returnedById: string;
   returnedBy?: EmployeeRef;
   reason: string;
-  status: DocumentStatus;
+  status: MrnStatus;
   receivedById?: string;
   receivedDate?: string;
   originalMirvId?: string;
@@ -143,11 +160,7 @@ export interface MRV {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use mrvNumber */
-  formNumber?: string;
-  /** @deprecated Use returnDate */
-  date?: string;
-  /** @deprecated Use toWarehouseId */
+  /** @deprecated Use toWarehouseId — still used in pdfExport.ts */
   warehouse?: string;
 }
 
@@ -220,8 +233,4 @@ export interface OSDReport {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use osdNumber */
-  formNumber?: string;
-  /** @deprecated Use reportTypes (array) */
-  reportType?: string;
 }

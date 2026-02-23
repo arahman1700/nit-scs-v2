@@ -24,6 +24,7 @@ import type { TabDef } from '@/components/SectionTabBar';
 import {
   useDashboardStats,
   useSLACompliance,
+  flattenSLA,
   useJobOrders,
   useFleet,
   useGatePassList,
@@ -60,7 +61,7 @@ export const EquipmentSectionPage: React.FC = () => {
   const toolIssueQuery = useToolIssueList({ pageSize: 50 });
 
   const stats = statsQuery.data?.data;
-  const sla = slaQuery.data?.data;
+  const sla = flattenSLA(slaQuery.data?.data);
   const joData = joQuery.data?.data ?? [];
   const fleetData = fleetQuery.data?.data ?? [];
   const generatorsData = genQuery.data?.data ?? [];

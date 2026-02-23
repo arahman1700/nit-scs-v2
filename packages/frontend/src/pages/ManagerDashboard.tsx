@@ -9,12 +9,17 @@ import {
   Briefcase,
   Search,
   Warehouse,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { useMirvList } from '@/api/hooks/useMirv';
 import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useMrfList } from '@/api/hooks/useMrf';
 import { useStockTransferList } from '@/api/hooks/useStockTransfers';
+import { useGrnList } from '@/api/hooks/useGrn';
+import { useScrapList } from '@/api/hooks/useScrap';
+import { useDrList } from '@/api/hooks/useDr';
 import { useProjects } from '@/api/hooks/useMasterData';
 import { useCrossDepartment } from '@/api/hooks/useDashboard';
 import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
@@ -22,6 +27,31 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
+
+interface UnifiedDoc {
+  id: string;
+  type: string;
+  formType: string;
+  number: string;
+  status: string;
+  date: string;
+  project?: string;
+}
+
+const DOC_STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-gray-500/20 text-gray-400',
+  pending: 'bg-amber-500/20 text-amber-400',
+  pending_approval: 'bg-amber-500/20 text-amber-400',
+  submitted: 'bg-blue-500/20 text-blue-400',
+  approved: 'bg-emerald-500/20 text-emerald-400',
+  completed: 'bg-emerald-500/20 text-emerald-400',
+  issued: 'bg-emerald-500/20 text-emerald-400',
+  rejected: 'bg-red-500/20 text-red-400',
+  cancelled: 'bg-red-500/20 text-red-400',
+  in_progress: 'bg-blue-500/20 text-blue-400',
+};
+
+const PAGE_SIZE = 20;
 
 type ManagerTab = 'overview' | 'approvals' | 'documents' | 'projects';
 
@@ -33,11 +63,19 @@ export const ManagerDashboard: React.FC = () => {
   ) as ManagerTab;
   const [search, setSearch] = useState('');
 
+  const [docSearch, setDocSearch] = useState('');
+  const [docTypeFilter, setDocTypeFilter] = useState('all');
+  const [docStatusFilter, setDocStatusFilter] = useState('all');
+  const [docPage, setDocPage] = useState(1);
+
   // API data
   const mirvQuery = useMirvList({ pageSize: 200 });
   const joQuery = useJobOrderList({ pageSize: 200 });
   const mrfQuery = useMrfList({ pageSize: 200 });
   const stQuery = useStockTransferList({ pageSize: 200 });
+  const grnQuery = useGrnList({ pageSize: 200 });
+  const scrapQuery = useScrapList({ pageSize: 200 });
+  const drQuery = useDrList({ pageSize: 200 });
   const projectsQuery = useProjects({ pageSize: 200 });
 
   const crossDeptQuery = useCrossDepartment();
@@ -126,6 +164,106 @@ export const ManagerDashboard: React.FC = () => {
   }, [pendingMirvs, pendingJOs, pendingMrfs, pendingSTs, search]);
 
   const activeProjects = useMemo(() => allProjects.filter(p => p.status === 'active'), [allProjects]);
+
+  // ── Unified document list (7 doc types) ─────────────────────────────
+  const allGrns = (grnQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allScrap = (scrapQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allDrs = (drQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+
+  const unifiedDocs = useMemo((): UnifiedDoc[] => {
+    const docs: UnifiedDoc[] = [
+      ...allMirvs.map(d => ({
+        id: d.id as string,
+        type: 'MI',
+        formType: 'mirv',
+        number: String((d as unknown as Record<string, unknown>).mirvNumber || d.id).slice(0, 16),
+        status: d.status as string,
+        date: String(
+          (d as unknown as Record<string, unknown>).requestDate ||
+            (d as unknown as Record<string, unknown>).createdAt ||
+            '',
+        ),
+        project: displayStr((d as unknown as Record<string, unknown>).project),
+      })),
+      ...allJOs.map(d => ({
+        id: d.id as string,
+        type: 'JO',
+        formType: 'jo',
+        number: String((d as unknown as Record<string, unknown>).joNumber || d.id).slice(0, 16),
+        status: d.status as string,
+        date: String(
+          (d as unknown as Record<string, unknown>).requestDate ||
+            (d as unknown as Record<string, unknown>).createdAt ||
+            '',
+        ),
+        project: displayStr((d as unknown as Record<string, unknown>).project),
+      })),
+      ...allMrfs.map(d => ({
+        id: d.id as string,
+        type: 'MR',
+        formType: 'mrf',
+        number: String(d.mrfNumber || d.id).slice(0, 16),
+        status: String(d.status || ''),
+        date: String(d.requestDate || d.createdAt || ''),
+        project: displayStr(d.project),
+      })),
+      ...allSTs.map(d => ({
+        id: d.id as string,
+        type: 'WT',
+        formType: 'st',
+        number: String(d.transferNumber || d.id).slice(0, 16),
+        status: String(d.status || ''),
+        date: String(d.transferDate || d.createdAt || ''),
+      })),
+      ...allGrns.map(d => ({
+        id: d.id as string,
+        type: 'GRN',
+        formType: 'grn',
+        number: String(d.mrrvNumber || d.id).slice(0, 16),
+        status: String(d.status || ''),
+        date: String(d.receivedDate || d.createdAt || ''),
+        project: displayStr(d.project),
+      })),
+      ...allScrap.map(d => ({
+        id: d.id as string,
+        type: 'Scrap',
+        formType: 'scrap',
+        number: String(d.scrapNumber || d.id).slice(0, 16),
+        status: String(d.status || ''),
+        date: String(d.createdAt || ''),
+      })),
+      ...allDrs.map(d => ({
+        id: d.id as string,
+        type: 'DR',
+        formType: 'dr',
+        number: String(d.osdNumber || d.id).slice(0, 16),
+        status: String(d.status || ''),
+        date: String(d.createdAt || ''),
+      })),
+    ];
+    return docs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [allMirvs, allJOs, allMrfs, allSTs, allGrns, allScrap, allDrs]);
+
+  const filteredDocs = useMemo(() => {
+    let docs = unifiedDocs;
+    if (docTypeFilter !== 'all') docs = docs.filter(d => d.type === docTypeFilter);
+    if (docStatusFilter !== 'all') docs = docs.filter(d => d.status === docStatusFilter);
+    if (docSearch) {
+      const q = docSearch.toLowerCase();
+      docs = docs.filter(
+        d =>
+          d.number.toLowerCase().includes(q) ||
+          d.type.toLowerCase().includes(q) ||
+          (d.project || '').toLowerCase().includes(q),
+      );
+    }
+    return docs;
+  }, [unifiedDocs, docTypeFilter, docStatusFilter, docSearch]);
+
+  const docPageCount = Math.max(1, Math.ceil(filteredDocs.length / PAGE_SIZE));
+  const paginatedDocs = filteredDocs.slice((docPage - 1) * PAGE_SIZE, docPage * PAGE_SIZE);
+  const docTypes = [...new Set(unifiedDocs.map(d => d.type))].sort();
+  const docStatuses = [...new Set(unifiedDocs.map(d => d.status))].sort();
 
   const setTab = (t: ManagerTab) => navigate(`/manager/${t}`, { replace: true });
 
@@ -364,85 +502,126 @@ export const ManagerDashboard: React.FC = () => {
 
       {/* Documents Tab */}
       {activeTab === 'documents' && (
-        <div className="glass-card rounded-2xl p-6 border border-white/10">
-          <h3 className="text-white font-bold mb-4">Recent Documents</h3>
-          <div className="overflow-x-auto">
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex-1 min-w-[200px] relative">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                value={docSearch}
+                onChange={e => {
+                  setDocSearch(e.target.value);
+                  setDocPage(1);
+                }}
+                placeholder="Search by number, type, or project..."
+                className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
+              />
+            </div>
+            <select
+              value={docTypeFilter}
+              onChange={e => {
+                setDocTypeFilter(e.target.value);
+                setDocPage(1);
+              }}
+              className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2.5 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Types</option>
+              {docTypes.map(t => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <select
+              value={docStatusFilter}
+              onChange={e => {
+                setDocStatusFilter(e.target.value);
+                setDocPage(1);
+              }}
+              className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2.5 focus:outline-none cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              {docStatuses.map(s => (
+                <option key={s} value={s}>
+                  {s.replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-gray-500">{filteredDocs.length} documents</span>
+          </div>
+
+          {/* Table */}
+          <div className="glass-card rounded-2xl overflow-hidden border border-white/10">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-gray-400 text-xs uppercase">
+                <tr className="border-b border-white/10 bg-white/5 text-gray-400 text-xs uppercase">
                   <th className="px-4 py-3">Type</th>
                   <th className="px-4 py-3">Number</th>
+                  <th className="px-4 py-3">Project</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Date</th>
                 </tr>
               </thead>
               <tbody className="text-gray-300 divide-y divide-white/5">
-                {[
-                  ...allMirvs
-                    .slice(0, 5)
-                    .map(d => ({
-                      type: 'MI',
-                      number: (d as unknown as Record<string, unknown>).mirvNumber || d.id,
-                      status: d.status,
-                      date:
-                        (d as unknown as Record<string, unknown>).requestDate ||
-                        (d as unknown as Record<string, unknown>).createdAt,
-                    })),
-                  ...allJOs
-                    .slice(0, 5)
-                    .map(d => ({
-                      type: 'JO',
-                      number: (d as unknown as Record<string, unknown>).joNumber || d.id,
-                      status: d.status,
-                      date:
-                        (d as unknown as Record<string, unknown>).requestDate ||
-                        (d as unknown as Record<string, unknown>).createdAt,
-                    })),
-                  ...allMrfs
-                    .slice(0, 5)
-                    .map(d => ({
-                      type: 'MR',
-                      number: d.mrfNumber || d.id,
-                      status: d.status,
-                      date: d.requestDate || d.createdAt,
-                    })),
-                  ...allSTs
-                    .slice(0, 5)
-                    .map(d => ({
-                      type: 'WT',
-                      number: d.transferNumber || d.id,
-                      status: d.status,
-                      date: d.transferDate || d.createdAt,
-                    })),
-                ]
-                  .sort(
-                    (a, b) =>
-                      new Date((b.date as string) || '').getTime() - new Date((a.date as string) || '').getTime(),
-                  )
-                  .slice(0, 15)
-                  .map((doc, i) => (
-                    <tr key={i} className="hover:bg-white/5 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="bg-nesma-primary/20 text-nesma-secondary px-2 py-0.5 rounded text-xs font-medium">
-                          {doc.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-white text-xs">{String(doc.number).slice(0, 12)}</td>
-                      <td className="px-4 py-3 capitalize text-xs">{String(doc.status || '').replace(/_/g, ' ')}</td>
-                      <td className="px-4 py-3 text-xs text-gray-400">
-                        {doc.date ? new Date(doc.date as string).toLocaleDateString() : '—'}
-                      </td>
-                    </tr>
-                  ))}
-                {allMirvs.length === 0 && allJOs.length === 0 && allMrfs.length === 0 && allSTs.length === 0 && (
+                {paginatedDocs.map(doc => (
+                  <tr
+                    key={`${doc.type}-${doc.id}`}
+                    className="hover:bg-white/5 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/manager/forms/${doc.formType}/${doc.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <span className="bg-nesma-primary/20 text-nesma-secondary px-2 py-0.5 rounded text-xs font-medium">
+                        {doc.type}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-white text-xs">{doc.number}</td>
+                    <td className="px-4 py-3 text-xs text-gray-400 truncate max-w-[180px]">{doc.project || '—'}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs capitalize ${DOC_STATUS_COLORS[doc.status] || 'bg-white/10 text-gray-400'}`}
+                      >
+                        {doc.status.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-400">
+                      {doc.date ? new Date(doc.date).toLocaleDateString() : '—'}
+                    </td>
+                  </tr>
+                ))}
+                {paginatedDocs.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
-                      No recent documents
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                      No documents found
                     </td>
                   </tr>
                 )}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {docPageCount > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+                <span className="text-xs text-gray-500">
+                  Page {docPage} of {docPageCount}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDocPage(p => Math.max(1, p - 1))}
+                    disabled={docPage === 1}
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    onClick={() => setDocPage(p => Math.min(docPageCount, p + 1))}
+                    disabled={docPage === docPageCount}
+                    className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -40,11 +40,27 @@ export interface DocumentCounts {
   shipments: { total: number; inTransit: number };
 }
 
+export interface SLAServiceMetrics {
+  total: number;
+  onTime: number;
+  breached: number;
+  pending: number;
+}
+
 export interface SLACompliance {
-  onTrack: number;
-  atRisk: number;
-  overdue: number;
-  compliancePct: number;
+  mirv: SLAServiceMetrics;
+  jo: SLAServiceMetrics;
+}
+
+/** Derive flat on-track / at-risk / overdue / compliance from nested SLA data */
+export function flattenSLA(sla: SLACompliance | undefined) {
+  if (!sla) return { onTrack: 0, atRisk: 0, overdue: 0, compliancePct: 0 };
+  const total = sla.mirv.total + sla.jo.total;
+  if (total === 0) return { onTrack: 0, atRisk: 0, overdue: 0, compliancePct: 0 };
+  const onTrack = Math.round((sla.mirv.onTime * sla.mirv.total + sla.jo.onTime * sla.jo.total) / total);
+  const overdue = Math.round((sla.mirv.breached * sla.mirv.total + sla.jo.breached * sla.jo.total) / total);
+  const atRisk = Math.max(0, 100 - onTrack - overdue);
+  return { onTrack, atRisk, overdue, compliancePct: onTrack };
 }
 
 export interface TopProject {

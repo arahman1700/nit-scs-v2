@@ -31,18 +31,14 @@ export interface GatePass {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use passType */
+  /** @deprecated Use passType — still used in pdfExport.ts + GatePassForm */
   type?: string;
-  /** @deprecated Use issueDate */
+  /** @deprecated Use issueDate — still used in pdfExport.ts */
   date?: string;
-  /** @deprecated Use vehicleNumber */
+  /** @deprecated Use vehicleNumber — still used in pdfExport.ts + dashboards */
   vehiclePlate?: string;
-  /** @deprecated Use gatePassItems */
+  /** @deprecated Use gatePassItems — still used in GatePassForm.tsx */
   items?: VoucherLineItem[];
-  /** @deprecated Use exitTime */
-  guardCheckOut?: string;
-  /** @deprecated Use returnTime */
-  guardCheckIn?: string;
 }
 
 // ── Stock Transfer ───────────────────────────────────────────────────────
@@ -74,8 +70,6 @@ export interface StockTransfer {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use transferDate */
-  date?: string;
 }
 
 // ── Material Requisition (MRF) ───────────────────────────────────────────
@@ -120,12 +114,8 @@ export interface MaterialRequisition {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use requestDate */
+  /** @deprecated Use requestDate — still used in MrfForm.tsx */
   date?: string;
-  /** @deprecated Use requestedById */
-  requester?: string;
-  /** @deprecated Use totalEstimatedValue */
-  totalValue?: number;
 }
 
 // ── Shipment ─────────────────────────────────────────────────────────────
@@ -196,15 +186,13 @@ export interface Shipment {
   statusHistory?: StatusHistoryEntry[];
   createdAt?: string;
   updatedAt?: string;
-  /** @deprecated Use expectedShipDate */
+  /** @deprecated Use expectedShipDate — still used in pdfExport.ts */
   etd?: string;
-  /** @deprecated Use etaPort */
+  /** @deprecated Use etaPort — still used in pdfExport.ts */
   eta?: string;
-  /** @deprecated Use commercialValue */
-  value?: number;
-  /** @deprecated Use portOfEntryId */
+  /** @deprecated Use portOfEntryId — still used in pdfExport.ts */
   port?: string;
-  /** @deprecated Use modeOfShipment */
+  /** @deprecated Use modeOfShipment — still used in ShipmentForm.tsx */
   shipmentType?: string;
 }
 

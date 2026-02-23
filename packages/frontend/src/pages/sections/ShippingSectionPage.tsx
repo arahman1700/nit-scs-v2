@@ -7,7 +7,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import { useShipmentList, useSLACompliance } from '@/api/hooks';
+import { useShipmentList, useSLACompliance, flattenSLA } from '@/api/hooks';
 
 const LazySla = React.lazy(() => import('@/pages/SlaDashboard').then(m => ({ default: m.SlaDashboard })));
 
@@ -20,7 +20,7 @@ export const ShippingSectionPage: React.FC = () => {
   const shipQuery = useShipmentList({ pageSize: 50 });
   const slaQuery = useSLACompliance();
 
-  const sla = slaQuery.data?.data;
+  const sla = flattenSLA(slaQuery.data?.data);
   const shipData = shipQuery.data?.data ?? [];
   const inTransitCount = shipData.filter(s => (s as unknown as Record<string, unknown>).status === 'in_transit').length;
 

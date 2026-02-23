@@ -5,7 +5,7 @@ import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import { useShipmentList } from '@/api/hooks/useShipments';
 import { useGatePassList } from '@/api/hooks/useGatePasses';
 import { useMrrvList } from '@/api/hooks/useMrrv';
-import { useSLACompliance } from '@/api/hooks/useDashboard';
+import { useSLACompliance, flattenSLA } from '@/api/hooks/useDashboard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { JobOrder } from '@nit-scs-v2/shared/types';
@@ -44,7 +44,8 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
     [allShipments],
   );
   const pendingGPs = useMemo(() => allGPs.filter(g => g.status === 'pending' || g.status === 'Pending'), [allGPs]);
-  const slaCompliance = slaQuery.data?.data?.compliancePct ?? 0;
+  const slaFlat = flattenSLA(slaQuery.data?.data);
+  const slaCompliance = slaFlat.compliancePct;
 
   const joByType = useMemo(() => {
     const map: Record<string, number> = {};
@@ -197,15 +198,15 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
             <h3 className="text-white font-bold mb-4">SLA Summary</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <p className="text-3xl font-bold text-emerald-400">{slaQuery.data?.data?.onTrack ?? 0}%</p>
+                <p className="text-3xl font-bold text-emerald-400">{slaFlat.onTrack}%</p>
                 <p className="text-xs text-gray-500 mt-1">On Track</p>
               </div>
               <div className="text-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                <p className="text-3xl font-bold text-amber-400">{slaQuery.data?.data?.atRisk ?? 0}%</p>
+                <p className="text-3xl font-bold text-amber-400">{slaFlat.atRisk}%</p>
                 <p className="text-xs text-gray-500 mt-1">At Risk</p>
               </div>
               <div className="text-center p-4 bg-red-500/10 rounded-xl border border-red-500/20">
-                <p className="text-3xl font-bold text-red-400">{slaQuery.data?.data?.overdue ?? 0}%</p>
+                <p className="text-3xl font-bold text-red-400">{slaFlat.overdue}%</p>
                 <p className="text-xs text-gray-500 mt-1">Overdue</p>
               </div>
             </div>

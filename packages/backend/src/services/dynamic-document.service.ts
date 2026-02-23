@@ -40,7 +40,7 @@ export async function listDocuments(
     skip: number;
     pageSize: number;
     sortBy: string;
-    sortDir: string;
+    sortDir: 'asc' | 'desc';
     search?: string;
     status?: string;
     [key: string]: unknown;

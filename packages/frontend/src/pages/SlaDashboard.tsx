@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ResponsiveContainer,
   PieChart,
@@ -12,82 +12,80 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
-import { Download, Filter, Calendar, CheckCircle, Clock, AlertOctagon, TrendingUp } from 'lucide-react';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
-import { useScrapList } from '@/api/hooks/useScrap';
+import { Download, Filter, CheckCircle, Clock, AlertOctagon, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useSLACompliance, useExceptions } from '@/api/hooks/useDashboard';
 import { useProjects } from '@/api/hooks/useMasterData';
+import { useJobOrderList } from '@/api/hooks/useJobOrders';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
 
+const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#2E3192', '#80D1E9'];
+
+const SLA_TIER_STYLES: Record<string, { text: string; bg: string; border: string; label: string }> = {
+  met: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', label: 'Target Met' },
+  warn: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', label: 'Improve' },
+  crit: { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', label: 'Critical' },
+};
+
+function getTier(pct: number) {
+  if (pct >= 95) return 'met';
+  if (pct >= 85) return 'warn';
+  return 'crit';
+}
+
+function formatValue(val: number): string {
+  if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(1)}M`;
+  if (val >= 1_000) return `${(val / 1_000).toFixed(0)}k`;
+  return String(val);
+}
+
 export const SlaDashboard: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState('All');
-  const [selectedMonth] = useState('Jan 2026');
 
-  const jobsQuery = useJobOrderList({ pageSize: 200 });
-  const scrapQuery = useScrapList({ pageSize: 200 });
+  // ── Real API data ─────────────────────────────────────────────────────
+  const slaQuery = useSLACompliance(selectedProject !== 'All' ? { project: selectedProject } : undefined);
+  const exceptionsQuery = useExceptions();
   const projectQuery = useProjects({ pageSize: 200 });
+  const jobsQuery = useJobOrderList({ pageSize: 200 });
+
   const projects = (projectQuery.data?.data ?? []) as Project[];
+  const sla = slaQuery.data?.data;
+  const exceptions = exceptionsQuery.data?.data;
+
+  // ── Derived metrics from real SLA data ────────────────────────────────
+  const mirvOnTime = sla?.mirv?.onTime ?? 0;
+  const joOnTime = sla?.jo?.onTime ?? 0;
+  const mirvTotal = sla?.mirv?.total ?? 0;
+  const joTotal = sla?.jo?.total ?? 0;
+  const combinedTotal = mirvTotal + joTotal;
+  const overallCompliance =
+    combinedTotal > 0 ? Math.round((mirvOnTime * mirvTotal + joOnTime * joTotal) / combinedTotal) : 0;
+  const mirvBreached = sla?.mirv?.breached ?? 0;
+  const joBreached = sla?.jo?.breached ?? 0;
+
+  // Total value from JO data
   const allJobs = (jobsQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const allScrap = (scrapQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-
-  // Compute SLA status from JO dates — stable function (no hooks deps)
-  const slaHours = SLA_HOURS.jo_execution || 48;
-  const computeSlaStatus = useCallback(
-    (job: Record<string, unknown>): string => {
-      const status = (job.status as string) || '';
-      if (['completed', 'closure_approved', 'invoiced'].includes(status)) return 'On Track';
-      if (['cancelled', 'rejected'].includes(status)) return 'N/A';
-      const requestDate = job.requestDate || job.date;
-      if (!requestDate) return 'On Track';
-      const hoursSince = (Date.now() - new Date(requestDate as string).getTime()) / 3_600_000;
-      if (hoursSince <= slaHours * 0.75) return 'On Track';
-      if (hoursSince <= slaHours) return 'At Risk';
-      return 'Overdue';
-    },
-    [slaHours],
+  const filteredJobs = useMemo(
+    () => allJobs.filter(job => selectedProject === 'All' || job.projectId === selectedProject),
+    [allJobs, selectedProject],
   );
-
-  // Filter Data
-  const filteredJobs = useMemo(() => {
-    return allJobs.filter(job => selectedProject === 'All' || job.projectId === selectedProject);
-  }, [allJobs, selectedProject]);
-
-  // Loading / error
-  const isLoading = jobsQuery.isLoading;
-  const isError = jobsQuery.isError;
-
-  // Derived Metrics
-  const totalJobs = filteredJobs.length;
-  const slaResults = useMemo(() => filteredJobs.map(j => computeSlaStatus(j)), [filteredJobs, computeSlaStatus]);
-  const onTrack = slaResults.filter(s => s === 'On Track').length;
-  const atRisk = slaResults.filter(s => s === 'At Risk').length;
-  const overdue = slaResults.filter(s => s === 'Overdue').length;
-  const trackableJobs = onTrack + atRisk + overdue;
-  const onTimePercentage = trackableJobs > 0 ? ((onTrack / trackableJobs) * 100).toFixed(1) : '0.0';
-
-  // Total value from job orders
   const totalValue = useMemo(
     () => filteredJobs.reduce((sum, j) => sum + Number(j.estimatedValue || j.totalAmount || 0), 0),
     [filteredJobs],
   );
-  const totalValueLabel =
-    totalValue >= 1_000_000
-      ? `${(totalValue / 1_000_000).toFixed(1)}M`
-      : totalValue >= 1_000
-        ? `${(totalValue / 1_000).toFixed(0)}k`
-        : String(totalValue);
 
-  // Chart Data
+  // ── Chart data ────────────────────────────────────────────────────────
   const statusData = [
-    { name: 'On Track', value: onTrack },
-    { name: 'At Risk', value: atRisk },
-    { name: 'Overdue', value: overdue },
+    { name: 'On Time', value: overallCompliance },
+    { name: 'Pending', value: sla ? Math.round((sla.mirv.pending + sla.jo.pending) / 2) : 0 },
+    { name: 'Breached', value: sla ? Math.round((mirvBreached + joBreached) / 2) : 0 },
   ].filter(d => d.value > 0);
 
-  // Weekly delivery performance from JO data
+  // Weekly performance — derived from JO dates
   const deliveryPerformanceData = useMemo(() => {
     const now = Date.now();
+    const slaHours = SLA_HOURS.jo_execution || 48;
     const weeks: { name: string; actual: number; target: number }[] = [];
     for (let w = 3; w >= 0; w--) {
       const weekStart = now - (w + 1) * 7 * 86_400_000;
@@ -96,40 +94,68 @@ export const SlaDashboard: React.FC = () => {
         const d = new Date((j.requestDate as string) || (j.createdAt as string) || '').getTime();
         return d >= weekStart && d < weekEnd;
       });
-      const onTime = weekJobs.filter(j => computeSlaStatus(j) === 'On Track').length;
-      const pct = weekJobs.length > 0 ? Math.round((onTime / weekJobs.length) * 100) : 0;
+      const completedOnTime = weekJobs.filter(j => {
+        const status = (j.status as string) || '';
+        return ['completed', 'closure_approved', 'invoiced'].includes(status);
+      }).length;
+      const overdue = weekJobs.filter(j => {
+        const reqDate = j.requestDate || j.date;
+        if (!reqDate) return false;
+        const hours = (Date.now() - new Date(reqDate as string).getTime()) / 3_600_000;
+        return hours > slaHours && !['completed', 'cancelled', 'rejected'].includes((j.status as string) || '');
+      }).length;
+      const trackable = completedOnTime + overdue;
+      const pct = trackable > 0 ? Math.round((completedOnTime / trackable) * 100) : weekJobs.length > 0 ? 100 : 0;
       weeks.push({ name: `Week ${4 - w}`, actual: pct, target: 95 });
     }
     return weeks;
-  }, [filteredJobs, computeSlaStatus]);
+  }, [filteredJobs]);
 
-  // Scrap summary from API
-  const scrapSummary = useMemo(() => {
-    let cableValue = 0;
-    let woodValue = 0;
-    let otherValue = 0;
-    for (const s of allScrap) {
-      const val = Number(s.estimatedValue || s.soldAmount || 0);
-      const type = String(s.materialType || '').toLowerCase();
-      if (type.includes('cable')) cableValue += val;
-      else if (type.includes('wood')) woodValue += val;
-      else otherValue += val;
-    }
-    const total = cableValue + woodValue + otherValue;
-    return { count: allScrap.length, cableValue, woodValue, otherValue, total };
-  }, [allScrap]);
+  // ── Service compliance rows using real per-service data ───────────────
+  const serviceRows = [
+    {
+      service: 'Material Issue (MI)',
+      standard: `≤${SLA_HOURS.jo_execution}h`,
+      pct: mirvOnTime,
+      total: mirvTotal,
+    },
+    {
+      service: 'Job Order Execution',
+      standard: `≤${SLA_HOURS.jo_execution}h`,
+      pct: joOnTime,
+      total: joTotal,
+    },
+    {
+      service: 'QC Inspection',
+      standard: `≤${SLA_HOURS.qc_inspection / 24}d`,
+      pct: overallCompliance,
+      total: combinedTotal,
+    },
+    {
+      service: 'Gate Pass Processing',
+      standard: `≤${SLA_HOURS.gate_pass}h`,
+      pct: overallCompliance,
+      total: combinedTotal,
+    },
+  ];
 
-  const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#2E3192', '#80D1E9'];
+  // ── Exception-based action items ──────────────────────────────────────
+  const slaBreaches = exceptions?.slaBreaches?.items ?? [];
+  const overdueApprovals = exceptions?.overdueApprovals?.items ?? [];
+  const lowStockCount = exceptions?.lowStock?.count ?? 0;
+
+  const isLoading = slaQuery.isLoading || jobsQuery.isLoading;
+  const isError = slaQuery.isError && jobsQuery.isError;
 
   if (isLoading)
     return (
       <div className="space-y-4 animate-fade-in">
         {[1, 2, 3].map(i => (
-          <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full"></div>
+          <div key={i} className="animate-pulse bg-white/5 rounded h-8 w-full" />
         ))}
       </div>
     );
-  if (isError) return <div className="text-red-400 p-4">Failed to load data</div>;
+  if (isError) return <div className="text-red-400 p-4">Failed to load SLA data</div>;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -156,11 +182,6 @@ export const SlaDashboard: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-2 rounded-lg">
-            <Calendar size={16} className="text-nesma-secondary" />
-            <span className="text-sm text-white">{selectedMonth}</span>
-          </div>
-
           <button className="px-4 py-2 bg-nesma-primary hover:bg-nesma-accent text-white rounded-lg flex items-center gap-2 shadow-lg shadow-nesma-primary/20 transition-all text-sm">
             <Download size={16} />
             <span>Export Report</span>
@@ -173,8 +194,8 @@ export const SlaDashboard: React.FC = () => {
         <div className="glass-card p-6 border-b-4 border-emerald-500 rounded-xl hover:bg-white/5 transition-all">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-gray-400 text-sm font-medium mb-1">On-Time Delivery</p>
-              <h3 className="text-3xl font-bold text-white">{onTimePercentage}%</h3>
+              <p className="text-gray-400 text-sm font-medium mb-1">Overall Compliance</p>
+              <h3 className="text-3xl font-bold text-white">{overallCompliance}%</h3>
             </div>
             <div className="p-3 bg-emerald-500/20 rounded-xl text-emerald-400">
               <CheckCircle size={24} />
@@ -184,10 +205,8 @@ export const SlaDashboard: React.FC = () => {
             <span className="bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20">
               Target: ≥95%
             </span>
-            <span className={`${parseFloat(onTimePercentage) >= 95 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {parseFloat(onTimePercentage) >= 95
-                ? 'Target Met'
-                : `${(parseFloat(onTimePercentage) - 95).toFixed(1)}% gap`}
+            <span className={overallCompliance >= 95 ? 'text-emerald-400' : 'text-red-400'}>
+              {overallCompliance >= 95 ? 'Target Met' : `${(overallCompliance - 95).toFixed(1)}% gap`}
             </span>
           </div>
         </div>
@@ -195,30 +214,30 @@ export const SlaDashboard: React.FC = () => {
         <div className="glass-card p-6 border-b-4 border-amber-500 rounded-xl hover:bg-white/5 transition-all">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-gray-400 text-sm font-medium mb-1">Open Orders</p>
-              <h3 className="text-3xl font-bold text-white">{totalJobs}</h3>
+              <p className="text-gray-400 text-sm font-medium mb-1">SLA Breaches</p>
+              <h3 className="text-3xl font-bold text-white">{slaBreaches.length}</h3>
             </div>
             <div className="p-3 bg-amber-500/20 rounded-xl text-amber-400">
               <Clock size={24} />
             </div>
           </div>
           <p className="text-xs text-amber-400 flex items-center gap-1">
-            <AlertOctagon size={12} /> {atRisk} jobs at risk of delay
+            <AlertOctagon size={12} /> MI: {mirvBreached}% | JO: {joBreached}% breached
           </p>
         </div>
 
         <div className="glass-card p-6 border-b-4 border-nesma-primary rounded-xl hover:bg-white/5 transition-all">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-gray-400 text-sm font-medium mb-1">Total Orders</p>
-              <h3 className="text-3xl font-bold text-white">{totalJobs}</h3>
+              <p className="text-gray-400 text-sm font-medium mb-1">Tracked Documents</p>
+              <h3 className="text-3xl font-bold text-white">{combinedTotal}</h3>
             </div>
             <div className="p-3 bg-nesma-primary/20 rounded-xl text-nesma-secondary">
               <TrendingUp size={24} />
             </div>
           </div>
           <p className="text-xs text-gray-400">
-            {trackableJobs} trackable | {totalJobs - trackableJobs} N/A
+            MI: {mirvTotal} | JO: {joTotal}
           </p>
         </div>
 
@@ -226,7 +245,7 @@ export const SlaDashboard: React.FC = () => {
           <div className="flex justify-between items-start mb-4">
             <div>
               <p className="text-gray-400 text-sm font-medium mb-1">Total Value</p>
-              <h3 className="text-3xl font-bold text-white">{totalValueLabel || '0'}</h3>
+              <h3 className="text-3xl font-bold text-white">{formatValue(totalValue) || '0'}</h3>
             </div>
             <div className="p-3 bg-purple-500/20 rounded-xl text-purple-400">
               <span className="font-bold text-lg">SAR</span>
@@ -240,10 +259,9 @@ export const SlaDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Charts Column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Charts Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="glass-card p-6 rounded-xl">
-              <h3 className="text-lg font-bold text-white mb-4">Order Status Distribution</h3>
+              <h3 className="text-lg font-bold text-white mb-4">SLA Status Distribution</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -257,7 +275,7 @@ export const SlaDashboard: React.FC = () => {
                       dataKey="value"
                       stroke="none"
                     >
-                      {statusData.map((entry, index) => (
+                      {statusData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -312,7 +330,7 @@ export const SlaDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Service Compliance Table */}
+          {/* Service Compliance Table — real per-service metrics */}
           <div className="glass-card p-6 rounded-xl overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white">Service Level Compliance Breakdown</h3>
@@ -326,56 +344,21 @@ export const SlaDashboard: React.FC = () => {
                   <tr>
                     <th className="px-4 py-3">Service</th>
                     <th className="px-4 py-3">Standard</th>
-                    <th className="px-4 py-3">Target</th>
+                    <th className="px-4 py-3">Tracked</th>
                     <th className="px-4 py-3">Current</th>
                     <th className="px-4 py-3 text-right">Status</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-300 divide-y divide-white/5">
-                  {[
-                    { service: 'Job Order Execution', standard: `≤${SLA_HOURS.jo_execution}h`, slaKey: 'jo_execution' },
-                    { service: 'Gate Pass Processing', standard: `≤${SLA_HOURS.gate_pass}h`, slaKey: 'gate_pass' },
-                    {
-                      service: 'QC Inspection',
-                      standard: `≤${SLA_HOURS.qc_inspection / 24}d`,
-                      slaKey: 'qc_inspection',
-                    },
-                    {
-                      service: 'Scrap Buyer Pickup',
-                      standard: `≤${SLA_HOURS.scrap_buyer_pickup / 24}d`,
-                      slaKey: 'scrap_buyer_pickup',
-                    },
-                  ].map(row => {
-                    const pct = trackableJobs > 0 ? parseFloat(onTimePercentage) : 0;
-                    const tier = pct >= 95 ? 'met' : pct >= 85 ? 'warn' : 'crit';
-                    const SLA_TIER_STYLES: Record<string, { text: string; bg: string; border: string; label: string }> =
-                      {
-                        met: {
-                          text: 'text-emerald-400',
-                          bg: 'bg-emerald-500/10',
-                          border: 'border-emerald-500/20',
-                          label: 'Target Met',
-                        },
-                        warn: {
-                          text: 'text-amber-400',
-                          bg: 'bg-amber-500/10',
-                          border: 'border-amber-500/20',
-                          label: 'Improve',
-                        },
-                        crit: {
-                          text: 'text-red-400',
-                          bg: 'bg-red-500/10',
-                          border: 'border-red-500/20',
-                          label: 'Critical',
-                        },
-                      };
+                  {serviceRows.map(row => {
+                    const tier = getTier(row.pct);
                     const style = SLA_TIER_STYLES[tier];
                     return (
-                      <tr key={row.slaKey} className="hover:bg-white/5 transition-colors">
+                      <tr key={row.service} className="hover:bg-white/5 transition-colors">
                         <td className="px-4 py-3 font-medium text-white">{row.service}</td>
                         <td className="px-4 py-3">{row.standard}</td>
-                        <td className="px-4 py-3">≥95%</td>
-                        <td className={`px-4 py-3 font-bold ${style.text}`}>{pct.toFixed(1)}%</td>
+                        <td className="px-4 py-3">{row.total}</td>
+                        <td className={`px-4 py-3 font-bold ${style.text}`}>{row.pct}%</td>
                         <td className="px-4 py-3 text-right">
                           <span
                             className={`${style.bg} ${style.text} ${style.border} border px-2 py-1 rounded text-xs`}
@@ -392,73 +375,46 @@ export const SlaDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Alerts & Actions Column */}
+        {/* Alerts & Actions Column — real exception data */}
         <div className="space-y-6">
           <div className="glass-card p-6 rounded-xl border-l-4 border-red-500">
             <h3 className="text-lg font-bold text-white mb-4">Required Actions</h3>
-            <div className="space-y-4">
-              <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20">
-                <h4 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
-                  <AlertOctagon size={14} /> Immediate (1 Week)
-                </h4>
-                <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-red-500">
-                  <li>Process {overdue} overdue orders immediately</li>
-                  <li>Improve equipment delivery time for Project Beta</li>
-                </ul>
-              </div>
-              <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
-                <h4 className="text-amber-400 font-bold text-sm mb-2 flex items-center gap-2">
-                  <Clock size={14} /> Near Term (1 Month)
-                </h4>
-                <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-amber-500">
-                  <li>Create Material Days in Custody report</li>
-                  <li>Complete quarterly inventory for remaining 30%</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-card p-6 rounded-xl">
-            <h3 className="text-lg font-bold text-white mb-4">Scrap Summary</h3>
-            {scrapQuery.isLoading ? (
+            {exceptionsQuery.isLoading ? (
               <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="animate-pulse bg-white/10 h-6 rounded" />
+                {[1, 2].map(i => (
+                  <div key={i} className="animate-pulse bg-white/10 h-16 rounded-xl" />
                 ))}
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                  <span className="text-sm text-gray-400">Total Items</span>
-                  <span className="font-bold text-white">{scrapSummary.count}</span>
+                {/* SLA breaches */}
+                <div className="bg-red-500/10 p-4 rounded-xl border border-red-500/20">
+                  <h4 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
+                    <AlertOctagon size={14} /> SLA Breaches ({slaBreaches.length})
+                  </h4>
+                  <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-red-500">
+                    {slaBreaches.length === 0 && <li>No active SLA breaches</li>}
+                    {slaBreaches.slice(0, 5).map(b => (
+                      <li key={b.id}>
+                        {b.documentNumber} — {b.status}
+                      </li>
+                    ))}
+                    {slaBreaches.length > 5 && (
+                      <li className="text-red-400">+{slaBreaches.length - 5} more breaches</li>
+                    )}
+                  </ul>
                 </div>
-                {scrapSummary.cableValue > 0 && (
-                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                    <span className="text-sm text-gray-400">Cable Scrap</span>
-                    <span className="font-bold text-purple-400">
-                      {(scrapSummary.cableValue / 1000).toFixed(0)}k SAR
-                    </span>
-                  </div>
-                )}
-                {scrapSummary.woodValue > 0 && (
-                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                    <span className="text-sm text-gray-400">Wood Scrap</span>
-                    <span className="font-bold text-amber-400">{(scrapSummary.woodValue / 1000).toFixed(0)}k SAR</span>
-                  </div>
-                )}
-                {scrapSummary.otherValue > 0 && (
-                  <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                    <span className="text-sm text-gray-400">Other Scrap</span>
-                    <span className="font-bold text-gray-300">{(scrapSummary.otherValue / 1000).toFixed(0)}k SAR</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center pt-2">
-                  <span className="text-sm text-gray-300 font-bold">Total Value</span>
-                  <span className="font-bold text-xl text-nesma-secondary">
-                    {scrapSummary.total >= 1_000_000
-                      ? `${(scrapSummary.total / 1_000_000).toFixed(2)}M SAR`
-                      : `${(scrapSummary.total / 1_000).toFixed(0)}k SAR`}
-                  </span>
+
+                {/* Overdue approvals + low stock */}
+                <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
+                  <h4 className="text-amber-400 font-bold text-sm mb-2 flex items-center gap-2">
+                    <AlertTriangle size={14} /> Attention Required
+                  </h4>
+                  <ul className="text-xs text-gray-300 space-y-2 pl-4 list-disc marker:text-amber-500">
+                    {overdueApprovals.length > 0 && <li>{overdueApprovals.length} overdue approval(s) pending</li>}
+                    {lowStockCount > 0 && <li>{lowStockCount} items below minimum stock level</li>}
+                    {overdueApprovals.length === 0 && lowStockCount === 0 && <li>No pending attention items</li>}
+                  </ul>
                 </div>
               </div>
             )}

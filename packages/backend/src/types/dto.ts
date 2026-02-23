@@ -248,7 +248,7 @@ export interface ListParams {
   skip: number;
   pageSize: number;
   sortBy: string;
-  sortDir: string;
+  sortDir: 'asc' | 'desc';
   search?: string;
   status?: string;
   /** Index signature for row-level security scope filters and extra query params */

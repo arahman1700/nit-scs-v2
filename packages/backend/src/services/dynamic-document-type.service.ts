@@ -55,7 +55,7 @@ export async function listDocumentTypes(params: {
   skip: number;
   pageSize: number;
   sortBy: string;
-  sortDir: string;
+  sortDir: 'asc' | 'desc';
   search?: string;
   category?: string;
   isActive?: string;

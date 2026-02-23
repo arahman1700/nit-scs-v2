@@ -95,3 +95,74 @@ export type JOType =
   | 'scrap'
   | 'generator_rental'
   | 'generator_maintenance';
+
+// ── Per-Document Status Types ────────────────────────────────────────────
+// Narrowed subsets of DocumentStatus for each document type.
+// These match the STATUS_FLOWS in formConfigs.ts (display labels map to these db values).
+
+export type GrnStatus = 'draft' | 'pending_qc' | 'qc_approved' | 'received' | 'stored';
+export type MiStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'approved'
+  | 'partially_issued'
+  | 'issued'
+  | 'completed'
+  | 'rejected'
+  | 'cancelled';
+export type MrnStatus = 'draft' | 'pending_approval' | 'received' | 'completed' | 'rejected';
+export type QciStatus = 'pending_qc' | 'in_progress' | 'completed';
+export type DrStatus =
+  | 'draft'
+  | 'under_review'
+  | 'claim_sent'
+  | 'awaiting_response'
+  | 'negotiating'
+  | 'resolved'
+  | 'closed';
+export type MrStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'approved'
+  | 'checking_stock'
+  | 'from_stock'
+  | 'needs_purchase'
+  | 'partially_fulfilled'
+  | 'fulfilled'
+  | 'rejected'
+  | 'cancelled';
+export type WtStatus = 'draft' | 'pending_approval' | 'approved' | 'shipped' | 'received' | 'completed' | 'cancelled';
+export type GatePassStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'approved'
+  | 'released'
+  | 'returned'
+  | 'expired'
+  | 'cancelled';
+export type ImsfStatus = 'created' | 'sent' | 'confirmed' | 'in_transit' | 'delivered' | 'completed' | 'rejected';
+export type ScrapStatus =
+  | 'identified'
+  | 'reported'
+  | 'approved'
+  | 'in_ssc'
+  | 'sold'
+  | 'disposed'
+  | 'closed'
+  | 'rejected';
+export type SurplusStatus = 'identified' | 'evaluated' | 'approved' | 'actioned' | 'closed' | 'rejected';
+export type RentalContractStatus = 'draft' | 'pending_approval' | 'active' | 'extended' | 'terminated' | 'rejected';
+export type ShipmentStatus =
+  | 'draft'
+  | 'po_issued'
+  | 'in_production'
+  | 'ready_to_ship'
+  | 'in_transit'
+  | 'at_port'
+  | 'customs_clearing'
+  | 'cleared'
+  | 'in_delivery'
+  | 'delivered'
+  | 'cancelled';
+export type HandoverStatus = 'initiated' | 'in_progress' | 'completed';
