@@ -234,8 +234,8 @@ async function notifySla(params: {
           ? `/${params.referenceTable}/${params.referenceId}`
           : '/notifications',
       tag: params.notificationType,
-    }).catch(() => {
-      // Silently ignore push failures
+    }).catch(err => {
+      log('warn', `[Scheduler] Push notification failed: ${(err as Error).message}`);
     });
   }
 

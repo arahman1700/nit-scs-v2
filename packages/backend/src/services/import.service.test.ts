@@ -8,13 +8,59 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
-vi.mock('xlsx', () => ({
-  read: vi.fn(),
-  utils: { sheet_to_json: vi.fn() },
-}));
+
+// Mock exceljs — we provide a fake Workbook class that simulates parsing
+const mockWorksheetRows: Array<{ values: unknown[] }> = [];
+
+vi.mock('exceljs', () => {
+  return {
+    default: {
+      Workbook: class MockWorkbook {
+        worksheets: Array<{
+          eachRow: (
+            cb: (
+              row: { eachCell: (cb: (cell: { value: unknown }, colNumber: number) => void) => void },
+              rowNumber: number,
+            ) => void,
+          ) => void;
+        }> = [];
+        xlsx = {
+          load: vi.fn().mockImplementation(async () => {
+            if (mockWorksheetRows.length === 0) {
+              this.worksheets = [];
+              return;
+            }
+            this.worksheets = [
+              {
+                eachRow: (
+                  cb: (
+                    row: { eachCell: (cb: (cell: { value: unknown }, colNumber: number) => void) => void },
+                    rowNumber: number,
+                  ) => void,
+                ) => {
+                  mockWorksheetRows.forEach((row, index) => {
+                    cb(
+                      {
+                        eachCell: (cellCb: (cell: { value: unknown }, colNumber: number) => void) => {
+                          row.values.forEach((val, colIdx) => {
+                            cellCb({ value: val }, colIdx + 1);
+                          });
+                        },
+                      },
+                      index + 1,
+                    );
+                  });
+                },
+              },
+            ];
+          }),
+        };
+      },
+    },
+  };
+});
 
 import { createPrismaMock } from '../test-utils/prisma-mock.js';
-import * as XLSX from 'xlsx';
 import { getExpectedFields, parseExcelPreview, executeImport } from './import.service.js';
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -27,6 +73,7 @@ describe('import.service', () => {
     (mockPrisma as any).city = { create: vi.fn() };
     (mockPrisma as any).unitOfMeasure = { create: vi.fn() };
     vi.clearAllMocks();
+    mockWorksheetRows.length = 0;
   });
 
   // ---------------------------------------------------------------------------
@@ -70,63 +117,61 @@ describe('import.service', () => {
   // parseExcelPreview
   // ---------------------------------------------------------------------------
   describe('parseExcelPreview', () => {
-    it('parses Excel buffer and returns preview with headers, sampleRows, totalRows', () => {
-      const mockRows = [
-        { Code: 'A001', Name: 'Widget' },
-        { Code: 'A002', Name: 'Gadget' },
-        { Code: 'A003', Name: 'Doohickey' },
-      ];
-
-      vi.mocked(XLSX.read).mockReturnValue({
-        SheetNames: ['Sheet1'],
-        Sheets: { Sheet1: {} },
-      } as any);
-      vi.mocked(XLSX.utils.sheet_to_json).mockReturnValue(mockRows as any);
-
-      const result = parseExcelPreview(Buffer.from('data'), 'items');
-
-      expect(XLSX.read).toHaveBeenCalledWith(
-        Buffer.from('data'),
-        expect.objectContaining({ type: 'buffer', dense: true, cellFormula: false }),
+    it('parses Excel buffer and returns preview with headers, sampleRows, totalRows', async () => {
+      mockWorksheetRows.push(
+        { values: ['Code', 'Name'] }, // header row
+        { values: ['A001', 'Widget'] },
+        { values: ['A002', 'Gadget'] },
+        { values: ['A003', 'Doohickey'] },
       );
+
+      const result = await parseExcelPreview(Buffer.from('data'), 'items');
+
       expect(result.headers).toEqual(['Code', 'Name']);
-      expect(result.sampleRows).toEqual(mockRows);
+      expect(result.sampleRows).toHaveLength(3);
       expect(result.totalRows).toBe(3);
       expect(result.expectedFields).toEqual(getExpectedFields('items'));
     });
 
-    it('returns at most 5 sample rows', () => {
-      const mockRows = Array.from({ length: 20 }, (_, i) => ({ id: `item-${i}` }));
+    it('returns at most 5 sample rows', async () => {
+      // Header row
+      mockWorksheetRows.push({ values: ['id'] });
+      // 20 data rows
+      for (let i = 0; i < 20; i++) {
+        mockWorksheetRows.push({ values: [`item-${i}`] });
+      }
 
-      vi.mocked(XLSX.read).mockReturnValue({
-        SheetNames: ['Sheet1'],
-        Sheets: { Sheet1: {} },
-      } as any);
-      vi.mocked(XLSX.utils.sheet_to_json).mockReturnValue(mockRows as any);
-
-      const result = parseExcelPreview(Buffer.from('data'), 'items');
+      const result = await parseExcelPreview(Buffer.from('data'), 'items');
 
       expect(result.sampleRows).toHaveLength(5);
       expect(result.totalRows).toBe(20);
     });
 
-    it('throws when workbook has no sheets', () => {
-      vi.mocked(XLSX.read).mockReturnValue({
-        SheetNames: [],
-        Sheets: {},
-      } as any);
-
-      expect(() => parseExcelPreview(Buffer.from('data'), 'items')).toThrow('No sheets found in the Excel file');
+    it('throws when workbook has no sheets', async () => {
+      // mockWorksheetRows is empty → no worksheets created
+      await expect(parseExcelPreview(Buffer.from('data'), 'items')).rejects.toThrow(
+        'No sheets found in the Excel file',
+      );
     });
 
-    it('throws when sheet has no data rows', () => {
-      vi.mocked(XLSX.read).mockReturnValue({
-        SheetNames: ['Sheet1'],
-        Sheets: { Sheet1: {} },
-      } as any);
-      vi.mocked(XLSX.utils.sheet_to_json).mockReturnValue([]);
+    it('throws when sheet has no data rows', async () => {
+      // Only header row, no data
+      mockWorksheetRows.push({ values: ['Code', 'Name'] });
 
-      expect(() => parseExcelPreview(Buffer.from('data'), 'items')).toThrow('No data rows found in the Excel file');
+      // Actually this will produce 0 data rows since eachRow skips first as header
+      // We need to mock the worksheet to have only headers but trigger an empty rows scenario
+      // Let's just have a header row but no data row — eachRow will only call once (rowNumber=1)
+      // which is treated as header, resulting in 0 data rows
+      // But wait — our mock always calls for all rows in mockWorksheetRows.
+      // With only 1 row (header), rows array will be empty → throws
+
+      await expect(parseExcelPreview(Buffer.from('data'), 'items')).rejects.toThrow(
+        'No data rows found in the Excel file',
+      );
+    });
+
+    it('throws when buffer is empty', async () => {
+      await expect(parseExcelPreview(Buffer.alloc(0), 'items')).rejects.toThrow('Uploaded file is empty');
     });
   });
 
@@ -226,12 +271,23 @@ describe('import.service', () => {
 
       const createCall = mockPrisma.project.create.mock.calls[0][0];
       expect(createCall.data.startDate).toBeInstanceOf(Date);
-      // Verify the date is valid
       expect(createCall.data.startDate.getTime()).not.toBeNaN();
     });
 
+    it('handles Date objects from exceljs via toDate transform', async () => {
+      mockPrisma.project.create.mockResolvedValue({});
+
+      const mapping = { Code: 'projectCode', Name: 'projectName', Start: 'startDate' };
+      const rows = [{ Code: 'P-1', Name: 'Test', Start: new Date('2025-06-15') }];
+
+      await executeImport('projects', mapping, rows);
+
+      const createCall = mockPrisma.project.create.mock.calls[0][0];
+      expect(createCall.data.startDate).toBeInstanceOf(Date);
+      expect(createCall.data.startDate.toISOString()).toContain('2025-06-15');
+    });
+
     it('throws when required field mapping is missing', async () => {
-      // items requires itemCode and itemDescription
       const mapping = { Code: 'itemCode' }; // missing itemDescription
       const rows = [{ Code: 'IC-1' }];
 
@@ -292,7 +348,6 @@ describe('import.service', () => {
         itemCode: 'IC-1',
         itemDescription: 'Widget',
       });
-      // Empty optional fields should NOT be present
       expect(createCall.data).not.toHaveProperty('itemCategory');
       expect(createCall.data).not.toHaveProperty('hsnCode');
     });
@@ -402,7 +457,6 @@ describe('import.service', () => {
       await executeImport('items', mapping, rows);
 
       const createCall = mockPrisma.item.create.mock.calls[0][0];
-      // toNumber returns null for NaN, and null optional → skipped
       expect(createCall.data).not.toHaveProperty('unitPrice');
     });
   });

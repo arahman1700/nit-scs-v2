@@ -56,8 +56,8 @@ export function getRedis(): Redis | null {
     });
 
     // Attempt the actual connection
-    _redis.connect().catch(() => {
-      // Handled by the 'error' event — swallow here so the app continues
+    _redis.connect().catch(err => {
+      logger.warn({ err }, 'Redis connect() promise rejected — handled by error event');
       if (process.env.NODE_ENV === 'production') {
         logger.error('Redis is required in production but failed to connect');
       }

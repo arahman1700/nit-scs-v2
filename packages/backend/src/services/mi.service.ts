@@ -11,6 +11,7 @@ import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
+import { logger } from '../config/logger.js';
 import type { Server as SocketIOServer } from 'socket.io';
 import type {
   MirvCreateDto as MiCreateDto,
@@ -322,7 +323,7 @@ async function autoFulfillParentMr(mirvId: string, userId: string): Promise<void
   } catch (err) {
     // Non-critical — log but don't fail the MI issuance
 
-    console.error('[MI] Failed to auto-fulfill parent MR:', err);
+    logger.error({ err }, 'Failed to auto-fulfill parent MR after MI issuance');
   }
 }
 

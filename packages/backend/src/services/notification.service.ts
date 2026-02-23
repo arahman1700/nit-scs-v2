@@ -3,6 +3,7 @@ import { prisma } from '../utils/prisma.js';
 import { emitToUser } from '../socket/setup.js';
 import { NotFoundError, AuthorizationError } from '@nit-scs-v2/shared';
 import { sendPushToUser } from './push-notification.service.js';
+import { logger } from '../config/logger.js';
 
 export interface CreateNotificationParams {
   recipientId: string;
@@ -42,8 +43,8 @@ export async function createNotification(params: CreateNotificationParams, io?: 
         ? `/${params.referenceTable}/${params.referenceId}`
         : '/notifications',
     tag: params.notificationType,
-  }).catch(() => {
-    // Silently ignore push failures — socket/in-app notifications still work
+  }).catch(err => {
+    logger.warn({ err, userId: params.recipientId }, 'Push notification delivery failed');
   });
 
   return notification;
