@@ -107,6 +107,7 @@ export interface PrismaMock {
   laborStandard: PrismaModelMock;
   navigationOverride: PrismaModelMock;
   dynamicDocumentType: PrismaModelMock;
+  dynamicFieldDefinition: PrismaModelMock;
   dynamicDocumentField: PrismaModelMock;
   dynamicDocument: PrismaModelMock;
   semanticMeasure: PrismaModelMock;
@@ -119,6 +120,7 @@ export interface PrismaMock {
   workflowExecutionLog: PrismaModelMock;
   surplusDeclaration: PrismaModelMock;
   notificationPreference: PrismaModelMock;
+  rolePermission: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -197,6 +199,7 @@ export function createPrismaMock(): PrismaMock {
     laborStandard: createModelMock(),
     navigationOverride: createModelMock(),
     dynamicDocumentType: createModelMock(),
+    dynamicFieldDefinition: createModelMock(),
     dynamicDocumentField: createModelMock(),
     dynamicDocument: createModelMock(),
     semanticMeasure: createModelMock(),
@@ -209,6 +212,7 @@ export function createPrismaMock(): PrismaMock {
     workflowExecutionLog: createModelMock(),
     surplusDeclaration: createModelMock(),
     notificationPreference: createModelMock(),
+    rolePermission: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
