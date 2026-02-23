@@ -113,9 +113,43 @@ export const ALLOWED_TABLES: TableInfo[] = [
     description: 'Discrepancy Reports (DR)',
     columns: ['id', 'osd_number', 'status', 'report_type', 'created_at'],
   },
+  {
+    table: 'stock_transfers',
+    description: 'Stock transfer / WT documents',
+    columns: ['id', 'transfer_number', 'status', 'from_warehouse_id', 'to_warehouse_id', 'transfer_date', 'created_at'],
+  },
+  {
+    table: 'gate_passes',
+    description: 'Gate pass documents',
+    columns: ['id', 'gate_pass_number', 'status', 'mirv_id', 'project_id', 'created_at'],
+  },
+  {
+    table: 'imsf',
+    description: 'Inter-site material supply forms',
+    columns: ['id', 'imsf_number', 'status', 'from_warehouse_id', 'to_warehouse_id', 'created_at'],
+  },
+  {
+    table: 'surplus_items',
+    description: 'Surplus inventory',
+    columns: ['id', 'surplus_number', 'status', 'item_id', 'qty', 'project_id', 'created_at'],
+  },
 ];
 
 const ALLOWED_TABLE_SET = new Set(ALLOWED_TABLES.map(t => t.table));
+
+/** System catalog and internal PostgreSQL tables — always blocked (defense-in-depth) */
+export const BLOCKED_TABLES = new Set([
+  'information_schema',
+  'pg_catalog',
+  'pg_tables',
+  'pg_stat_user_tables',
+  'pg_roles',
+  'pg_user',
+  'pg_shadow',
+  'pg_stat_activity',
+  'pg_settings',
+  'pg_authid',
+]);
 
 /** Build a text prompt describing the schema for AI context */
 export function buildSchemaPrompt(): string {
@@ -161,6 +195,15 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     'pg_read_file',
     'pg_sleep',
     'lo_import',
+    'with',
+    'into',
+    'call',
+    'do',
+    'handler',
+    'load',
+    'replace',
+    'lock',
+    'unlock',
   ];
   for (const word of forbidden) {
     // Check as whole word
@@ -168,6 +211,11 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     if (regex.test(sql)) {
       return { valid: false, reason: `Forbidden keyword: ${word}` };
     }
+  }
+
+  // Block subqueries in FROM clause — pattern: FROM (SELECT or FROM\s*\(SELECT
+  if (/\bfrom\s*\(\s*select\b/i.test(sql)) {
+    return { valid: false, reason: 'Subqueries in FROM clause are not allowed.' };
   }
 
   // Enforce LIMIT clause — reject queries without LIMIT or with LIMIT > 1000
@@ -186,6 +234,15 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
   const allTables = [...fromMatch, ...joinMatch].map(m => m.split(/\s+/)[1]?.toLowerCase()).filter(Boolean);
 
   for (const table of allTables) {
+    // Block any pg_ prefixed tables (system catalogs)
+    if (table!.startsWith('pg_')) {
+      return { valid: false, reason: `System catalog table not allowed: ${table}` };
+    }
+    // Block known system catalog schemas/tables
+    if (BLOCKED_TABLES.has(table!)) {
+      return { valid: false, reason: `System catalog table not allowed: ${table}` };
+    }
+    // Check against allowlist
     if (!ALLOWED_TABLE_SET.has(table!)) {
       return { valid: false, reason: `Table not allowed: ${table}` };
     }

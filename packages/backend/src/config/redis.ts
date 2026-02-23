@@ -20,9 +20,15 @@ export function getRedis(): Redis | null {
 
   const url = process.env.REDIS_URL || 'redis://localhost:6379';
 
+  // Upstash and other managed Redis providers use rediss:// (TLS).
+  // ioredis parses the protocol automatically, but we add explicit TLS
+  // options for reliability across environments.
+  const useTls = url.startsWith('rediss://');
+
   try {
     _redis = new Redis(url, {
       maxRetriesPerRequest: 3,
+      connectTimeout: 5000, // 5 s connection timeout
       retryStrategy(times) {
         if (times > 5) {
           logger.warn('Redis: max reconnect attempts reached — giving up');
@@ -31,6 +37,7 @@ export function getRedis(): Redis | null {
         return Math.min(times * 200, 2000);
       },
       lazyConnect: true, // don't connect until first command
+      ...(useTls ? { tls: {} } : {}),
     });
 
     _redis.on('connect', () => {

@@ -25,10 +25,11 @@ services:
         value: '4000'
       - key: CORS_ORIGIN
         sync: false
-      # Optional: Redis for rate limiting, caching, token blacklisting
-      # Sign up at https://upstash.com (free tier: 10k commands/day)
-      # - key: REDIS_URL
-      #   sync: false
+      # Redis for rate limiting, caching, token blacklisting
+      # Free tier: Upstash (https://upstash.com) — 10k commands/day
+      # Set the REDIS_URL value in Render dashboard to your Upstash rediss:// URL
+      - key: REDIS_URL
+        sync: false
       # Optional: Sentry error monitoring (https://sentry.io)
       # - key: SENTRY_DSN
       #   sync: false
