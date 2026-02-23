@@ -101,7 +101,6 @@ export default defineConfig({
           charts: ['recharts'],
           dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           socketio: ['socket.io-client'],
-
         },
       },
     },

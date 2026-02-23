@@ -74,18 +74,15 @@ router.post(
         return;
       }
 
-      try {
-        const entity = (req.body.entity || req.query.entity) as string as ImportableEntity;
-        if (!entity) {
-          sendError(res, 400, 'Entity type is required');
-          return;
-        }
-
-        const preview = parseExcelPreview(req.file.buffer, entity);
-        sendSuccess(res, preview);
-      } catch (parseErr) {
-        next(parseErr);
+      const entity = (req.body.entity || req.query.entity) as string as ImportableEntity;
+      if (!entity) {
+        sendError(res, 400, 'Entity type is required');
+        return;
       }
+
+      parseExcelPreview(req.file.buffer, entity)
+        .then(preview => sendSuccess(res, preview))
+        .catch(parseErr => next(parseErr));
     });
   },
 );

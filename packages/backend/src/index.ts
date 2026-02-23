@@ -25,6 +25,7 @@ import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { sanitizeInput } from './middleware/sanitize.js';
 import { setupSocketIO } from './socket/setup.js';
+import { rateLimiter } from './middleware/rate-limiter.js';
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startScheduler, stopScheduler } from './services/scheduler.service.js';
@@ -46,7 +47,30 @@ const io = new SocketIOServer(httpServer, { cors: corsOptions });
 app.set('trust proxy', 1);
 
 // ── Global Middleware ─────────────────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'blob:'],
+        connectSrc: ["'self'", 'wss:', 'ws:'],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  }),
+);
 app.use(cors(corsOptions));
 const jsonParser = express.json({ limit: '2mb' });
 app.use((req, res, next) => {
@@ -83,6 +107,7 @@ app.get('/api/docs.json', (_req, res) => {
 });
 
 // ── API Routes (versioned) ────────────────────────────────────────────────
+app.use('/api/v1', rateLimiter(100, 60_000));
 app.use('/api/v1', apiRoutes);
 
 // Backward-compatible redirect: /api/* → /api/v1/*

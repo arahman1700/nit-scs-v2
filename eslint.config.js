@@ -24,6 +24,29 @@ export default tseslint.config(
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'prefer-const': 'error',
       'no-var': 'error',
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'prisma',
+          property: '$queryRawUnsafe',
+          message: 'Use Prisma.sql or $queryRaw with tagged templates to prevent SQL injection.',
+        },
+        {
+          object: 'prisma',
+          property: '$executeRawUnsafe',
+          message: 'Use Prisma.sql or $executeRaw with tagged templates to prevent SQL injection.',
+        },
+        {
+          object: 'tx',
+          property: '$queryRawUnsafe',
+          message: 'Use Prisma.sql or $queryRaw with tagged templates to prevent SQL injection.',
+        },
+        {
+          object: 'tx',
+          property: '$executeRawUnsafe',
+          message: 'Use Prisma.sql or $executeRaw with tagged templates to prevent SQL injection.',
+        },
+      ],
     },
   },
 

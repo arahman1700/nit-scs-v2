@@ -1,17 +1,8 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { prisma } from '../utils/prisma.js';
 import type { ImportableEntity } from '../schemas/import.schema.js';
 
 const MAX_IMPORT_ROWS = 5000;
-const XLSX_READ_OPTIONS: XLSX.ParsingOptions = {
-  type: 'buffer',
-  dense: true,
-  cellFormula: false,
-  cellHTML: false,
-  cellNF: false,
-  cellStyles: false,
-  bookVBA: false,
-};
 
 // ── Column Mapping Definitions ──────────────────────────────────────────
 
@@ -104,6 +95,7 @@ function toDate(val: unknown): Date | null {
     const date = new Date((val - 25569) * 86400 * 1000);
     return isNaN(date.getTime()) ? null : date;
   }
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
   const d = new Date(String(val));
   return isNaN(d.getTime()) ? null : d;
 }
@@ -158,28 +150,43 @@ export function getExpectedFields(entity: ImportableEntity) {
 /**
  * Parse an Excel file and return a preview.
  */
-export function parseExcelPreview(buffer: Buffer, entity: ImportableEntity): ImportPreviewResult {
+export async function parseExcelPreview(buffer: Buffer, entity: ImportableEntity): Promise<ImportPreviewResult> {
   if (!buffer.length) {
     throw new Error('Uploaded file is empty');
   }
 
-  const workbook = XLSX.read(buffer, XLSX_READ_OPTIONS);
-  const sheetName = workbook.SheetNames[0];
-  if (!sheetName) throw new Error('No sheets found in the Excel file');
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
 
-  const sheet = workbook.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-    defval: '',
-    raw: true,
-    blankrows: false,
+  const sheet = workbook.worksheets[0];
+  if (!sheet) throw new Error('No sheets found in the Excel file');
+
+  const headers: string[] = [];
+  const rows: Record<string, unknown>[] = [];
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) {
+      // Header row
+      row.eachCell((cell, colNumber) => {
+        headers[colNumber - 1] = String(cell.value ?? '');
+      });
+      return;
+    }
+
+    const rowData: Record<string, unknown> = {};
+    row.eachCell((cell, colNumber) => {
+      const header = headers[colNumber - 1];
+      if (header) {
+        rowData[header] = cell.value;
+      }
+    });
+    rows.push(rowData);
   });
 
   if (rows.length === 0) throw new Error('No data rows found in the Excel file');
   if (rows.length > MAX_IMPORT_ROWS) {
     throw new Error(`Import file exceeds the maximum supported rows (${MAX_IMPORT_ROWS})`);
   }
-
-  const headers = Object.keys(rows[0]);
 
   return {
     headers,

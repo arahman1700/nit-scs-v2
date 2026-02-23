@@ -12,52 +12,52 @@ async function main() {
     prisma.region.upsert({
       where: { regionName: 'Riyadh' },
       update: {},
-      create: { regionName: 'Riyadh', regionNameAr: 'الرياض' },
+      create: { regionName: 'Riyadh' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Makkah' },
       update: {},
-      create: { regionName: 'Makkah', regionNameAr: 'مكة المكرمة' },
+      create: { regionName: 'Makkah' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Eastern Province' },
       update: {},
-      create: { regionName: 'Eastern Province', regionNameAr: 'المنطقة الشرقية' },
+      create: { regionName: 'Eastern Province' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Madinah' },
       update: {},
-      create: { regionName: 'Madinah', regionNameAr: 'المدينة المنورة' },
+      create: { regionName: 'Madinah' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Asir' },
       update: {},
-      create: { regionName: 'Asir', regionNameAr: 'عسير' },
+      create: { regionName: 'Asir' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Tabuk' },
       update: {},
-      create: { regionName: 'Tabuk', regionNameAr: 'تبوك' },
+      create: { regionName: 'Tabuk' },
     }),
     prisma.region.upsert({
       where: { regionName: 'Jazan' },
       update: {},
-      create: { regionName: 'Jazan', regionNameAr: 'جازان' },
+      create: { regionName: 'Jazan' },
     }),
   ]);
   console.log(`  Regions: ${regions.length}`);
 
   // ── Cities ───────────────────────────────────────────────────────────
   const cityData = [
-    { cityName: 'Riyadh', cityNameAr: 'الرياض', region: 'Riyadh' },
-    { cityName: 'Jeddah', cityNameAr: 'جدة', region: 'Makkah' },
-    { cityName: 'Makkah', cityNameAr: 'مكة', region: 'Makkah' },
-    { cityName: 'Dammam', cityNameAr: 'الدمام', region: 'Eastern Province' },
-    { cityName: 'Jubail', cityNameAr: 'الجبيل', region: 'Eastern Province' },
-    { cityName: 'Yanbu', cityNameAr: 'ينبع', region: 'Madinah' },
-    { cityName: 'Tabuk', cityNameAr: 'تبوك', region: 'Tabuk' },
-    { cityName: 'NEOM', cityNameAr: 'نيوم', region: 'Tabuk' },
-    { cityName: 'Abha', cityNameAr: 'أبها', region: 'Asir' },
+    { cityName: 'Riyadh', region: 'Riyadh' },
+    { cityName: 'Jeddah', region: 'Makkah' },
+    { cityName: 'Makkah', region: 'Makkah' },
+    { cityName: 'Dammam', region: 'Eastern Province' },
+    { cityName: 'Jubail', region: 'Eastern Province' },
+    { cityName: 'Yanbu', region: 'Madinah' },
+    { cityName: 'Tabuk', region: 'Tabuk' },
+    { cityName: 'NEOM', region: 'Tabuk' },
+    { cityName: 'Abha', region: 'Asir' },
   ];
   const cities = [];
   for (const c of cityData) {
@@ -65,7 +65,7 @@ async function main() {
     cities.push(
       await prisma.city
         .create({
-          data: { cityName: c.cityName, cityNameAr: c.cityNameAr, regionId: region.id },
+          data: { cityName: c.cityName, regionId: region.id },
         })
         .catch(() => prisma.city.findFirst({ where: { cityName: c.cityName } }).then(r => r!)),
     );
@@ -93,21 +93,21 @@ async function main() {
 
   // ── Units of Measure ─────────────────────────────────────────────────
   const uoms = [
-    { uomCode: 'EA', uomName: 'Each', uomNameAr: 'قطعة', category: 'count' },
-    { uomCode: 'KG', uomName: 'Kilogram', uomNameAr: 'كيلوغرام', category: 'weight' },
-    { uomCode: 'TON', uomName: 'Metric Ton', uomNameAr: 'طن', category: 'weight' },
-    { uomCode: 'M', uomName: 'Meter', uomNameAr: 'متر', category: 'length' },
-    { uomCode: 'M2', uomName: 'Square Meter', uomNameAr: 'متر مربع', category: 'area' },
-    { uomCode: 'M3', uomName: 'Cubic Meter', uomNameAr: 'متر مكعب', category: 'volume' },
-    { uomCode: 'L', uomName: 'Liter', uomNameAr: 'لتر', category: 'volume' },
-    { uomCode: 'BOX', uomName: 'Box', uomNameAr: 'صندوق', category: 'package' },
-    { uomCode: 'SET', uomName: 'Set', uomNameAr: 'طقم', category: 'count' },
-    { uomCode: 'ROLL', uomName: 'Roll', uomNameAr: 'لفة', category: 'count' },
-    { uomCode: 'BAG', uomName: 'Bag', uomNameAr: 'كيس', category: 'package' },
-    { uomCode: 'SHEET', uomName: 'Sheet', uomNameAr: 'لوح', category: 'count' },
-    { uomCode: 'DRUM', uomName: 'Drum', uomNameAr: 'برميل', category: 'package' },
-    { uomCode: 'PALLET', uomName: 'Pallet', uomNameAr: 'بالت', category: 'package' },
-    { uomCode: 'FT', uomName: 'Foot', uomNameAr: 'قدم', category: 'length' },
+    { uomCode: 'EA', uomName: 'Each', category: 'count' },
+    { uomCode: 'KG', uomName: 'Kilogram', category: 'weight' },
+    { uomCode: 'TON', uomName: 'Metric Ton', category: 'weight' },
+    { uomCode: 'M', uomName: 'Meter', category: 'length' },
+    { uomCode: 'M2', uomName: 'Square Meter', category: 'area' },
+    { uomCode: 'M3', uomName: 'Cubic Meter', category: 'volume' },
+    { uomCode: 'L', uomName: 'Liter', category: 'volume' },
+    { uomCode: 'BOX', uomName: 'Box', category: 'package' },
+    { uomCode: 'SET', uomName: 'Set', category: 'count' },
+    { uomCode: 'ROLL', uomName: 'Roll', category: 'count' },
+    { uomCode: 'BAG', uomName: 'Bag', category: 'package' },
+    { uomCode: 'SHEET', uomName: 'Sheet', category: 'count' },
+    { uomCode: 'DRUM', uomName: 'Drum', category: 'package' },
+    { uomCode: 'PALLET', uomName: 'Pallet', category: 'package' },
+    { uomCode: 'FT', uomName: 'Foot', category: 'length' },
   ];
   for (const u of uoms) {
     await prisma.unitOfMeasure.upsert({ where: { uomCode: u.uomCode }, update: {}, create: u })
@@ -117,11 +117,11 @@ async function main() {
 
   // ── Warehouse Types ──────────────────────────────────────────────────
   const warehouseTypes = [
-    { typeName: 'Main Warehouse', typeNameAr: 'مستودع رئيسي', description: 'Central warehouse facility' },
-    { typeName: 'Site Warehouse', typeNameAr: 'مستودع موقع', description: 'Project site storage' },
-    { typeName: 'Transit Warehouse', typeNameAr: 'مستودع عبور', description: 'Temporary transit storage' },
-    { typeName: 'Cold Storage', typeNameAr: 'تخزين بارد', description: 'Temperature-controlled storage' },
-    { typeName: 'Open Yard', typeNameAr: 'ساحة مفتوحة', description: 'Outdoor storage area' },
+    { typeName: 'Main Warehouse', description: 'Central warehouse facility' },
+    { typeName: 'Site Warehouse', description: 'Project site storage' },
+    { typeName: 'Transit Warehouse', description: 'Temporary transit storage' },
+    { typeName: 'Cold Storage', description: 'Temperature-controlled storage' },
+    { typeName: 'Open Yard', description: 'Outdoor storage area' },
   ];
   for (const wt of warehouseTypes) {
     await prisma.warehouseType.create({ data: wt }).catch(() => null);
@@ -130,10 +130,10 @@ async function main() {
 
   // ── Equipment Categories + Types ─────────────────────────────────────
   const equipCategories = [
-    { categoryName: 'Heavy Equipment', categoryNameAr: 'معدات ثقيلة' },
-    { categoryName: 'Vehicles', categoryNameAr: 'مركبات' },
-    { categoryName: 'Generators', categoryNameAr: 'مولدات' },
-    { categoryName: 'Small Tools', categoryNameAr: 'عدد صغيرة' },
+    { categoryName: 'Heavy Equipment' },
+    { categoryName: 'Vehicles' },
+    { categoryName: 'Generators' },
+    { categoryName: 'Small Tools' },
   ];
   const createdCategories = [];
   for (const ec of equipCategories) {
@@ -146,19 +146,19 @@ async function main() {
   console.log(`  Equipment Categories: ${createdCategories.length}`);
 
   const equipTypes = [
-    { typeName: 'Crane', typeNameAr: 'رافعة', category: 'Heavy Equipment' },
-    { typeName: 'Excavator', typeNameAr: 'حفارة', category: 'Heavy Equipment' },
-    { typeName: 'Forklift', typeNameAr: 'رافعة شوكية', category: 'Heavy Equipment' },
-    { typeName: 'Flatbed Truck', typeNameAr: 'شاحنة مسطحة', category: 'Vehicles' },
-    { typeName: 'Pickup Truck', typeNameAr: 'شاحنة بيك أب', category: 'Vehicles' },
-    { typeName: 'Water Tanker', typeNameAr: 'صهريج مياه', category: 'Vehicles' },
-    { typeName: 'Diesel Generator', typeNameAr: 'مولد ديزل', category: 'Generators' },
+    { typeName: 'Crane', category: 'Heavy Equipment' },
+    { typeName: 'Excavator', category: 'Heavy Equipment' },
+    { typeName: 'Forklift', category: 'Heavy Equipment' },
+    { typeName: 'Flatbed Truck', category: 'Vehicles' },
+    { typeName: 'Pickup Truck', category: 'Vehicles' },
+    { typeName: 'Water Tanker', category: 'Vehicles' },
+    { typeName: 'Diesel Generator', category: 'Generators' },
   ];
   for (const et of equipTypes) {
     const cat = createdCategories.find(c => c!.categoryName === et.category);
     await prisma.equipmentType
       .create({
-        data: { typeName: et.typeName, typeNameAr: et.typeNameAr, categoryId: cat?.id },
+        data: { typeName: et.typeName, categoryId: cat?.id },
       })
       .catch(() => null);
   }
@@ -188,7 +188,6 @@ async function main() {
     create: {
       entityCode: 'NIT',
       entityName: 'Nesma Infrastructure & Technology',
-      entityNameAr: 'نسما للبنية التحتية والتقنية',
       status: 'active',
     },
   });
@@ -219,7 +218,6 @@ async function main() {
     create: {
       employeeIdNumber: 'EMP-001',
       fullName: 'System Administrator',
-      fullNameAr: 'مدير النظام',
       email: 'admin@nit.sa',
       phone: '+966500000001',
       department: 'admin',
@@ -233,69 +231,13 @@ async function main() {
 
   // ── Sample Employees ─────────────────────────────────────────────────
   const sampleEmployees = [
-    {
-      id: 'EMP-002',
-      name: 'Ahmed Hassan',
-      nameAr: 'أحمد حسن',
-      email: 'ahmed@nit.sa',
-      dept: 'warehouse',
-      role: 'Warehouse Staff',
-      sysRole: 'warehouse_staff',
-    },
-    {
-      id: 'EMP-003',
-      name: 'Mohammed Ali',
-      nameAr: 'محمد علي',
-      email: 'mohammed@nit.sa',
-      dept: 'transport',
-      role: 'Transport Staff',
-      sysRole: 'logistics_coordinator',
-    },
-    {
-      id: 'EMP-004',
-      name: 'Khalid Omar',
-      nameAr: 'خالد عمر',
-      email: 'khalid@nit.sa',
-      dept: 'projects',
-      role: 'Engineer',
-      sysRole: 'site_engineer',
-    },
-    {
-      id: 'EMP-005',
-      name: 'Saad Ibrahim',
-      nameAr: 'سعد إبراهيم',
-      email: 'saad@nit.sa',
-      dept: 'quality',
-      role: 'QC Officer',
-      sysRole: 'qc_officer',
-    },
-    {
-      id: 'EMP-006',
-      name: 'Abdulrahman Hussein',
-      nameAr: 'عبدالرحمن حسين',
-      email: 'abdulrahman@nit.sa',
-      dept: 'logistics',
-      role: 'Manager',
-      sysRole: 'manager',
-    },
-    {
-      id: 'EMP-007',
-      name: 'Fahad Al-Otaibi',
-      nameAr: 'فهد العتيبي',
-      email: 'fahad@nit.sa',
-      dept: 'transport',
-      role: 'Transport Supervisor',
-      sysRole: 'transport_supervisor',
-    },
-    {
-      id: 'EMP-008',
-      name: 'Nasser Al-Qahtani',
-      nameAr: 'ناصر القحطاني',
-      email: 'nasser@nit.sa',
-      dept: 'warehouse',
-      role: 'Scrap Committee Member',
-      sysRole: 'scrap_committee_member',
-    },
+    { id: 'EMP-002', name: 'Ahmed Hassan', email: 'ahmed@nit.sa', dept: 'warehouse', role: 'Warehouse Staff', sysRole: 'warehouse_staff' },
+    { id: 'EMP-003', name: 'Mohammed Ali', email: 'mohammed@nit.sa', dept: 'transport', role: 'Transport Staff', sysRole: 'logistics_coordinator' },
+    { id: 'EMP-004', name: 'Khalid Omar', email: 'khalid@nit.sa', dept: 'projects', role: 'Engineer', sysRole: 'site_engineer' },
+    { id: 'EMP-005', name: 'Saad Ibrahim', email: 'saad@nit.sa', dept: 'quality', role: 'QC Officer', sysRole: 'qc_officer' },
+    { id: 'EMP-006', name: 'Abdulrahman Hussein', email: 'abdulrahman@nit.sa', dept: 'logistics', role: 'Manager', sysRole: 'manager' },
+    { id: 'EMP-007', name: 'Fahad Al-Otaibi', email: 'fahad@nit.sa', dept: 'transport', role: 'Transport Supervisor', sysRole: 'transport_supervisor' },
+    { id: 'EMP-008', name: 'Nasser Al-Qahtani', email: 'nasser@nit.sa', dept: 'warehouse', role: 'Scrap Committee Member', sysRole: 'scrap_committee_member' },
   ];
   for (const emp of sampleEmployees) {
     await prisma.employee
@@ -303,7 +245,6 @@ async function main() {
         data: {
           employeeIdNumber: emp.id,
           fullName: emp.name,
-          fullNameAr: emp.nameAr,
           email: emp.email,
           department: emp.dept,
           role: emp.role,
@@ -326,7 +267,6 @@ async function main() {
         data: {
           warehouseCode: 'WH-MAIN',
           warehouseName: 'NIT Main Warehouse',
-          warehouseNameAr: 'مستودع نسما الرئيسي',
           warehouseTypeId: mainWhType.id,
           regionId: riyadhRegion.id,
           status: 'active',

@@ -82,7 +82,8 @@ export async function isTokenBlacklisted(jti: string): Promise<boolean> {
   try {
     const result = await redis.get(`${TOKEN_BLACKLIST_PREFIX}${jti}`);
     return result !== null;
-  } catch {
+  } catch (err) {
+    log('warn', `[Auth] Redis error checking token blacklist: ${(err as Error).message} — allowing request`);
     return false;
   }
 }

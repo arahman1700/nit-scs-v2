@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { sendError } from '../utils/response.js';
 import { getRedis } from '../config/redis.js';
+import { logger } from '../config/logger.js';
 
 // ── In-memory fallback ──────────────────────────────────────────────────
 
@@ -93,7 +94,10 @@ export function rateLimiter(maxRequests = 100, windowMs = 60_000) {
         }
         next();
       })
-      .catch(() => next());
+      .catch(err => {
+        logger.error({ err, key }, 'Rate limiter unexpected error');
+        next();
+      });
   };
 }
 
@@ -118,7 +122,10 @@ export function authRateLimiter(maxAttempts = 5, windowSec = 900) {
         }
         next();
       })
-      .catch(() => next());
+      .catch(err => {
+        logger.error({ err, key }, 'Auth rate limiter unexpected error');
+        next();
+      });
   };
 }
 
@@ -144,7 +151,10 @@ export function aiRateLimiter(maxRequests = 30, windowSec = 3600) {
         }
         next();
       })
-      .catch(() => next());
+      .catch(err => {
+        logger.error({ err, key }, 'AI rate limiter unexpected error');
+        next();
+      });
   };
 }
 

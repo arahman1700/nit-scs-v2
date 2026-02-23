@@ -107,7 +107,7 @@ async function main() {
     {
       supplierCode: 'SUP-001',
       supplierName: 'Al-Rajhi Steel Industries',
-      supplierNameAr: 'صناعات الراجحي للحديد',
+
       types: ['steel', 'construction'],
       contactPerson: 'Fahad Al-Rajhi',
       email: 'fahad@alrajhisteel.sa',
@@ -123,7 +123,6 @@ async function main() {
     {
       supplierCode: 'SUP-002',
       supplierName: 'Saudi Cement Company',
-      supplierNameAr: 'الشركة السعودية للأسمنت',
       types: ['cement', 'construction'],
       contactPerson: 'Omar Bakr',
       email: 'omar@saudicement.sa',
@@ -139,7 +138,6 @@ async function main() {
     {
       supplierCode: 'SUP-003',
       supplierName: 'Gulf Electrical Supplies',
-      supplierNameAr: 'مستلزمات الخليج الكهربائية',
       types: ['electrical'],
       contactPerson: 'Tariq Mansour',
       email: 'tariq@gulfelectrical.sa',
@@ -155,7 +153,6 @@ async function main() {
     {
       supplierCode: 'SUP-004',
       supplierName: 'National Pipe Company (Napco)',
-      supplierNameAr: 'شركة الأنابيب الوطنية',
       types: ['piping', 'mechanical'],
       contactPerson: 'Sultan Al-Otaibi',
       email: 'sultan@napco.sa',
@@ -171,7 +168,6 @@ async function main() {
     {
       supplierCode: 'SUP-005',
       supplierName: 'Al-Marai Industrial Supplies',
-      supplierNameAr: 'المراعي للمستلزمات الصناعية',
       types: ['consumables', 'general'],
       contactPerson: 'Nasser Al-Marai',
       email: 'nasser@almarai-ind.sa',
@@ -187,7 +183,6 @@ async function main() {
     {
       supplierCode: 'SUP-006',
       supplierName: 'Hassan Safety Equipment Co.',
-      supplierNameAr: 'شركة حسن لمعدات السلامة',
       types: ['safety', 'ppe'],
       contactPerson: 'Hassan Khalil',
       email: 'hassan@hassansafety.sa',
@@ -203,7 +198,6 @@ async function main() {
     {
       supplierCode: 'SUP-007',
       supplierName: 'Bin Laden Construction Materials',
-      supplierNameAr: 'بن لادن لمواد البناء',
       types: ['construction', 'general'],
       contactPerson: 'Youssef Bin Laden',
       email: 'youssef@blcm.sa',
@@ -219,7 +213,6 @@ async function main() {
     {
       supplierCode: 'SUP-008',
       supplierName: 'NESMA Trading Company',
-      supplierNameAr: 'شركة نسمة التجارية',
       types: ['general', 'trading'],
       contactPerson: 'Ali Turki',
       email: 'ali@nesmatrading.sa',
@@ -250,7 +243,6 @@ async function main() {
     {
       projectCode: 'PRJ-001',
       projectName: 'NEOM Bay Phase 1',
-      projectNameAr: 'خليج نيوم المرحلة الأولى',
       client: 'NEOM Company',
       entityId: entity.id,
       regionId: tabukRegion.id,
@@ -265,7 +257,6 @@ async function main() {
     {
       projectCode: 'PRJ-002',
       projectName: 'Jubail Industrial Expansion',
-      projectNameAr: 'توسعة الجبيل الصناعية',
       client: 'Royal Commission for Jubail',
       entityId: entity.id,
       regionId: easternRegion.id,
@@ -280,7 +271,6 @@ async function main() {
     {
       projectCode: 'PRJ-003',
       projectName: 'Riyadh Metro Line 3',
-      projectNameAr: 'مترو الرياض الخط الثالث',
       client: 'Royal Commission for Riyadh City',
       entityId: entity.id,
       regionId: riyadhRegion.id,
@@ -295,7 +285,6 @@ async function main() {
     {
       projectCode: 'PRJ-004',
       projectName: 'Jeddah Tower Foundation Works',
-      projectNameAr: 'أعمال أساسات برج جدة',
       client: 'Jeddah Economic Company',
       entityId: entity.id,
       regionId: makkahRegion.id,
@@ -310,7 +299,6 @@ async function main() {
     {
       projectCode: 'PRJ-005',
       projectName: 'Tabuk Solar Farm',
-      projectNameAr: 'مزرعة تبوك الشمسية',
       client: 'Saudi Electricity Company (SEC)',
       entityId: entity.id,
       regionId: tabukRegion.id,
@@ -340,7 +328,6 @@ async function main() {
     {
       warehouseCode: 'WH-001',
       warehouseName: 'Dammam Main Warehouse',
-      warehouseNameAr: 'المستودع الرئيسي بالدمام',
       warehouseTypeId: whMain.id,
       regionId: easternRegion.id,
       cityId: dammamCity.id,
@@ -354,7 +341,6 @@ async function main() {
     {
       warehouseCode: 'WH-002',
       warehouseName: 'Jubail Site Store',
-      warehouseNameAr: 'مخزن موقع الجبيل',
       warehouseTypeId: whSite.id,
       regionId: easternRegion.id,
       cityId: jubailCity.id,
@@ -369,7 +355,6 @@ async function main() {
     {
       warehouseCode: 'WH-003',
       warehouseName: 'Riyadh Distribution Center',
-      warehouseNameAr: 'مركز التوزيع بالرياض',
       warehouseTypeId: whMain.id,
       regionId: riyadhRegion.id,
       cityId: riyadhCity.id,
@@ -383,7 +368,6 @@ async function main() {
     {
       warehouseCode: 'WH-004',
       warehouseName: 'NEOM Project Yard',
-      warehouseNameAr: 'ساحة مشروع نيوم',
       warehouseTypeId: whYard.id,
       regionId: tabukRegion.id,
       cityId: neomCity.id,
@@ -413,7 +397,6 @@ async function main() {
     {
       code: 'STL-001',
       desc: 'Steel Rebar 12mm',
-      descAr: 'حديد تسليح ١٢ مم',
       cat: 'construction',
       uomId: uomKG.id,
       cost: 4.5,
@@ -423,7 +406,6 @@ async function main() {
     {
       code: 'STL-002',
       desc: 'Steel Plate 10mm',
-      descAr: 'لوح حديد ١٠ مم',
       cat: 'construction',
       uomId: uomKG.id,
       cost: 6.8,
@@ -433,7 +415,6 @@ async function main() {
     {
       code: 'CEM-001',
       desc: 'Portland Cement 50kg Bag',
-      descAr: 'أسمنت بورتلاندي ٥٠ كجم',
       cat: 'construction',
       uomId: uomBAG.id,
       cost: 18.0,
@@ -443,7 +424,6 @@ async function main() {
     {
       code: 'PIP-001',
       desc: 'GRP Pipe 200mm',
-      descAr: 'أنبوب GRP ٢٠٠ مم',
       cat: 'mechanical',
       uomId: uomM.id,
       cost: 145.0,
@@ -453,7 +433,6 @@ async function main() {
     {
       code: 'PIP-002',
       desc: 'PVC Pipe 110mm',
-      descAr: 'أنبوب PVC ١١٠ مم',
       cat: 'mechanical',
       uomId: uomM.id,
       cost: 32.5,
@@ -463,7 +442,6 @@ async function main() {
     {
       code: 'ELC-001',
       desc: 'Cable 4x16mm2 XLPE',
-      descAr: 'كابل ٤×١٦ مم مربع',
       cat: 'electrical',
       uomId: uomM.id,
       cost: 28.0,
@@ -473,7 +451,6 @@ async function main() {
     {
       code: 'ELC-002',
       desc: 'Circuit Breaker 63A 3P',
-      descAr: 'قاطع دائرة ٦٣ أمبير',
       cat: 'electrical',
       uomId: uomEA.id,
       cost: 185.0,
@@ -483,7 +460,6 @@ async function main() {
     {
       code: 'ELC-003',
       desc: 'LED Flood Light 200W IP65',
-      descAr: 'كشاف LED ٢٠٠ واط',
       cat: 'electrical',
       uomId: uomEA.id,
       cost: 320.0,
@@ -493,7 +469,6 @@ async function main() {
     {
       code: 'SAF-001',
       desc: 'Safety Helmet EN397',
-      descAr: 'خوذة سلامة EN397',
       cat: 'safety',
       uomId: uomEA.id,
       cost: 45.0,
@@ -503,7 +478,6 @@ async function main() {
     {
       code: 'SAF-002',
       desc: 'Safety Vest Hi-Vis',
-      descAr: 'سترة سلامة عاكسة',
       cat: 'safety',
       uomId: uomEA.id,
       cost: 25.0,
@@ -513,7 +487,6 @@ async function main() {
     {
       code: 'SAF-003',
       desc: 'Safety Boots Steel-Toe',
-      descAr: 'حذاء سلامة برأس حديد',
       cat: 'safety',
       uomId: uomEA.id,
       cost: 180.0,
@@ -523,7 +496,6 @@ async function main() {
     {
       code: 'TOL-001',
       desc: 'Drill Machine Bosch GBH 2-26',
-      descAr: 'مثقاب بوش GBH 2-26',
       cat: 'tools',
       uomId: uomEA.id,
       cost: 850.0,
@@ -533,7 +505,6 @@ async function main() {
     {
       code: 'TOL-002',
       desc: 'Welding Machine 300A MIG',
-      descAr: 'ماكينة لحام ٣٠٠ أمبير',
       cat: 'tools',
       uomId: uomEA.id,
       cost: 2500.0,
@@ -543,7 +514,6 @@ async function main() {
     {
       code: 'CON-001',
       desc: 'Diesel Fuel (EN 590)',
-      descAr: 'وقود ديزل',
       cat: 'consumables',
       uomId: uomL.id,
       cost: 2.18,
@@ -553,7 +523,6 @@ async function main() {
     {
       code: 'CON-002',
       desc: 'Lubricant Oil 20L Drum',
-      descAr: 'زيت تشحيم ٢٠ لتر',
       cat: 'consumables',
       uomId: uomDRUM.id,
       cost: 145.0,
@@ -563,7 +532,6 @@ async function main() {
     {
       code: 'SPR-001',
       desc: 'Bearing SKF 6205-2RS',
-      descAr: 'محمل SKF 6205',
       cat: 'spare_parts',
       uomId: uomEA.id,
       cost: 38.0,
@@ -573,7 +541,6 @@ async function main() {
     {
       code: 'SPR-002',
       desc: 'V-Belt B65',
-      descAr: 'سير V مقاس B65',
       cat: 'spare_parts',
       uomId: uomEA.id,
       cost: 22.0,
@@ -583,7 +550,6 @@ async function main() {
     {
       code: 'CON-003',
       desc: 'Welding Rod E6013 2.5mm',
-      descAr: 'سلك لحام ٢.٥ مم',
       cat: 'consumables',
       uomId: uomKG.id,
       cost: 12.5,
@@ -593,7 +559,6 @@ async function main() {
     {
       code: 'STL-003',
       desc: 'Wire Mesh 4mm 2x3m',
-      descAr: 'شبك حديد ٤ مم',
       cat: 'construction',
       uomId: uomM2.id,
       cost: 35.0,
@@ -603,7 +568,6 @@ async function main() {
     {
       code: 'ELC-004',
       desc: 'Distribution Panel 12-Way',
-      descAr: 'لوحة توزيع ١٢ مخرج',
       cat: 'electrical',
       uomId: uomEA.id,
       cost: 750.0,
@@ -619,7 +583,6 @@ async function main() {
         data: {
           itemCode: i.code,
           itemDescription: i.desc,
-          itemDescriptionAr: i.descAr,
           category: i.cat,
           uomId: i.uomId,
           standardCost: i.cost,

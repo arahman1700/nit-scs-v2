@@ -1358,10 +1358,18 @@ export function startScheduler(socketIo?: SocketIOServer): void {
     if (!running) return;
     const hasLock = await acquireLock('initial_run', 30);
     if (hasLock) {
-      checkSlaBreaches();
-      checkSlaWarnings();
-      retryEmails();
-      markExpiredLots();
+      const initialJobs = [
+        { name: 'checkSlaBreaches', fn: checkSlaBreaches },
+        { name: 'checkSlaWarnings', fn: checkSlaWarnings },
+        { name: 'retryEmails', fn: retryEmails },
+        { name: 'markExpiredLots', fn: markExpiredLots },
+      ];
+      const results = await Promise.allSettled(initialJobs.map(j => j.fn()));
+      results.forEach((r, i) => {
+        if (r.status === 'rejected') {
+          log('error', `[Scheduler] Initial ${initialJobs[i].name} failed: ${(r.reason as Error).message}`);
+        }
+      });
     }
   }, 10_000);
   timers.push(initTimer);

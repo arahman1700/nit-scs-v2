@@ -130,6 +130,17 @@ describe('auth.service', () => {
 
       expect(result).toBe(false);
     });
+
+    it('should log a warning when Redis throws during blacklist check', async () => {
+      const { log } = await import('../config/logger.js');
+      const redis = createRedisMock();
+      redis.get.mockRejectedValue(new Error('Redis down'));
+      vi.mocked(getRedis).mockReturnValue(redis as any);
+
+      await isTokenBlacklisted('test-jti');
+
+      expect(log).toHaveBeenCalledWith('warn', expect.stringContaining('Redis error checking token blacklist'));
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────

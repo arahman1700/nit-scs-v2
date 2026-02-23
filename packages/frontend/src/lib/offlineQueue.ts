@@ -228,12 +228,18 @@ export function initAutoSync(): void {
   autoSyncSetup = true;
 
   window.addEventListener('online', () => {
-    syncAll();
+    syncAll().catch(err => {
+      console.warn('[OfflineQueue] Auto-sync on online failed:', err);
+    });
   });
 
   // Also try to sync on page load if online
   if (navigator.onLine) {
     // Delay slightly to let handlers register
-    setTimeout(() => syncAll(), 2000);
+    setTimeout(() => {
+      syncAll().catch(err => {
+        console.warn('[OfflineQueue] Initial sync failed:', err);
+      });
+    }, 2000);
   }
 }

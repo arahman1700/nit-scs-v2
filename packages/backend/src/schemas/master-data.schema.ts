@@ -4,12 +4,11 @@ import { z } from 'zod';
 
 export const regionSchema = z.object({
   regionName: z.string().min(1).max(100),
-  regionNameAr: z.string().max(100).optional(),
 });
 
 export const citySchema = z.object({
   cityName: z.string().min(1).max(100),
-  cityNameAr: z.string().max(100).optional(),
+
   regionId: z.string().uuid(),
 });
 
@@ -23,24 +22,21 @@ export const portSchema = z.object({
 export const uomSchema = z.object({
   uomCode: z.string().min(1).max(20),
   uomName: z.string().min(1).max(50),
-  uomNameAr: z.string().max(50).optional(),
+
   category: z.string().max(30).optional(),
 });
 
 export const warehouseTypeSchema = z.object({
   typeName: z.string().min(1).max(50),
-  typeNameAr: z.string().max(50).optional(),
   description: z.string().optional(),
 });
 
 export const equipmentCategorySchema = z.object({
   categoryName: z.string().min(1).max(100),
-  categoryNameAr: z.string().max(100).optional(),
 });
 
 export const equipmentTypeSchema = z.object({
   typeName: z.string().min(1).max(100),
-  typeNameAr: z.string().max(100).optional(),
   categoryId: z.string().uuid().optional(),
 });
 
@@ -49,7 +45,7 @@ export const equipmentTypeSchema = z.object({
 export const projectCreateSchema = z.object({
   projectCode: z.string().min(1).max(50),
   projectName: z.string().min(1).max(300),
-  projectNameAr: z.string().max(300).optional(),
+
   client: z.string().min(1).max(200),
   entityId: z.string().uuid().optional(),
   regionId: z.string().uuid().optional(),
@@ -93,7 +89,7 @@ export const employeeUpdateSchema = employeeCreateSchema.partial();
 export const supplierCreateSchema = z.object({
   supplierCode: z.string().min(1).max(50),
   supplierName: z.string().min(1).max(300),
-  supplierNameAr: z.string().max(300).optional(),
+
   types: z.array(z.string()),
   contactPerson: z.string().max(200).optional(),
   phone: z.string().max(20).optional(),
@@ -112,7 +108,7 @@ export const supplierUpdateSchema = supplierCreateSchema.partial();
 export const warehouseCreateSchema = z.object({
   warehouseCode: z.string().min(1).max(50),
   warehouseName: z.string().min(1).max(200),
-  warehouseNameAr: z.string().max(200).optional(),
+
   warehouseTypeId: z.string().uuid(),
   projectId: z.string().uuid().optional(),
   regionId: z.string().uuid(),
@@ -130,7 +126,7 @@ export const warehouseUpdateSchema = warehouseCreateSchema.partial();
 export const itemCreateSchema = z.object({
   itemCode: z.string().min(1).max(50),
   itemDescription: z.string().min(1).max(500),
-  itemDescriptionAr: z.string().max(500).optional(),
+
   category: z.enum(['construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts']),
   subCategory: z.string().max(100).optional(),
   uomId: z.string().uuid(),
