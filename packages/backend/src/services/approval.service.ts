@@ -1,9 +1,59 @@
 import type { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../utils/prisma.js';
 import { createAuditLog } from './audit.service.js';
+import { createNotification } from './notification.service.js';
 import { emitToRole, emitToDocument } from '../socket/setup.js';
 import { log } from '../config/logger.js';
 import { eventBus } from '../events/event-bus.js';
+
+// ── Document Display Names (V1 internal → V2 label) ────────────────────
+
+const DOC_LABELS: Record<string, string> = {
+  mrrv: 'GRN',
+  mirv: 'MI',
+  mrv: 'MRN',
+  rfim: 'QCI',
+  osd: 'DR',
+  mrf: 'MR',
+  stock_transfer: 'WT',
+  jo: 'Job Order',
+  gate_pass: 'Gate Pass',
+  shipment: 'Shipment',
+  imsf: 'IMSF',
+  scrap: 'Scrap',
+  surplus: 'Surplus',
+};
+
+function docLabel(type: string): string {
+  return DOC_LABELS[type] || type.toUpperCase();
+}
+
+/** Send a persistent + push notification to every active user with the given role. */
+async function notifyRoleUsers(
+  role: string,
+  params: { title: string; body: string; referenceTable: string; referenceId: string },
+  io?: SocketIOServer,
+): Promise<void> {
+  const users = await prisma.employee.findMany({
+    where: { systemRole: role, isActive: true },
+    select: { id: true },
+  });
+  await Promise.allSettled(
+    users.map(u =>
+      createNotification(
+        {
+          recipientId: u.id,
+          title: params.title,
+          body: params.body,
+          notificationType: 'approval',
+          referenceTable: params.referenceTable,
+          referenceId: params.referenceId,
+        },
+        io,
+      ),
+    ),
+  );
+}
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -235,6 +285,18 @@ export async function submitForApproval(params: {
     });
   }
 
+  // Push + persistent notification to first-level approvers
+  notifyRoleUsers(
+    firstStep.approverRole,
+    {
+      title: `${docLabel(documentType)} Pending Approval`,
+      body: `A ${docLabel(documentType)} requires your Level 1 approval.`,
+      referenceTable: documentType,
+      referenceId: documentId,
+    },
+    io,
+  ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
+
   log('info', `[Approval] ${documentType} ${documentId} submitted for ${chain.steps.length}-level approval`);
 
   eventBus.publish({
@@ -353,6 +415,18 @@ export async function processApproval(params: {
         });
       }
 
+      // Push + persistent notification to next-level approvers
+      notifyRoleUsers(
+        nextStep.approverRole,
+        {
+          title: `${docLabel(documentType)} Awaiting L${nextStep.level} Approval`,
+          body: `Level ${currentStep.level} approved. Your Level ${nextStep.level} approval is required.`,
+          referenceTable: documentType,
+          referenceId: documentId,
+        },
+        io,
+      ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
+
       log(
         'info',
         `[Approval] ${documentType} ${documentId} level ${currentStep.level} approved by ${processedById}, advancing to level ${nextStep.level}`,
@@ -404,6 +478,23 @@ export async function processApproval(params: {
           totalLevels: currentStep.level,
           comments,
         });
+      }
+
+      // Notify the document submitter that it's fully approved
+      const approvedDoc = await delegate.findUnique({ where: { id: documentId } });
+      const submitter = (approvedDoc as Record<string, unknown> | null)?.createdById as string | undefined;
+      if (submitter) {
+        createNotification(
+          {
+            recipientId: submitter,
+            title: `${docLabel(documentType)} Approved`,
+            body: `Your ${docLabel(documentType)} has been fully approved.`,
+            notificationType: 'approval',
+            referenceTable: documentType,
+            referenceId: documentId,
+          },
+          io,
+        ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
       }
 
       log(
@@ -473,6 +564,23 @@ export async function processApproval(params: {
         rejectedAtLevel: currentStep.level,
         reason: comments,
       });
+    }
+
+    // Notify the document submitter that it's been rejected
+    const rejectedDoc = await delegate.findUnique({ where: { id: documentId } });
+    const rejSubmitter = (rejectedDoc as Record<string, unknown> | null)?.createdById as string | undefined;
+    if (rejSubmitter) {
+      createNotification(
+        {
+          recipientId: rejSubmitter,
+          title: `${docLabel(documentType)} Rejected`,
+          body: `Your ${docLabel(documentType)} was rejected at Level ${currentStep.level}.${comments ? ` Reason: ${comments}` : ''}`,
+          notificationType: 'approval',
+          referenceTable: documentType,
+          referenceId: documentId,
+        },
+        io,
+      ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
     }
 
     log('info', `[Approval] ${documentType} ${documentId} rejected at level ${currentStep.level} by ${processedById}`);

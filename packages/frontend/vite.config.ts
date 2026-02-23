@@ -3,6 +3,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const commitSha = process.env.RENDER_GIT_COMMIT || process.env.COMMIT_SHA || 'dev';
+
 export default defineConfig({
   server: {
     port: 3000,
@@ -94,6 +96,7 @@ export default defineConfig({
     }),
   ],
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -104,6 +107,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  define: {
+    __COMMIT_SHA__: JSON.stringify(commitSha.slice(0, 7)),
   },
   resolve: {
     alias: {

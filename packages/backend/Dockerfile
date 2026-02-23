@@ -10,6 +10,8 @@ RUN pnpm install --frozen-lockfile
 
 # ── Stage 2: Build all packages ──
 FROM deps AS build
+ARG RENDER_GIT_COMMIT=""
+ENV RENDER_GIT_COMMIT=${RENDER_GIT_COMMIT}
 COPY tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
 COPY packages/backend/ packages/backend/

@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../client';
+import { Sentry } from '@/config/sentry';
 import type { User } from '@nit-scs-v2/shared/types';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -28,7 +29,6 @@ interface MeUser {
   id: string;
   employeeIdNumber: string;
   fullName: string;
-  fullNameAr: string | null;
   email: string;
   phone: string | null;
   department: string;
@@ -56,6 +56,7 @@ export function useLogin() {
       localStorage.setItem('nit_scs_token', result.data.accessToken);
       localStorage.setItem('nit_scs_refresh_token', result.data.refreshToken);
       qc.setQueryData(['auth', 'me'], { success: true, data: result.data.user });
+      Sentry.setUser({ id: result.data.user.id, email: result.data.user.email });
     },
   });
 }
@@ -71,6 +72,7 @@ export function useLogout() {
       localStorage.removeItem('nit_scs_token');
       localStorage.removeItem('nit_scs_refresh_token');
       qc.clear();
+      Sentry.setUser(null);
     },
   });
 }
