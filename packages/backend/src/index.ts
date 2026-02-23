@@ -32,7 +32,7 @@ import { startScheduler, stopScheduler } from './services/scheduler.service.js';
 import { registerDynamicDataSources, register as registerDataSource } from './services/widget-data.service.js';
 import { loadCustomDataSources } from './services/custom-data-source.service.js';
 import apiRoutes from './routes/index.js';
-import { healthCheck, authDiagnostic } from './routes/health.routes.js';
+import { healthCheck } from './routes/health.routes.js';
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 dotenv.config({ path: '../../.env' });
@@ -115,11 +115,6 @@ app.use('/api', (req, res, next) => {
   // Health check shortcut (no redirect needed)
   if (req.path === '/health') {
     healthCheck(req, res);
-    return;
-  }
-  // TEMP: auth diagnostic (remove after debugging)
-  if (req.path === '/debug/auth') {
-    authDiagnostic(req, res);
     return;
   }
   // Only redirect non-versioned paths to avoid double /v1/
