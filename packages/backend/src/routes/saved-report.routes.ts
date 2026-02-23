@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../utils/response.js';
@@ -99,8 +100,8 @@ router.post('/templates/:id/use', async (req: Request, res: Response, next: Next
         name: `${template.name} (copy)`,
         description: template.description,
         dataSource: template.dataSource,
-        columns: template.columns as any,
-        filters: template.filters as any,
+        columns: template.columns as Prisma.InputJsonValue,
+        filters: template.filters as Prisma.InputJsonValue,
         visualization: template.visualization,
         ownerId: userId,
         isPublic: false,

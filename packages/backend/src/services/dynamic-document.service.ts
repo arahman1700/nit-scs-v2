@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import { generateDocumentNumber } from './document-number.service.js';
@@ -138,7 +139,7 @@ export async function createDocument(
         documentTypeId: docType.id,
         documentNumber,
         status: initialStatus,
-        data: body.data as any,
+        data: body.data as Prisma.InputJsonValue,
         projectId: body.projectId,
         warehouseId: body.warehouseId,
         createdById: userId,
@@ -147,7 +148,7 @@ export async function createDocument(
           ? {
               create: body.lines.map((line, i) => ({
                 lineNumber: i + 1,
-                data: line as any,
+                data: line as Prisma.InputJsonValue,
               })),
             }
           : undefined,
@@ -236,7 +237,7 @@ export async function updateDocument(
     return tx.dynamicDocument.update({
       where: { id },
       data: {
-        data: body.data ? (body.data as any) : undefined,
+        data: body.data ? (body.data as Prisma.InputJsonValue) : undefined,
         projectId: body.projectId,
         warehouseId: body.warehouseId,
         updatedById: userId,
@@ -245,7 +246,7 @@ export async function updateDocument(
           ? {
               create: body.lines.map((line, i) => ({
                 lineNumber: i + 1,
-                data: line as any,
+                data: line as Prisma.InputJsonValue,
               })),
             }
           : undefined,

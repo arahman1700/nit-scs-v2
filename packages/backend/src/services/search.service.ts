@@ -133,7 +133,9 @@ export async function globalSearch(query: string, filters?: SearchFilters): Prom
 
       if (orConditions.length === 0) return [];
 
-      const delegate = (prisma as Record<string, any>)[def.model];
+      const delegate = (prisma as unknown as Record<string, unknown>)[def.model] as
+        | { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
+        | undefined;
       if (!delegate) return [];
 
       try {
@@ -143,16 +145,19 @@ export async function globalSearch(query: string, filters?: SearchFilters): Prom
           orderBy: { createdAt: 'desc' },
         });
 
-        return (records as Record<string, any>[]).map(
-          (record): SearchResult => ({
+        return (records as Record<string, unknown>[]).map((record): SearchResult => {
+          const id = record.id as string;
+          const numberVal = def.numberField ? (record[def.numberField] as string | undefined) : undefined;
+          const displayNumber = numberVal ?? id.slice(0, 8);
+          return {
             type: def.type,
-            id: record.id,
-            number: def.numberField ? (record[def.numberField] ?? record.id.slice(0, 8)) : record.id.slice(0, 8),
-            status: record[def.statusField] ?? 'unknown',
-            summary: `${TYPE_LABELS[def.type] ?? def.type} ${def.numberField ? record[def.numberField] : record.id.slice(0, 8)}`,
-            createdAt: record.createdAt,
-          }),
-        );
+            id,
+            number: displayNumber,
+            status: (record[def.statusField] as string) ?? 'unknown',
+            summary: `${TYPE_LABELS[def.type] ?? def.type} ${displayNumber}`,
+            createdAt: record.createdAt as Date,
+          };
+        });
       } catch {
         // Silently skip models that fail (e.g. table doesn't exist yet)
         return [];

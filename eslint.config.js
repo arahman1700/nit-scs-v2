@@ -27,6 +27,14 @@ export default tseslint.config(
     },
   },
 
+  // Relax rules for test files
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+
   // Disable formatting rules (Prettier handles formatting)
   eslintConfigPrettier,
 );

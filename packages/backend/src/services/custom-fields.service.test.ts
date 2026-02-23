@@ -21,7 +21,6 @@ import {
   getCustomFieldValues,
   setCustomFieldValues,
   deleteCustomFieldValues,
-  validateCustomFieldValues,
 } from './custom-fields.service.js';
 
 describe('custom-fields.service', () => {

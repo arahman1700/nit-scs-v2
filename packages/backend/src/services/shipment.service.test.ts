@@ -11,7 +11,7 @@ vi.mock('../events/event-bus.js', () => ({ eventBus: { publish: vi.fn(), subscri
 
 import { createPrismaMock } from '../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from './document-number.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError } from '@nit-scs-v2/shared';
 import {
   list,
   getById,
