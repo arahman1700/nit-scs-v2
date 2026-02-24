@@ -22,7 +22,6 @@ const ENTITY_FIELDS: Record<ImportableEntity, FieldDef[]> = {
   items: [
     { dbField: 'itemCode', label: 'Item Code', required: true },
     { dbField: 'itemDescription', label: 'Description', required: true },
-    { dbField: 'itemDescriptionAr', label: 'Description (Arabic)', required: false },
     { dbField: 'itemCategory', label: 'Category', required: false },
     { dbField: 'defaultUomId', label: 'UOM ID', required: false },
     { dbField: 'reorderLevel', label: 'Reorder Level', required: false, transform: toNumber },
@@ -32,7 +31,6 @@ const ENTITY_FIELDS: Record<ImportableEntity, FieldDef[]> = {
   suppliers: [
     { dbField: 'supplierCode', label: 'Supplier Code', required: true },
     { dbField: 'supplierName', label: 'Supplier Name', required: true },
-    { dbField: 'supplierNameAr', label: 'Supplier Name (Arabic)', required: false },
     { dbField: 'contactPerson', label: 'Contact Person', required: false },
     { dbField: 'phone', label: 'Phone', required: false },
     { dbField: 'email', label: 'Email', required: false },
@@ -44,7 +42,6 @@ const ENTITY_FIELDS: Record<ImportableEntity, FieldDef[]> = {
   projects: [
     { dbField: 'projectCode', label: 'Project Code', required: true },
     { dbField: 'projectName', label: 'Project Name', required: true },
-    { dbField: 'projectNameAr', label: 'Project Name (Arabic)', required: false },
     { dbField: 'client', label: 'Client', required: false },
     { dbField: 'status', label: 'Status', required: false },
     { dbField: 'startDate', label: 'Start Date', required: false, transform: toDate },
@@ -62,23 +59,17 @@ const ENTITY_FIELDS: Record<ImportableEntity, FieldDef[]> = {
   warehouses: [
     { dbField: 'warehouseCode', label: 'Warehouse Code', required: true },
     { dbField: 'warehouseName', label: 'Warehouse Name', required: true },
-    { dbField: 'warehouseNameAr', label: 'Warehouse Name (Arabic)', required: false },
     { dbField: 'location', label: 'Location', required: false },
     { dbField: 'capacity', label: 'Capacity', required: false, transform: toNumber },
   ],
-  regions: [
-    { dbField: 'regionName', label: 'Region Name', required: true },
-    { dbField: 'regionNameAr', label: 'Region Name (Arabic)', required: false },
-  ],
+  regions: [{ dbField: 'regionName', label: 'Region Name', required: true }],
   cities: [
     { dbField: 'cityName', label: 'City Name', required: true },
-    { dbField: 'cityNameAr', label: 'City Name (Arabic)', required: false },
     { dbField: 'regionId', label: 'Region ID', required: false },
   ],
   uoms: [
     { dbField: 'uomCode', label: 'UOM Code', required: true },
     { dbField: 'uomName', label: 'UOM Name', required: true },
-    { dbField: 'uomNameAr', label: 'UOM Name (Arabic)', required: false },
   ],
 };
 
@@ -100,18 +91,25 @@ function toDate(val: unknown): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-// ── Prisma model name mapping ───────────────────────────────────────────
+// ── Prisma delegate mapping ─────────────────────────────────────────────
+// Data is dynamically constructed from Excel rows, so we use a bounded cast
+// at the delegate boundary rather than `(prisma as any)[name]`.
 
-const PRISMA_MODEL: Record<ImportableEntity, string> = {
-  items: 'item',
-  suppliers: 'supplier',
-  projects: 'project',
-  employees: 'employee',
-  warehouses: 'warehouse',
-  regions: 'region',
-  cities: 'city',
-  uoms: 'unitOfMeasure',
-};
+type CreateDelegate = { create(args: { data: Record<string, unknown> }): Promise<unknown> };
+
+function getCreateDelegate(entity: ImportableEntity): CreateDelegate {
+  const map: Record<ImportableEntity, unknown> = {
+    items: prisma.item,
+    suppliers: prisma.supplier,
+    projects: prisma.project,
+    employees: prisma.employee,
+    warehouses: prisma.warehouse,
+    regions: prisma.region,
+    cities: prisma.city,
+    uoms: prisma.unitOfMeasure,
+  };
+  return map[entity] as CreateDelegate;
+}
 
 // ── Public API ──────────────────────────────────────────────────────────
 
@@ -209,7 +207,7 @@ export async function executeImport(
   }
 
   const fields = ENTITY_FIELDS[entity];
-  const modelName = PRISMA_MODEL[entity];
+  const delegate = getCreateDelegate(entity);
 
   // Validate mapping covers required fields
   const mappedDbFields = new Set(Object.values(mapping));
@@ -262,9 +260,7 @@ export async function executeImport(
         data[dbField] = value;
       }
 
-      // Use Prisma dynamic model access
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (prisma as any)[modelName].create({ data });
+      await delegate.create({ data });
 
       results.push({ row: i + 1, success: true });
       succeeded++;

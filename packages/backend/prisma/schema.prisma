@@ -536,6 +536,9 @@ model Item {
   packingLines       PackingLine[]
   stagingAssignments StagingAssignment[]
 
+  @@index([status], map: "idx_items_status")
+  @@index([category], map: "idx_items_category")
+  @@index([uomId], map: "idx_items_uom")
   @@map("items")
 }
 

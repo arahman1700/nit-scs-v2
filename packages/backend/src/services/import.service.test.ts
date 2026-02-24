@@ -83,7 +83,7 @@ describe('import.service', () => {
     it('returns correct fields for items entity', () => {
       const fields = getExpectedFields('items');
 
-      expect(fields).toHaveLength(8);
+      expect(fields).toHaveLength(7);
       expect(fields[0]).toEqual({ dbField: 'itemCode', label: 'Item Code', required: true });
       expect(fields[1]).toEqual({ dbField: 'itemDescription', label: 'Description', required: true });
 
@@ -96,7 +96,7 @@ describe('import.service', () => {
     it('returns correct fields for suppliers entity', () => {
       const fields = getExpectedFields('suppliers');
 
-      expect(fields).toHaveLength(10);
+      expect(fields).toHaveLength(9);
       expect(fields[0]).toEqual({ dbField: 'supplierCode', label: 'Supplier Code', required: true });
       expect(fields[1]).toEqual({ dbField: 'supplierName', label: 'Supplier Name', required: true });
 

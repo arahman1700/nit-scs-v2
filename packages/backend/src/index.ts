@@ -194,6 +194,17 @@ async function shutdown(signal: string) {
   setTimeout(() => process.exit(1), 10_000);
 }
 
+// ── Unhandled errors — log + report to Sentry, then exit ─────────────────
+process.on('unhandledRejection', reason => {
+  logger.error({ err: reason }, 'Unhandled promise rejection');
+  if (Sentry.isInitialized()) Sentry.captureException(reason);
+});
+process.on('uncaughtException', err => {
+  logger.error({ err }, 'Uncaught exception — shutting down');
+  if (Sentry.isInitialized()) Sentry.captureException(err);
+  process.exit(1);
+});
+
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 

@@ -71,11 +71,11 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ templateId, va
 
       {/* Preview output — rendered in a sandboxed iframe for safety */}
       {sanitizedHtml && (
-        <div className="bg-white rounded-lg overflow-hidden">
+        <div className="glass-card rounded-lg overflow-hidden">
           {/* Subject bar */}
-          <div className="bg-gray-100 px-4 py-2 border-b flex items-center gap-2">
-            <Send size={12} className="text-gray-500" />
-            <span className="text-sm text-gray-700 font-medium">{result?.data?.subject || '(no subject)'}</span>
+          <div className="bg-white/5 px-4 py-2 border-b border-white/10 flex items-center gap-2">
+            <Send size={12} className="text-gray-400" />
+            <span className="text-sm text-gray-300 font-medium">{result?.data?.subject || '(no subject)'}</span>
           </div>
           {/* HTML body rendered via sandbox iframe */}
           <iframe srcDoc={sanitizedHtml} sandbox="" title="Email preview" className="w-full min-h-[300px] border-0" />
