@@ -187,7 +187,7 @@ describe('create', () => {
 
     const result = await create(header as any, lines as any, USER_ID);
 
-    expect(generateDocumentNumber).toHaveBeenCalledWith('stock_transfer');
+    expect(generateDocumentNumber).toHaveBeenCalledWith('wt');
     expect(mockPrisma.stockTransfer.create).toHaveBeenCalledOnce();
     expect(result).toEqual(created);
   });
