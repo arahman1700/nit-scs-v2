@@ -4,7 +4,7 @@ import { Save, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { ExportButton } from '@/components/ExportButton';
-import { useCreateStockTransfer } from '@/api/hooks/useStockTransfers';
+import { useCreateWt } from '@/api/hooks/useWt';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
@@ -17,7 +17,7 @@ export const StockTransferForm: React.FC = () => {
   });
   const [lineItems, setLineItems] = useState<VoucherLineItem[]>([]);
 
-  const createMutation = useCreateStockTransfer();
+  const createMutation = useCreateWt();
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
   const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
@@ -52,14 +52,18 @@ export const StockTransferForm: React.FC = () => {
       fromProjectId: formData.fromProject || undefined,
       toProjectId: formData.toProject || undefined,
       transferDate,
-      totalValue,
-      lineItems,
       notes: formData.notes,
+      lines: lineItems.map(li => ({
+        itemId: li.itemId,
+        quantity: li.quantity,
+        uomId: li.uomId,
+      })),
     };
 
     createMutation.mutate(payload, {
       onSuccess: res => {
-        setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'ST-NEW');
+        const data = (res as { data?: { transferNumber?: string } })?.data;
+        setDocumentNumber(data?.transferNumber ?? 'WT-NEW');
         setSubmitted(true);
       },
     });
