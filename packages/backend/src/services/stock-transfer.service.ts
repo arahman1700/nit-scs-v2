@@ -8,6 +8,8 @@ import { eventBus } from '../events/event-bus.js';
 import type { StockTransferCreateDto, StockTransferUpdateDto, StockTransferLineDto, ListParams } from '../types/dto.js';
 
 const DOC_TYPE = 'stock_transfer';
+/** V2 key for DOC_PREFIXES — used only for document-number generation */
+const DOC_NUMBER_KEY = 'wt';
 
 const LIST_INCLUDE = {
   fromWarehouse: { select: { id: true, warehouseName: true, warehouseCode: true } },
@@ -78,7 +80,7 @@ export async function create(
   userId: string,
 ) {
   return prisma.$transaction(async tx => {
-    const transferNumber = await generateDocumentNumber('stock_transfer');
+    const transferNumber = await generateDocumentNumber(DOC_NUMBER_KEY);
     return tx.stockTransfer.create({
       data: {
         transferNumber,
