@@ -999,6 +999,870 @@ async function main() {
 
   console.log('    1 job order (transport) with details');
 
+  // ── 9. RFIM / QCI Documents (3) ─────────────────────────────────────
+  console.log('  Creating RFIM (QCI) documents ...');
+
+  // QCI-1: Completed pass for MRRV-3 (cement delivery)
+  await prisma.rfim
+    .create({
+      data: {
+        rfimNumber: 'RFIM-2026-0001',
+        mrrvId: mrrv3.id,
+        inspectorId: empSaad.id,
+        requestDate: new Date('2026-01-20T10:00:00Z'),
+        inspectionDate: new Date('2026-01-21T09:00:00Z'),
+        result: 'pass',
+        comments: 'Cement bags in good condition, moisture level within acceptable range. All 3,000 bags verified.',
+        status: 'completed',
+      },
+    })
+    .catch(() => null);
+
+  // QCI-2: In progress for MRRV-2 (electrical supplies)
+  await prisma.rfim
+    .create({
+      data: {
+        rfimNumber: 'RFIM-2026-0002',
+        mrrvId: mrrv2.id,
+        inspectorId: empSaad.id,
+        requestDate: new Date('2026-02-03T14:00:00Z'),
+        status: 'in_progress',
+        comments: 'Inspecting cable insulation resistance and breaker specifications',
+      },
+    })
+    .catch(() => null);
+
+  // QCI-3: Completed conditional for MRRV-1 (steel delivery)
+  await prisma.rfim
+    .create({
+      data: {
+        rfimNumber: 'RFIM-2026-0003',
+        mrrvId: mrrv1.id,
+        inspectorId: empSaad.id,
+        requestDate: new Date('2026-02-01T14:00:00Z'),
+        inspectionDate: new Date('2026-02-02T11:00:00Z'),
+        result: 'conditional',
+        comments: 'Steel rebar passed. Steel plate batch has 50 KG damaged – surface rust. Recommend partial acceptance.',
+        status: 'completed',
+        pmApprovalRequired: true,
+        pmApprovalById: empAbdulrahman.id,
+        pmApprovalDate: new Date('2026-02-02T15:00:00Z'),
+      },
+    })
+    .catch(() => null);
+
+  console.log('    3 RFIM (QCI) documents');
+
+  // ── 10. OSD / DR Documents (2) ──────────────────────────────────────
+  console.log('  Creating OSD (DR) documents ...');
+
+  // DR-1: Short shipment for MRRV-2
+  const osd1 = await prisma.osdReport
+    .create({
+      data: {
+        osdNumber: 'OSD-2026-0001',
+        mrrvId: mrrv2.id,
+        poNumber: 'PO-2026-00456',
+        supplierId: suppliers['SUP-003'].id,
+        warehouseId: warehouses['WH-003'].id,
+        reportDate: new Date('2026-02-03'),
+        reportTypes: ['short'],
+        status: 'claim_sent',
+        totalShortValue: 370,
+        claimSentDate: new Date('2026-02-04'),
+        claimReference: 'CLM-GE-2026-0012',
+      },
+    })
+    .catch(() => prisma.osdReport.findFirst({ where: { osdNumber: 'OSD-2026-0001' } }).then(r => r!));
+
+  await prisma.osdLine
+    .create({
+      data: {
+        osdId: osd1.id,
+        itemId: items['ELC-002'].id,
+        uomId: uomEA.id,
+        qtyInvoice: 50,
+        qtyReceived: 48,
+        unitCost: 185,
+        notes: '2 circuit breakers missing from shipment',
+      },
+    })
+    .catch(() => null);
+
+  // DR-2: Damage report for MRRV-1
+  const osd2 = await prisma.osdReport
+    .create({
+      data: {
+        osdNumber: 'OSD-2026-0002',
+        mrrvId: mrrv1.id,
+        poNumber: 'PO-2026-00123',
+        supplierId: suppliers['SUP-001'].id,
+        warehouseId: warehouses['WH-001'].id,
+        reportDate: new Date('2026-02-01'),
+        reportTypes: ['damage'],
+        status: 'resolved',
+        totalDamageValue: 340,
+        claimSentDate: new Date('2026-02-02'),
+        claimReference: 'CLM-ARS-2026-0055',
+        supplierResponse: 'Accepted. Credit note CN-ARS-2026-0078 issued for damaged steel plates.',
+        responseDate: new Date('2026-02-05'),
+        resolutionType: 'credit_note',
+        resolutionAmount: 340,
+        resolutionDate: new Date('2026-02-06'),
+        resolvedById: empAbdulrahman.id,
+      },
+    })
+    .catch(() => prisma.osdReport.findFirst({ where: { osdNumber: 'OSD-2026-0002' } }).then(r => r!));
+
+  await prisma.osdLine
+    .create({
+      data: {
+        osdId: osd2.id,
+        itemId: items['STL-002'].id,
+        uomId: uomKG.id,
+        qtyInvoice: 3000,
+        qtyReceived: 2950,
+        qtyDamaged: 50,
+        damageType: 'physical',
+        unitCost: 6.8,
+        notes: 'Surface rust on 50 KG of steel plates – transport moisture damage',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    2 OSD (DR) documents with lines');
+
+  // ── 11. MRV / MRN Documents (2) ─────────────────────────────────────
+  console.log('  Creating MRV (MRN) documents ...');
+
+  // MRN-1: Return to warehouse (good condition)
+  const mrv1 = await prisma.mrv
+    .create({
+      data: {
+        mrvNumber: 'MRV-2026-0001',
+        returnType: 'return_to_warehouse',
+        projectId: projects['PRJ-002'].id,
+        fromWarehouseId: warehouses['WH-002'].id,
+        toWarehouseId: warehouses['WH-001'].id,
+        returnedById: empKhalid.id,
+        returnDate: new Date('2026-02-06T08:00:00Z'),
+        reason: 'Excess piping material after pipeline installation complete in Sector C',
+        status: 'completed',
+        receivedById: empAhmed.id,
+        receivedDate: new Date('2026-02-06T14:00:00Z'),
+        notes: 'Material in good condition, returned to main warehouse stock',
+      },
+    })
+    .catch(() => prisma.mrv.findFirst({ where: { mrvNumber: 'MRV-2026-0001' } }).then(r => r!));
+
+  await prisma.mrvLine
+    .create({
+      data: {
+        mrvId: mrv1.id,
+        itemId: items['PIP-001'].id,
+        qtyReturned: 25,
+        uomId: uomM.id,
+        condition: 'good',
+        notes: 'Unused GRP pipe sections – original packaging intact',
+      },
+    })
+    .catch(() => null);
+  await prisma.mrvLine
+    .create({
+      data: {
+        mrvId: mrv1.id,
+        itemId: items['CON-003'].id,
+        qtyReturned: 40,
+        uomId: uomKG.id,
+        condition: 'good',
+        notes: 'Sealed welding rod boxes',
+      },
+    })
+    .catch(() => null);
+
+  // MRN-2: Return used tools (damaged condition)
+  const mrv2 = await prisma.mrv
+    .create({
+      data: {
+        mrvNumber: 'MRV-2026-0002',
+        returnType: 'return_to_warehouse',
+        projectId: projects['PRJ-003'].id,
+        toWarehouseId: warehouses['WH-003'].id,
+        returnedById: empKhalid.id,
+        returnDate: new Date('2026-02-08T10:00:00Z'),
+        reason: 'Safety equipment replacement cycle – returning used items for inspection',
+        status: 'pending',
+        notes: 'Used PPE from metro construction site – needs QC inspection before re-issue',
+      },
+    })
+    .catch(() => prisma.mrv.findFirst({ where: { mrvNumber: 'MRV-2026-0002' } }).then(r => r!));
+
+  await prisma.mrvLine
+    .create({
+      data: {
+        mrvId: mrv2.id,
+        itemId: items['SAF-001'].id,
+        qtyReturned: 30,
+        uomId: uomEA.id,
+        condition: 'used',
+        notes: 'Helmets with minor scratches – still serviceable',
+      },
+    })
+    .catch(() => null);
+  await prisma.mrvLine
+    .create({
+      data: {
+        mrvId: mrv2.id,
+        itemId: items['SAF-003'].id,
+        qtyReturned: 15,
+        uomId: uomEA.id,
+        condition: 'damaged',
+        notes: 'Steel-toe boots with worn soles – recommend disposal',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    2 MRV (MRN) documents with lines');
+
+  // ── 12. MRF / MR Documents (2) ──────────────────────────────────────
+  console.log('  Creating MRF (MR) documents ...');
+
+  // MR-1: Approved, from stock
+  const mrf1 = await prisma.materialRequisition
+    .create({
+      data: {
+        mrfNumber: 'MRF-2026-0001',
+        requestDate: new Date('2026-02-07T08:00:00Z'),
+        requiredDate: new Date('2026-02-12'),
+        projectId: projects['PRJ-001'].id,
+        department: 'civil',
+        requestedById: empKhalid.id,
+        deliveryPoint: 'NEOM Bay Sector A1 – Foundation Area',
+        workOrder: 'WO-NEOM-FND-001',
+        priority: 'high',
+        status: 'approved',
+        totalEstimatedValue: 82500,
+        reviewedById: empAhmed.id,
+        reviewDate: new Date('2026-02-07T14:00:00Z'),
+        approvedById: empAbdulrahman.id,
+        approvalDate: new Date('2026-02-08T09:00:00Z'),
+        notes: 'Materials for NEOM Bay foundation concrete pour scheduled Feb 15',
+      },
+    })
+    .catch(() => prisma.materialRequisition.findFirst({ where: { mrfNumber: 'MRF-2026-0001' } }).then(r => r!));
+
+  await prisma.mrfLine
+    .create({
+      data: {
+        mrfId: mrf1.id,
+        itemId: items['STL-001'].id,
+        qtyRequested: 10000,
+        uomId: uomKG.id,
+        source: 'from_stock',
+        qtyFromStock: 10000,
+        unitCost: 4.5,
+        notes: 'For rebar cage assembly – foundation zone',
+      },
+    })
+    .catch(() => null);
+  await prisma.mrfLine
+    .create({
+      data: {
+        mrfId: mrf1.id,
+        itemId: items['CEM-001'].id,
+        qtyRequested: 2000,
+        uomId: uomBAG.id,
+        source: 'from_stock',
+        qtyFromStock: 2000,
+        unitCost: 18,
+        notes: 'Portland cement for concrete mix',
+      },
+    })
+    .catch(() => null);
+
+  // MR-2: Under review, needs purchase
+  const mrf2 = await prisma.materialRequisition
+    .create({
+      data: {
+        mrfNumber: 'MRF-2026-0002',
+        requestDate: new Date('2026-02-10T09:00:00Z'),
+        requiredDate: new Date('2026-02-20'),
+        projectId: projects['PRJ-003'].id,
+        department: 'electrical',
+        requestedById: empKhalid.id,
+        deliveryPoint: 'Riyadh Metro – Station 7 Electrical Room',
+        drawingReference: 'DWG-RM-ELC-S7-001',
+        priority: 'medium',
+        status: 'under_review',
+        totalEstimatedValue: 38500,
+        reviewedById: empAhmed.id,
+        reviewDate: new Date('2026-02-10T16:00:00Z'),
+        notes: 'Electrical materials for Station 7 fit-out – partially from stock',
+      },
+    })
+    .catch(() => prisma.materialRequisition.findFirst({ where: { mrfNumber: 'MRF-2026-0002' } }).then(r => r!));
+
+  await prisma.mrfLine
+    .create({
+      data: {
+        mrfId: mrf2.id,
+        itemId: items['ELC-001'].id,
+        qtyRequested: 800,
+        uomId: uomM.id,
+        source: 'both',
+        qtyFromStock: 260,
+        qtyFromPurchase: 540,
+        unitCost: 28,
+        notes: 'XLPE cable for main distribution',
+      },
+    })
+    .catch(() => null);
+  await prisma.mrfLine
+    .create({
+      data: {
+        mrfId: mrf2.id,
+        itemId: items['ELC-004'].id,
+        qtyRequested: 12,
+        uomId: uomEA.id,
+        source: 'purchase_required',
+        qtyFromPurchase: 12,
+        unitCost: 750,
+        notes: '12-way distribution panels for each sub-station',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    2 MRF (MR) documents with lines');
+
+  // ── 13. Gate Passes (3) ─────────────────────────────────────────────
+  console.log('  Creating gate passes ...');
+
+  await prisma.gatePass
+    .create({
+      data: {
+        gatePassNumber: 'GP-2026-0001',
+        passType: 'outbound',
+        mirvId: mirv2.id,
+        projectId: projects['PRJ-002'].id,
+        warehouseId: warehouses['WH-002'].id,
+        vehicleNumber: 'أ ب ج 1234',
+        driverName: 'عبدالله سعيد',
+        driverIdNumber: '1098765432',
+        destination: 'Jubail Industrial City – Sector C Pipeline Corridor',
+        purpose: 'Material delivery for approved MI – piping and welding materials',
+        issueDate: new Date('2026-01-30T06:00:00Z'),
+        validUntil: new Date('2026-01-30T18:00:00Z'),
+        status: 'released',
+        issuedById: empAhmed.id,
+        securityOfficer: 'Hassan Al-Zahrani',
+        exitTime: new Date('2026-01-30T06:30:00Z'),
+        vehicleType: 'Flatbed Truck',
+        notes: 'Carrying 50 M GRP pipe and 100 KG welding rods',
+      },
+    })
+    .catch(() => null);
+
+  await prisma.gatePass
+    .create({
+      data: {
+        gatePassNumber: 'GP-2026-0002',
+        passType: 'inbound',
+        warehouseId: warehouses['WH-001'].id,
+        vehicleNumber: 'ه و ز 5678',
+        driverName: 'فيصل الحربي',
+        driverIdNumber: '1087654321',
+        destination: 'Dammam Main Warehouse – Receiving Bay',
+        purpose: 'Steel delivery from Al-Rajhi Steel Industries – PO-2026-00123',
+        issueDate: new Date('2026-02-01T07:00:00Z'),
+        validUntil: new Date('2026-02-01T12:00:00Z'),
+        status: 'returned',
+        issuedById: empAhmed.id,
+        securityOfficer: 'Mohammed Al-Qahtani',
+        exitTime: new Date('2026-02-01T07:15:00Z'),
+        returnTime: new Date('2026-02-01T11:00:00Z'),
+        vehicleType: 'Heavy Trailer',
+        notes: 'Delivered 8 tons steel – MRRV-2026-0001',
+      },
+    })
+    .catch(() => null);
+
+  await prisma.gatePass
+    .create({
+      data: {
+        gatePassNumber: 'GP-2026-0003',
+        passType: 'outbound',
+        projectId: projects['PRJ-001'].id,
+        warehouseId: warehouses['WH-001'].id,
+        vehicleNumber: 'د ر س 9012',
+        driverName: 'سالم العتيبي',
+        destination: 'NEOM Bay Logistics Zone – Sector A1',
+        purpose: 'Transport JO-2026-0001 – Steel and cement to NEOM site',
+        issueDate: new Date('2026-02-06T05:30:00Z'),
+        validUntil: new Date('2026-02-07T23:59:00Z'),
+        status: 'approved',
+        issuedById: empAhmed.id,
+        vehicleType: 'Heavy Trailer',
+        notes: '42.5 tons cargo – 3 trailers convoy',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    3 gate passes');
+
+  // ── 14. Stock Transfers / WT (2) ────────────────────────────────────
+  console.log('  Creating stock transfers ...');
+
+  const st1 = await prisma.stockTransfer
+    .create({
+      data: {
+        transferNumber: 'ST-2026-0001',
+        transferType: 'warehouse_to_warehouse',
+        fromWarehouseId: warehouses['WH-001'].id,
+        toWarehouseId: warehouses['WH-003'].id,
+        requestedById: empAbdulrahman.id,
+        transferDate: new Date('2026-02-09T08:00:00Z'),
+        status: 'completed',
+        shippedDate: new Date('2026-02-09T10:00:00Z'),
+        receivedDate: new Date('2026-02-10T09:00:00Z'),
+        notes: 'Replenishment of Riyadh Distribution Center – safety equipment stock low',
+      },
+    })
+    .catch(() => prisma.stockTransfer.findFirst({ where: { transferNumber: 'ST-2026-0001' } }).then(r => r!));
+
+  await prisma.stockTransferLine.create({ data: { transferId: st1.id, itemId: items['SAF-001'].id, quantity: 100, uomId: uomEA.id, condition: 'good' } }).catch(() => null);
+  await prisma.stockTransferLine.create({ data: { transferId: st1.id, itemId: items['SAF-002'].id, quantity: 200, uomId: uomEA.id, condition: 'good' } }).catch(() => null);
+  await prisma.stockTransferLine.create({ data: { transferId: st1.id, itemId: items['SAF-003'].id, quantity: 50, uomId: uomEA.id, condition: 'good' } }).catch(() => null);
+
+  const st2 = await prisma.stockTransfer
+    .create({
+      data: {
+        transferNumber: 'ST-2026-0002',
+        transferType: 'warehouse_to_project',
+        fromWarehouseId: warehouses['WH-001'].id,
+        toWarehouseId: warehouses['WH-004'].id,
+        toProjectId: projects['PRJ-001'].id,
+        requestedById: empMohammed.id,
+        transferDate: new Date('2026-02-11T07:00:00Z'),
+        status: 'shipped',
+        shippedDate: new Date('2026-02-11T09:00:00Z'),
+        transportJoId: jo1.id,
+        notes: 'Consumables for NEOM site – diesel and lubricants',
+      },
+    })
+    .catch(() => prisma.stockTransfer.findFirst({ where: { transferNumber: 'ST-2026-0002' } }).then(r => r!));
+
+  await prisma.stockTransferLine.create({ data: { transferId: st2.id, itemId: items['CON-001'].id, quantity: 5000, uomId: uomL.id, condition: 'good' } }).catch(() => null);
+  await prisma.stockTransferLine.create({ data: { transferId: st2.id, itemId: items['CON-002'].id, quantity: 10, uomId: uomDRUM.id, condition: 'good' } }).catch(() => null);
+
+  console.log('    2 stock transfers with lines');
+
+  // ── 15. Shipments (2) ───────────────────────────────────────────────
+  console.log('  Creating shipments ...');
+
+  const ship1 = await prisma.shipment
+    .create({
+      data: {
+        shipmentNumber: 'SH-2026-0001',
+        poNumber: 'PO-2026-01200',
+        supplierId: suppliers['SUP-004'].id,
+        projectId: projects['PRJ-002'].id,
+        originCountry: 'Germany',
+        modeOfShipment: 'sea_fcl',
+        portOfLoading: 'Hamburg Port, Germany',
+        destinationWarehouseId: warehouses['WH-001'].id,
+        orderDate: new Date('2025-12-15'),
+        expectedShipDate: new Date('2026-01-10'),
+        actualShipDate: new Date('2026-01-12'),
+        etaPort: new Date('2026-02-15'),
+        status: 'in_transit',
+        awbBlNumber: 'MAEU-2026-4578901',
+        containerNumber: 'MAEU5678901',
+        vesselFlight: 'MSC Gulsun – Voyage 2026-W05',
+        commercialValue: 285000,
+        freightCost: 12500,
+        insuranceCost: 2850,
+        dutiesEstimated: 14250,
+        description: 'Specialized GRP fittings and valves from German manufacturer for Jubail pipeline',
+        notes: 'Cargo insured – expected arrival Dammam port mid-Feb',
+      },
+    })
+    .catch(() => prisma.shipment.findFirst({ where: { shipmentNumber: 'SH-2026-0001' } }).then(r => r!));
+
+  await prisma.shipmentLine.create({ data: { shipmentId: ship1.id, itemId: items['PIP-001'].id, description: 'GRP Pipe 200mm (specialized fittings)', quantity: 500, uomId: uomM.id, unitValue: 180, hsCode: '3917.39' } }).catch(() => null);
+
+  const ship2 = await prisma.shipment
+    .create({
+      data: {
+        shipmentNumber: 'SH-2026-0002',
+        poNumber: 'PO-2026-01350',
+        supplierId: suppliers['SUP-003'].id,
+        projectId: projects['PRJ-003'].id,
+        originCountry: 'China',
+        modeOfShipment: 'air',
+        portOfLoading: 'Shanghai Pudong Airport',
+        destinationWarehouseId: warehouses['WH-003'].id,
+        orderDate: new Date('2026-01-20'),
+        expectedShipDate: new Date('2026-02-01'),
+        actualShipDate: new Date('2026-02-02'),
+        etaPort: new Date('2026-02-04'),
+        actualArrivalDate: new Date('2026-02-04'),
+        deliveryDate: new Date('2026-02-06'),
+        status: 'delivered',
+        awbBlNumber: 'SV-2026-8901234',
+        vesselFlight: 'SV-869 PVG-RUH',
+        commercialValue: 92000,
+        freightCost: 4500,
+        insuranceCost: 920,
+        description: 'LED flood lights and distribution panels for Riyadh Metro stations',
+        mrrvId: mrrv2.id,
+        notes: 'Air freight – urgent order for metro station electrical fit-out',
+      },
+    })
+    .catch(() => prisma.shipment.findFirst({ where: { shipmentNumber: 'SH-2026-0002' } }).then(r => r!));
+
+  await prisma.shipmentLine.create({ data: { shipmentId: ship2.id, itemId: items['ELC-003'].id, description: 'LED Flood Light 200W IP65', quantity: 120, uomId: uomEA.id, unitValue: 320, hsCode: '9405.42' } }).catch(() => null);
+  await prisma.shipmentLine.create({ data: { shipmentId: ship2.id, itemId: items['ELC-004'].id, description: 'Distribution Panel 12-Way 400V', quantity: 40, uomId: uomEA.id, unitValue: 750, hsCode: '8537.10' } }).catch(() => null);
+
+  console.log('    2 shipments with lines');
+
+  // ── 16. More Job Orders (2) ─────────────────────────────────────────
+  console.log('  Creating additional job orders ...');
+
+  const empFahad = await employee('fahad@nit.sa');
+
+  // JO-2: Equipment rental
+  await prisma.jobOrder
+    .create({
+      data: {
+        joNumber: 'JO-2026-0002',
+        joType: 'equipment',
+        entityId: entity.id,
+        projectId: projects['PRJ-001'].id,
+        supplierId: suppliers['SUP-007'].id,
+        requestedById: empMohammed.id,
+        requestDate: new Date('2026-02-08T08:00:00Z'),
+        requiredDate: new Date('2026-02-15'),
+        status: 'in_progress',
+        priority: 'high',
+        description: 'Crane rental for NEOM Bay foundation steel erection – 200T crawler crane with operator',
+        totalAmount: 45000,
+        startDate: new Date('2026-02-12T06:00:00Z'),
+        notes: 'Bin Laden supplying Liebherr LR 1200 crawler crane – 30 day rental',
+      },
+    })
+    .catch(() => null);
+
+  // JO-3: Generator maintenance
+  await prisma.jobOrder
+    .create({
+      data: {
+        joNumber: 'JO-2026-0003',
+        joType: 'generator_maintenance',
+        entityId: entity.id,
+        projectId: projects['PRJ-002'].id,
+        supplierId: suppliers['SUP-005'].id,
+        requestedById: empFahad.id,
+        requestDate: new Date('2026-02-10T07:00:00Z'),
+        requiredDate: new Date('2026-02-14'),
+        status: 'completed',
+        priority: 'normal',
+        description: 'Scheduled 500-hour maintenance for Jubail site generators – oil change, filter replacement, load test',
+        totalAmount: 3500,
+        startDate: new Date('2026-02-12T08:00:00Z'),
+        completionDate: new Date('2026-02-13T16:00:00Z'),
+        notes: 'All 3 generators serviced and load-tested successfully',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    2 additional job orders');
+
+  // ── 17. Generators (3) ──────────────────────────────────────────────
+  console.log('  Creating generators ...');
+
+  const gen1 = await prisma.generator
+    .create({
+      data: {
+        generatorCode: 'GEN-001',
+        generatorName: 'Caterpillar C15 – 500 KVA',
+        capacityKva: 500,
+        currentProjectId: projects['PRJ-001'].id,
+        currentWarehouseId: warehouses['WH-004'].id,
+        status: 'assigned',
+        purchaseDate: new Date('2023-06-15'),
+        purchaseValue: 185000,
+        salvageValue: 25000,
+        usefulLifeMonths: 120,
+        depreciationMethod: 'straight_line',
+        inServiceDate: new Date('2023-07-01'),
+        hoursTotal: 4520,
+      },
+    })
+    .catch(() => prisma.generator.findFirst({ where: { generatorCode: 'GEN-001' } }).then(r => r!));
+
+  const gen2 = await prisma.generator
+    .create({
+      data: {
+        generatorCode: 'GEN-002',
+        generatorName: 'Cummins QSX15 – 350 KVA',
+        capacityKva: 350,
+        currentProjectId: projects['PRJ-002'].id,
+        currentWarehouseId: warehouses['WH-002'].id,
+        status: 'assigned',
+        purchaseDate: new Date('2024-01-10'),
+        purchaseValue: 145000,
+        salvageValue: 20000,
+        usefulLifeMonths: 120,
+        depreciationMethod: 'straight_line',
+        inServiceDate: new Date('2024-02-01'),
+        hoursTotal: 2800,
+      },
+    })
+    .catch(() => prisma.generator.findFirst({ where: { generatorCode: 'GEN-002' } }).then(r => r!));
+
+  const gen3 = await prisma.generator
+    .create({
+      data: {
+        generatorCode: 'GEN-003',
+        generatorName: 'Perkins 1106 – 150 KVA',
+        capacityKva: 150,
+        currentWarehouseId: warehouses['WH-001'].id,
+        status: 'available',
+        purchaseDate: new Date('2024-09-01'),
+        purchaseValue: 65000,
+        salvageValue: 10000,
+        usefulLifeMonths: 120,
+        depreciationMethod: 'straight_line',
+        inServiceDate: new Date('2024-09-15'),
+        hoursTotal: 980,
+      },
+    })
+    .catch(() => prisma.generator.findFirst({ where: { generatorCode: 'GEN-003' } }).then(r => r!));
+
+  console.log('    3 generators');
+
+  // ── 18. Generator Fuel Logs (4) ─────────────────────────────────────
+  console.log('  Creating generator fuel logs ...');
+
+  await prisma.generatorFuelLog.create({ data: { generatorId: gen1.id, fuelDate: new Date('2026-02-01'), fuelQtyLiters: 450, meterReading: 4420, fuelSupplier: 'Saudi Aramco', costPerLiter: 2.18, totalCost: 981, loggedById: empMohammed.id } }).catch(() => null);
+  await prisma.generatorFuelLog.create({ data: { generatorId: gen1.id, fuelDate: new Date('2026-02-08'), fuelQtyLiters: 480, meterReading: 4520, fuelSupplier: 'Saudi Aramco', costPerLiter: 2.18, totalCost: 1046.4, loggedById: empMohammed.id } }).catch(() => null);
+  await prisma.generatorFuelLog.create({ data: { generatorId: gen2.id, fuelDate: new Date('2026-02-03'), fuelQtyLiters: 320, meterReading: 2720, fuelSupplier: 'Saudi Aramco', costPerLiter: 2.18, totalCost: 697.6, loggedById: empAhmed.id } }).catch(() => null);
+  await prisma.generatorFuelLog.create({ data: { generatorId: gen2.id, fuelDate: new Date('2026-02-10'), fuelQtyLiters: 350, meterReading: 2800, fuelSupplier: 'Saudi Aramco', costPerLiter: 2.18, totalCost: 763, loggedById: empAhmed.id } }).catch(() => null);
+
+  console.log('    4 fuel logs');
+
+  // ── 19. Generator Maintenance (3) ───────────────────────────────────
+  console.log('  Creating generator maintenance records ...');
+
+  await prisma.generatorMaintenance.create({ data: { generatorId: gen1.id, maintenanceType: 'weekly', scheduledDate: new Date('2026-02-05'), completedDate: new Date('2026-02-05T10:00:00Z'), performedById: empFahad.id, status: 'completed', findings: 'Oil level normal, coolant topped up, belts in good condition', cost: 150 } }).catch(() => null);
+  await prisma.generatorMaintenance.create({ data: { generatorId: gen2.id, maintenanceType: 'monthly', scheduledDate: new Date('2026-02-12'), completedDate: new Date('2026-02-12T14:00:00Z'), performedById: empFahad.id, status: 'completed', findings: 'Oil and filters changed, air filter replaced, load test passed at 100%', partsReplaced: 'Oil filter, fuel filter, air filter, engine oil 15W-40 (20L)', cost: 1200 } }).catch(() => null);
+  await prisma.generatorMaintenance.create({ data: { generatorId: gen3.id, maintenanceType: 'annual', scheduledDate: new Date('2026-03-01'), status: 'scheduled', findings: null, cost: 5000 } }).catch(() => null);
+
+  console.log('    3 maintenance records');
+
+  // ── 20. Tools (5) ───────────────────────────────────────────────────
+  console.log('  Creating tools ...');
+
+  const tools: Record<string, { id: string }> = {};
+  const toolDefs = [
+    { code: 'TL-001', name: 'Bosch GBH 2-26 DFR Rotary Hammer', cat: 'Power Tools', serial: 'BSH-2026-001', whId: warehouses['WH-001'].id },
+    { code: 'TL-002', name: 'Hilti TE 60-ATC Hammer Drill', cat: 'Power Tools', serial: 'HLT-2026-002', whId: warehouses['WH-003'].id },
+    { code: 'TL-003', name: 'Fluke 376 FC Clamp Meter', cat: 'Testing Equipment', serial: 'FLK-2026-003', whId: warehouses['WH-003'].id },
+    { code: 'TL-004', name: 'Topcon RL-H5A Laser Level', cat: 'Survey Equipment', serial: 'TOP-2026-004', whId: warehouses['WH-001'].id },
+    { code: 'TL-005', name: 'Lincoln MIG 300i Welder', cat: 'Welding Equipment', serial: 'LNC-2026-005', whId: warehouses['WH-002'].id },
+  ];
+
+  for (const t of toolDefs) {
+    const created = await prisma.tool
+      .create({
+        data: {
+          toolCode: t.code,
+          toolName: t.name,
+          category: t.cat,
+          serialNumber: t.serial,
+          condition: 'good',
+          warehouseId: t.whId,
+          purchaseDate: new Date('2025-06-15'),
+          warrantyExpiry: new Date('2027-06-15'),
+        },
+      })
+      .catch(() => prisma.tool.findFirst({ where: { toolCode: t.code } }).then(r => r!));
+    tools[t.code] = created;
+  }
+
+  console.log('    5 tools');
+
+  // ── 21. Tool Issues (3) ─────────────────────────────────────────────
+  console.log('  Creating tool issues ...');
+
+  await prisma.toolIssue.create({ data: { toolId: tools['TL-001'].id, issuedToId: empKhalid.id, issuedById: empAhmed.id, issuedDate: new Date('2026-02-01T07:00:00Z'), expectedReturnDate: new Date('2026-02-15'), status: 'issued' } }).catch(() => null);
+  await prisma.toolIssue.create({ data: { toolId: tools['TL-003'].id, issuedToId: empSaad.id, issuedById: empAhmed.id, issuedDate: new Date('2026-01-25T08:00:00Z'), expectedReturnDate: new Date('2026-02-01'), actualReturnDate: new Date('2026-02-01T16:00:00Z'), returnCondition: 'good', returnVerifiedById: empAhmed.id, status: 'returned' } }).catch(() => null);
+  await prisma.toolIssue.create({ data: { toolId: tools['TL-005'].id, issuedToId: empKhalid.id, issuedById: empAhmed.id, issuedDate: new Date('2026-01-20T07:00:00Z'), expectedReturnDate: new Date('2026-02-05'), status: 'overdue' } }).catch(() => null);
+
+  console.log('    3 tool issues');
+
+  // ── 22. Scrap Items (3) ─────────────────────────────────────────────
+  console.log('  Creating scrap items ...');
+
+  const empNasser = await employee('nasser@nit.sa');
+
+  await prisma.scrapItem.create({ data: { scrapNumber: 'SCR-2026-0001', projectId: projects['PRJ-004'].id, warehouseId: warehouses['WH-001'].id, materialType: 'steel', description: 'Offcut steel rebar pieces 12mm – various lengths 30cm to 1.5m', qty: 2500, packaging: 'Loose on pallet', condition: 'Rusty surface, structurally sound', estimatedValue: 5000, status: 'in_ssc', siteManagerApproval: true, qcApproval: true, storekeeperApproval: true, createdById: empNasser.id } }).catch(() => null);
+  await prisma.scrapItem.create({ data: { scrapNumber: 'SCR-2026-0002', projectId: projects['PRJ-003'].id, warehouseId: warehouses['WH-003'].id, materialType: 'cable', description: 'Damaged XLPE cable 4x16mm2 – water ingress damage', qty: 180, packaging: 'Cable drum', condition: 'Water damaged insulation – not reusable', estimatedValue: 1800, status: 'approved', siteManagerApproval: true, qcApproval: true, createdById: empSaad.id } }).catch(() => null);
+  await prisma.scrapItem.create({ data: { scrapNumber: 'SCR-2026-0003', projectId: projects['PRJ-002'].id, materialType: 'wood', description: 'Used formwork timber – multiple uses, split and warped', qty: 4000, packaging: 'Stacked on pallets', condition: 'End of life – 3+ pour cycles', estimatedValue: 2000, status: 'identified', createdById: empAhmed.id } }).catch(() => null);
+
+  console.log('    3 scrap items');
+
+  // ── 23. Surplus Items (2) ───────────────────────────────────────────
+  console.log('  Creating surplus items ...');
+
+  await prisma.surplusItem.create({ data: { surplusNumber: 'SUR-2026-0001', itemId: items['PIP-002'].id, warehouseId: warehouses['WH-001'].id, projectId: projects['PRJ-004'].id, qty: 150, condition: 'New – unused', estimatedValue: 4875, disposition: 'transfer', status: 'approved', createdById: empAhmed.id } }).catch(() => null);
+  await prisma.surplusItem.create({ data: { surplusNumber: 'SUR-2026-0002', itemId: items['ELC-003'].id, warehouseId: warehouses['WH-003'].id, projectId: projects['PRJ-003'].id, qty: 20, condition: 'New in box', estimatedValue: 6400, disposition: 'retain', status: 'evaluated', createdById: empAbdulrahman.id } }).catch(() => null);
+
+  console.log('    2 surplus items');
+
+  // ── 24. Tasks (6) ───────────────────────────────────────────────────
+  console.log('  Creating tasks ...');
+
+  await prisma.task.create({ data: { title: 'Inspect NEOM Bay foundation rebar cages', description: 'Verify rebar spacing and tie-wire connections per DWG-NEOM-FND-RC-001 before concrete pour', status: 'in_progress', priority: 'high', dueDate: new Date('2026-02-14'), assigneeId: empSaad.id, creatorId: empAbdulrahman.id, projectId: projects['PRJ-001'].id, tags: ['quality', 'inspection', 'critical-path'], startedAt: new Date('2026-02-10T08:00:00Z') } }).catch(() => null);
+  await prisma.task.create({ data: { title: 'Complete GRN for electrical supplies', description: 'Process MRRV-2026-0002 – circuit breakers and cables for Metro Line 3. QC pending.', status: 'open', priority: 'medium', dueDate: new Date('2026-02-12'), assigneeId: empAhmed.id, creatorId: empAbdulrahman.id, projectId: projects['PRJ-003'].id, tags: ['receiving', 'grn'] } }).catch(() => null);
+  await prisma.task.create({ data: { title: 'Arrange transport for NEOM steel delivery', description: 'Coordinate 3-trailer convoy from Dammam to NEOM – JO-2026-0001. Confirm driver assignments.', status: 'completed', priority: 'high', dueDate: new Date('2026-02-06'), assigneeId: empMohammed.id, creatorId: empAbdulrahman.id, projectId: projects['PRJ-001'].id, tags: ['transport', 'logistics'], startedAt: new Date('2026-02-04T07:00:00Z'), completedAt: new Date('2026-02-06T06:00:00Z') } }).catch(() => null);
+  await prisma.task.create({ data: { title: 'Perform cycle count – Zone A (Construction)', description: 'Monthly physical inventory count for construction materials in WH-001, Zone A', status: 'open', priority: 'medium', dueDate: new Date('2026-02-15'), assigneeId: empAhmed.id, creatorId: empAbdulrahman.id, tags: ['inventory', 'cycle-count'] } }).catch(() => null);
+  await prisma.task.create({ data: { title: 'Follow up DR claim – Gulf Electrical', description: 'OSD-2026-0001 claim sent Feb 4. Follow up on 2 missing circuit breakers.', status: 'in_progress', priority: 'low', dueDate: new Date('2026-02-18'), assigneeId: empAbdulrahman.id, creatorId: empSaad.id, projectId: projects['PRJ-003'].id, tags: ['procurement', 'claim'], startedAt: new Date('2026-02-10T09:00:00Z') } }).catch(() => null);
+  await prisma.task.create({ data: { title: 'Process surplus PVC pipes for Tabuk Solar Farm', description: 'Transfer 150 M PVC pipes from WH-001 to Tabuk project – SUR-2026-0001 approved', status: 'open', priority: 'low', dueDate: new Date('2026-02-20'), assigneeId: empMohammed.id, creatorId: empAhmed.id, projectId: projects['PRJ-005'].id, tags: ['surplus', 'transfer'] } }).catch(() => null);
+
+  console.log('    6 tasks');
+
+  // ── 25. Bin Cards & Transactions ────────────────────────────────────
+  console.log('  Creating bin cards and transactions ...');
+
+  const binCardDefs: Array<{ itemCode: string; whCode: string; bin: string; qty: number }> = [
+    { itemCode: 'STL-001', whCode: 'WH-001', bin: 'A-01-01', qty: 4500 },
+    { itemCode: 'STL-002', whCode: 'WH-001', bin: 'A-01-03', qty: 3200 },
+    { itemCode: 'CEM-001', whCode: 'WH-001', bin: 'B-01-01', qty: 1800 },
+    { itemCode: 'ELC-001', whCode: 'WH-003', bin: 'D-01-02', qty: 260 },
+    { itemCode: 'ELC-002', whCode: 'WH-003', bin: 'D-02-01', qty: 120 },
+    { itemCode: 'SAF-001', whCode: 'WH-001', bin: 'E-01-01', qty: 450 },
+    { itemCode: 'CON-001', whCode: 'WH-001', bin: 'G-01-01', qty: 8500 },
+    { itemCode: 'PIP-001', whCode: 'WH-002', bin: 'C-01-02', qty: 180 },
+  ];
+
+  for (const bc of binCardDefs) {
+    const created = await prisma.binCard
+      .create({
+        data: {
+          itemId: items[bc.itemCode].id,
+          warehouseId: warehouses[bc.whCode].id,
+          binNumber: bc.bin,
+          currentQty: bc.qty,
+          lastVerifiedAt: new Date('2026-02-01T08:00:00Z'),
+          lastVerifiedById: empAhmed.id,
+        },
+      })
+      .catch(() => prisma.binCard.findFirst({ where: { itemId: items[bc.itemCode].id, warehouseId: warehouses[bc.whCode].id, binNumber: bc.bin } }).then(r => r!));
+
+    // Add a receipt and issue transaction for each bin card
+    if (created) {
+      await prisma.binCardTransaction.create({
+        data: {
+          binCardId: created.id,
+          transactionType: 'receipt',
+          referenceType: 'grn',
+          referenceId: mrrv1.id,
+          referenceNumber: 'MRRV-2026-0001',
+          qtyIn: Math.round(bc.qty * 0.3),
+          runningBalance: bc.qty,
+          performedById: empAhmed.id,
+          performedAt: new Date('2026-02-01T09:00:00Z'),
+        },
+      }).catch(() => null);
+
+      await prisma.binCardTransaction.create({
+        data: {
+          binCardId: created.id,
+          transactionType: 'issue',
+          referenceType: 'mi',
+          referenceId: mirv1.id,
+          referenceNumber: 'MIRV-2026-0001',
+          qtyOut: Math.round(bc.qty * 0.05),
+          runningBalance: bc.qty,
+          performedById: empAhmed.id,
+          performedAt: new Date('2026-02-05T11:00:00Z'),
+        },
+      }).catch(() => null);
+    }
+  }
+
+  console.log('    8 bin cards with 16 transactions');
+
+  // ── 26. MIRV-3: Issued (adds a complete cycle for dashboards) ───────
+  console.log('  Creating additional MIRV for complete flow ...');
+
+  await prisma.mirv
+    .create({
+      data: {
+        mirvNumber: 'MIRV-2026-0003',
+        projectId: projects['PRJ-003'].id,
+        warehouseId: warehouses['WH-003'].id,
+        requestedById: empKhalid.id,
+        requestDate: new Date('2026-02-08T10:00:00Z'),
+        requiredDate: new Date('2026-02-10'),
+        priority: 'normal',
+        status: 'issued',
+        approvedById: empAbdulrahman.id,
+        approvedDate: new Date('2026-02-08T14:00:00Z'),
+        issuedById: empAhmed.id,
+        issuedDate: new Date('2026-02-09T08:00:00Z'),
+        estimatedValue: 22500,
+        locationOfWork: 'Riyadh Metro – Station 7 Construction Zone',
+        notes: 'Safety and consumable materials for metro station crew',
+      },
+    })
+    .catch(() => null);
+
+  // Additional MRRV-4 and MRRV-5 for variety
+  await prisma.mrrv
+    .create({
+      data: {
+        mrrvNumber: 'MRRV-2026-0004',
+        supplierId: suppliers['SUP-006'].id,
+        poNumber: 'PO-2026-01100',
+        warehouseId: warehouses['WH-003'].id,
+        projectId: projects['PRJ-003'].id,
+        receivedById: empAhmed.id,
+        receiveDate: new Date('2026-02-10T08:00:00Z'),
+        invoiceNumber: 'INV-HSE-2026-0220',
+        deliveryNote: 'DN-HSE-1150',
+        status: 'stored',
+        qcInspectorId: empSaad.id,
+        qcApprovedDate: new Date('2026-02-10T14:00:00Z'),
+        totalValue: 22500,
+        notes: 'Safety equipment delivery for Riyadh Metro crew – QC passed',
+      },
+    })
+    .catch(() => null);
+
+  await prisma.mrrv
+    .create({
+      data: {
+        mrrvNumber: 'MRRV-2026-0005',
+        supplierId: suppliers['SUP-005'].id,
+        poNumber: 'PO-2026-01250',
+        warehouseId: warehouses['WH-004'].id,
+        projectId: projects['PRJ-001'].id,
+        receivedById: empMohammed.id,
+        receiveDate: new Date('2026-02-12T07:00:00Z'),
+        invoiceNumber: 'INV-MAI-2026-0089',
+        deliveryNote: 'DN-MAI-2260',
+        status: 'pending_qc',
+        rfimRequired: true,
+        qcInspectorId: empSaad.id,
+        notes: 'Consumables and spare parts for NEOM site equipment maintenance',
+      },
+    })
+    .catch(() => null);
+
+  console.log('    1 additional MIRV + 2 additional MRRV documents');
+
   // ── Done ───────────────────────────────────────────────────────────────
   console.log('\nOperational seed data completed successfully.');
 }
