@@ -196,6 +196,128 @@ export async function returnPass(id: string) {
   return updated;
 }
 
+/**
+ * SOW C5 — Outbound gate verification.
+ * Gate officer verifies items against the gate pass before releasing the vehicle.
+ * Approved → Released with verification record.
+ */
+export async function verifyOutbound(
+  id: string,
+  body: {
+    securityOfficer?: string;
+    verificationNotes?: string;
+    itemChecks?: Array<{ itemId: string; verifiedQty: number }>;
+  },
+  verifiedById?: string,
+) {
+  const gp = await prisma.gatePass.findUnique({ where: { id }, include: { gatePassItems: true } });
+  if (!gp) throw new NotFoundError('Gate Pass', id);
+  assertTransition(DOC_TYPE, gp.status, 'released');
+
+  // Validate item checks match gate pass items
+  if (body.itemChecks?.length) {
+    const gpItemIds = new Set(gp.gatePassItems.map(i => i.itemId));
+    for (const check of body.itemChecks) {
+      if (!gpItemIds.has(check.itemId)) {
+        throw new BusinessRuleError(`Item ${check.itemId} is not on this gate pass`);
+      }
+    }
+  }
+
+  const verificationSummary = body.itemChecks?.length
+    ? `Verified ${body.itemChecks.length}/${gp.gatePassItems.length} items. ${body.verificationNotes || ''}`
+    : body.verificationNotes || 'Gate verification completed';
+
+  const updated = await prisma.gatePass.update({
+    where: { id: gp.id },
+    data: {
+      status: 'released',
+      exitTime: new Date(),
+      securityOfficer: body.securityOfficer ?? null,
+      notes: gp.notes
+        ? `${gp.notes}\n[OUTBOUND VERIFICATION] ${verificationSummary}`
+        : `[OUTBOUND VERIFICATION] ${verificationSummary}`,
+    },
+    include: DETAIL_INCLUDE,
+  });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'verify_outbound',
+    payload: {
+      from: gp.status,
+      to: 'released',
+      passType: gp.passType,
+      verifiedById,
+      itemsVerified: body.itemChecks?.length ?? 0,
+    },
+    performedById: verifiedById,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
+}
+
+/**
+ * SOW C6 — Inbound gate verification.
+ * Gate officer verifies incoming materials at the gate before allowing entry.
+ * Released → Returned with verification record.
+ */
+export async function verifyInbound(
+  id: string,
+  body: {
+    securityOfficer?: string;
+    verificationNotes?: string;
+    itemChecks?: Array<{ itemId: string; verifiedQty: number }>;
+  },
+  verifiedById?: string,
+) {
+  const gp = await prisma.gatePass.findUnique({ where: { id }, include: { gatePassItems: true } });
+  if (!gp) throw new NotFoundError('Gate Pass', id);
+
+  // Inbound verification can be done on 'approved' (inbound passes) or 'released' (return verification)
+  if (!['approved', 'released'].includes(gp.status)) {
+    throw new BusinessRuleError(`Inbound verification requires status 'approved' or 'released', got '${gp.status}'`);
+  }
+
+  const verificationSummary = body.itemChecks?.length
+    ? `Verified ${body.itemChecks.length}/${gp.gatePassItems.length} items. ${body.verificationNotes || ''}`
+    : body.verificationNotes || 'Inbound verification completed';
+
+  const updated = await prisma.gatePass.update({
+    where: { id: gp.id },
+    data: {
+      status: 'returned',
+      returnTime: new Date(),
+      securityOfficer: body.securityOfficer ?? gp.securityOfficer ?? null,
+      notes: gp.notes
+        ? `${gp.notes}\n[INBOUND VERIFICATION] ${verificationSummary}`
+        : `[INBOUND VERIFICATION] ${verificationSummary}`,
+    },
+    include: DETAIL_INCLUDE,
+  });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'gate_pass',
+    entityId: gp.id,
+    action: 'verify_inbound',
+    payload: {
+      from: gp.status,
+      to: 'returned',
+      passType: gp.passType,
+      verifiedById,
+      itemsVerified: body.itemChecks?.length ?? 0,
+    },
+    performedById: verifiedById,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
+}
+
 export async function cancel(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);

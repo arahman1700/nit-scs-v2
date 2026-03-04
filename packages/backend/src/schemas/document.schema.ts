@@ -448,6 +448,301 @@ export const putAwayRuleUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+// ── Equipment Delivery Note ──────────────────────────────────────────────
+
+const conditionEnum = z.enum(['excellent', 'good', 'fair', 'poor']);
+const fuelLevelEnum = z.enum(['full', 'three_quarter', 'half', 'quarter', 'empty']);
+
+export const equipmentDeliveryNoteCreateSchema = z.object({
+  jobOrderId: uuid,
+  rentalContractId: uuid.optional(),
+  deliveryDate: z.string().datetime(),
+  receivedById: uuid,
+  equipmentDescription: z.string().min(1, 'Equipment description is required'),
+  serialNumber: z.string().max(100).optional(),
+  hoursOnDelivery: z.number().min(0).optional(),
+  mileageOnDelivery: z.number().min(0).optional(),
+  conditionOnDelivery: conditionEnum,
+  conditionNotes: z.string().optional(),
+  safetyCertificateVerified: z.boolean().optional(),
+  notes: z.string().optional(),
+});
+
+export const equipmentDeliveryNoteUpdateSchema = z.object({
+  deliveryDate: z.string().datetime().optional(),
+  equipmentDescription: z.string().min(1).optional(),
+  serialNumber: z.string().max(100).optional(),
+  hoursOnDelivery: z.number().min(0).optional(),
+  mileageOnDelivery: z.number().min(0).optional(),
+  conditionOnDelivery: conditionEnum.optional(),
+  conditionNotes: z.string().optional(),
+  safetyCertificateVerified: z.boolean().optional(),
+  notes: z.string().optional(),
+});
+
+// ── Equipment Return Note ───────────────────────────────────────────────
+
+export const equipmentReturnNoteCreateSchema = z.object({
+  jobOrderId: uuid,
+  deliveryNoteId: uuid,
+  returnDate: z.string().datetime(),
+  returnedById: uuid,
+  hoursOnReturn: z.number().min(0).optional(),
+  mileageOnReturn: z.number().min(0).optional(),
+  conditionOnReturn: conditionEnum,
+  conditionNotes: z.string().optional(),
+  damageDescription: z.string().optional(),
+  damageEstimatedCost: z.number().min(0).optional(),
+  fuelLevel: fuelLevelEnum.optional(),
+  notes: z.string().optional(),
+});
+
+export const equipmentReturnNoteUpdateSchema = z.object({
+  returnDate: z.string().datetime().optional(),
+  hoursOnReturn: z.number().min(0).optional(),
+  mileageOnReturn: z.number().min(0).optional(),
+  conditionOnReturn: conditionEnum.optional(),
+  conditionNotes: z.string().optional(),
+  damageDescription: z.string().optional(),
+  damageEstimatedCost: z.number().min(0).optional(),
+  fuelLevel: fuelLevelEnum.optional(),
+  notes: z.string().optional(),
+});
+
+// ── Rate Card (Supplier Equipment Rate) ──────────────────────────────────
+
+export const rateCardCreateSchema = z.object({
+  supplierId: uuid,
+  equipmentTypeId: uuid,
+  capacity: z.string().max(100).optional(),
+  dailyRate: decimalNonNegative.optional(),
+  weeklyRate: decimalNonNegative.optional(),
+  monthlyRate: decimalNonNegative.optional(),
+  withOperatorSurcharge: decimalNonNegative.optional(),
+  operatorIncluded: z.boolean().optional(),
+  fuelIncluded: z.boolean().optional(),
+  insuranceIncluded: z.boolean().optional(),
+  validFrom: z.string().datetime(),
+  validUntil: z.string().datetime().optional(),
+  status: z.enum(['active', 'inactive', 'expired']).optional(),
+  notes: z.string().optional(),
+});
+
+export const rateCardUpdateSchema = z.object({
+  capacity: z.string().max(100).optional(),
+  dailyRate: decimalNonNegative.optional(),
+  weeklyRate: decimalNonNegative.optional(),
+  monthlyRate: decimalNonNegative.optional(),
+  withOperatorSurcharge: decimalNonNegative.optional(),
+  operatorIncluded: z.boolean().optional(),
+  fuelIncluded: z.boolean().optional(),
+  insuranceIncluded: z.boolean().optional(),
+  validFrom: z.string().datetime().optional(),
+  validUntil: z.string().datetime().optional(),
+  status: z.enum(['active', 'inactive', 'expired']).optional(),
+  notes: z.string().optional(),
+});
+
+// ── Visitor Pass (SOW M5-F03) ────────────────────────────────────────────
+
+export const visitorPassCreateSchema = z.object({
+  visitorName: z.string().min(1, 'Visitor name is required').max(200),
+  visitorCompany: z.string().max(200).optional(),
+  visitorIdNumber: z.string().min(1, 'Visitor ID number is required').max(50),
+  visitorPhone: z.string().max(30).optional(),
+  visitorEmail: z.string().email().max(200).optional(),
+  hostEmployeeId: uuid,
+  warehouseId: uuid,
+  purpose: z.string().min(1, 'Visit purpose is required'),
+  visitDate: z.string().datetime(),
+  expectedDuration: z.number().int().min(1, 'Expected duration must be at least 1 minute'),
+  vehicleNumber: z.string().max(30).optional(),
+  vehicleType: z.string().max(30).optional(),
+  badgeNumber: z.string().max(30).optional(),
+  notes: z.string().optional(),
+});
+
+export const visitorPassUpdateSchema = z.object({
+  visitorName: z.string().min(1).max(200).optional(),
+  visitorCompany: z.string().max(200).nullable().optional(),
+  visitorIdNumber: z.string().min(1).max(50).optional(),
+  visitorPhone: z.string().max(30).nullable().optional(),
+  visitorEmail: z.string().email().max(200).nullable().optional(),
+  hostEmployeeId: uuid.optional(),
+  warehouseId: uuid.optional(),
+  purpose: z.string().min(1).optional(),
+  visitDate: z.string().datetime().optional(),
+  expectedDuration: z.number().int().min(1).optional(),
+  vehicleNumber: z.string().max(30).nullable().optional(),
+  vehicleType: z.string().max(30).nullable().optional(),
+  badgeNumber: z.string().max(30).nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const visitorCheckInSchema = z.object({
+  badgeNumber: z.string().max(30).optional(),
+});
+
+// ── AMC (Annual Maintenance Contract) — SOW M1 ─────────────────────────
+
+export const amcCreateSchema = z.object({
+  supplierId: uuid,
+  equipmentTypeId: uuid,
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().min(1, 'End date is required'),
+  contractValue: decimalPositive,
+  coverageType: z.enum(['comprehensive', 'parts_only', 'labor_only']),
+  responseTimeSlaHours: z.number().int().min(1, 'Response time SLA must be at least 1 hour'),
+  preventiveMaintenanceFrequency: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']),
+  includesSpares: z.boolean().optional(),
+  maxCallouts: z.number().int().positive().nullable().optional(),
+  notes: z.string().optional(),
+});
+
+export const amcUpdateSchema = z.object({
+  supplierId: uuid.optional(),
+  equipmentTypeId: uuid.optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  contractValue: decimalPositive.optional(),
+  coverageType: z.enum(['comprehensive', 'parts_only', 'labor_only']).optional(),
+  responseTimeSlaHours: z.number().int().min(1).optional(),
+  preventiveMaintenanceFrequency: z.enum(['weekly', 'monthly', 'quarterly', 'yearly']).optional(),
+  includesSpares: z.boolean().optional(),
+  maxCallouts: z.number().int().positive().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const amcTerminateSchema = z.object({
+  reason: z.string().optional(),
+});
+
+// ── Customs Document (SOW M9) ────────────────────────────────────────────
+
+const customsDocumentTypes = [
+  'bill_of_lading',
+  'commercial_invoice',
+  'packing_list',
+  'certificate_of_origin',
+  'insurance_certificate',
+  'customs_declaration',
+  'import_permit',
+  'phytosanitary',
+  'conformity_certificate',
+  'other',
+] as const;
+
+export const customsDocumentCreateSchema = z.object({
+  shipmentId: uuid,
+  documentType: z.enum(customsDocumentTypes),
+  documentNumber: z.string().max(100).optional(),
+  issueDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+  filePath: z.string().max(500).optional(),
+  notes: z.string().optional(),
+});
+
+export const customsDocumentUpdateSchema = z.object({
+  documentType: z.enum(customsDocumentTypes).optional(),
+  documentNumber: z.string().max(100).nullable().optional(),
+  issueDate: z.string().nullable().optional(),
+  expiryDate: z.string().nullable().optional(),
+  status: z.enum(['pending', 'received', 'verified', 'rejected']).optional(),
+  filePath: z.string().max(500).nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const customsDocumentRejectSchema = z.object({
+  reason: z.string().optional(),
+});
+
+// ── Vehicle Maintenance (M8) ─────────────────────────────────────────────
+
+export const vehicleMaintenanceCreateSchema = z.object({
+  vehicleId: uuid,
+  maintenanceType: z.enum(['preventive', 'corrective', 'emergency', 'inspection']),
+  scheduledDate: z.string().min(1, 'Scheduled date is required'),
+  description: z.string().min(1, 'Description is required'),
+  currentHoursAtService: z.number().optional(),
+  currentMileageAtService: z.number().optional(),
+  vendorName: z.string().max(200).optional(),
+  performedById: uuid.optional(),
+  nextServiceHours: z.number().optional(),
+  nextServiceMileage: z.number().optional(),
+  nextServiceDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const vehicleMaintenanceUpdateSchema = z.object({
+  maintenanceType: z.enum(['preventive', 'corrective', 'emergency', 'inspection']).optional(),
+  scheduledDate: z.string().optional(),
+  description: z.string().min(1).optional(),
+  currentHoursAtService: z.number().nullable().optional(),
+  currentMileageAtService: z.number().nullable().optional(),
+  vendorName: z.string().max(200).nullable().optional(),
+  performedById: uuid.nullable().optional(),
+  nextServiceHours: z.number().nullable().optional(),
+  nextServiceMileage: z.number().nullable().optional(),
+  nextServiceDate: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const vehicleMaintenanceCompleteSchema = z.object({
+  workPerformed: z.string().min(1, 'Work performed is required'),
+  partsUsed: z.string().optional(),
+  cost: z.number().optional(),
+});
+
+// ── Asset Register (M10) ─────────────────────────────────────────────────
+
+export const assetCreateSchema = z.object({
+  description: z.string().min(1, 'Description is required').max(500),
+  category: z.enum(['equipment', 'vehicle', 'furniture', 'it_hardware', 'tools', 'other']),
+  serialNumber: z.string().max(100).optional(),
+  manufacturer: z.string().max(200).optional(),
+  model: z.string().max(200).optional(),
+  purchaseDate: z.string().datetime().optional(),
+  purchaseCost: decimalNonNegative.optional(),
+  currentValue: decimalNonNegative.optional(),
+  depreciationMethod: z.enum(['straight_line', 'declining_balance', 'none']).optional(),
+  usefulLifeYears: z.number().int().min(1).optional(),
+  salvageValue: decimalNonNegative.optional(),
+  status: z.enum(['active', 'maintenance', 'retired', 'disposed', 'lost']).optional(),
+  locationWarehouseId: uuid.optional(),
+  assignedToId: uuid.optional(),
+  condition: z.enum(['new', 'good', 'fair', 'poor']).optional(),
+  notes: z.string().optional(),
+});
+
+export const assetUpdateSchema = z.object({
+  description: z.string().min(1).max(500).optional(),
+  category: z.enum(['equipment', 'vehicle', 'furniture', 'it_hardware', 'tools', 'other']).optional(),
+  serialNumber: z.string().max(100).nullable().optional(),
+  manufacturer: z.string().max(200).nullable().optional(),
+  model: z.string().max(200).nullable().optional(),
+  purchaseDate: z.string().datetime().nullable().optional(),
+  purchaseCost: decimalNonNegative.nullable().optional(),
+  currentValue: decimalNonNegative.nullable().optional(),
+  depreciationMethod: z.enum(['straight_line', 'declining_balance', 'none']).nullable().optional(),
+  usefulLifeYears: z.number().int().min(1).nullable().optional(),
+  salvageValue: decimalNonNegative.nullable().optional(),
+  locationWarehouseId: uuid.nullable().optional(),
+  assignedToId: uuid.nullable().optional(),
+  condition: z.enum(['new', 'good', 'fair', 'poor']).nullable().optional(),
+  lastAuditDate: z.string().datetime().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const assetTransferSchema = z.object({
+  toWarehouseId: uuid.optional(),
+  toEmployeeId: uuid.optional(),
+  reason: z.string().optional(),
+});
+
+export const assetDisposeSchema = z.object({
+  disposalValue: decimalNonNegative.optional(),
+});
+
 // ── Approval Action ─────────────────────────────────────────────────────
 
 export const approvalActionSchema = z.object({

@@ -4,6 +4,7 @@ import gatePassRoutes from './gate-pass.routes.js';
 import stockTransferRoutes from './stock-transfer.routes.js';
 import mrfRoutes from './mrf.routes.js';
 import shipmentRoutes from './shipment.routes.js';
+import transportOrderRoutes from './transport-order.routes.js';
 
 const router = Router();
 
@@ -12,5 +13,6 @@ router.use('/gate-passes', gatePassRoutes);
 router.use('/stock-transfers', stockTransferRoutes);
 router.use('/mrf', mrfRoutes);
 router.use('/shipments', shipmentRoutes);
+router.use('/transport-orders', transportOrderRoutes);
 
 export default router;

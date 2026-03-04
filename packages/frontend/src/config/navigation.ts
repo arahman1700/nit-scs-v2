@@ -27,10 +27,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: '---', type: 'divider' },
         { label: 'IMSF - Material Shifting', path: '/admin/warehouses?tab=imsf' },
         { label: 'WT - Warehouse Transfer', path: '/admin/warehouses?tab=wt' },
-        { label: '---', type: 'divider' },
-        { label: 'Packing Station', path: '/admin/warehouse/packing' },
-        { label: 'Staging Areas', path: '/admin/warehouse/staging' },
-        { label: 'Yard Management', path: '/admin/warehouse/yard' },
       ],
     },
 
@@ -82,10 +78,7 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
 
-    // ── 6. Intelligence ──
-    { label: 'Intelligence', path: '/admin/intelligence' },
-
-    // ── 7. Interactive Map ──
+    // ── 6. Interactive Map ──
     { label: 'Interactive Map', path: '/admin/map' },
 
     // ── 7. Documents ──
@@ -132,20 +125,6 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: '---', type: 'divider' },
         { label: 'Email Templates', path: '/admin/settings?tab=email-templates' },
         { label: 'Email Logs', path: '/admin/settings?tab=email-logs' },
-        { label: '---', type: 'divider' },
-        { label: 'Dashboard Builder', path: '/admin/settings/dashboards' },
-        { label: 'Report Builder', path: '/admin/settings/reports' },
-        { label: 'Document Type Builder', path: '/admin/dynamic-types' },
-        { label: 'Custom Data Sources', path: '/admin/custom-data-sources' },
-        { label: 'Custom Fields', path: '/admin/custom-fields' },
-        { label: 'Workflow Templates', path: '/admin/workflow-templates' },
-        { label: 'AI Insights', path: '/admin/ai-insights' },
-        { label: '---', type: 'divider' },
-        { label: 'Labor Dashboard', path: '/admin/dashboards/labor' },
-        { label: 'Exceptions Dashboard', path: '/admin/dashboards/exceptions' },
-        { label: '---', type: 'divider' },
-        { label: 'Features Catalog', path: '/admin/features' },
-        { label: 'ROI Calculator', path: '/admin/roi-calculator' },
       ],
     },
   ],
@@ -158,14 +137,10 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Receive (GRN)', path: '/warehouse/receive' },
         { label: 'Issue (MI)', path: '/warehouse/issue' },
         { label: 'Returns (MRN)', path: '/warehouse/return' },
-        { label: 'Packing Station', path: '/warehouse/packing' },
-        { label: 'Staging Areas', path: '/warehouse/staging' },
         { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
-        { label: 'Yard Management', path: '/warehouse/yard' },
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Intelligence', path: '/warehouse/intelligence' },
     { label: 'Labor Dashboard', path: '/warehouse/labor' },
   ],
   [UserRole.WAREHOUSE_STAFF]: [
@@ -177,14 +152,10 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Receive (GRN)', path: '/warehouse/receive' },
         { label: 'Issue (MI)', path: '/warehouse/issue' },
         { label: 'Returns (MRN)', path: '/warehouse/return' },
-        { label: 'Packing Station', path: '/warehouse/packing' },
-        { label: 'Staging Areas', path: '/warehouse/staging' },
         { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
-        { label: 'Yard Management', path: '/warehouse/yard' },
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Intelligence', path: '/warehouse/intelligence' },
   ],
   [UserRole.FREIGHT_FORWARDER]: [
     { label: 'Dashboard', path: '/transport' },
@@ -292,6 +263,121 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
         { label: 'Scrap Items', path: '/admin/scrap?tab=scrap' },
         { label: 'Surplus', path: '/admin/scrap?tab=surplus' },
+      ],
+    },
+  ],
+  // SOW Section 13.1 — additional roles
+  [UserRole.TECHNICAL_MANAGER]: [
+    { label: 'Dashboard', path: '/manager' },
+    {
+      label: 'Approvals',
+      path: '/manager/approvals',
+      children: [
+        { label: 'Approval Queue', path: '/manager/approvals' },
+        { label: 'Documents', path: '/manager/documents' },
+      ],
+    },
+    {
+      label: 'Oversight',
+      path: '/manager/projects',
+      children: [
+        { label: 'Projects', path: '/manager/projects' },
+        { label: 'Inventory', path: '/manager/inventory' },
+      ],
+    },
+  ],
+  [UserRole.GATE_OFFICER]: [
+    { label: 'Dashboard', path: '/warehouse' },
+    {
+      label: 'Gate Operations',
+      path: '/warehouse/gate-passes',
+      children: [
+        { label: 'Gate Passes', path: '/warehouse/gate-passes' },
+        { label: 'Inbound Verification', path: '/warehouse/gate-inbound' },
+        { label: 'Outbound Verification', path: '/warehouse/gate-outbound' },
+      ],
+    },
+  ],
+  [UserRole.INVENTORY_SPECIALIST]: [
+    { label: 'Dashboard', path: '/warehouse' },
+    {
+      label: 'Inventory',
+      path: '/warehouse/inventory',
+      children: [
+        { label: 'Stock Levels', path: '/warehouse/inventory' },
+        { label: 'Bin Cards', path: '/warehouse/bin-cards' },
+        { label: 'Cycle Counts', path: '/warehouse/cycle-counts' },
+      ],
+    },
+    {
+      label: 'Operations',
+      path: '/warehouse/receive',
+      children: [
+        { label: 'Receive (GRN)', path: '/warehouse/receive' },
+        { label: 'Issue (MI)', path: '/warehouse/issue' },
+        { label: 'Returns (MRN)', path: '/warehouse/return' },
+      ],
+    },
+  ],
+  [UserRole.SHIPPING_OFFICER]: [
+    { label: 'Dashboard', path: '/logistics' },
+    {
+      label: 'Shipments',
+      path: '/logistics/shipments',
+      children: [
+        { label: 'All Shipments', path: '/logistics/shipments' },
+        { label: 'Customs Clearance', path: '/logistics/customs' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      ],
+    },
+  ],
+  [UserRole.FINANCE_USER]: [
+    { label: 'Dashboard', path: '/admin' },
+    {
+      label: 'Reports',
+      path: '/admin/settings?tab=reports',
+      children: [
+        { label: 'Financial Reports', path: '/admin/settings?tab=reports' },
+        { label: 'Inventory Valuation', path: '/admin/warehouses?tab=inventory' },
+      ],
+    },
+    {
+      label: 'Documents',
+      path: '/admin/documents',
+      children: [
+        { label: 'All Documents', path: '/admin/documents' },
+        { label: 'Job Orders', path: '/admin/equipment?tab=all-jobs' },
+      ],
+    },
+  ],
+  [UserRole.CUSTOMS_SPECIALIST]: [
+    { label: 'Dashboard', path: '/logistics' },
+    {
+      label: 'Customs',
+      path: '/logistics/customs',
+      children: [
+        { label: 'Customs Clearance', path: '/logistics/customs' },
+        { label: 'Shipments', path: '/logistics/shipments' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      ],
+    },
+  ],
+  [UserRole.COMPLIANCE_OFFICER]: [
+    { label: 'Dashboard', path: '/admin' },
+    {
+      label: 'Compliance',
+      path: '/admin/settings?tab=audit',
+      children: [
+        { label: 'Audit Log', path: '/admin/settings?tab=audit' },
+        { label: 'Reports', path: '/admin/settings?tab=reports' },
+      ],
+    },
+    {
+      label: 'Documents',
+      path: '/admin/documents',
+      children: [
+        { label: 'All Documents', path: '/admin/documents' },
+        { label: 'Quality (QCI)', path: '/admin/warehouses?tab=qci' },
       ],
     },
   ],

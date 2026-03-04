@@ -11,6 +11,14 @@ export enum UserRole {
   FREIGHT_FORWARDER = 'freight_forwarder',
   TRANSPORT_SUPERVISOR = 'transport_supervisor',
   SCRAP_COMMITTEE_MEMBER = 'scrap_committee_member',
+  // SOW Section 13.1 — additional roles for full 14-role coverage
+  TECHNICAL_MANAGER = 'technical_manager',
+  GATE_OFFICER = 'gate_officer',
+  INVENTORY_SPECIALIST = 'inventory_specialist',
+  SHIPPING_OFFICER = 'shipping_officer',
+  FINANCE_USER = 'finance_user',
+  CUSTOMS_SPECIALIST = 'customs_specialist',
+  COMPLIANCE_OFFICER = 'compliance_officer',
 }
 
 /**

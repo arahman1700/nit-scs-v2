@@ -273,6 +273,16 @@ export {
   useMarkOverdueGeneratorMaintenance,
 } from './useGeneratorMaintenance';
 
+// Vehicle Maintenance — M8 module
+export {
+  useVehicleMaintenanceList,
+  useVehicleMaintenance,
+  useCreateVehicleMaintenance,
+  useUpdateVehicleMaintenance,
+  useCompleteVehicleMaintenance,
+  useCancelVehicleMaintenance,
+} from './useVehicleMaintenance';
+
 // Warehouse Zones — new module (CRUD only)
 export {
   useWarehouseZoneList,
@@ -302,84 +312,19 @@ export {
   useCompleteHandover,
 } from './useHandovers';
 
+// Rate Cards — SOW M2-F06
+export { useRateCardList, useRateCard, useCreateRateCard, useUpdateRateCard, useRateCardLookup } from './useRateCards';
+
 // Labor Productivity
 export { useLaborProductivity } from './useLaborProductivity';
 
-// ABC Analysis — inventory classification
-export { useAbcAnalysis, useAbcSummary, useRecalculateAbc } from './useAbcAnalysis';
-
-// Put-Away Rules — zone placement engine
-export {
-  usePutAwayRules,
-  usePutAwayRule,
-  useCreatePutAwayRule,
-  useUpdatePutAwayRule,
-  useDeletePutAwayRule,
-  usePutAwaySuggestion,
-} from './usePutAwayRules';
-
-// Cycle Counts — physical inventory counting
-export {
-  useCycleCountList,
-  useCycleCount,
-  useCreateCycleCount,
-  useGenerateLines,
-  useStartCycleCount,
-  useRecordCount,
-  useCompleteCycleCount,
-  useApplyAdjustments,
-  useCancelCycleCount,
-} from './useCycleCounts';
-
-// Pick Path Optimization & Wave Picking
-export {
-  useOptimizePickPath,
-  useWaveList,
-  useWave,
-  useCreateWave,
-  useStartWave,
-  useCompleteWave,
-} from './usePickOptimizer';
-export type { PickStop, PickPath, Wave } from './usePickOptimizer';
+// MVP DEFERRED: ABC Analysis, Put-Away Rules, Cycle Counts, Pick Optimizer
 
 // Route Optimization (JO Transport)
 export { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from './useRouteOptimizer';
 export type { RouteStop, OptimizedRouteStop, OptimizedRoute, UndeliveredJO, FuelEstimate } from './useRouteOptimizer';
 
-// ASN (Advance Shipping Notice) — new module
-export {
-  useAsnList,
-  useAsn,
-  useCreateAsn,
-  useUpdateAsn,
-  useMarkInTransit,
-  useMarkArrived,
-  useReceiveAsn,
-  useCancelAsn,
-  useAsnVariance,
-} from './useAsn';
-
-// Slotting Optimization
-export { useSlottingAnalysis, usePickFrequencies, useApplySlotting } from './useSlotting';
-export type { SlottingSuggestion, SlottingAnalysis, ItemPickFrequency } from './useSlotting';
-
-// Demand Forecasting — statistical demand prediction
-export { useDemandForecast, useTopDemandItems, useReorderAlerts, useSeasonalPatterns } from './useDemandForecast';
-export type { ItemForecast, SeasonalPattern } from './useDemandForecast';
-
-// Cross-Docking — bypass put-away workflow
-export {
-  useCrossDockOpportunities,
-  useCrossDockStats,
-  useCrossDockList,
-  useCrossDock,
-  useCreateCrossDock,
-  useApproveCrossDock,
-  useExecuteCrossDock,
-  useCompleteCrossDock,
-  useCancelCrossDock,
-} from './useCrossDock';
-export type { CrossDock, CrossDockOpportunity, CrossDockStats } from './useCrossDock';
+// MVP DEFERRED: ASN, Slotting, Demand Forecast, Cross-Docking
 
 // Inspection Tools (AQL Calculator & Checklists)
 export {
@@ -406,51 +351,134 @@ export {
 } from './useParallelApprovals';
 export type { ParallelApprovalGroup, ParallelApprovalResponse } from './useParallelApprovals';
 
-// IoT Sensor Monitoring
+// Visitor Management — SOW M5-F03
 export {
-  useSensorList,
-  useSensor,
-  useCreateSensor,
-  useUpdateSensor,
-  useDeleteSensor,
-  useIngestReading,
-  useSensorReadings,
-  useSensorAlerts,
-  useAcknowledgeAlert,
-  useSensorStatus,
-  useZoneHeatmap,
-} from './useSensors';
-export type { Sensor, SensorReading, SensorAlert, ZoneHeatmapEntry } from './useSensors';
+  useVisitorList,
+  useVisitor,
+  useRegisterVisitor,
+  useUpdateVisitor,
+  useCheckInVisitor,
+  useCheckOutVisitor,
+  useCancelVisitor,
+} from './useVisitors';
 
-// Intelligence — smart defaults, anomaly detection, reorder predictions
+// Equipment Delivery & Return Notes — SOW M2-F02
 export {
-  useSmartDefaults,
-  useAnomalies,
-  useInventoryHealth,
-  useReorderPredictions,
-  useAutoUpdateReorderPoints,
-} from './useIntelligence';
-export type { SmartDefaults, Anomaly, InventoryHealthSummary, ReorderPrediction } from './useIntelligence';
+  useEquipmentDeliveryNoteList,
+  useEquipmentDeliveryNote,
+  useCreateEquipmentDeliveryNote,
+  useUpdateEquipmentDeliveryNote,
+  useConfirmEquipmentDeliveryNote,
+  useCancelEquipmentDeliveryNote,
+  useEquipmentReturnNoteList,
+  useEquipmentReturnNote,
+  useCreateEquipmentReturnNote,
+  useUpdateEquipmentReturnNote,
+  useInspectEquipmentReturnNote,
+  useConfirmEquipmentReturnNote,
+  useDisputeEquipmentReturnNote,
+} from './useEquipmentNotes';
 
-// Yard Management
+// Tariff & Duties — SOW M3
 export {
-  useDockDoorList,
-  useDockDoor,
-  useAvailableDockDoors,
-  useCreateDockDoor,
-  useUpdateDockDoor,
-  useDeleteDockDoor,
-  useAppointmentList,
-  useAppointment,
-  useCreateAppointment,
-  useCheckInAppointment,
-  useCompleteAppointment,
-  useCancelAppointment,
-  useTruckVisitList,
-  useCheckInTruck,
-  useAssignDock,
-  useCheckOutTruck,
-  useYardStatus,
-  useDockUtilization,
-} from './useYard';
-export type { DockDoor, YardAppointment, TruckVisit, YardStatus, DockUtilization } from './useYard';
+  useTariffRateList,
+  useTariffRate,
+  useCreateTariffRate,
+  useUpdateTariffRate,
+  useCalculateDuties,
+  useApplyDuties,
+} from './useTariffs';
+export type { TariffRate, LineBreakdown, DutyCalculationResult } from './useTariffs';
+
+// Comprehensive KPI Dashboard (M7)
+export { useKpis, useKpisByCategory } from './useKpis';
+export type {
+  KpiResult,
+  ComprehensiveKpis,
+  InventoryKpis,
+  ProcurementKpis,
+  LogisticsKpis,
+  QualityKpis,
+  FinancialKpis,
+  KpiCategory,
+} from './useKpis';
+
+// Security (M6: Access Control & Security)
+export { useSecurityDashboard, useLoginHistory } from './useSecurity';
+export type { SecurityDashboard, LoginHistoryEntry, LoginHistoryParams } from './useSecurity';
+
+// AMC — Annual Maintenance Contracts (SOW M1)
+export { useAmcList, useAmc, useCreateAmc, useUpdateAmc, useActivateAmc, useTerminateAmc } from './useAmc';
+export type { Amc } from './useAmc';
+
+// Customs Documents — SOW M9
+export {
+  useCustomsDocumentList,
+  useCustomsDocument,
+  useCreateCustomsDocument,
+  useUpdateCustomsDocument,
+  useVerifyCustomsDocument,
+  useRejectCustomsDocument,
+  useDocumentCompleteness,
+} from './useCustomsDocuments';
+
+// Compliance Audit Checklists (ISO 9001) — SOW M2
+export {
+  useChecklistList as useComplianceChecklistList,
+  useChecklist as useComplianceChecklist,
+  useCreateChecklist as useCreateComplianceChecklist,
+  useUpdateChecklist as useUpdateComplianceChecklist,
+  useAuditList as useComplianceAuditList,
+  useAudit as useComplianceAudit,
+  useCreateAudit as useCreateComplianceAudit,
+  useSubmitAuditResponses,
+  useCompleteAudit as useCompleteComplianceAudit,
+} from './useCompliance';
+
+// Asset Register (M10)
+export {
+  useAssetList,
+  useAsset,
+  useAssetSummary,
+  useCreateAsset,
+  useUpdateAsset,
+  useTransferAsset,
+  useRetireAsset,
+  useDisposeAsset,
+} from './useAssets';
+export type {
+  ComplianceChecklist,
+  ComplianceChecklistItem,
+  ComplianceAudit,
+  ComplianceAuditResponse,
+} from './useCompliance';
+
+// Expiry Alerts (L2)
+export { useExpiringLots } from './useExpiryAlerts';
+export type { ExpiringLot, ExpiringItemGroup, ExpiringLotsResponse } from './useExpiryAlerts';
+
+// Digital Signatures (L6)
+export { useDocumentSignatures, useCreateSignature } from './useDigitalSignatures';
+export type { DigitalSignature } from './useDigitalSignatures';
+
+// Cost Allocation Reports (L7)
+export { useCostAllocation, useCostAllocationSummary } from './useCostAllocation';
+export type {
+  CostCategory,
+  MonthlyBreakdown,
+  CostAllocationData,
+  ProjectCostSummaryItem,
+  CostAllocationSummaryData,
+} from './useCostAllocation';
+
+// Demand Analysis — L8 (Consumption Trends) + L9 (Demand Forecasting)
+export { useItemConsumptionTrend, useTopConsumptionItems, useReorderSuggestions, useItemForecast } from './useDemand';
+export type {
+  MonthlyConsumption,
+  ItemConsumptionTrend,
+  TopConsumptionItem,
+  ReorderSuggestion,
+  ItemForecastProjection,
+} from './useDemand';
+
+// MVP DEFERRED: Sensors, Intelligence, Yard Management

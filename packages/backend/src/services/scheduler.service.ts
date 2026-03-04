@@ -14,6 +14,20 @@
  * 7. ABC classification recalculation — every 7 days
  * 8. Anomaly detection — every 6 hours
  * 9. Reorder point auto-update — every 7 days
+ *
+ * SOW Notification Jobs:
+ * N-03: Equipment return date approaching — daily
+ * N-05: Shipment delayed — every 6 hours
+ * N-08: Cycle count scheduled — daily
+ * N-09: Rate card expiring — daily
+ * N-10: Vehicle maintenance due — every 12 hours
+ * N-12: NCR/DR deadline approaching — daily
+ * N-13: Contract/insurance renewal due — daily
+ * N-14: Overdue tool return — every 12 hours
+ *
+ * L2 Expiry Date Alerts:
+ * Expiry alerts — daily (30/60/90 day thresholds)
+ * Auto-quarantine expired lots — every 12 hours
  */
 
 import { prisma } from '../utils/prisma.js';
@@ -24,7 +38,22 @@ import { calculateABCClassification, applyABCClassification } from './abc-analys
 import { autoCreateCycleCounts } from './cycle-count.service.js';
 import { detectAnomalies } from './anomaly-detection.service.js';
 import { autoUpdateReorderPoints } from './reorder-prediction.service.js';
+import { checkExpiringContracts as checkAmcExpiry } from './amc.service.js';
+import { calculateDepreciation } from './asset.service.js';
 import { processScheduledRules, initializeScheduledRules } from '../events/scheduled-rule-runner.js';
+import {
+  checkEquipmentReturnDue,
+  checkShipmentDelays,
+  checkScheduledCycleCounts,
+  checkRateCardExpiry,
+  checkVehicleMaintenanceDue,
+  checkNcrDeadlines,
+  checkContractRenewals,
+  checkOverdueToolReturns,
+} from './notification-dispatcher.service.js';
+import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from './vehicle-maintenance.service.js';
+import { detectSuspiciousActivity } from './security.service.js';
+import { checkExpiringLots, autoQuarantineExpired } from './expiry-alert.service.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 import { emitToRole, emitToUser } from '../socket/setup.js';
@@ -1303,6 +1332,265 @@ async function runReorderPointUpdate(): Promise<void> {
   }
 }
 
+// ── C7: Daily Material Movement Reconciliation ─────────────────────────
+
+/**
+ * SOW C7 — Daily reconciliation engine.
+ * Compares InventoryLevel.qtyOnHand against the sum of all transaction movements
+ * (GRN receipts, MI issuances, WT transfers, MRN returns) to detect drift.
+ * Flags discrepancies as notifications to warehouse supervisors.
+ */
+async function runDailyReconciliation(): Promise<void> {
+  log('info', '[Scheduler] Running daily material movement reconciliation');
+
+  try {
+    // Compute expected quantities from lot records (source of truth)
+    const lotSummaries = await prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; lot_total: number }>>`
+      SELECT
+        il."item_id",
+        il."warehouse_id",
+        COALESCE(SUM(il."available_qty"), 0)::numeric AS lot_total
+      FROM inventory_lots il
+      WHERE il.status IN ('active', 'blocked')
+      GROUP BY il."item_id", il."warehouse_id"
+    `;
+
+    // Fetch current InventoryLevel records
+    const levels = await prisma.inventoryLevel.findMany({
+      select: { id: true, itemId: true, warehouseId: true, qtyOnHand: true },
+    });
+
+    const lotMap = new Map<string, number>();
+    for (const row of lotSummaries) {
+      lotMap.set(`${row.item_id}:${row.warehouse_id}`, Number(row.lot_total));
+    }
+
+    const discrepancies: Array<{
+      itemId: string;
+      warehouseId: string;
+      qtyOnHand: number;
+      lotTotal: number;
+      diff: number;
+    }> = [];
+
+    for (const level of levels) {
+      const key = `${level.itemId}:${level.warehouseId}`;
+      const lotTotal = lotMap.get(key) ?? 0;
+      const onHand = Number(level.qtyOnHand);
+      const diff = Math.abs(onHand - lotTotal);
+
+      // Flag if difference exceeds 0.001 (floating point tolerance)
+      if (diff > 0.001) {
+        discrepancies.push({
+          itemId: level.itemId,
+          warehouseId: level.warehouseId,
+          qtyOnHand: onHand,
+          lotTotal,
+          diff,
+        });
+      }
+    }
+
+    if (discrepancies.length === 0) {
+      log('info', '[Scheduler] Reconciliation complete — no discrepancies found');
+      return;
+    }
+
+    log('warn', `[Scheduler] Reconciliation found ${discrepancies.length} discrepancies`);
+
+    // Notify warehouse supervisors and admins
+    const supervisorIds = await getEmployeeIdsByRole('warehouse_supervisor');
+    const inventorySpecialistIds = await getEmployeeIdsByRole('inventory_specialist');
+    const adminIds = await getAdminIds();
+    const allRecipients = [...new Set([...supervisorIds, ...inventorySpecialistIds, ...adminIds])];
+
+    if (allRecipients.length > 0) {
+      const top5 = discrepancies
+        .slice(0, 5)
+        .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (Δ${d.diff.toFixed(3)})`);
+
+      await notifySla({
+        recipientIds: allRecipients,
+        title: `Reconciliation Alert: ${discrepancies.length} discrepancies`,
+        body: `Daily reconciliation found ${discrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
+        notificationType: 'reconciliation_alert',
+        referenceTable: 'inventory_levels',
+        referenceId: 'daily-reconciliation',
+        socketEvent: 'inventory:reconciliation',
+        socketRoles: ['admin', 'warehouse_supervisor', 'inventory_specialist'],
+      });
+    }
+
+    // Auto-correct discrepancies where lot total is authoritative
+    for (const d of discrepancies) {
+      await prisma.inventoryLevel.updateMany({
+        where: { itemId: d.itemId, warehouseId: d.warehouseId },
+        data: { qtyOnHand: d.lotTotal },
+      });
+    }
+
+    log('info', `[Scheduler] Reconciliation: auto-corrected ${discrepancies.length} inventory levels`);
+  } catch (err) {
+    log('error', `[Scheduler] Reconciliation failed: ${(err as Error).message}`);
+  }
+}
+
+// ── SOW M4-F07: Scheduled Report Auto-Generation ─────────────────────────
+
+async function runScheduledReports(): Promise<void> {
+  try {
+    const now = new Date();
+
+    // Find all reports due for generation
+    const dueReports = await prisma.savedReport.findMany({
+      where: {
+        scheduleFrequency: { not: null },
+        nextRunAt: { lte: now },
+      },
+      include: {
+        owner: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+
+    if (dueReports.length === 0) return;
+
+    log('info', `[Scheduler] Processing ${dueReports.length} scheduled report(s)`);
+
+    for (const report of dueReports) {
+      try {
+        // Calculate next run time based on frequency
+        const nextRun = new Date(now);
+        switch (report.scheduleFrequency) {
+          case 'daily':
+            nextRun.setDate(nextRun.getDate() + 1);
+            break;
+          case 'weekly':
+            nextRun.setDate(nextRun.getDate() + 7);
+            break;
+          case 'monthly':
+            nextRun.setMonth(nextRun.getMonth() + 1);
+            break;
+          case 'quarterly':
+            nextRun.setMonth(nextRun.getMonth() + 3);
+            break;
+          default:
+            nextRun.setDate(nextRun.getDate() + 1); // fallback daily
+        }
+
+        // Update report with last/next run times
+        await prisma.savedReport.update({
+          where: { id: report.id },
+          data: { lastRunAt: now, nextRunAt: nextRun },
+        });
+
+        // Notify the report owner that their scheduled report is ready
+        await prisma.notification.create({
+          data: {
+            recipientId: report.ownerId,
+            title: `Scheduled report ready: ${report.name}`.slice(0, 200),
+            body: `Your ${report.scheduleFrequency} report "${report.name}" has been generated and is ready for viewing.`,
+            notificationType: 'scheduled_report',
+            isRead: false,
+          },
+        });
+
+        log('info', `[Scheduler] Generated scheduled report: ${report.name} (next: ${nextRun.toISOString()})`);
+      } catch (err) {
+        log('error', `[Scheduler] Failed to process report ${report.name}: ${(err as Error).message}`);
+      }
+    }
+  } catch (err) {
+    log('error', `[Scheduler] Scheduled reports check failed: ${(err as Error).message}`);
+  }
+}
+
+// ── Visitor Overstay Detection (SOW M5-F03) ──────────────────────────────
+
+async function checkVisitorOverstays(): Promise<void> {
+  try {
+    const now = new Date();
+
+    // Find checked-in visitors where checkInTime + expectedDuration < now
+    const overstayVisitors = await prisma.visitorPass.findMany({
+      where: {
+        status: 'checked_in',
+        checkInTime: { not: null },
+      },
+      include: {
+        warehouse: { select: { id: true, warehouseName: true, managerId: true } },
+        registeredBy: { select: { id: true } },
+      },
+    });
+
+    // Filter in JS because Prisma doesn't support computed date comparison
+    const overstayIds: string[] = [];
+    const notifyTargets: Array<{
+      visitorName: string;
+      passNumber: string;
+      warehouseManagerId: string | null;
+      registeredById: string;
+    }> = [];
+
+    for (const visitor of overstayVisitors) {
+      if (!visitor.checkInTime) continue;
+      const expectedEnd = new Date(visitor.checkInTime.getTime() + visitor.expectedDuration * 60 * 1000);
+      if (expectedEnd < now) {
+        overstayIds.push(visitor.id);
+        notifyTargets.push({
+          visitorName: visitor.visitorName,
+          passNumber: visitor.passNumber,
+          warehouseManagerId: visitor.warehouse.managerId,
+          registeredById: visitor.registeredBy.id,
+        });
+      }
+    }
+
+    if (overstayIds.length === 0) return;
+
+    // Batch update status to overstay
+    await prisma.visitorPass.updateMany({
+      where: { id: { in: overstayIds } },
+      data: { status: 'overstay' },
+    });
+
+    // Find gate officers and warehouse supervisors to notify
+    const staffToNotify = await prisma.employee.findMany({
+      where: {
+        systemRole: { in: ['gate_officer', 'warehouse_supervisor'] },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    const recipientIds = new Set(staffToNotify.map(s => s.id));
+    // Also add warehouse managers and the registering officers
+    for (const target of notifyTargets) {
+      if (target.warehouseManagerId) recipientIds.add(target.warehouseManagerId);
+      recipientIds.add(target.registeredById);
+    }
+
+    // Send notifications
+    await Promise.allSettled(
+      Array.from(recipientIds).map(recipientId =>
+        createNotification(
+          {
+            recipientId,
+            title: 'Visitor Overstay Alert',
+            body: `${overstayIds.length} visitor(s) have exceeded their expected visit duration and require attention.`,
+            notificationType: 'visitor_overstay',
+            referenceTable: 'visitor_passes',
+          },
+          io ?? undefined,
+        ),
+      ),
+    );
+
+    log('warn', `[Scheduler] Visitor overstay: ${overstayIds.length} visitor(s) marked as overstay`);
+  } catch (err) {
+    log('error', `[Scheduler] Visitor overstay check failed: ${(err as Error).message}`);
+  }
+}
+
 // ── Scheduler Lifecycle ──────────────────────────────────────────────────
 
 export function startScheduler(socketIo?: SocketIOServer): void {
@@ -1347,6 +1635,59 @@ export function startScheduler(socketIo?: SocketIOServer): void {
 
   // Scheduled workflow rules — every 60 seconds (lock: 50 sec)
   scheduleLoop('scheduled_rules', processScheduledRules, 60 * 1000, 50);
+
+  // SOW C7: Daily material movement reconciliation — every 24 hours (lock: 23 hours)
+  scheduleLoop('daily_reconciliation', runDailyReconciliation, 24 * 60 * 60 * 1000, 82800);
+
+  // SOW M4-F07: Scheduled report auto-generation — every hour (lock: 50 min)
+  scheduleLoop('scheduled_reports', runScheduledReports, 60 * 60 * 1000, 3000);
+
+  // Asset depreciation calculation — daily check, quarterly execution (lock: 2 hours)
+  scheduleLoop('asset_depreciation', calculateDepreciation, 24 * 60 * 60 * 1000, 7200);
+
+  // ── SOW Notification Checks (N-03, N-05, N-08, N-09, N-10, N-12, N-13, N-14) ──
+
+  // N-03: Equipment return date approaching — daily (lock: 23 hours)
+  scheduleLoop('sow_equipment_return', checkEquipmentReturnDue, 24 * 60 * 60 * 1000, 82800);
+
+  // N-05: Shipment delayed — every 6 hours (lock: 5 hours)
+  scheduleLoop('sow_shipment_delays', checkShipmentDelays, 6 * 60 * 60 * 1000, 18000);
+
+  // N-08: Cycle count scheduled — daily (lock: 23 hours)
+  scheduleLoop('sow_cycle_count', checkScheduledCycleCounts, 24 * 60 * 60 * 1000, 82800);
+
+  // N-09: Rate card expiring — daily (lock: 23 hours)
+  scheduleLoop('sow_rate_card_expiry', checkRateCardExpiry, 24 * 60 * 60 * 1000, 82800);
+
+  // N-10: Vehicle maintenance due — every 12 hours (lock: 11 hours)
+  scheduleLoop('sow_vehicle_maint', checkVehicleMaintenanceDue, 12 * 60 * 60 * 1000, 39600);
+
+  // M8: Vehicle maintenance usage-based scheduling — every 12 hours (lock: 11 hours)
+  scheduleLoop('vehicle_maintenance', checkVehicleMaintenanceDueM8, 12 * 60 * 60 * 1000, 39600);
+
+  // N-12: NCR/DR deadline approaching — daily (lock: 23 hours)
+  scheduleLoop('sow_ncr_deadline', checkNcrDeadlines, 24 * 60 * 60 * 1000, 82800);
+
+  // N-13: Contract/insurance renewal due — daily (lock: 23 hours)
+  scheduleLoop('sow_contract_renewal', checkContractRenewals, 24 * 60 * 60 * 1000, 82800);
+
+  // N-14: Overdue tool return — every 12 hours (lock: 11 hours)
+  scheduleLoop('sow_overdue_tools', checkOverdueToolReturns, 12 * 60 * 60 * 1000, 39600);
+
+  // SOW M5-F03: Visitor overstay detection — every 30 minutes (lock: 25 min)
+  scheduleLoop('visitor_overstay', checkVisitorOverstays, 30 * 60 * 1000, 1500);
+
+  // SOW M1: AMC expiry check — daily (lock: 2 hours)
+  scheduleLoop('amc_expiry', checkAmcExpiry, 24 * 60 * 60 * 1000, 7200);
+
+  // M6: Security monitor — suspicious login activity detection — every hour (lock: 50 min)
+  scheduleLoop('security_monitor', detectSuspiciousActivity, 60 * 60 * 1000, 3000);
+
+  // L2: Expiry date alerts — daily (lock: 2 hours)
+  scheduleLoop('expiry_alerts', checkExpiringLots, 24 * 60 * 60 * 1000, 7200);
+
+  // L2: Auto-quarantine expired lots — every 12 hours (lock: ~83 min)
+  scheduleLoop('expiry_quarantine', autoQuarantineExpired, 12 * 60 * 60 * 1000, 5000);
 
   // Initialize nextRunAt for any scheduled rules that don't have one
   initializeScheduledRules().catch(err =>

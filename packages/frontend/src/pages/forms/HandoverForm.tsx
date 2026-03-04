@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeftRight, CheckCircle, Loader2, PlayCircle } from 'lucide-react';
 import type { Warehouse, Employee } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';
-import { ExportButton } from '@/components/ExportButton';
 import {
   useCreateHandover,
   useHandover,
@@ -13,7 +12,6 @@ import {
 } from '@/api/hooks';
 import { useWarehouses, useEmployees } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
-import { generateHandoverPdf } from '@/utils/pdfExport';
 
 interface HandoverDoc {
   id?: string;
@@ -140,26 +138,7 @@ export const HandoverForm: React.FC = () => {
             Employee-to-employee warehouse handover -- #{isEditMode ? id : nextNumber}
           </p>
         </div>
-        {isEditMode && existingDoc && (
-          <ExportButton
-            onExportPdf={() => {
-              const warehouse = warehouses.find(w => w.id === formData.warehouseId);
-              const outgoing = employees.find(e => e.id === formData.outgoingEmployeeId);
-              const incoming = employees.find(e => e.id === formData.incomingEmployeeId);
-              generateHandoverPdf({
-                documentNumber: existingDoc.formNumber ?? id ?? '',
-                warehouse: warehouse?.name ?? String(formData.warehouseId ?? ''),
-                outgoingEmployee: outgoing?.name ?? String(formData.outgoingEmployeeId ?? ''),
-                incomingEmployee: incoming?.name ?? String(formData.incomingEmployeeId ?? ''),
-                handoverDate: String(formData.handoverDate ?? ''),
-                inventoryVerified: !!formData.inventoryVerified,
-                discrepanciesFound: String(formData.discrepancies ?? ''),
-                status: String(existingDoc.status ?? ''),
-                notes: String(formData.notes ?? ''),
-              });
-            }}
-          />
-        )}
+        {/* PDF export deferred for MVP */}
       </div>
 
       {/* ── Handover Details ────────────────────────────────────────────── */}

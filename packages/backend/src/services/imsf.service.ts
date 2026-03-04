@@ -133,8 +133,20 @@ export async function confirm(id: string, userId: string) {
     where: { id },
     include: {
       imsfLines: true,
-      senderProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
-      receiverProject: { select: { id: true, warehouses: { select: { id: true }, take: 1 } } },
+      senderProject: {
+        select: {
+          id: true,
+          projectName: true,
+          warehouses: { select: { id: true }, take: 1 },
+        },
+      },
+      receiverProject: {
+        select: {
+          id: true,
+          projectName: true,
+          warehouses: { select: { id: true }, take: 1 },
+        },
+      },
     },
   });
   if (!imsf) throw new NotFoundError('IMSF', id);
@@ -189,7 +201,56 @@ export async function confirm(id: string, userId: string) {
       timestamp: new Date().toISOString(),
     });
 
-    return { imsf: updated, wt: { id: wt.id, transferNumber: wt.transferNumber } };
+    // Auto-create outbound GatePass for the sender project (idempotent — only if not already created)
+    let gatePass: { id: string; gatePassNumber: string } | null = null;
+    if (!imsf.gatePassAutoCreated) {
+      const gatePassNumber = await generateDocumentNumber('gatepass');
+      const receiverName = imsf.receiverProject?.projectName ?? 'Receiver Project';
+      const gp = await tx.gatePass.create({
+        data: {
+          gatePassNumber,
+          passType: 'transfer',
+          imsfId: imsf.id,
+          projectId: imsf.receiverProjectId,
+          warehouseId: fromWarehouseId,
+          vehicleNumber: 'TBD',
+          driverName: 'TBD',
+          destination: receiverName,
+          issueDate: new Date(),
+          status: 'pending',
+          issuedById: userId,
+          notes: `Auto-created from IMSF ${imsf.imsfNumber}`,
+          gatePassItems: {
+            create: imsf.imsfLines.map(line => ({
+              itemId: line.itemId,
+              quantity: line.qty,
+              uomId: line.uomId,
+              description: line.description ?? null,
+            })),
+          },
+        },
+      });
+      await tx.imsf.update({
+        where: { id: imsf.id },
+        data: { gatePassAutoCreated: true },
+      });
+      gatePass = { id: gp.id, gatePassNumber: gp.gatePassNumber };
+
+      eventBus.publish({
+        type: 'document:created',
+        entityType: 'gate_pass',
+        entityId: gp.id,
+        action: 'create',
+        payload: { sourceImsfId: imsf.id, autoCreated: true },
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return {
+      imsf: updated,
+      wt: { id: wt.id, transferNumber: wt.transferNumber },
+      gatePass,
+    };
   });
 }
 

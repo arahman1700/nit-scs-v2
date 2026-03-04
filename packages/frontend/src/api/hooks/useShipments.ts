@@ -85,6 +85,27 @@ export function useUpdateCustomsStage() {
   });
 }
 
+// ── Release Authorization (SOW M4) ─────────────────────────────────────────
+export function useReleaseShipment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...checklist
+    }: {
+      id: string;
+      customsCleared: boolean;
+      docsVerified: boolean;
+      warehouseReady: boolean;
+      transportAssigned: boolean;
+    }) => {
+      const { data } = await apiClient.post<ApiResponse<Shipment>>(`/shipments/${id}/release`, checklist);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['shipments'] }),
+  });
+}
+
 // ── Deliver ─────────────────────────────────────────────────────────────────
 export function useDeliverShipment() {
   const qc = useQueryClient();

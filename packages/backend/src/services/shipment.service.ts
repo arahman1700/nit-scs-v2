@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
-import { NotFoundError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../types/dto.js';
@@ -325,6 +325,62 @@ export async function deliver(id: string, userId?: string) {
   });
 
   return { ...result.updated, autoCreatedGrnId: result.grnId };
+}
+
+// SOW M4: Release authorization — validates prerequisite checklist before allowing delivery
+export async function release(
+  id: string,
+  userId: string,
+  checklist: {
+    customsCleared: boolean;
+    docsVerified: boolean;
+    warehouseReady: boolean;
+    transportAssigned: boolean;
+  },
+) {
+  const shipment = await prisma.shipment.findUnique({
+    where: { id },
+    include: { customsTracking: { orderBy: { stageDate: 'desc' as const }, take: 1 } },
+  });
+  if (!shipment) throw new NotFoundError('Shipment', id);
+
+  // Only cleared shipments can be released
+  if (shipment.status !== 'cleared' && shipment.status !== 'at_port') {
+    throw new BusinessRuleError('Shipment must be cleared or at port before release');
+  }
+
+  // Validate all prerequisites
+  const failures: string[] = [];
+  if (!checklist.customsCleared) failures.push('Customs clearance not confirmed');
+  if (!checklist.docsVerified) failures.push('Shipping documents not verified');
+  if (!checklist.warehouseReady) failures.push('Destination warehouse not ready');
+  if (!checklist.transportAssigned) failures.push('Transport not assigned');
+
+  if (failures.length > 0) {
+    throw new BusinessRuleError(`Release prerequisites not met: ${failures.join('; ')}`);
+  }
+
+  const updated = await prisma.shipment.update({
+    where: { id },
+    data: {
+      status: 'in_delivery',
+      releaseChecklist: checklist,
+      releasedById: userId,
+      releasedAt: new Date(),
+    },
+  });
+
+  eventBus.publish({
+    type: 'document:status_changed',
+    entityType: 'shipment',
+    entityId: shipment.id,
+    action: 'status_change',
+    payload: { from: shipment.status, to: 'in_delivery', releaseChecklist: checklist },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  return updated;
 }
 
 export async function cancel(id: string) {

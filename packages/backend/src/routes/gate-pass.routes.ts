@@ -3,8 +3,9 @@ import { gatePassCreateSchema, gatePassUpdateSchema } from '../schemas/logistics
 import * as gatePassService from '../services/gate-pass.service.js';
 import type { GatePassCreateDto, GatePassUpdateDto } from '../types/dto.js';
 
-const WRITE_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
+const WRITE_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff', 'gate_officer'];
 const APPROVE_ROLES = ['admin', 'warehouse_supervisor'];
+const GATE_ROLES = ['admin', 'warehouse_supervisor', 'gate_officer'];
 
 export default createDocumentRouter({
   docType: 'gate-passes',
@@ -42,8 +43,22 @@ export default createDocumentRouter({
       socketData: () => ({ status: 'approved' }),
     },
     {
+      path: 'verify-outbound',
+      roles: GATE_ROLES,
+      handler: (id, req) => {
+        const body = req.body as {
+          securityOfficer?: string;
+          verificationNotes?: string;
+          itemChecks?: Array<{ itemId: string; verifiedQty: number }>;
+        };
+        return gatePassService.verifyOutbound(id, body, req.user?.userId);
+      },
+      socketEvent: 'gatepass:released',
+      socketData: () => ({ status: 'released' }),
+    },
+    {
       path: 'release',
-      roles: WRITE_ROLES,
+      roles: GATE_ROLES,
       handler: (id, req) => {
         const { securityOfficer } = req.body as { securityOfficer?: string };
         return gatePassService.release(id, securityOfficer);
@@ -52,8 +67,22 @@ export default createDocumentRouter({
       socketData: () => ({ status: 'released' }),
     },
     {
+      path: 'verify-inbound',
+      roles: GATE_ROLES,
+      handler: (id, req) => {
+        const body = req.body as {
+          securityOfficer?: string;
+          verificationNotes?: string;
+          itemChecks?: Array<{ itemId: string; verifiedQty: number }>;
+        };
+        return gatePassService.verifyInbound(id, body, req.user?.userId);
+      },
+      socketEvent: 'gatepass:returned',
+      socketData: () => ({ status: 'returned' }),
+    },
+    {
       path: 'return',
-      roles: WRITE_ROLES,
+      roles: GATE_ROLES,
       handler: id => gatePassService.returnPass(id),
       socketEvent: 'gatepass:returned',
       socketData: () => ({ status: 'returned' }),

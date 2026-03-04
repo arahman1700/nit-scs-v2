@@ -7,6 +7,7 @@ import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../events/event-bus.js';
 import type { Server as SocketIOServer } from 'socket.io';
 import type { JoCreateDto, JoUpdateDto, ListParams } from '../types/dto.js';
+import { getActiveRateForEquipment } from './rate-card.service.js';
 
 const DOC_TYPE = 'jo';
 
@@ -209,6 +210,62 @@ export async function create(body: JoCreateDto, userId: string) {
       });
     }
 
+    // SOW M2-F06: Auto-pull rate card data for equipment lines without explicit rates
+    if (headerData.supplierId && equipmentLines && equipmentLines.length > 0 && headerData.joType === 'equipment') {
+      try {
+        for (const line of equipmentLines) {
+          if (line.dailyRate == null) {
+            const rateCard = await getActiveRateForEquipment(headerData.supplierId, line.equipmentTypeId);
+            if (rateCard?.dailyRate != null) {
+              await tx.joEquipmentLine.updateMany({
+                where: { jobOrderId: created.id, equipmentTypeId: line.equipmentTypeId },
+                data: { dailyRate: Number(rateCard.dailyRate) },
+              });
+            }
+          }
+        }
+      } catch {
+        // Non-blocking: rate card lookup failure should not prevent JO creation
+      }
+    }
+
+    // SOW M2-F06: Auto-pull rate card data for rental JOs without explicit rates
+    if (
+      headerData.supplierId &&
+      rentalDetails &&
+      (headerData.joType === 'rental_monthly' || headerData.joType === 'rental_daily')
+    ) {
+      try {
+        // Look up rate card using the first equipment line's type or a general lookup
+        const eqLines = await tx.joEquipmentLine.findMany({
+          where: { jobOrderId: created.id },
+          select: { equipmentTypeId: true },
+          take: 1,
+        });
+        const equipmentTypeId = eqLines[0]?.equipmentTypeId;
+        if (equipmentTypeId) {
+          const rateCard = await getActiveRateForEquipment(headerData.supplierId, equipmentTypeId);
+          if (rateCard) {
+            const updateData: Record<string, unknown> = {};
+            if (rentalDetails.dailyRate == null && rateCard.dailyRate != null) {
+              updateData.dailyRate = Number(rateCard.dailyRate);
+            }
+            if (rentalDetails.monthlyRate == null && rateCard.monthlyRate != null) {
+              updateData.monthlyRate = Number(rateCard.monthlyRate);
+            }
+            if (Object.keys(updateData).length > 0) {
+              await tx.joRentalDetail.update({
+                where: { jobOrderId: created.id },
+                data: updateData,
+              });
+            }
+          }
+        }
+      } catch {
+        // Non-blocking: rate card lookup failure should not prevent JO creation
+      }
+    }
+
     await tx.joSlaTracking.create({ data: { jobOrderId: created.id } });
     return created;
   });
@@ -252,6 +309,9 @@ export async function submit(id: string, userId: string, io?: SocketIOServer) {
   if (!jo) throw new NotFoundError('Job Order', id);
   assertTransition(DOC_TYPE, jo.status, 'pending_approval');
 
+  // SOW M5: Emergency fast-track — halve SLA for emergency priority
+  const isEmergency = jo.priority === 'emergency' || jo.priority === 'urgent';
+
   const approval = await submitForApproval({
     documentType: 'jo',
     documentId: jo.id,
@@ -260,33 +320,66 @@ export async function submit(id: string, userId: string, io?: SocketIOServer) {
     io,
   });
 
+  // Emergency: halve the SLA response hours (minimum 2h)
+  const effectiveSlaHours = isEmergency ? Math.max(2, Math.floor(approval.slaHours / 2)) : approval.slaHours;
+
   await prisma.joSlaTracking.update({
     where: { jobOrderId: jo.id },
     data: {
-      slaResponseHours: approval.slaHours,
+      slaResponseHours: effectiveSlaHours,
       slaDueDate: (() => {
         const d = new Date();
-        d.setHours(d.getHours() + approval.slaHours);
+        d.setHours(d.getHours() + effectiveSlaHours);
         return d;
       })(),
     },
   });
+
+  // SOW M5: Emergency notification to SC Manager for fast-track
+  if (isEmergency) {
+    const managers = await prisma.employee.findMany({
+      where: { systemRole: { in: ['manager', 'warehouse_supervisor'] }, isActive: true },
+      select: { id: true },
+    });
+    if (managers.length > 0) {
+      await prisma.notification.createMany({
+        data: managers.map(m => ({
+          recipientId: m.id,
+          title: `EMERGENCY JO — ${jo.joNumber} needs immediate approval`,
+          body: `Priority: ${jo.priority}. ${jo.description?.slice(0, 100) ?? ''}`,
+          notificationType: 'emergency_approval',
+          referenceTable: 'job_orders',
+          referenceId: jo.id,
+        })),
+      });
+    }
+  }
 
   eventBus.publish({
     type: 'document:status_changed',
     entityType: 'jo',
     entityId: jo.id,
     action: 'status_change',
-    payload: { from: 'draft', to: 'pending_approval', joType: jo.joType },
+    payload: { from: 'draft', to: 'pending_approval', joType: jo.joType, isEmergency },
     performedById: userId,
     timestamp: new Date().toISOString(),
   });
 
-  return { id: jo.id, approverRole: approval.approverRole, slaHours: approval.slaHours };
+  return { id: jo.id, approverRole: approval.approverRole, slaHours: effectiveSlaHours, isEmergency };
 }
 
+/** JO types that require an outbound gate pass upon approval */
+const GATE_PASS_JO_TYPES = ['transport', 'equipment', 'scrap'];
+
 export async function approve(id: string, userId: string, approved: boolean, quoteAmount?: number, comments?: string) {
-  const jo = await prisma.jobOrder.findUnique({ where: { id }, include: { approvals: true } });
+  const jo = await prisma.jobOrder.findUnique({
+    where: { id },
+    include: {
+      approvals: true,
+      project: { select: { id: true, projectName: true, warehouses: { select: { id: true }, take: 1 } } },
+      transportDetails: { select: { deliveryLocation: true } },
+    },
+  });
   if (!jo) throw new NotFoundError('Job Order', id);
   if (jo.status !== 'pending_approval' && jo.status !== 'quoted') {
     throw new BusinessRuleError('Job Order must be pending approval or quoted');
@@ -323,6 +416,48 @@ export async function approve(id: string, userId: string, approved: boolean, quo
       },
     });
     await tx.jobOrder.update({ where: { id: jo.id }, data: { status: 'approved' } });
+
+    // Auto-create outbound GatePass for transport/equipment/scrap JOs (idempotent)
+    if (GATE_PASS_JO_TYPES.includes(jo.joType) && !jo.gatePassAutoCreated) {
+      const warehouseId = jo.project?.warehouses[0]?.id;
+      if (warehouseId) {
+        const gatePassNumber = await generateDocumentNumber('gatepass');
+        const destination =
+          jo.transportDetails?.deliveryLocation ?? jo.googleMapsDelivery ?? jo.project?.projectName ?? 'Project Site';
+
+        await tx.gatePass.create({
+          data: {
+            gatePassNumber,
+            passType: 'outbound',
+            jobOrderId: jo.id,
+            projectId: jo.projectId,
+            warehouseId,
+            vehicleNumber: jo.vehiclePlate ?? 'TBD',
+            driverName: jo.driverName ?? 'TBD',
+            driverIdNumber: jo.driverIdNumber ?? null,
+            destination,
+            purpose: jo.description,
+            issueDate: new Date(),
+            status: 'pending',
+            issuedById: userId,
+            notes: `Auto-created from JO ${jo.joNumber}`,
+          },
+        });
+        await tx.jobOrder.update({
+          where: { id: jo.id },
+          data: { gatePassAutoCreated: true },
+        });
+
+        eventBus.publish({
+          type: 'document:created',
+          entityType: 'gate_pass',
+          entityId: jo.id,
+          action: 'create',
+          payload: { sourceJoId: jo.id, joType: jo.joType, autoCreated: true },
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
   });
 
   const sla = await prisma.joSlaTracking.findUnique({ where: { jobOrderId: jo.id } });

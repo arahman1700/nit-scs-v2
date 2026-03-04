@@ -523,3 +523,287 @@ export async function getSeasonalPatterns(warehouseId?: string): Promise<Seasona
   log('info', `[Demand Forecast] Found ${results.length} items with seasonal patterns`);
   return results;
 }
+
+// ── L9: Reorder Suggestion Types ────────────────────────────────────────────
+
+export interface ReorderSuggestion {
+  itemId: string;
+  itemCode: string;
+  description: string;
+  currentStock: number;
+  avgMonthlyConsumption: number;
+  reorderPoint: number;
+  suggestedQty: number;
+  urgency: 'critical' | 'soon' | 'planning';
+  daysUntilStockout: number;
+}
+
+export interface ItemForecastProjection {
+  current: number;
+  forecast: Array<{
+    month: string;
+    projectedConsumption: number;
+    projectedEndStock: number;
+  }>;
+  reorderRecommended: boolean;
+}
+
+// ── L9: Raw row types ───────────────────────────────────────────────────────
+
+interface InventoryRow {
+  item_id: string;
+  item_code: string;
+  item_description: string;
+  warehouse_id: string;
+  qty_on_hand: number;
+  reorder_point: number;
+}
+
+interface ConsumptionRow {
+  item_id: string;
+  avg_monthly: number;
+}
+
+// ── L9: Reorder Suggestions ─────────────────────────────────────────────────
+
+/**
+ * Generate reorder suggestions for items based on current stock levels
+ * and historical consumption patterns.
+ *
+ * For each item in InventoryLevel:
+ *   - Calculate moving-average consumption (configurable lookback)
+ *   - Calculate safety stock = avgMonthly x leadTimeDays / 30
+ *   - Flag for reorder if qtyOnHand <= reorderPoint OR qtyOnHand < safetyStock + avgMonthly
+ *   - Suggested qty = (avgMonthly x 2) - qtyOnHand + safetyStock (floor 0)
+ *   - Urgency: critical < 7 days, soon < 30 days, planning otherwise
+ */
+export async function generateReorderSuggestions(
+  warehouseId?: string,
+  lookbackMonths: number = 6,
+  leadTimeDays: number = 30,
+): Promise<ReorderSuggestion[]> {
+  const safeLookback = Math.min(Math.max(lookbackMonths, 1), 24);
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - safeLookback);
+
+  // 1. Fetch inventory levels
+  let inventoryRows: InventoryRow[];
+
+  if (warehouseId) {
+    inventoryRows = await prisma.$queryRaw<InventoryRow[]>`
+      SELECT
+        il.item_id,
+        i.item_code,
+        i.item_description,
+        il.warehouse_id,
+        il.qty_on_hand::float    AS qty_on_hand,
+        COALESCE(il.reorder_point, i.reorder_point, 0)::float AS reorder_point
+      FROM inventory_levels il
+      JOIN items i ON i.id = il.item_id
+      WHERE il.warehouse_id = ${warehouseId}::uuid
+        AND i.status = 'active'
+    `;
+  } else {
+    inventoryRows = await prisma.$queryRaw<InventoryRow[]>`
+      SELECT
+        il.item_id,
+        i.item_code,
+        i.item_description,
+        il.warehouse_id,
+        il.qty_on_hand::float    AS qty_on_hand,
+        COALESCE(il.reorder_point, i.reorder_point, 0)::float AS reorder_point
+      FROM inventory_levels il
+      JOIN items i ON i.id = il.item_id
+      WHERE i.status = 'active'
+    `;
+  }
+
+  if (inventoryRows.length === 0) return [];
+
+  // 2. Fetch average monthly consumption per item from mirv_lines
+  let consumptionRows: ConsumptionRow[];
+
+  if (warehouseId) {
+    consumptionRows = await prisma.$queryRaw<ConsumptionRow[]>`
+      SELECT
+        ml.item_id,
+        COALESCE(
+          SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float) / ${safeLookback}::float,
+          0
+        ) AS avg_monthly
+      FROM mirv_lines ml
+      JOIN mirv m ON m.id = ml.mirv_id
+      WHERE m.request_date >= ${cutoff}
+        AND m.status NOT IN ('draft', 'cancelled', 'rejected')
+        AND m.warehouse_id = ${warehouseId}::uuid
+      GROUP BY ml.item_id
+    `;
+  } else {
+    consumptionRows = await prisma.$queryRaw<ConsumptionRow[]>`
+      SELECT
+        ml.item_id,
+        COALESCE(
+          SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float) / ${safeLookback}::float,
+          0
+        ) AS avg_monthly
+      FROM mirv_lines ml
+      JOIN mirv m ON m.id = ml.mirv_id
+      WHERE m.request_date >= ${cutoff}
+        AND m.status NOT IN ('draft', 'cancelled', 'rejected')
+      GROUP BY ml.item_id
+    `;
+  }
+
+  const consumptionMap = new Map<string, number>();
+  for (const row of consumptionRows) {
+    consumptionMap.set(row.item_id, row.avg_monthly);
+  }
+
+  // 3. Evaluate each inventory item
+  const suggestions: ReorderSuggestion[] = [];
+
+  for (const inv of inventoryRows) {
+    const avgMonthly = consumptionMap.get(inv.item_id) ?? 0;
+    const safetyStock = (avgMonthly * leadTimeDays) / 30;
+    const qtyOnHand = inv.qty_on_hand;
+    const reorderPoint = inv.reorder_point;
+
+    // Should we flag for reorder?
+    const needsReorder = qtyOnHand <= reorderPoint || qtyOnHand < safetyStock + avgMonthly;
+
+    if (!needsReorder) continue;
+
+    // Suggested reorder qty: cover 2 months + safety stock - current
+    const suggestedQty = Math.max(0, round2(avgMonthly * 2 - qtyOnHand + safetyStock));
+
+    // Days until stockout
+    const dailyConsumption = avgMonthly / 30;
+    const daysUntilStockout =
+      dailyConsumption > 0 ? Math.max(0, Math.floor(qtyOnHand / dailyConsumption)) : qtyOnHand > 0 ? 999 : 0;
+
+    // Urgency classification
+    let urgency: 'critical' | 'soon' | 'planning';
+    if (daysUntilStockout < 7) {
+      urgency = 'critical';
+    } else if (daysUntilStockout < 30) {
+      urgency = 'soon';
+    } else {
+      urgency = 'planning';
+    }
+
+    suggestions.push({
+      itemId: inv.item_id,
+      itemCode: inv.item_code,
+      description: inv.item_description,
+      currentStock: round2(qtyOnHand),
+      avgMonthlyConsumption: round2(avgMonthly),
+      reorderPoint: round2(reorderPoint),
+      suggestedQty,
+      urgency,
+      daysUntilStockout,
+    });
+  }
+
+  // Sort by urgency (critical first) then by daysUntilStockout ascending
+  const urgencyOrder = { critical: 0, soon: 1, planning: 2 };
+  suggestions.sort((a, b) => {
+    const diff = urgencyOrder[a.urgency] - urgencyOrder[b.urgency];
+    return diff !== 0 ? diff : a.daysUntilStockout - b.daysUntilStockout;
+  });
+
+  log('info', `[Demand Forecast] Generated ${suggestions.length} reorder suggestions`);
+  return suggestions;
+}
+
+// ── L9: Item Forecast (Simple Moving Average Projection) ────────────────────
+
+/**
+ * Project future consumption for a specific item in a specific warehouse
+ * using a simple moving average and compute projected end-of-month stock.
+ */
+export async function getItemForecastProjection(
+  itemId: string,
+  warehouseId: string,
+  forecastMonths: number = 6,
+): Promise<ItemForecastProjection> {
+  const safeMonths = Math.min(Math.max(forecastMonths, 1), 24);
+
+  // Fetch current stock
+  const stockRows = await prisma.$queryRaw<Array<{ qty_on_hand: number }>>`
+    SELECT qty_on_hand::float AS qty_on_hand
+    FROM inventory_levels
+    WHERE item_id = ${itemId}::uuid
+      AND warehouse_id = ${warehouseId}::uuid
+  `;
+
+  const currentStock = stockRows.length > 0 ? stockRows[0].qty_on_hand : 0;
+
+  // Fetch historical monthly consumption (last 12 months for SMA basis)
+  const historicalLookback = 12;
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - historicalLookback);
+
+  const histRows = await prisma.$queryRaw<Array<{ month_key: string; total_qty: number }>>`
+    SELECT
+      to_char(m.request_date, 'YYYY-MM') AS month_key,
+      COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
+    FROM mirv_lines ml
+    JOIN mirv m ON m.id = ml.mirv_id
+    WHERE ml.item_id = ${itemId}::uuid
+      AND m.warehouse_id = ${warehouseId}::uuid
+      AND m.request_date >= ${cutoff}
+      AND m.status NOT IN ('draft', 'cancelled', 'rejected')
+    GROUP BY to_char(m.request_date, 'YYYY-MM')
+    ORDER BY month_key
+  `;
+
+  // Build full historical array (fill gaps with zeros)
+  const historicalKeys = buildMonthKeys(historicalLookback);
+  const histMap = new Map<string, number>();
+  for (const row of histRows) {
+    histMap.set(row.month_key, row.total_qty);
+  }
+  const historicalValues = historicalKeys.map(mk => histMap.get(mk) ?? 0);
+
+  // Simple moving average = mean of last N months with data
+  const nonZeroValues = historicalValues.filter(v => v > 0);
+  const sma = nonZeroValues.length > 0 ? nonZeroValues.reduce((a, b) => a + b, 0) / nonZeroValues.length : 0;
+
+  // Project forward
+  const futureKeys = buildFutureMonthKeys(safeMonths);
+  let runningStock = currentStock;
+  let reorderRecommended = false;
+
+  const forecast = futureKeys.map(mk => {
+    const projectedConsumption = round2(sma);
+    runningStock = round2(runningStock - projectedConsumption);
+    if (runningStock < 0) {
+      runningStock = 0;
+      reorderRecommended = true;
+    }
+    return {
+      month: mk,
+      projectedConsumption,
+      projectedEndStock: runningStock,
+    };
+  });
+
+  // Also flag reorder if any month ends below zero
+  if (!reorderRecommended && forecast.some(f => f.projectedEndStock <= 0)) {
+    reorderRecommended = true;
+  }
+
+  log('info', `[Demand Forecast] Item forecast for ${itemId} over ${safeMonths} months, SMA=${round2(sma)}`);
+
+  return {
+    current: round2(currentStock),
+    forecast,
+    reorderRecommended,
+  };
+}
+
+// ── Private helpers (L9) ────────────────────────────────────────────────────
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}

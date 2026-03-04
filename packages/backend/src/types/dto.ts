@@ -40,6 +40,24 @@ import type {
   warehouseZoneUpdateSchema,
   handoverCreateSchema,
   handoverUpdateSchema,
+  rateCardCreateSchema,
+  rateCardUpdateSchema,
+  visitorPassCreateSchema,
+  visitorPassUpdateSchema,
+  visitorCheckInSchema,
+  equipmentDeliveryNoteCreateSchema,
+  equipmentDeliveryNoteUpdateSchema,
+  equipmentReturnNoteCreateSchema,
+  equipmentReturnNoteUpdateSchema,
+  amcCreateSchema,
+  amcUpdateSchema,
+  amcTerminateSchema,
+  customsDocumentCreateSchema,
+  customsDocumentUpdateSchema,
+  customsDocumentRejectSchema,
+  vehicleMaintenanceCreateSchema,
+  vehicleMaintenanceUpdateSchema,
+  vehicleMaintenanceCompleteSchema,
   approvalActionSchema,
 } from '../schemas/document.schema.js';
 
@@ -55,6 +73,8 @@ import type {
   shipmentUpdateSchema,
   shipmentStatusSchema,
   customsStageSchema,
+  transportOrderCreateSchema,
+  transportOrderUpdateSchema,
 } from '../schemas/logistics.schema.js';
 
 // ── Job order schemas ───────────────────────────────────────────────────
@@ -182,6 +202,38 @@ export type WarehouseZoneUpdateDto = z.infer<typeof warehouseZoneUpdateSchema>;
 export type HandoverCreateDto = z.infer<typeof handoverCreateSchema>;
 export type HandoverUpdateDto = z.infer<typeof handoverUpdateSchema>;
 
+// Rate Card (Supplier Equipment Rate)
+export type RateCardCreateDto = z.infer<typeof rateCardCreateSchema>;
+export type RateCardUpdateDto = z.infer<typeof rateCardUpdateSchema>;
+
+// Visitor Pass (SOW M5-F03)
+export type VisitorPassCreateDto = z.infer<typeof visitorPassCreateSchema>;
+export type VisitorPassUpdateDto = z.infer<typeof visitorPassUpdateSchema>;
+export type VisitorCheckInDto = z.infer<typeof visitorCheckInSchema>;
+
+// Equipment Delivery Note (SOW M2-F02)
+export type EquipmentDeliveryNoteCreateDto = z.infer<typeof equipmentDeliveryNoteCreateSchema>;
+export type EquipmentDeliveryNoteUpdateDto = z.infer<typeof equipmentDeliveryNoteUpdateSchema>;
+
+// Equipment Return Note (SOW M2-F02)
+export type EquipmentReturnNoteCreateDto = z.infer<typeof equipmentReturnNoteCreateSchema>;
+export type EquipmentReturnNoteUpdateDto = z.infer<typeof equipmentReturnNoteUpdateSchema>;
+
+// AMC — Annual Maintenance Contract (SOW M1)
+export type AmcCreateDto = z.infer<typeof amcCreateSchema>;
+export type AmcUpdateDto = z.infer<typeof amcUpdateSchema>;
+export type AmcTerminateDto = z.infer<typeof amcTerminateSchema>;
+
+// Customs Document (SOW M9)
+export type CustomsDocumentCreateDto = z.infer<typeof customsDocumentCreateSchema>;
+export type CustomsDocumentUpdateDto = z.infer<typeof customsDocumentUpdateSchema>;
+export type CustomsDocumentRejectDto = z.infer<typeof customsDocumentRejectSchema>;
+
+// Vehicle Maintenance (M8)
+export type VehicleMaintenanceCreateDto = z.infer<typeof vehicleMaintenanceCreateSchema>;
+export type VehicleMaintenanceUpdateDto = z.infer<typeof vehicleMaintenanceUpdateSchema>;
+export type VehicleMaintenanceCompleteDto = z.infer<typeof vehicleMaintenanceCompleteSchema>;
+
 // ═══════════════════════════════════════════════════════════════════════
 // Logistics DTOs
 // ═══════════════════════════════════════════════════════════════════════
@@ -220,6 +272,11 @@ export type ShipmentCreateDto = z.infer<typeof shipmentCreateSchema>;
 export type ShipmentUpdateDto = z.infer<typeof shipmentUpdateSchema>;
 export type ShipmentStatusDto = z.infer<typeof shipmentStatusSchema>;
 export type CustomsStageDto = z.infer<typeof customsStageSchema>;
+
+// Transport Order (SOW M2-F03 — H9)
+export type TransportOrderCreateDto = z.infer<typeof transportOrderCreateSchema>;
+export type TransportOrderUpdateDto = z.infer<typeof transportOrderUpdateSchema>;
+export type TransportOrderItemDto = TransportOrderCreateDto['items'][number];
 
 // ═══════════════════════════════════════════════════════════════════════
 // Job Order DTOs

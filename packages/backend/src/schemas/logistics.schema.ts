@@ -107,12 +107,9 @@ export const stockTransferCreateSchema = z.object({
 });
 
 export const stockTransferUpdateSchema = z.object({
-  transferType: z.enum([
-    'warehouse_to_warehouse',
-    'project_to_project',
-    'warehouse_to_project',
-    'project_to_warehouse',
-  ]).optional(),
+  transferType: z
+    .enum(['warehouse_to_warehouse', 'project_to_project', 'warehouse_to_project', 'project_to_warehouse'])
+    .optional(),
   fromWarehouseId: uuid.optional(),
   toWarehouseId: uuid.optional(),
   fromProjectId: uuid.optional(),
@@ -188,8 +185,17 @@ export const shipmentUpdateSchema = z.object({
 
 export const shipmentStatusSchema = z.object({
   status: z.enum([
-    'draft', 'po_issued', 'in_production', 'ready_to_ship', 'in_transit',
-    'at_port', 'customs_clearing', 'cleared', 'in_delivery', 'delivered', 'cancelled',
+    'draft',
+    'po_issued',
+    'in_production',
+    'ready_to_ship',
+    'in_transit',
+    'at_port',
+    'customs_clearing',
+    'cleared',
+    'in_delivery',
+    'delivered',
+    'cancelled',
   ]),
   actualShipDate: z.string().optional(),
   etaPort: z.string().optional(),
@@ -214,24 +220,62 @@ export const customsStageSchema = z.object({
   customsDeclaration: z.string().optional(),
   customsRef: z.string().optional(),
   inspectorName: z.string().optional(),
-  inspectionType: z.enum([
-    'document_review',
-    'xray_scan',
-    'physical_inspection',
-    'lab_testing',
-    'green_channel',
-  ]).optional(),
+  inspectionType: z
+    .enum(['document_review', 'xray_scan', 'physical_inspection', 'lab_testing', 'green_channel'])
+    .optional(),
   dutiesAmount: decimalNonNegative.optional(),
   vatAmount: decimalNonNegative.optional(),
   otherFees: decimalNonNegative.optional(),
-  paymentStatus: z.enum([
-    'pending_calculation',
-    'awaiting_payment',
-    'paid',
-    'refund_pending',
-  ]).optional(),
+  paymentStatus: z.enum(['pending_calculation', 'awaiting_payment', 'paid', 'refund_pending']).optional(),
   issues: z.string().optional(),
   resolution: z.string().optional(),
 });
 
 export const customsStageUpdateSchema = customsStageSchema.partial();
+
+// ── Transport Order (SOW M2-F03 — H9) ───────────────────────────────
+
+const transportOrderItemSchema = z.object({
+  itemId: uuid.optional(),
+  description: z.string().min(1),
+  quantity: decimalPositive,
+  uomId: uuid.optional(),
+  weight: decimalNonNegative.optional(),
+});
+
+export const transportOrderCreateSchema = z.object({
+  jobOrderId: uuid.optional(),
+  originWarehouseId: uuid,
+  destinationWarehouseId: uuid.optional(),
+  destinationAddress: z.string().optional(),
+  projectId: uuid.optional(),
+  loadDescription: z.string().min(1),
+  vehicleType: z.string().optional(),
+  vehicleNumber: z.string().optional(),
+  driverName: z.string().optional(),
+  driverPhone: z.string().optional(),
+  driverIdNumber: z.string().optional(),
+  scheduledDate: z.string().datetime(),
+  estimatedWeight: decimalNonNegative.optional(),
+  gatePassId: uuid.optional(),
+  notes: z.string().optional(),
+  items: z.array(transportOrderItemSchema).min(1, 'At least one item is required'),
+});
+
+export const transportOrderUpdateSchema = z.object({
+  jobOrderId: uuid.optional(),
+  originWarehouseId: uuid.optional(),
+  destinationWarehouseId: uuid.optional(),
+  destinationAddress: z.string().optional(),
+  projectId: uuid.optional(),
+  loadDescription: z.string().optional(),
+  vehicleType: z.string().optional(),
+  vehicleNumber: z.string().optional(),
+  driverName: z.string().optional(),
+  driverPhone: z.string().optional(),
+  driverIdNumber: z.string().optional(),
+  scheduledDate: z.string().datetime().optional(),
+  estimatedWeight: decimalNonNegative.optional(),
+  gatePassId: uuid.optional(),
+  notes: z.string().optional(),
+});

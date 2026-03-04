@@ -278,7 +278,7 @@ export async function reserveStock(itemId: string, warehouseId: string, qty: num
       qtyReserved: { increment: qty },
     });
 
-    // 3. Reserve from oldest lots first (FIFO by receiptDate)
+    // 3. FEFO/FIFO: prefer lots with earliest expiry (FEFO), then oldest receipt (FIFO)
     const lots = await tx.inventoryLot.findMany({
       where: {
         itemId,
@@ -286,7 +286,7 @@ export async function reserveStock(itemId: string, warehouseId: string, qty: num
         status: 'active',
         availableQty: { gt: 0 },
       },
-      orderBy: { receiptDate: 'asc' },
+      orderBy: [{ expiryDate: { sort: 'asc', nulls: 'last' } }, { receiptDate: 'asc' }],
     });
 
     let remaining = qty;
@@ -618,10 +618,10 @@ export async function reserveStockBatch(
         qtyReserved: { increment: qty },
       });
 
-      // Reserve from oldest lots (FIFO)
+      // FEFO/FIFO: prefer lots with earliest expiry, then oldest receipt
       const lots = await tx.inventoryLot.findMany({
         where: { itemId, warehouseId, status: 'active', availableQty: { gt: 0 } },
-        orderBy: { receiptDate: 'asc' },
+        orderBy: [{ expiryDate: { sort: 'asc', nulls: 'last' } }, { receiptDate: 'asc' }],
       });
 
       let remaining = qty;

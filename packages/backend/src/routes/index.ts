@@ -42,7 +42,12 @@ import generatorMaintenanceRoutes from './generator-maintenance.routes.js';
 import warehouseZoneRoutes from './warehouse-zone.routes.js';
 import binCardRoutes from './bin-card.routes.js';
 import handoverRoutes from './handover.routes.js';
-import putawayRulesRoutes from './putaway-rules.routes.js';
+import rateCardRoutes from './rate-card.routes.js';
+import visitorRoutes from './visitor.routes.js';
+import equipmentNoteRoutes from './equipment-note.routes.js';
+import amcRoutes from './amc.routes.js';
+import vehicleMaintenanceRoutes from './vehicle-maintenance.routes.js';
+// MVP DEFERRED: import putawayRulesRoutes from './putaway-rules.routes.js';
 
 // ── Existing Routes (unchanged) ────────────────────────────────────────
 import notificationRoutes from './notification.routes.js';
@@ -72,34 +77,42 @@ import importRoutes from './import.routes.js';
 import delegationRoutes from './delegation.routes.js';
 import attachmentRoutes from './attachment.routes.js';
 import userViewRoutes from './user-view.routes.js';
-import abcAnalysisRoutes from './abc-analysis.routes.js';
+// MVP DEFERRED: Advanced warehouse features
+// import abcAnalysisRoutes from './abc-analysis.routes.js';
 import cycleCountRoutes from './cycle-count.routes.js';
 import pickOptimizerRoutes from './pick-optimizer.routes.js';
 import routeOptimizerRoutes from './route-optimizer.routes.js';
-import asnRoutes from './asn.routes.js';
+// import asnRoutes from './asn.routes.js';
 import inspectionRoutes from './inspection.routes.js';
 import pushRoutes from './push.routes.js';
-import slottingRoutes from './slotting.routes.js';
-import crossDockRoutes from './cross-dock.routes.js';
-import demandForecastRoutes from './demand-forecast.routes.js';
-import sensorRoutes from './sensor.routes.js';
-import yardRoutes from './yard.routes.js';
-import packingRoutes from './packing.routes.js';
-import stagingRoutes from './staging.routes.js';
+// import slottingRoutes from './slotting.routes.js';
+// import crossDockRoutes from './cross-dock.routes.js';
+// import demandForecastRoutes from './demand-forecast.routes.js';  // superseded by demand.routes.ts
+// import consumptionTrendRoutes from './consumption-trend.routes.js';  // superseded by demand.routes.ts
+// import sensorRoutes from './sensor.routes.js';
+// import yardRoutes from './yard.routes.js';
+// import packingRoutes from './packing.routes.js';
+// import stagingRoutes from './staging.routes.js';
 
-// ── Dynamic Documents ───────────────────────────────────────────────────
-import dynamicDocTypeRoutes from './dynamic-document-type.routes.js';
-import dynamicDocRoutes from './dynamic-document.routes.js';
+// MVP DEFERRED: Dynamic Documents, Custom builders, ROI
+// import dynamicDocTypeRoutes from './dynamic-document-type.routes.js';
+// import dynamicDocRoutes from './dynamic-document.routes.js';
+// import customDataSourceRoutes from './custom-data-source.routes.js';
+// import customFieldRoutes from './custom-fields.routes.js';
+// import workflowTemplateRoutes from './workflow-template.routes.js';
+// import roiCalculatorRoutes from './roi-calculator.routes.js';
 
-// ── Custom Data Sources & Custom Fields ─────────────────────────────────
-import customDataSourceRoutes from './custom-data-source.routes.js';
-import customFieldRoutes from './custom-fields.routes.js';
+// ── Asset Register (M10) ──────────────────────────────────────────────────
+import assetRoutes from './asset.routes.js';
 
-// ── Workflow Templates (Marketplace) ────────────────────────────────────
-import workflowTemplateRoutes from './workflow-template.routes.js';
+// ── Supplier Performance Evaluation (SOW M2-F05) ────────────────────────
+import supplierEvaluationRoutes from './supplier-evaluation.routes.js';
 
-// ── ROI Calculator ──────────────────────────────────────────────────────
-import roiCalculatorRoutes from './roi-calculator.routes.js';
+// ── Compliance Audit Checklists (SOW M2 — ISO 9001) ────────────────────
+import complianceRoutes from './compliance.routes.js';
+
+// ── Tariff & Duties (SOW M3 — VAT & Duties Calculation) ─────────────────
+import tariffRoutes from './tariff.routes.js';
 
 // ── Labor Standards ──────────────────────────────────────────────────────
 import laborRoutes from './labor.routes.js';
@@ -113,8 +126,28 @@ import searchRoutes from './search.routes.js';
 // ── Semantic Analytics Layer ────────────────────────────────────────────
 import semanticRoutes from './semantic.routes.js';
 
-// ── Intelligence (Smart Features) ──────────────────────────────────────
-import intelligenceRoutes from './intelligence.routes.js';
+// ── Comprehensive KPI Dashboard (M7) ──────────────────────────────────
+import kpiRoutes from './kpi.routes.js';
+
+// ── Security (M6: Access Control & Security) ──────────────────────────
+import securityRoutes from './security.routes.js';
+
+// ── Customs Documentation Management (M9) ────────────────────────────
+import customsDocumentRoutes from './customs-document.routes.js';
+
+// MVP DEFERRED: import intelligenceRoutes from './intelligence.routes.js';
+
+// ── Demand Analysis (L8 Consumption Trends + L9 Rule-Based Forecasting) ──
+import demandRoutes from './demand.routes.js';
+
+// ── Expiry Alerts (L2: Expiry Date Alerts) ──────────────────────────────
+import expiryAlertRoutes from './expiry-alert.routes.js';
+
+// ── Digital Signatures (L6) ──────────────────────────────────────────
+import signatureRoutes from './digital-signature.routes.js';
+
+// ── Cost Allocation Reports (L7) ──────────────────────────────────────
+import costAllocationRoutes from './cost-allocation.routes.js';
 
 const router = Router();
 
@@ -159,7 +192,12 @@ router.use('/generator-maintenance', generatorMaintenanceRoutes);
 router.use('/warehouse-zones', warehouseZoneRoutes);
 router.use('/bin-cards', binCardRoutes);
 router.use('/handovers', handoverRoutes);
-router.use('/putaway-rules', putawayRulesRoutes);
+router.use('/rate-cards', rateCardRoutes);
+router.use('/visitors', visitorRoutes);
+router.use('/equipment-notes', equipmentNoteRoutes);
+router.use('/amc', amcRoutes);
+router.use('/vehicle-maintenance', vehicleMaintenanceRoutes);
+// MVP DEFERRED: router.use('/putaway-rules', putawayRulesRoutes);
 
 // ── Logistics (job-orders, gate-passes, stock-transfers, mrf, shipments) ─
 router.use('/', logisticsRoutes);
@@ -218,61 +256,49 @@ router.use('/attachments', attachmentRoutes);
 // ── User View Preferences ────────────────────────────────────────────────
 router.use('/views', userViewRoutes);
 
-// ── ABC Inventory Analysis ──────────────────────────────────────────────
-router.use('/abc-analysis', abcAnalysisRoutes);
-
-// ── Cycle Counting ──────────────────────────────────────────────────────
+// ── MVP DEFERRED: Advanced warehouse features ──────────────────────────
+// router.use('/abc-analysis', abcAnalysisRoutes);
 router.use('/cycle-counts', cycleCountRoutes);
-
-// ── Pick Path Optimization & Wave Picking ───────────────────────────────
 router.use('/pick-optimizer', pickOptimizerRoutes);
+// router.use('/asn', asnRoutes);
+// router.use('/slotting', slottingRoutes);
+// router.use('/cross-docks', crossDockRoutes);
+// router.use('/demand-forecast', demandForecastRoutes);  // superseded by /demand
+// router.use('/consumption-trends', consumptionTrendRoutes);  // superseded by /demand
+// router.use('/sensors', sensorRoutes);
+// router.use('/yard', yardRoutes);
+// router.use('/packing', packingRoutes);
+// router.use('/staging', stagingRoutes);
+// router.use('/putaway-rules', putawayRulesRoutes);
 
-// ── Route Optimization (JO Transport) ───────────────────────────────────
+// ── MVP DEFERRED: Dynamic Documents, Custom builders, ROI ──────────────
+// router.use('/dynamic-types', dynamicDocTypeRoutes);
+// router.use('/dynamic', dynamicDocRoutes);
+// router.use('/custom-data-sources', customDataSourceRoutes);
+// router.use('/custom-fields', customFieldRoutes);
+// router.use('/workflow-templates', workflowTemplateRoutes);
+// router.use('/roi-calculator', roiCalculatorRoutes);
+
+// ── Route Optimization (JO Transport — kept for logistics) ─────────────
 router.use('/route-optimizer', routeOptimizerRoutes);
 
-// ── Advance Shipping Notice ─────────────────────────────────────────────
-router.use('/asn', asnRoutes);
-
-// ── Inspection Tools (AQL Calculator & Checklists) ─────────────────────
+// ── Inspection Tools (AQL Calculator & Checklists — core QC) ───────────
 router.use('/inspections', inspectionRoutes);
 
 // ── Web Push Notifications ──────────────────────────────────────────────
 router.use('/push', pushRoutes);
 
-// ── Slotting Optimization ───────────────────────────────────────────────
-router.use('/slotting', slottingRoutes);
+// ── Supplier Performance Evaluation ──────────────────────────────────────
+router.use('/supplier-evaluations', supplierEvaluationRoutes);
 
-// ── Cross-Docking ───────────────────────────────────────────────────────
-router.use('/cross-docks', crossDockRoutes);
+// ── Asset Register (M10) ────────────────────────────────────────────────
+router.use('/assets', assetRoutes);
 
-// ── Demand Forecasting ──────────────────────────────────────────────────
-router.use('/demand-forecast', demandForecastRoutes);
+// ── Compliance Audit Checklists (ISO 9001) ──────────────────────────────
+router.use('/compliance', complianceRoutes);
 
-// ── IoT Sensor Monitoring ───────────────────────────────────────────────
-router.use('/sensors', sensorRoutes);
-
-// ── Yard Management ─────────────────────────────────────────────────
-router.use('/yard', yardRoutes);
-
-// ── Packing Station ─────────────────────────────────────────────────
-router.use('/packing', packingRoutes);
-
-// ── Staging Area Management ─────────────────────────────────────────
-router.use('/staging', stagingRoutes);
-
-// ── Dynamic Document System ─────────────────────────────────────────────
-router.use('/dynamic-types', dynamicDocTypeRoutes);
-router.use('/dynamic', dynamicDocRoutes);
-
-// ── Custom Data Sources & Custom Fields ─────────────────────────────────
-router.use('/custom-data-sources', customDataSourceRoutes);
-router.use('/custom-fields', customFieldRoutes);
-
-// ── Workflow Templates (Marketplace) ────────────────────────────────────
-router.use('/workflow-templates', workflowTemplateRoutes);
-
-// ── ROI Calculator ──────────────────────────────────────────────────────
-router.use('/roi-calculator', roiCalculatorRoutes);
+// ── Tariff & Duties (SOW M3) ────────────────────────────────────────────
+router.use('/tariffs', tariffRoutes);
 
 // ── Labor Standards ──────────────────────────────────────────────────────
 router.use('/labor', laborRoutes);
@@ -286,7 +312,27 @@ router.use('/search', searchRoutes);
 // ── Semantic Analytics Layer ────────────────────────────────────────────
 router.use('/semantic', semanticRoutes);
 
-// ── Intelligence (Smart Features) ──────────────────────────────────────
-router.use('/intelligence', intelligenceRoutes);
+// ── Comprehensive KPI Dashboard (M7) ──────────────────────────────────
+router.use('/kpis', kpiRoutes);
+
+// ── Security (M6: Access Control & Security) ────────────────────────────
+router.use('/security', securityRoutes);
+
+// ── Customs Documentation Management (M9) ──────────────────────────────
+router.use('/customs-documents', customsDocumentRoutes);
+
+// ── Expiry Alerts (L2: Inventory Expiry Date Alerts) ──────────────────
+router.use('/inventory', expiryAlertRoutes);
+
+// ── Digital Signatures (L6) ──────────────────────────────────────────
+router.use('/signatures', signatureRoutes);
+
+// ── Cost Allocation Reports (L7) ──────────────────────────────────────
+router.use('/cost-allocation', costAllocationRoutes);
+
+// ── Demand Analysis (L8 + L9) ────────────────────────────────────────
+router.use('/demand', demandRoutes);
+
+// MVP DEFERRED: router.use('/intelligence', intelligenceRoutes);
 
 export default router;

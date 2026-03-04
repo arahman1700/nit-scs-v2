@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Search, Package, MapPin, Layers, BarChart3, X, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
-import { generateInventoryReportPdf } from '@/utils/pdfExport';
+
 import { exportToExcel } from '@/lib/excelExport';
 import { useInventory, useWarehouses } from '@/api/hooks/useMasterData';
 import { useInventorySummary } from '@/api/hooks/useDashboard';
@@ -153,21 +153,6 @@ export const InventoryDashboard: React.FC = () => {
 
   // ── Export handlers ───────────────────────────────────────────────────
 
-  const handleExportPdf = useCallback(() => {
-    const exportData = filteredData.map((r, i) => ({
-      sn: i + 1,
-      project: '-',
-      itemCode: r.itemCode,
-      description: r.description,
-      size: '-',
-      unit: r.unit,
-      location: r.warehouseName,
-      subLocation: '-',
-      balance: r.qtyOnHand,
-    }));
-    generateInventoryReportPdf(exportData, 'Inventory Levels');
-  }, [filteredData]);
-
   const handleExportExcel = useCallback(() => {
     const exportData = filteredData.map((r, i) => ({
       sn: i + 1,
@@ -230,7 +215,7 @@ export const InventoryDashboard: React.FC = () => {
           >
             <RefreshCw size={16} className={inventoryQuery.isFetching ? 'animate-spin' : ''} />
           </button>
-          <ExportButton onExportPdf={handleExportPdf} onExportExcel={handleExportExcel} />
+          <ExportButton onExportExcel={handleExportExcel} />
         </div>
       </div>
 

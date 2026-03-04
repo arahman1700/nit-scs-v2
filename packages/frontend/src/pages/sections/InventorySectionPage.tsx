@@ -184,7 +184,7 @@ export const InventorySectionPage: React.FC = () => {
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h3 className="text-white font-semibold">Stock Levels</h3>
                 <button
-                  onClick={() => navigate('/admin/inventory/inventory')}
+                  onClick={() => navigate('/admin/warehouses?tab=inventory')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   View All
@@ -228,7 +228,7 @@ export const InventorySectionPage: React.FC = () => {
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <h3 className="text-white font-semibold">Warehouses</h3>
                 <button
-                  onClick={() => navigate('/admin/inventory/warehouses')}
+                  onClick={() => navigate('/admin/master?tab=warehouses')}
                   className="text-nesma-secondary text-xs hover:underline"
                 >
                   View All
@@ -272,7 +272,7 @@ export const InventorySectionPage: React.FC = () => {
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <h3 className="text-white font-semibold">Gate Passes</h3>
                   <button
-                    onClick={() => navigate('/admin/logistics/gate-pass')}
+                    onClick={() => navigate('/admin/equipment?tab=gate-passes')}
                     className="text-nesma-secondary text-xs hover:underline"
                   >
                     View All
@@ -318,7 +318,7 @@ export const InventorySectionPage: React.FC = () => {
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <h3 className="text-white font-semibold">Stock Transfers</h3>
                   <button
-                    onClick={() => navigate('/admin/logistics/stock-transfer')}
+                    onClick={() => navigate('/admin/warehouses?tab=wt')}
                     className="text-nesma-secondary text-xs hover:underline"
                   >
                     View All
@@ -392,7 +392,7 @@ export const InventorySectionPage: React.FC = () => {
           onItemFound={item => {
             setScannerOpen(false);
             const code = String(item.itemCode || item.code || '');
-            if (code) navigate(`/admin/inventory/inventory?search=${encodeURIComponent(code)}`);
+            if (code) navigate(`/admin/warehouses?tab=inventory&search=${encodeURIComponent(code)}`);
           }}
         />
       </Suspense>

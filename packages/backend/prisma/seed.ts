@@ -336,6 +336,9 @@ async function main() {
       generator_fuel: ['create', 'read'],
       generator_maintenance: ['create', 'read', 'update'],
       warehouse_zone: ['create', 'read', 'update', 'delete'],
+      email_template: ['create', 'read', 'update', 'delete'],
+      email_log: ['read'],
+      workflow: ['create', 'read', 'update', 'delete'],
     },
     manager: {
       grn: ['read', 'approve', 'export'],

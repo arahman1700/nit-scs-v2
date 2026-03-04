@@ -4,12 +4,12 @@ import type { JwtPayload } from './jwt.js';
  * Row-level security: build Prisma `where` conditions based on user role
  * and assigned project/warehouse.
  *
- * Scoping rules:
- * - admin, manager: see all records (no filter)
- * - warehouse_supervisor, warehouse_staff: filter by assignedWarehouseId
- * - site_engineer: filter by assignedProjectId
- * - qc_officer: see all (quality oversight across warehouses)
- * - logistics_coordinator, freight_forwarder: see all logistics-related
+ * Scoping rules (SOW Section 13.1 — 17 roles):
+ * - UNRESTRICTED: admin, manager, qc_officer, logistics_coordinator, freight_forwarder,
+ *   transport_supervisor, scrap_committee_member, technical_manager, finance_user,
+ *   compliance_officer, shipping_officer, customs_specialist
+ * - WAREHOUSE_SCOPED: warehouse_supervisor, warehouse_staff, gate_officer, inventory_specialist
+ * - PROJECT_SCOPED: site_engineer
  *
  * Returns an empty object for unrestricted roles, or a Prisma `where` clause.
  */
@@ -29,11 +29,31 @@ const DEFAULT_MAPPING: ScopeFieldMapping = {
   projectField: 'projectId',
 };
 
-/** Roles that see everything */
-const UNRESTRICTED_ROLES = new Set(['admin', 'manager', 'qc_officer', 'logistics_coordinator', 'freight_forwarder']);
+/** Roles that see everything (cross-warehouse/project visibility) */
+const UNRESTRICTED_ROLES = new Set([
+  'admin',
+  'manager',
+  'qc_officer',
+  'logistics_coordinator',
+  'freight_forwarder',
+  'transport_supervisor',
+  'scrap_committee_member',
+  // SOW Section 13.1 — cross-warehouse oversight roles
+  'technical_manager',
+  'finance_user',
+  'compliance_officer',
+  'shipping_officer',
+  'customs_specialist',
+]);
 
 /** Roles scoped to their assigned warehouse */
-const WAREHOUSE_SCOPED_ROLES = new Set(['warehouse_supervisor', 'warehouse_staff']);
+const WAREHOUSE_SCOPED_ROLES = new Set([
+  'warehouse_supervisor',
+  'warehouse_staff',
+  // SOW Section 13.1 — warehouse-bound roles
+  'gate_officer',
+  'inventory_specialist',
+]);
 
 /** Roles scoped to their assigned project */
 const PROJECT_SCOPED_ROLES = new Set(['site_engineer']);

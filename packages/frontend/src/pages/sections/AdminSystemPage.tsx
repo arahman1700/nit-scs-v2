@@ -24,28 +24,8 @@ const ApprovalWorkflowPage = React.lazy(() =>
   import('@/pages/admin/ApprovalWorkflowPage').then(m => ({ default: m.ApprovalWorkflowPage })),
 );
 
-// Platform tools — lazy loaded
-const DashboardBuilderPage = React.lazy(() =>
-  import('@/pages/DashboardBuilderPage').then(m => ({ default: m.DashboardBuilderPage })),
-);
-const ReportBuilderPage = React.lazy(() =>
-  import('@/pages/ReportBuilderPage').then(m => ({ default: m.ReportBuilderPage })),
-);
-const DynamicTypeListPage = React.lazy(() =>
-  import('@/pages/admin/DynamicTypeListPage').then(m => ({ default: m.DynamicTypeListPage })),
-);
-const CustomDataSourcePage = React.lazy(() =>
-  import('@/pages/admin/CustomDataSourcePage').then(m => ({ default: m.CustomDataSourcePage })),
-);
-const CustomFieldsPage = React.lazy(() =>
-  import('@/pages/admin/CustomFieldsPage').then(m => ({ default: m.CustomFieldsPage })),
-);
-const WorkflowTemplatesPage = React.lazy(() =>
-  import('@/pages/admin/WorkflowTemplatesPage').then(m => ({ default: m.WorkflowTemplatesPage })),
-);
-const AiInsightsPage = React.lazy(() =>
-  import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
-);
+// MVP DEFERRED: Platform tools (DashboardBuilder, ReportBuilder, DynamicTypes,
+// CustomDataSources, CustomFields, WorkflowTemplates, AiInsights) stripped for pilot
 
 const Spinner: React.FC = () => (
   <div className="flex items-center justify-center py-20">
@@ -91,13 +71,6 @@ const tabs: TabDef[] = [
   { key: 'workflows', label: 'Workflows' },
   { key: 'email-templates', label: 'Email Templates' },
   { key: 'email-logs', label: 'Email Logs' },
-  { key: 'dashboard-builder', label: 'Dashboard Builder' },
-  { key: 'report-builder', label: 'Report Builder' },
-  { key: 'document-types', label: 'Document Types' },
-  { key: 'data-sources', label: 'Data Sources' },
-  { key: 'custom-fields', label: 'Custom Fields' },
-  { key: 'workflow-templates', label: 'Workflow Templates' },
-  { key: 'ai-insights', label: 'AI Insights' },
 ];
 
 // Backward-compatible alias
@@ -172,55 +145,6 @@ export const AdminSystemPage: React.FC = () => {
           <RouteErrorBoundary label="Email Logs">
             <Suspense fallback={<Spinner />}>
               <EmailLogsPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'dashboard-builder': (
-          <RouteErrorBoundary label="Dashboard Builder">
-            <Suspense fallback={<Spinner />}>
-              <DashboardBuilderPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'report-builder': (
-          <RouteErrorBoundary label="Report Builder">
-            <Suspense fallback={<Spinner />}>
-              <ReportBuilderPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'document-types': (
-          <RouteErrorBoundary label="Document Types">
-            <Suspense fallback={<Spinner />}>
-              <DynamicTypeListPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'data-sources': (
-          <RouteErrorBoundary label="Data Sources">
-            <Suspense fallback={<Spinner />}>
-              <CustomDataSourcePage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'custom-fields': (
-          <RouteErrorBoundary label="Custom Fields">
-            <Suspense fallback={<Spinner />}>
-              <CustomFieldsPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'workflow-templates': (
-          <RouteErrorBoundary label="Workflow Templates">
-            <Suspense fallback={<Spinner />}>
-              <WorkflowTemplatesPage />
-            </Suspense>
-          </RouteErrorBoundary>
-        ),
-        'ai-insights': (
-          <RouteErrorBoundary label="AI Insights">
-            <Suspense fallback={<Spinner />}>
-              <AiInsightsPage />
             </Suspense>
           </RouteErrorBoundary>
         ),

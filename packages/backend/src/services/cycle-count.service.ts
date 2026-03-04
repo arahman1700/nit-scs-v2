@@ -2,6 +2,7 @@ import { prisma } from '../utils/prisma.js';
 import { generateDocumentNumber } from './document-number.service.js';
 import { createAuditLog } from './audit.service.js';
 import { log } from '../config/logger.js';
+import { eventBus } from '../events/event-bus.js';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -289,6 +290,7 @@ export async function completeCount(id: string, userId: string) {
   const updated = await prisma.cycleCount.update({
     where: { id },
     data: { status: 'completed', completedAt: new Date() },
+    include: { warehouse: { select: { id: true, warehouseName: true } } },
   });
 
   await createAuditLog({
@@ -299,6 +301,80 @@ export async function completeCount(id: string, userId: string) {
     newValues: { status: 'completed', completedAt: updated.completedAt },
     performedById: userId,
   });
+
+  // SOW M1-F04: Auto-flag NCR for lines with >5% variance
+  const highVarianceLines = await prisma.cycleCountLine.findMany({
+    where: {
+      cycleCountId: id,
+      status: 'counted',
+      variancePercent: { not: null },
+      OR: [{ variancePercent: { gt: 5 } }, { variancePercent: { lt: -5 } }],
+    },
+    include: {
+      item: { select: { id: true, itemCode: true, itemDescription: true } },
+    },
+  });
+
+  if (highVarianceLines.length > 0) {
+    const ncrItems = highVarianceLines.map(l => ({
+      itemCode: l.item?.itemCode ?? l.itemId,
+      itemDescription: l.item?.itemDescription ?? '',
+      expected: Number(l.expectedQty),
+      counted: Number(l.countedQty),
+      variancePercent: Number(l.variancePercent),
+    }));
+
+    // Create notification for WH manager and QC officer
+    const roles = ['warehouse_supervisor', 'qc_officer', 'inventory_specialist'];
+    const recipients = await prisma.employee.findMany({
+      where: { systemRole: { in: roles }, isActive: true },
+      select: { id: true },
+    });
+    const recipientIds = recipients.map(r => r.id);
+
+    if (recipientIds.length > 0) {
+      await prisma.notification.createMany({
+        data: recipientIds.map(rid => ({
+          recipientId: rid,
+          title: `NCR: ${highVarianceLines.length} item(s) exceeded 5% variance in ${cycleCount.countNumber}`.slice(
+            0,
+            200,
+          ),
+          body: ncrItems
+            .map(
+              i =>
+                `${i.itemCode}: expected ${i.expected}, counted ${i.counted} (${i.variancePercent > 0 ? '+' : ''}${i.variancePercent}%)`,
+            )
+            .join('\n')
+            .slice(0, 2000),
+          notificationType: 'cycle_count_ncr',
+          isRead: false,
+        })),
+      });
+    }
+
+    eventBus.publish({
+      type: 'quality:ncr_flagged',
+      entityType: 'cycle_count',
+      entityId: id,
+      action: 'ncr_flagged',
+      payload: {
+        countNumber: cycleCount.countNumber,
+        warehouseId: cycleCount.warehouseId,
+        warehouseName: (updated as Record<string, unknown> & { warehouse?: { warehouseName?: string } }).warehouse
+          ?.warehouseName,
+        itemCount: highVarianceLines.length,
+        items: ncrItems,
+      },
+      performedById: userId,
+      timestamp: new Date().toISOString(),
+    });
+
+    log(
+      'warn',
+      `[CycleCount] NCR flagged: ${highVarianceLines.length} items with >5% variance in ${cycleCount.countNumber}`,
+    );
+  }
 
   log('info', `[CycleCount] Completed ${cycleCount.countNumber}`);
   return updated;

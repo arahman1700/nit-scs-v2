@@ -48,7 +48,10 @@ export function validateGRN(data: Record<string, unknown>, lineItems: VoucherLin
     errors.push({ field: 'poNumber', rule: 'GRN-V004', message: 'PO Number is required' });
   }
 
-  if (!data.supplier || !(data.supplier as string).trim()) {
+  if (
+    (!data.supplier || !(data.supplier as string).trim()) &&
+    (!data.supplierId || !(data.supplierId as string).trim())
+  ) {
     errors.push({ field: 'supplier', rule: 'GRN-V005', message: 'Supplier is required' });
   }
 
@@ -85,11 +88,14 @@ export function validateMI(data: Record<string, unknown>, lineItems: VoucherLine
     errors.push({ field: 'lineItems', rule: 'MI-V001', message: 'At least one line item is required' });
   }
 
-  if (!data.project || !(data.project as string).trim()) {
+  if ((!data.project || !(data.project as string).trim()) && (!data.projectId || !(data.projectId as string).trim())) {
     errors.push({ field: 'project', rule: 'MI-V002', message: 'Project is required' });
   }
 
-  if (!data.warehouse || !(data.warehouse as string).trim()) {
+  if (
+    (!data.warehouse || !(data.warehouse as string).trim()) &&
+    (!data.warehouseId || !(data.warehouseId as string).trim())
+  ) {
     errors.push({ field: 'warehouse', rule: 'MI-V003', message: 'Warehouse is required' });
   }
 
@@ -122,7 +128,7 @@ export function validateMRN(data: Record<string, unknown>, lineItems: VoucherLin
   if (!data.returnType) {
     errors.push({ field: 'returnType', rule: 'MRN-V001', message: 'Return type is required' });
   }
-  if (!data.project || !(data.project as string).trim()) {
+  if ((!data.project || !(data.project as string).trim()) && (!data.projectId || !(data.projectId as string).trim())) {
     errors.push({ field: 'project', rule: 'MRN-V002', message: 'Project is required' });
   }
   if (!data.reason || !(data.reason as string).trim()) {
@@ -226,11 +232,14 @@ export function validateMR(data: Record<string, unknown>, lineItems: VoucherLine
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  if (!data.project || !(data.project as string).trim()) {
+  if ((!data.project || !(data.project as string).trim()) && (!data.projectId || !(data.projectId as string).trim())) {
     errors.push({ field: 'project', rule: 'MR-V001', message: 'Project is required' });
   }
 
-  if (!data.requestedBy || !(data.requestedBy as string).trim()) {
+  if (
+    (!data.requestedBy || !(data.requestedBy as string).trim()) &&
+    (!data.requestedById || !(data.requestedById as string).trim())
+  ) {
     errors.push({ field: 'requestedBy', rule: 'MR-V002', message: 'Requester is required' });
   }
 
@@ -288,7 +297,7 @@ export function validateJO(data: Record<string, unknown>): ValidationResult {
   if (!data.joType && !data.type) {
     errors.push({ field: 'joType', rule: 'JO-V001', message: 'Job Order type is required' });
   }
-  if (!data.project || !(data.project as string).trim()) {
+  if ((!data.project || !(data.project as string).trim()) && (!data.projectId || !(data.projectId as string).trim())) {
     errors.push({ field: 'project', rule: 'JO-V002', message: 'Project is required' });
   }
 

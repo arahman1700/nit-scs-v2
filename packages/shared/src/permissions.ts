@@ -156,6 +156,77 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     surplus: ['read'],
     inventory: ['read'],
   },
+  // SOW Section 13.1 — additional roles for full 14-role coverage
+  [UserRole.TECHNICAL_MANAGER]: {
+    grn: ['read', 'approve'],
+    mi: ['read', 'approve'],
+    mr: ['read', 'approve'],
+    qci: ['read'],
+    jo: ['read', 'approve'],
+    inventory: ['read', 'export'],
+    items: ['read'],
+    projects: ['read'],
+    reports: ['read', 'export'],
+  },
+  [UserRole.GATE_OFFICER]: {
+    gatepass: ['create', 'read', 'update', 'approve'],
+    mi: ['read'],
+    grn: ['read'],
+    wt: ['read'],
+    imsf: ['read'],
+    shipment: ['read'],
+    inventory: ['read'],
+  },
+  [UserRole.INVENTORY_SPECIALIST]: {
+    inventory: ['read', 'update', 'export'],
+    bin_card: ['read', 'update'],
+    items: ['read', 'update'],
+    grn: ['read'],
+    mi: ['read'],
+    mrn: ['read'],
+    wt: ['read'],
+    imsf: ['read'],
+    warehouse_zone: ['read', 'update'],
+    tool: ['read', 'update'],
+    tool_issue: ['create', 'read', 'update'],
+  },
+  [UserRole.SHIPPING_OFFICER]: {
+    shipment: ['create', 'read', 'update', 'export'],
+    customs: ['create', 'read', 'update'],
+    gatepass: ['read'],
+    grn: ['read'],
+    inventory: ['read'],
+    suppliers: ['read'],
+  },
+  [UserRole.FINANCE_USER]: {
+    inventory: ['read', 'export'],
+    jo: ['read', 'export'],
+    mi: ['read', 'export'],
+    grn: ['read', 'export'],
+    reports: ['read', 'export'],
+    scrap: ['read'],
+    surplus: ['read'],
+    rental_contract: ['read'],
+  },
+  [UserRole.CUSTOMS_SPECIALIST]: {
+    customs: ['create', 'read', 'update', 'export'],
+    shipment: ['read', 'update'],
+    grn: ['read'],
+    suppliers: ['read'],
+    gatepass: ['read'],
+  },
+  [UserRole.COMPLIANCE_OFFICER]: {
+    'audit-log': ['read', 'export'],
+    reports: ['read', 'export'],
+    inventory: ['read', 'export'],
+    grn: ['read'],
+    mi: ['read'],
+    mrn: ['read'],
+    qci: ['read'],
+    dr: ['read'],
+    scrap: ['read'],
+    surplus: ['read'],
+  },
 };
 
 export function hasPermission(role: UserRole | string, resource: string, permission: Permission): boolean {
@@ -193,13 +264,15 @@ export function canExport(role: UserRole | string, resource: string): boolean {
 export function getMaxApprovalLevel(role: UserRole | string): number {
   switch (role) {
     case UserRole.ADMIN:
-      return 5;
+      return 2; // SOW: highest approval authority
     case UserRole.MANAGER:
-      return 4;
-    case UserRole.LOGISTICS_COORDINATOR:
+      return 2; // SOW: SC Manager > SAR 200K
+    case UserRole.TECHNICAL_MANAGER:
       return 2;
-    case UserRole.WAREHOUSE_SUPERVISOR:
+    case UserRole.LOGISTICS_COORDINATOR:
       return 1;
+    case UserRole.WAREHOUSE_SUPERVISOR:
+      return 1; // SOW: WH Manager ≤ SAR 200K
     case UserRole.WAREHOUSE_STAFF:
       return 1;
     case UserRole.QC_OFFICER:
@@ -207,6 +280,14 @@ export function getMaxApprovalLevel(role: UserRole | string): number {
     case UserRole.TRANSPORT_SUPERVISOR:
       return 1;
     case UserRole.SCRAP_COMMITTEE_MEMBER:
+      return 1;
+    case UserRole.GATE_OFFICER:
+      return 1;
+    case UserRole.INVENTORY_SPECIALIST:
+      return 1;
+    case UserRole.SHIPPING_OFFICER:
+      return 1;
+    case UserRole.COMPLIANCE_OFFICER:
       return 1;
     default:
       return 0;

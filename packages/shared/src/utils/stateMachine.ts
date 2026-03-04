@@ -150,10 +150,34 @@ const TRANSITION_MAP: Record<string, Record<string, string[]>> = {
     overdue: ['in_progress'],
     completed: [],
   },
+  vehicle_maintenance: {
+    scheduled: ['in_progress', 'cancelled'],
+    in_progress: ['completed', 'cancelled'],
+    completed: [],
+    cancelled: [],
+  },
   storekeeper_handover: {
     initiated: ['in_progress'],
     in_progress: ['completed'],
     completed: [],
+  },
+  equipment_delivery_note: {
+    draft: ['confirmed', 'cancelled'],
+    confirmed: [],
+    cancelled: [],
+  },
+  equipment_return_note: {
+    draft: ['inspected', 'disputed'],
+    inspected: ['confirmed', 'disputed'],
+    confirmed: [],
+    disputed: ['inspected'],
+  },
+  transport_order: {
+    draft: ['scheduled', 'cancelled'],
+    scheduled: ['in_transit', 'cancelled'],
+    in_transit: ['delivered'],
+    delivered: [],
+    cancelled: [],
   },
 };
 

@@ -219,6 +219,7 @@ router.use(
     createSchema: s.supplierRateCreateSchema,
     updateSchema: s.supplierRateUpdateSchema,
     includes: { supplier: true, equipmentType: true },
+    defaultSort: 'validFrom',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );
@@ -248,6 +249,7 @@ router.use(
     updateSchema: s.customsTrackingUpdateSchema,
     searchFields: ['customsDeclaration', 'customsRef'],
     includes: { shipment: true },
+    defaultSort: 'stageDate',
     allowedRoles: MASTER_DATA_ROLES,
   }),
 );

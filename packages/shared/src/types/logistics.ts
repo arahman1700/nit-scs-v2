@@ -196,6 +196,54 @@ export interface Shipment {
   shipmentType?: string;
 }
 
+// ── Transport Order (SOW M2-F03 — H9) ───────────────────────────────────
+
+export interface TransportOrderItem {
+  id: string;
+  itemId?: string;
+  itemCode?: string;
+  itemDescription?: string;
+  description: string;
+  quantity: number;
+  uomId?: string;
+  uomCode?: string;
+  uomName?: string;
+  weight?: number;
+}
+
+export interface TransportOrder {
+  id: string;
+  orderNumber?: string;
+  jobOrderId?: string;
+  originWarehouseId: string;
+  originWarehouse?: WarehouseRef;
+  destinationWarehouseId?: string;
+  destinationWarehouse?: WarehouseRef;
+  destinationAddress?: string;
+  projectId?: string;
+  project?: ProjectRef;
+  loadDescription: string;
+  vehicleType?: string;
+  vehicleNumber?: string;
+  driverName?: string;
+  driverPhone?: string;
+  driverIdNumber?: string;
+  scheduledDate: string;
+  actualPickupDate?: string;
+  actualDeliveryDate?: string;
+  estimatedWeight?: number;
+  actualWeight?: number;
+  gatePassId?: string;
+  requestedById: string;
+  requestedBy?: EmployeeRef;
+  status: 'draft' | 'scheduled' | 'in_transit' | 'delivered' | 'cancelled';
+  notes?: string;
+  transportOrderItems?: TransportOrderItem[];
+  statusHistory?: StatusHistoryEntry[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // ── Customs ──────────────────────────────────────────────────────────────
 
 export interface CustomsTracking {

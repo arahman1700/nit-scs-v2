@@ -81,6 +81,14 @@ export const MainLayout: React.FC<{
       [UserRole.FREIGHT_FORWARDER]: 'transport',
       [UserRole.TRANSPORT_SUPERVISOR]: 'logistics',
       [UserRole.SCRAP_COMMITTEE_MEMBER]: 'admin',
+      // SOW Section 13.1 — additional roles
+      [UserRole.TECHNICAL_MANAGER]: 'manager',
+      [UserRole.GATE_OFFICER]: 'warehouse',
+      [UserRole.INVENTORY_SPECIALIST]: 'warehouse',
+      [UserRole.SHIPPING_OFFICER]: 'logistics',
+      [UserRole.FINANCE_USER]: 'admin',
+      [UserRole.CUSTOMS_SPECIALIST]: 'logistics',
+      [UserRole.COMPLIANCE_OFFICER]: 'admin',
     };
     const expectedPath = roleBasePaths[role] || 'admin';
 

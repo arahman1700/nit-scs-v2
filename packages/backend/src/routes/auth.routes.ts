@@ -28,7 +28,9 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { email, password } = req.body;
-      const result = await authService.login(email, password);
+      const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+      const userAgent = req.headers['user-agent'];
+      const result = await authService.login(email, password, ipAddress, userAgent);
 
       // Set refresh token as httpOnly cookie for CSRF protection
       res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
@@ -41,7 +43,10 @@ router.post(
 
       sendSuccess(res, result);
     } catch (err) {
-      if (err instanceof Error && err.message.includes('Invalid')) {
+      if (
+        err instanceof Error &&
+        (err.message.includes('Invalid') || err.message.includes('deactivated') || err.message.includes('locked'))
+      ) {
         sendError(res, 401, err.message);
         return;
       }

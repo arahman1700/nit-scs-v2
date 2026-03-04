@@ -10,6 +10,7 @@ import { reserveStockBatch } from './inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { log } from '../config/logger.js';
 import { eventBus } from '../events/event-bus.js';
 import { logger } from '../config/logger.js';
 import type { Server as SocketIOServer } from 'socket.io';
@@ -216,6 +217,16 @@ export async function approve(
       where: { id: mi.id },
       data: { reservationStatus: allReserved ? 'reserved' : 'none' },
     });
+
+    // SOW M1-F02 AC-04: Auto-generate pick list (wave) on approval
+    try {
+      const { createWave } = await import('./wave-picking.service.js');
+      await createWave(mi.warehouseId, [mi.id]);
+      log('info', `[MI] Auto-created pick list wave for MI ${mi.mirvNumber ?? mi.id}`);
+    } catch (err) {
+      // Non-blocking — pick list is convenience, not a hard requirement
+      log('warn', `[MI] Failed to auto-create pick list for MI ${mi.id}: ${(err as Error).message}`);
+    }
   }
 
   const newStatus = action === 'approve' ? 'approved' : 'rejected';

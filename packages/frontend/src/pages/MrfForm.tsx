@@ -3,14 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Save, CheckCircle, AlertCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
-import { ExportButton } from '@/components/ExportButton';
 import { useCreateMrf } from '@/api/hooks/useMrf';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { useCurrentUser } from '@/api/hooks/useAuth';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 import { getRequiredApprovalLevel } from '@nit-scs-v2/shared/permissions';
-import { generateMrPdf } from '@/utils/pdfExport';
 
 export const MrfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -38,15 +36,39 @@ export const MrfForm: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(
-      { ...formData, lineItems, date: new Date().toISOString().split('T')[0] },
-      {
-        onSuccess: res => {
-          setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'MRF-NEW');
-          setSubmitted(true);
-        },
+    const dateStr = String(formData.date || new Date().toISOString().split('T')[0]);
+    const requestDate = dateStr.includes('T') ? dateStr : `${dateStr}T00:00:00.000Z`;
+    const requiredDate = formData.requiredDate
+      ? String(formData.requiredDate).includes('T')
+        ? String(formData.requiredDate)
+        : `${formData.requiredDate}T00:00:00.000Z`
+      : undefined;
+
+    const payload: Record<string, unknown> = {
+      requestDate,
+      requiredDate,
+      projectId: formData.project || formData.projectId,
+      department: formData.department || undefined,
+      deliveryPoint: formData.deliveryPoint || undefined,
+      workOrder: formData.workOrder || undefined,
+      drawingReference: formData.drawingReference || undefined,
+      priority: formData.priority || undefined,
+      notes: formData.notes || undefined,
+      lines: lineItems.map(li => ({
+        itemId: li.itemId || undefined,
+        itemDescription: li.itemName,
+        qtyRequested: li.quantity,
+        uomId: li.uomId || undefined,
+        notes: li.notes,
+      })),
+    };
+
+    createMutation.mutate(payload, {
+      onSuccess: res => {
+        setDocumentNumber((res as { data?: { formNumber?: string } })?.data?.formNumber ?? 'MRF-NEW');
+        setSubmitted(true);
       },
-    );
+    });
   };
 
   const reset = () => {
@@ -111,27 +133,7 @@ export const MrfForm: React.FC = () => {
                 {nextNumber}
               </span>
             </div>
-            {documentNumber && (
-              <ExportButton
-                onExportPdf={() =>
-                  generateMrPdf({
-                    documentNumber: documentNumber ?? nextNumber,
-                    project: String(formData.project ?? ''),
-                    requester: currentUserName,
-                    requiredDate: new Date().toISOString().split('T')[0],
-                    priority: String(formData.priority ?? 'medium'),
-                    status: 'submitted',
-                    items: lineItems.map(li => ({
-                      itemCode: li.itemCode ?? '',
-                      itemName: li.itemName ?? '',
-                      unit: li.unit ?? '',
-                      qtyRequested: li.quantity ?? 0,
-                    })),
-                    notes: String(formData.notes ?? ''),
-                  })
-                }
-              />
-            )}
+            {/* PDF export deferred for MVP */}
           </div>
         </div>
 

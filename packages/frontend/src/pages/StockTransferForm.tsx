@@ -3,12 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Save, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
-import { ExportButton } from '@/components/ExportButton';
 import { useCreateWt } from '@/api/hooks/useWt';
 import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
-import { generateWtPdf } from '@/utils/pdfExport';
 
 export const StockTransferForm: React.FC = () => {
   const navigate = useNavigate();
@@ -132,26 +130,7 @@ export const StockTransferForm: React.FC = () => {
                 </span>
               </div>
             </div>
-            {documentNumber && (
-              <ExportButton
-                onExportPdf={() =>
-                  generateWtPdf({
-                    documentNumber: documentNumber ?? nextNumber,
-                    fromWarehouse: String(formData.fromWarehouse ?? ''),
-                    toWarehouse: String(formData.toWarehouse ?? ''),
-                    transferType: String(formData.transferType ?? 'inter_warehouse'),
-                    requestedBy: '',
-                    status: 'created',
-                    items: lineItems.map(li => ({
-                      itemCode: li.itemCode ?? '',
-                      itemName: li.itemName ?? '',
-                      unit: li.unit ?? '',
-                      qty: li.quantity ?? 0,
-                    })),
-                  })
-                }
-              />
-            )}
+            {/* PDF export deferred for MVP */}
           </div>
         </div>
 

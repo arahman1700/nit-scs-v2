@@ -9,6 +9,7 @@ export {
   SLA_EVENTS,
   JO_EVENTS,
   USER_EVENTS,
+  NOTIFICATION_EVENTS,
   EVENT_DESCRIPTIONS,
   type SystemEventType,
 } from './events.js';
@@ -16,90 +17,92 @@ export {
 // ── Document Prefixes ────────────────────────────────────────────────────
 
 export const DOC_PREFIXES: Record<string, string> = {
-  grn: 'GRN', // was mrrv: 'MRRV'
-  qci: 'QCI', // was rfim: 'RFIM'
-  dr: 'DR', // was osd: 'OSD'
-  mi: 'MI', // was mirv: 'MIRV'
-  mrn: 'MRN', // was mrv: 'MRV'
-  mr: 'MR', // was mrf: 'MRF'
-  wt: 'WT', // was stock_transfer: 'ST'
-  imsf: 'IMSF', // NEW
+  // V2 document types
+  grn: 'GRN',
+  qci: 'QCI',
+  dr: 'DR',
+  mi: 'MI',
+  mrn: 'MRN',
+  mr: 'MR',
+  wt: 'WT',
+  imsf: 'IMSF',
+  scrap: 'SCR',
+  surplus: 'SUR',
+  // V1 backward-compatible docTypes (used by V1 routes)
+  mrrv: 'MRRV',
+  rfim: 'RFIM',
+  osd: 'OSD',
+  mirv: 'MIRV',
+  mrv: 'MRV',
+  mrf: 'MRF',
+  // Logistics & modules — keys must match route docType values
   jo: 'JO',
+  'job-orders': 'JO',
   gatepass: 'GP',
-  rc: 'RC', // NEW: Rental Contract
-  scrap: 'SCR', // NEW
-  surplus: 'SUR', // NEW
+  'gate-passes': 'GP',
   shipment: 'SH',
+  shipments: 'SH',
+  'stock-transfers': 'ST',
+  rc: 'RC',
+  rental_contract: 'RC',
+  tool_issue: 'TI',
+  generator_maintenance: 'GM',
+  vm: 'VM',
+  vehicle_maintenance: 'VM',
   lot: 'LOT',
   leftover: 'LO',
   cycle_count: 'CC',
   asn: 'ASN',
+  ssc: 'SSC',
+  transport: 'TO',
+  transport_order: 'TO',
+  'transport-orders': 'TO',
+  delivery_note: 'DN',
+  return_note: 'RN',
+  equipment_delivery_note: 'DN',
+  equipment_return_note: 'RN',
 };
 
 // ── Approval Levels ──────────────────────────────────────────────────────
 
+// SOW Section 7.3 — Two-tier approval: WH Manager ≤ SAR 200K, SC Manager > SAR 200K
 export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
-    label: 'Level 1 - Storekeeper',
-    roleName: 'warehouse_staff',
+    label: 'Level 1 - Warehouse Manager',
+    roleName: 'warehouse_supervisor',
     minAmount: 0,
-    maxAmount: 10_000,
-    slaHours: 4,
-  },
-  {
-    level: 2,
-    label: 'Level 2 - Logistics Manager',
-    roleName: 'logistics_coordinator',
-    minAmount: 10_000,
-    maxAmount: 50_000,
+    maxAmount: 200_000,
     slaHours: 8,
   },
   {
-    level: 3,
-    label: 'Level 3 - Department Head',
+    level: 2,
+    label: 'Level 2 - Supply Chain Manager',
     roleName: 'manager',
-    minAmount: 50_000,
-    maxAmount: 100_000,
+    minAmount: 200_000,
+    maxAmount: Infinity,
     slaHours: 24,
   },
-  {
-    level: 4,
-    label: 'Level 4 - Operations Director',
-    roleName: 'manager',
-    minAmount: 100_000,
-    maxAmount: 500_000,
-    slaHours: 48,
-  },
-  { level: 5, label: 'Level 5 - CEO', roleName: 'admin', minAmount: 500_000, maxAmount: Infinity, slaHours: 72 },
 ];
 
+// SOW Section 7.3 — Two-tier JO approval aligned with MI thresholds
 export const JO_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
     label: 'Level 1 - Logistics Coordinator',
     roleName: 'logistics_coordinator',
     minAmount: 0,
-    maxAmount: 5_000,
-    slaHours: 4,
-  },
-  {
-    level: 2,
-    label: 'Level 2 - Logistics Manager',
-    roleName: 'manager',
-    minAmount: 5_000,
-    maxAmount: 20_000,
+    maxAmount: 200_000,
     slaHours: 8,
   },
   {
-    level: 3,
-    label: 'Level 3 - Operations Director',
+    level: 2,
+    label: 'Level 2 - Operations Manager',
     roleName: 'manager',
-    minAmount: 20_000,
-    maxAmount: 100_000,
+    minAmount: 200_000,
+    maxAmount: Infinity,
     slaHours: 24,
   },
-  { level: 4, label: 'Level 4 - CEO', roleName: 'admin', minAmount: 100_000, maxAmount: Infinity, slaHours: 48 },
 ];
 
 // ── Status Flows ─────────────────────────────────────────────────────────
@@ -160,7 +163,11 @@ export const STATUS_FLOWS: Record<string, string[]> = {
   rental_contract: ['draft', 'pending_approval', 'active', 'extended', 'terminated', 'rejected'],
   tool_issue: ['issued', 'overdue', 'returned'],
   generator_maintenance: ['scheduled', 'in_progress', 'completed', 'overdue'],
+  vehicle_maintenance: ['scheduled', 'in_progress', 'completed', 'cancelled'],
   storekeeper_handover: ['initiated', 'in_progress', 'completed'],
+  equipment_delivery_note: ['draft', 'confirmed', 'cancelled'],
+  equipment_return_note: ['draft', 'inspected', 'confirmed', 'disputed'],
+  transport_order: ['draft', 'scheduled', 'in_transit', 'delivered', 'cancelled'],
 
   // V1 backward-compatibility aliases
   mrrv: ['draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected'],
@@ -260,8 +267,16 @@ export const SYSTEM_ROLES = [
   'site_engineer',
   'qc_officer',
   'freight_forwarder',
-  'transport_supervisor', // NEW
-  'scrap_committee_member', // NEW
+  'transport_supervisor',
+  'scrap_committee_member',
+  // SOW Section 13.1 — additional roles for full 14-role coverage
+  'technical_manager',
+  'gate_officer',
+  'inventory_specialist',
+  'shipping_officer',
+  'finance_user',
+  'customs_specialist',
+  'compliance_officer',
 ] as const;
 
 // ── JO Types ─────────────────────────────────────────────────────────────

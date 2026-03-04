@@ -33,7 +33,7 @@ router.get('/generate', async (req: Request, res: Response) => {
       text: data,
       scale: 3,
       height,
-      width,
+      ...(width !== undefined ? { width } : {}),
       includetext: true,
       textxalign: 'center',
     });

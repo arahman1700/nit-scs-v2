@@ -4,6 +4,7 @@ import { comparePassword, hashPassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, decodeToken, type JwtPayload } from '../utils/jwt.js';
 import { AuthenticationError, NotFoundError, RateLimitError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { sendTemplatedEmail } from './email.service.js';
+import { recordLoginAttempt, checkAccountLockout } from './security.service.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 
@@ -105,20 +106,41 @@ export interface LoginResult {
   refreshToken: string;
 }
 
-export async function login(email: string, password: string): Promise<LoginResult> {
+export async function login(
+  email: string,
+  password: string,
+  ipAddress?: string,
+  userAgent?: string,
+): Promise<LoginResult> {
+  const ip = ipAddress || 'unknown';
+
   const employee = await prisma.employee.findUnique({ where: { email } });
   if (!employee || !employee.passwordHash) {
     throw new AuthenticationError('Invalid email or password');
   }
 
+  // Check account lockout before validating password
+  const lockout = await checkAccountLockout(employee.id);
+  if (lockout.locked) {
+    await recordLoginAttempt(employee.id, ip, userAgent, false, 'account_locked');
+    throw new AuthenticationError(
+      `Account is temporarily locked due to too many failed attempts. Try again in ${lockout.remainingMinutes} minute(s).`,
+    );
+  }
+
   if (!employee.isActive) {
+    await recordLoginAttempt(employee.id, ip, userAgent, false, 'account_deactivated');
     throw new AuthenticationError('Account is deactivated');
   }
 
   const valid = await comparePassword(password, employee.passwordHash);
   if (!valid) {
+    await recordLoginAttempt(employee.id, ip, userAgent, false, 'invalid_password');
     throw new AuthenticationError('Invalid email or password');
   }
+
+  // Record successful login attempt
+  await recordLoginAttempt(employee.id, ip, userAgent, true);
 
   const payload: JwtPayload = {
     userId: employee.id,

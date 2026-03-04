@@ -13,6 +13,18 @@ export function useBinCardList(params?: ListParams) {
   });
 }
 
+// ── Computed View (SOW C1) ─────────────────────────────────────────────────
+/** Fetches bin cards as computed views — authoritative running balances from inventory transactions */
+export function useComputedBinCards(params?: ListParams) {
+  return useQuery({
+    queryKey: ['bin-cards', 'computed', params],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<unknown[]>>('/bin-cards/computed', { params });
+      return data;
+    },
+  });
+}
+
 // ── Detail ──────────────────────────────────────────────────────────────────
 export function useBinCard(id: string | undefined) {
   return useQuery({

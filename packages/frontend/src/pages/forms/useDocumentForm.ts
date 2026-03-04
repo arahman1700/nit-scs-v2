@@ -9,7 +9,6 @@ import {
   useEmployees,
   useUpload,
   useCurrentUser,
-  useSmartDefaults,
 } from '@/api/hooks';
 import {
   useCreateMrrv,
@@ -178,42 +177,7 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
   const mrrvListQuery = useMrrvList({ pageSize: 200 });
   const employeesQuery = useEmployees({ pageSize: 200 });
 
-  // Smart defaults — pre-populate warehouse/project/supplier for new documents
-  const smartDefaultsQuery = useSmartDefaults();
-
-  useEffect(() => {
-    if (isEditMode || initialized) return; // Only for new documents
-    const defaults = (
-      smartDefaultsQuery.data as
-        | {
-            data?: {
-              warehouses?: Array<{ name: string }>;
-              projects?: Array<{ name: string }>;
-              suppliers?: Array<{ name: string }>;
-            };
-          }
-        | undefined
-    )?.data;
-    if (!defaults) return;
-
-    setFormData(prev => {
-      const updates: Record<string, unknown> = {};
-      // Pre-fill warehouse if form has a warehouse field and user hasn't set one
-      if (!prev.warehouse && defaults.warehouses?.[0]?.name) {
-        updates.warehouse = defaults.warehouses[0].name;
-      }
-      // Pre-fill project if form has a project field and user hasn't set one
-      if (!prev.project && defaults.projects?.[0]?.name) {
-        updates.project = defaults.projects[0].name;
-      }
-      // Pre-fill supplier if form has a supplier field and user hasn't set one
-      if (!prev.supplier && defaults.suppliers?.[0]?.name) {
-        updates.supplier = defaults.suppliers[0].name;
-      }
-      if (Object.keys(updates).length === 0) return prev;
-      return { ...prev, ...updates };
-    });
-  }, [isEditMode, initialized, smartDefaultsQuery.data]);
+  // Smart defaults removed (deferred feature — Intelligence module)
 
   // Create mutations
   const createMrrv = useCreateMrrv();
@@ -332,6 +296,22 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
       currentUserName,
     ],
   );
+
+  // Seed formData with default values from formConfig for new documents
+  useEffect(() => {
+    if (isEditMode || !formConfig.sections.length) return;
+    const defaults: Record<string, unknown> = {};
+    for (const section of formConfig.sections) {
+      for (const field of section.fields) {
+        if (field.defaultValue && formData[field.key] === undefined) {
+          defaults[field.key] = field.defaultValue;
+        }
+      }
+    }
+    if (Object.keys(defaults).length > 0) {
+      setFormData(prev => ({ ...defaults, ...prev }));
+    }
+  }, [formConfig.sections, isEditMode]);  
 
   // Dynamic JO sections based on selected type
   const joTypeSections = useMemo(() => {
@@ -476,16 +456,78 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
       }
     }
 
-    // Map lineItems to the `lines` array format the backend expects
-    const mappedLines = lineItems.map(li => ({
-      itemId: li.itemId,
-      qtyOrdered: li.qtyExpected || li.quantity,
-      qtyReceived: li.quantity,
-      uomId: li.uomId,
-      unitCost: li.unitPrice,
-      condition: conditionMap[li.condition || 'New'] || 'good',
-      notes: li.notes,
-    }));
+    // Map lineItems to the `lines` array format each backend schema expects
+    const mappedLines = lineItems.map(li => {
+      const base = { itemId: li.itemId };
+      switch (formType) {
+        case 'mirv': // MI — qtyRequested only
+          return { ...base, qtyRequested: li.quantity, notes: li.notes };
+        case 'mrv': // MRN — qtyReturned + uomId + condition
+          return {
+            ...base,
+            qtyReturned: li.quantity,
+            uomId: li.uomId,
+            condition: conditionMap[li.condition || 'New'] || 'good',
+            notes: li.notes,
+          };
+        case 'mrf': // MR — qtyRequested + uomId + itemDescription
+          return {
+            ...base,
+            qtyRequested: li.quantity,
+            uomId: li.uomId,
+            itemDescription: li.itemName,
+            notes: li.notes,
+          };
+        case 'imsf': // IMSF — qty + uomId + description
+          return {
+            ...base,
+            qty: li.quantity,
+            uomId: li.uomId,
+            description: li.itemName,
+          };
+        case 'wt': // WT — quantity + uomId + condition
+          return {
+            ...base,
+            quantity: li.quantity,
+            uomId: li.uomId,
+            condition: conditionMap[li.condition || 'New'] || 'good',
+          };
+        case 'osd': // DR — qtyInvoice + qtyReceived + uomId
+          return {
+            ...base,
+            qtyInvoice: li.qtyExpected || li.quantity,
+            qtyReceived: li.quantity,
+            uomId: li.uomId,
+            unitCost: li.unitPrice,
+            notes: li.notes,
+          };
+        case 'shipment': // Shipment — quantity + description
+          return {
+            ...base,
+            quantity: li.quantity,
+            uomId: li.uomId,
+            description: li.itemName || '',
+            unitValue: li.unitPrice,
+          };
+        case 'gate-pass': // Gate Pass — quantity + uomId
+          return {
+            ...base,
+            quantity: li.quantity,
+            uomId: li.uomId,
+            description: li.itemName,
+          };
+        default: // GRN (mrrv) and any others — qtyOrdered + qtyReceived
+          return {
+            ...base,
+            qtyOrdered: li.qtyExpected || li.quantity,
+            qtyReceived: li.quantity,
+            uomId: li.uomId,
+            unitCost: li.unitPrice,
+            condition: conditionMap[li.condition || 'New'] || 'good',
+            notes: li.notes,
+          };
+      }
+    });
     payload.lines = mappedLines;
 
     // Remove display-only field names that aren't real Prisma columns
@@ -502,9 +544,12 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
       'senderProject',
       'receiverProject',
       'requestedBy',
+      'lineItems', // raw lineItems array — we send `lines` instead
+      'date', // raw date field — mapped to receiveDate/requestDate/etc.
+      'joType', // UI-only field for job order type selector
     ];
     for (const key of displayOnlyFields) {
-      if (payload[key] && typeof payload[key] === 'string') {
+      if (payload[key] !== undefined) {
         delete payload[key];
       }
     }

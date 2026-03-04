@@ -9,7 +9,6 @@ import {
   Trash2,
   ChevronUp,
   ChevronDown,
-  Download,
   CheckSquare,
   Square,
   Loader2,
@@ -36,7 +35,7 @@ import { useUserViews, useSaveView, useUpdateView } from '@/api/hooks/useUserVie
 import type { UserViewConfig } from '@/api/hooks/useUserViews';
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 import { toast } from '@/components/Toaster';
-import { generateDocumentPdf, buildPdfOptions } from '@/utils/pdfExport';
+
 import { getResourceConfig } from '@/config/resourceColumns';
 import type { StatusHistoryEntry } from '@nit-scs-v2/shared/types';
 import type { ListParams } from '@/api/types';
@@ -370,14 +369,6 @@ export const AdminResourceList: React.FC = () => {
   const config = getResourceConfig(resource);
   const filterConfigs = useMemo(() => getFilterConfigs(resource), [resource]);
 
-  const handlePdfExport = useCallback(
-    (row: Record<string, unknown>, printMode = false) => {
-      const options = buildPdfOptions(resource || '', row);
-      generateDocumentPdf({ ...options, printMode });
-    },
-    [resource],
-  );
-
   // Delete hooks
   const deleteProject = useDeleteProject();
   const deleteEmployee = useDeleteEmployee();
@@ -626,19 +617,7 @@ export const AdminResourceList: React.FC = () => {
       >
         <Eye size={size} />
       </button>
-      {isDocument && (
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handlePdfExport(row);
-          }}
-          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-          title="PDF"
-          aria-label={`Export PDF for ${(row.name as string) || (row.id as string) || 'record'}`}
-        >
-          <Download size={size} />
-        </button>
-      )}
+
       {formLink !== '#' && !!row.id && (
         <button
           onClick={e => {
@@ -1047,12 +1026,7 @@ export const AdminResourceList: React.FC = () => {
         subtitle={`${config.code} Record`}
         actions={[
           { label: 'Close', onClick: () => setSelectedRow(null), variant: 'secondary' },
-          ...(isDocument && selectedRow
-            ? [
-                { label: 'Print', onClick: () => handlePdfExport(selectedRow, true), variant: 'secondary' as const },
-                { label: 'Download PDF', onClick: () => handlePdfExport(selectedRow), variant: 'secondary' as const },
-              ]
-            : []),
+
           ...(formLink !== '#' && !!selectedRow?.id
             ? [
                 {

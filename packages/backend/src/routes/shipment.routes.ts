@@ -58,6 +58,33 @@ const baseRouter = createDocumentRouter({
 
 // ── Custom routes that don't fit the factory pattern ──────────────────
 
+// POST /:id/release — SOW M4: Release authorization with prerequisite checklist
+baseRouter.post(
+  '/:id/release',
+  authenticate,
+  requirePermission('shipment', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await shipmentService.release(req.params.id as string, req.user!.userId, req.body);
+
+      await auditAndEmit(req, {
+        action: 'update',
+        tableName: 'shipments',
+        recordId: req.params.id as string,
+        oldValues: { status: 'cleared' },
+        newValues: { status: 'in_delivery', releaseChecklist: req.body },
+        socketEvent: 'shipment:released',
+        docType: 'shipments',
+        socketData: { id: req.params.id as string, status: 'in_delivery' },
+      });
+
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 // PUT /:id/status — Update shipment status with optional date fields
 baseRouter.put(
   '/:id/status',

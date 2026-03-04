@@ -15,13 +15,31 @@ const RoleGuard: React.FC<{
 };
 
 // ── Role groups ──────────────────────────────────────────────────────────
-const ADMIN_MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER, UserRole.SCRAP_COMMITTEE_MEMBER];
-const WAREHOUSE_ROLES = [UserRole.ADMIN, UserRole.WAREHOUSE_SUPERVISOR, UserRole.WAREHOUSE_STAFF];
+const ADMIN_MANAGER_ROLES = [
+  UserRole.ADMIN,
+  UserRole.MANAGER,
+  UserRole.SCRAP_COMMITTEE_MEMBER,
+  UserRole.FINANCE_USER,
+  UserRole.COMPLIANCE_OFFICER,
+];
+const WAREHOUSE_ROLES = [
+  UserRole.ADMIN,
+  UserRole.WAREHOUSE_SUPERVISOR,
+  UserRole.WAREHOUSE_STAFF,
+  UserRole.GATE_OFFICER,
+  UserRole.INVENTORY_SPECIALIST,
+];
 const TRANSPORT_ROLES = [UserRole.ADMIN, UserRole.FREIGHT_FORWARDER, UserRole.TRANSPORT_SUPERVISOR];
 const QC_ROLES = [UserRole.ADMIN, UserRole.QC_OFFICER];
-const LOGISTICS_ROLES = [UserRole.ADMIN, UserRole.LOGISTICS_COORDINATOR, UserRole.TRANSPORT_SUPERVISOR];
+const LOGISTICS_ROLES = [
+  UserRole.ADMIN,
+  UserRole.LOGISTICS_COORDINATOR,
+  UserRole.TRANSPORT_SUPERVISOR,
+  UserRole.SHIPPING_OFFICER,
+  UserRole.CUSTOMS_SPECIALIST,
+];
 const ENGINEER_ROLES = [UserRole.ADMIN, UserRole.SITE_ENGINEER];
-const MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER];
+const MANAGER_ROLES = [UserRole.ADMIN, UserRole.MANAGER, UserRole.TECHNICAL_MANAGER];
 
 // ── Role-to-redirect map ─────────────────────────────────────────────────
 const ROLE_REDIRECT: Record<UserRole, string> = {
@@ -35,6 +53,14 @@ const ROLE_REDIRECT: Record<UserRole, string> = {
   [UserRole.FREIGHT_FORWARDER]: '/transport',
   [UserRole.TRANSPORT_SUPERVISOR]: '/logistics',
   [UserRole.SCRAP_COMMITTEE_MEMBER]: '/admin',
+  // SOW Section 13.1 — additional roles
+  [UserRole.TECHNICAL_MANAGER]: '/manager',
+  [UserRole.GATE_OFFICER]: '/warehouse',
+  [UserRole.INVENTORY_SPECIALIST]: '/warehouse',
+  [UserRole.SHIPPING_OFFICER]: '/logistics',
+  [UserRole.FINANCE_USER]: '/admin',
+  [UserRole.CUSTOMS_SPECIALIST]: '/logistics',
+  [UserRole.COMPLIANCE_OFFICER]: '/admin',
 };
 
 // ── 404 Not Found page ───────────────────────────────────────────────────
@@ -90,17 +116,8 @@ const AssetDashboard = React.lazy(() =>
 const LaborDashboard = React.lazy(() =>
   import('@/pages/dashboards/LaborDashboard').then(m => ({ default: m.LaborDashboard })),
 );
-const ForecastDashboard = React.lazy(() =>
-  import('@/pages/dashboards/ForecastDashboard').then(m => ({ default: m.ForecastDashboard })),
-);
 const OperationsDashboard = React.lazy(() =>
   import('@/pages/dashboards/OperationsDashboard').then(m => ({ default: m.OperationsDashboard })),
-);
-const ExceptionDashboard = React.lazy(() =>
-  import('@/pages/dashboards/ExceptionDashboard').then(m => ({ default: m.ExceptionDashboard })),
-);
-const DepreciationDashboard = React.lazy(() =>
-  import('@/pages/dashboards/DepreciationDashboard').then(m => ({ default: m.DepreciationDashboard })),
 );
 
 // V2 Form imports (additional)
@@ -116,61 +133,7 @@ const WarehouseZoneForm = React.lazy(() =>
 );
 const ToolForm = React.lazy(() => import('@/pages/forms/ToolForm').then(m => ({ default: m.ToolForm })));
 
-// ABC Analysis page
-const AbcAnalysisPage = React.lazy(() =>
-  import('@/pages/warehouse/AbcAnalysisPage').then(m => ({ default: m.AbcAnalysisPage })),
-);
-
-// Put-Away Rules page
-const PutAwayRulesPage = React.lazy(() =>
-  import('@/pages/warehouse/PutAwayRulesPage').then(m => ({ default: m.PutAwayRulesPage })),
-);
-
-// Cycle Counting pages
-const CycleCountListPage = React.lazy(() =>
-  import('@/pages/warehouse/CycleCountListPage').then(m => ({ default: m.CycleCountListPage })),
-);
-const CycleCountDetailPage = React.lazy(() =>
-  import('@/pages/warehouse/CycleCountDetailPage').then(m => ({ default: m.CycleCountDetailPage })),
-);
-
-// Wave Picking page
-const WavePickingPage = React.lazy(() =>
-  import('@/pages/warehouse/WavePickingPage').then(m => ({ default: m.WavePickingPage })),
-);
-
-// Slotting Optimization page
-const SlottingPage = React.lazy(() =>
-  import('@/pages/warehouse/SlottingPage').then(m => ({ default: m.SlottingPage })),
-);
-
-// Advance Shipping Notice page
-const AsnPage = React.lazy(() => import('@/pages/warehouse/AsnPage').then(m => ({ default: m.AsnPage })));
-
-// Cross-Docking page
-const CrossDockDashboard = React.lazy(() =>
-  import('@/pages/warehouse/CrossDockDashboard').then(m => ({ default: m.CrossDockDashboard })),
-);
-
-// IoT Sensor Monitoring
-const SensorDashboard = React.lazy(() =>
-  import('@/pages/warehouse/SensorDashboard').then(m => ({ default: m.SensorDashboard })),
-);
-
-// Yard Management
-const YardDashboard = React.lazy(() =>
-  import('@/pages/warehouse/YardDashboard').then(m => ({ default: m.YardDashboard })),
-);
-
-// Packing Station
-const PackingStationPage = React.lazy(() =>
-  import('@/pages/warehouse/PackingStationPage').then(m => ({ default: m.PackingStationPage })),
-);
-
-// Staging Area Management
-const StagingAreaPage = React.lazy(() =>
-  import('@/pages/warehouse/StagingAreaPage').then(m => ({ default: m.StagingAreaPage })),
-);
+// ── MVP DEFERRED: Advanced warehouse features stripped for pilot ──────────
 
 // Mobile scan workflow pages
 const MobileDashboard = React.lazy(() =>
@@ -203,14 +166,6 @@ const SiteEngineerDashboard = React.lazy(() =>
 // Feature pages
 const TasksPage = React.lazy(() => import('@/pages/TasksPage').then(m => ({ default: m.TasksPage })));
 const DocumentsPage = React.lazy(() => import('@/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
-
-// Dashboard & Report Builder
-const DashboardBuilderPage = React.lazy(() =>
-  import('@/pages/DashboardBuilderPage').then(m => ({ default: m.DashboardBuilderPage })),
-);
-const ReportBuilderPage = React.lazy(() =>
-  import('@/pages/ReportBuilderPage').then(m => ({ default: m.ReportBuilderPage })),
-);
 
 // Workflow Builder (parametric route)
 const WorkflowBuilderPage = React.lazy(() =>
@@ -267,50 +222,7 @@ const PendingApprovalsPage = React.lazy(() =>
   import('@/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
 );
 
-// Dynamic Document Type Builder (Admin)
-const DynamicTypeListPage = React.lazy(() =>
-  import('@/pages/admin/DynamicTypeListPage').then(m => ({ default: m.DynamicTypeListPage })),
-);
-const DynamicTypeBuilderPage = React.lazy(() =>
-  import('@/pages/admin/DynamicTypeBuilderPage').then(m => ({ default: m.DynamicTypeBuilderPage })),
-);
-
-// Dynamic Document Runtime Pages
-const DynamicDocumentListPage = React.lazy(() =>
-  import('@/pages/dynamic/DynamicDocumentListPage').then(m => ({ default: m.DynamicDocumentListPage })),
-);
-const DynamicDocumentFormPage = React.lazy(() =>
-  import('@/pages/dynamic/DynamicDocumentFormPage').then(m => ({ default: m.DynamicDocumentFormPage })),
-);
-
-// Custom Data Sources, Custom Fields, Workflow Templates (Admin)
-const CustomDataSourcePage = React.lazy(() =>
-  import('@/pages/admin/CustomDataSourcePage').then(m => ({ default: m.CustomDataSourcePage })),
-);
-const CustomFieldsPage = React.lazy(() =>
-  import('@/pages/admin/CustomFieldsPage').then(m => ({ default: m.CustomFieldsPage })),
-);
-const WorkflowTemplatesPage = React.lazy(() =>
-  import('@/pages/admin/WorkflowTemplatesPage').then(m => ({ default: m.WorkflowTemplatesPage })),
-);
-
-// AI Insights (optional — behind AI_ENABLED flag)
-const AiInsightsPage = React.lazy(() =>
-  import('@/modules/ai/AiInsightsPage').then(m => ({ default: m.AiInsightsPage })),
-);
-
-// Inventory Intelligence — anomaly detection, reorder predictions, health
-const IntelligencePage = React.lazy(() =>
-  import('@/pages/warehouse/IntelligencePage').then(m => ({ default: m.IntelligencePage })),
-);
-
-// Features Showcase & ROI Calculator (Admin)
-const FeaturesShowcasePage = React.lazy(() =>
-  import('@/pages/admin/FeaturesShowcasePage').then(m => ({ default: m.FeaturesShowcasePage })),
-);
-const RoiCalculatorPage = React.lazy(() =>
-  import('@/pages/admin/RoiCalculatorPage').then(m => ({ default: m.RoiCalculatorPage })),
-);
+// ── MVP DEFERRED: Admin builder tools, AI, dynamic types stripped for pilot ──
 
 export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ currentRole }) => (
   <Routes>
@@ -343,8 +255,6 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/employees/:tab" element={<EmployeeSectionPage />} />
     <Route path="/admin/settings" element={<AdminSystemPage />} />
     <Route path="/admin/settings/workflows/:workflowId" element={<WorkflowBuilderPage />} />
-    <Route path="/admin/settings/dashboards" element={<DashboardBuilderPage />} />
-    <Route path="/admin/settings/reports" element={<ReportBuilderPage />} />
     <Route path="/admin/master" element={<MasterDataSectionPage />} />
     <Route path="/admin/master/:tab" element={<MasterDataSectionPage />} />
     <Route path="/admin/map" element={<MapDashboard />} />
@@ -391,50 +301,12 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     {/* V2 Dashboard Routes */}
     <Route path="/admin/dashboards/assets" element={<AssetDashboard />} />
     <Route path="/admin/dashboards/labor" element={<LaborDashboard />} />
-    <Route path="/admin/dashboards/abc-analysis" element={<AbcAnalysisPage />} />
-    <Route path="/admin/dashboards/forecast" element={<ForecastDashboard />} />
-    <Route path="/admin/dashboards/operations" element={<OperationsDashboard />} />
-    <Route path="/admin/dashboards/exceptions" element={<ExceptionDashboard />} />
-    <Route path="/admin/dashboards/depreciation" element={<DepreciationDashboard />} />
-    <Route path="/admin/warehouse/putaway-rules" element={<PutAwayRulesPage />} />
-    <Route path="/admin/warehouse/cycle-counts" element={<CycleCountListPage />} />
-    <Route path="/admin/warehouse/cycle-counts/:id" element={<CycleCountDetailPage />} />
-    <Route path="/admin/warehouse/wave-picking" element={<WavePickingPage />} />
-    <Route path="/admin/warehouse/asn" element={<AsnPage />} />
-    <Route path="/admin/warehouse/slotting" element={<SlottingPage />} />
-    <Route path="/admin/warehouse/cross-docking" element={<CrossDockDashboard />} />
-    <Route path="/admin/warehouse/sensors" element={<SensorDashboard />} />
-    <Route path="/admin/warehouse/yard" element={<YardDashboard />} />
-    <Route path="/admin/warehouse/packing" element={<PackingStationPage />} />
-    <Route path="/admin/warehouse/staging" element={<StagingAreaPage />} />
+    {/* MVP DEFERRED: Advanced warehouse dashboards, analytics, yard stripped for pilot */}
     <Route path="/admin/logistics/route-optimizer" element={<RouteOptimizerPage />} />
     <Route path="/admin/quality/inspection-tools" element={<InspectionToolsPage />} />
     <Route path="/admin/parallel-approvals" element={<PendingApprovalsPage />} />
 
-    {/* Dynamic Document Type Builder (Admin) */}
-    <Route path="/admin/dynamic-types" element={<DynamicTypeListPage />} />
-    <Route path="/admin/dynamic-types/new" element={<DynamicTypeBuilderPage />} />
-    <Route path="/admin/dynamic-types/:id" element={<DynamicTypeBuilderPage />} />
-
-    {/* Dynamic Document Runtime Pages */}
-    <Route path="/admin/dynamic/:typeCode" element={<DynamicDocumentListPage />} />
-    <Route path="/admin/dynamic/:typeCode/new" element={<DynamicDocumentFormPage />} />
-    <Route path="/admin/dynamic/:typeCode/:id" element={<DynamicDocumentFormPage />} />
-
-    {/* Custom Data Sources, Custom Fields, Workflow Templates (Admin) */}
-    <Route path="/admin/custom-data-sources" element={<CustomDataSourcePage />} />
-    <Route path="/admin/custom-fields" element={<CustomFieldsPage />} />
-    <Route path="/admin/workflow-templates" element={<WorkflowTemplatesPage />} />
-
-    {/* AI Insights (optional) */}
-    <Route path="/admin/ai-insights" element={<AiInsightsPage />} />
-
-    {/* Inventory Intelligence */}
-    <Route path="/admin/intelligence" element={<IntelligencePage />} />
-
-    {/* Features Showcase & ROI Calculator */}
-    <Route path="/admin/features" element={<FeaturesShowcasePage />} />
-    <Route path="/admin/roi-calculator" element={<RoiCalculatorPage />} />
+    {/* MVP DEFERRED: Dynamic types, custom builders, AI, intelligence stripped for pilot */}
 
     {/* V1 Form Routes (kept for backward compatibility) */}
     <Route path="/admin/forms/gatepass" element={<GatePassForm />} />
@@ -514,118 +386,7 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
         </RoleGuard>
       }
     />
-    <Route
-      path="/warehouse/abc-analysis"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <AbcAnalysisPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/forecast"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <ForecastDashboard />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/putaway-rules"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <PutAwayRulesPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/intelligence"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <IntelligencePage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/cycle-counts"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <CycleCountListPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/cycle-counts/:id"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <CycleCountDetailPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/wave-picking"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <WavePickingPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/asn"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <AsnPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/slotting"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <SlottingPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/cross-docking"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <CrossDockDashboard />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/sensors"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <SensorDashboard />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/yard"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <YardDashboard />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/packing"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <PackingStationPage />
-        </RoleGuard>
-      }
-    />
-    <Route
-      path="/warehouse/staging"
-      element={
-        <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
-          <StagingAreaPage />
-        </RoleGuard>
-      }
-    />
+    {/* MVP DEFERRED: Advanced warehouse features stripped for pilot */}
     <Route
       path="/warehouse/labor"
       element={

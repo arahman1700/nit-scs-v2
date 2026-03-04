@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Recycle, CheckCircle, Camera, X, Loader2, Upload, DollarSign, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { SCRAP_MATERIAL_TYPES } from '@nit-scs-v2/shared/constants';
 import type { Project, Warehouse } from '@nit-scs-v2/shared/types';
-import { ExportButton } from '@/components/ExportButton';
 import {
   useCreateScrap,
   useScrap,
@@ -18,7 +17,6 @@ import {
 } from '@/api/hooks';
 import { useProjects, useWarehouses } from '@/api/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
-import { generateScrapPdf } from '@/utils/pdfExport';
 
 interface ScrapDoc {
   id?: string;
@@ -166,28 +164,7 @@ export const ScrapForm: React.FC = () => {
             Report scrap materials for disposal -- #{isEditMode ? id : nextNumber}
           </p>
         </div>
-        {isEditMode && existingDoc && (
-          <ExportButton
-            onExportPdf={() => {
-              const project = projects.find(p => p.id === formData.projectId);
-              const warehouse = warehouses.find(w => w.id === formData.warehouseId);
-              generateScrapPdf({
-                documentNumber: existingDoc.formNumber ?? id ?? '',
-                project: project?.name ?? String(formData.projectId ?? ''),
-                warehouse: warehouse?.name ?? String(formData.warehouseId ?? ''),
-                itemDescription: String(formData.description ?? ''),
-                category: String(formData.materialType ?? ''),
-                estimatedValue: formData.estimatedValue
-                  ? `${Number(formData.estimatedValue).toLocaleString()} SAR`
-                  : 'N/A',
-                disposalMethod: String(formData.disposalMethod ?? 'Pending'),
-                condition: String(formData.condition ?? ''),
-                status: docStatus,
-                notes: String(formData.description ?? ''),
-              });
-            }}
-          />
-        )}
+        {/* PDF export deferred for MVP */}
       </div>
 
       {/* Multi-Approval Status Display */}
