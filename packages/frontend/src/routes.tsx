@@ -217,6 +217,37 @@ const RouteOptimizerPage = React.lazy(() =>
   import('@/pages/logistics/RouteOptimizerPage').then(m => ({ default: m.RouteOptimizerPage })),
 );
 
+// Gap Analysis Feature Pages
+const KpiDashboard = React.lazy(() =>
+  import('@/pages/dashboards/KpiDashboard').then(m => ({ default: m.KpiDashboard })),
+);
+const SecurityDashboard = React.lazy(() =>
+  import('@/pages/dashboards/SecurityDashboard').then(m => ({ default: m.SecurityDashboard })),
+);
+const CostAllocationPage = React.lazy(() =>
+  import('@/pages/dashboards/CostAllocationPage').then(m => ({ default: m.CostAllocationPage })),
+);
+const AmcPage = React.lazy(() => import('@/pages/logistics/AmcPage').then(m => ({ default: m.AmcPage })));
+const VehicleMaintenancePage = React.lazy(() =>
+  import('@/pages/logistics/VehicleMaintenancePage').then(m => ({ default: m.VehicleMaintenancePage })),
+);
+const CustomsDocumentsPage = React.lazy(() =>
+  import('@/pages/logistics/CustomsDocumentsPage').then(m => ({ default: m.CustomsDocumentsPage })),
+);
+const TariffPage = React.lazy(() => import('@/pages/logistics/TariffPage').then(m => ({ default: m.TariffPage })));
+const AssetRegisterPage = React.lazy(() =>
+  import('@/pages/logistics/AssetRegisterPage').then(m => ({ default: m.AssetRegisterPage })),
+);
+const CompliancePage = React.lazy(() =>
+  import('@/pages/quality/CompliancePage').then(m => ({ default: m.CompliancePage })),
+);
+const ExpiryAlertsPage = React.lazy(() =>
+  import('@/pages/warehouse/ExpiryAlertsPage').then(m => ({ default: m.ExpiryAlertsPage })),
+);
+const DemandAnalyticsPage = React.lazy(() =>
+  import('@/pages/warehouse/DemandAnalyticsPage').then(m => ({ default: m.DemandAnalyticsPage })),
+);
+
 // Pending Approvals page
 const PendingApprovalsPage = React.lazy(() =>
   import('@/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
@@ -264,7 +295,6 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     <Route path="/admin/material/:tab" element={<Navigate to="/admin/warehouses" replace />} />
     <Route path="/admin/logistics" element={<Navigate to="/admin/equipment" replace />} />
     <Route path="/admin/logistics/:tab" element={<Navigate to="/admin/equipment" replace />} />
-    <Route path="/admin/assets" element={<Navigate to="/admin/scrap" replace />} />
     <Route path="/admin/assets/:tab" element={<Navigate to="/admin/scrap" replace />} />
     <Route path="/admin/system" element={<Navigate to="/admin/settings" replace />} />
     <Route path="/admin/system/workflows/:workflowId" element={<WorkflowBuilderPage />} />
@@ -301,6 +331,20 @@ export const AppRouteDefinitions: React.FC<{ currentRole: UserRole }> = ({ curre
     {/* V2 Dashboard Routes */}
     <Route path="/admin/dashboards/assets" element={<AssetDashboard />} />
     <Route path="/admin/dashboards/labor" element={<LaborDashboard />} />
+
+    {/* Gap Analysis Feature Pages */}
+    <Route path="/admin/dashboards/kpis" element={<KpiDashboard />} />
+    <Route path="/admin/dashboards/security" element={<SecurityDashboard />} />
+    <Route path="/admin/dashboards/cost-allocation" element={<CostAllocationPage />} />
+    <Route path="/admin/amc" element={<AmcPage />} />
+    <Route path="/admin/vehicle-maintenance" element={<VehicleMaintenancePage />} />
+    <Route path="/admin/customs-documents" element={<CustomsDocumentsPage />} />
+    <Route path="/admin/tariffs" element={<TariffPage />} />
+    <Route path="/admin/assets" element={<AssetRegisterPage />} />
+    <Route path="/admin/compliance" element={<CompliancePage />} />
+    <Route path="/warehouse/expiry-alerts" element={<ExpiryAlertsPage />} />
+    <Route path="/warehouse/demand-analytics" element={<DemandAnalyticsPage />} />
+
     {/* MVP DEFERRED: Advanced warehouse dashboards, analytics, yard stripped for pilot */}
     <Route path="/admin/logistics/route-optimizer" element={<RouteOptimizerPage />} />
     <Route path="/admin/quality/inspection-tools" element={<InspectionToolsPage />} />

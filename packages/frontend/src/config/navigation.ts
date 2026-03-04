@@ -51,6 +51,10 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: '---', type: 'divider' },
         { label: 'Tools Management', path: '/admin/equipment?tab=tools' },
         { label: 'Tool Issues', path: '/admin/equipment?tab=tool-issues' },
+        { label: '---', type: 'divider' },
+        { label: 'AMC Contracts', path: '/admin/amc' },
+        { label: 'Vehicle Maintenance', path: '/admin/vehicle-maintenance' },
+        { label: 'Asset Register', path: '/admin/assets' },
       ],
     },
 
@@ -75,6 +79,8 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: 'Shipments', path: '/admin/shipping?tab=shipments' },
         { label: 'Customs Clearance', path: '/admin/shipping?tab=customs' },
         { label: 'SLA Performance', path: '/admin/shipping?tab=sla' },
+        { label: 'Customs Documents', path: '/admin/customs-documents' },
+        { label: 'Tariff & Duties', path: '/admin/tariffs' },
       ],
     },
 
@@ -125,6 +131,10 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
         { label: '---', type: 'divider' },
         { label: 'Email Templates', path: '/admin/settings?tab=email-templates' },
         { label: 'Email Logs', path: '/admin/settings?tab=email-logs' },
+        { label: '---', type: 'divider' },
+        { label: 'KPI Dashboard', path: '/admin/dashboards/kpis' },
+        { label: 'Security', path: '/admin/dashboards/security' },
+        { label: 'Compliance', path: '/admin/compliance' },
       ],
     },
   ],
@@ -142,6 +152,8 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
     { label: 'Labor Dashboard', path: '/warehouse/labor' },
+    { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts' },
+    { label: 'Demand Analytics', path: '/warehouse/demand-analytics' },
   ],
   [UserRole.WAREHOUSE_STAFF]: [
     { label: 'Dashboard', path: '/warehouse' },
@@ -156,6 +168,8 @@ export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
       ],
     },
     { label: 'Inventory', path: '/warehouse/inventory' },
+    { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts' },
+    { label: 'Demand Analytics', path: '/warehouse/demand-analytics' },
   ],
   [UserRole.FREIGHT_FORWARDER]: [
     { label: 'Dashboard', path: '/transport' },
