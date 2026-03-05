@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIT Supply Chain V2 — System Overview</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        nesma: { dark: '#0a1628', primary: '#2E3192', secondary: '#80D1E9', accent: '#34d399', gold: '#f59e0b', surface: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.1)' }
+      },
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+  * { scroll-behavior: smooth; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0a1628; color: #e5e7eb; }
+  .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+  .glass-hover:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+  .glow { box-shadow: 0 0 30px rgba(46,49,146,0.3); }
+  .glow-cyan { box-shadow: 0 0 20px rgba(128,209,233,0.2); }
+  .gradient-text { background: linear-gradient(135deg, #80D1E9, #2E3192, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .gradient-border { border-image: linear-gradient(135deg, #2E3192, #80D1E9) 1; }
+  .pulse-dot { animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .fade-in { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+  nav a.active { color: #80D1E9; border-bottom: 2px solid #80D1E9; }
+  .mermaid { background: transparent !important; }
+  .mermaid svg { max-width: 100% !important; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a1628; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+  .feature-card { transition: all 0.3s ease; }
+  .feature-card:hover { transform: scale(1.02); box-shadow: 0 8px 32px rgba(46,49,146,0.2); }
+  .phase-line { position: relative; }
+  .phase-line::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, #2E3192, #80D1E9, #34d399, #f59e0b); }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▶'; display: inline-block; margin-right: 8px; transition: transform 0.3s; font-size: 10px; }
+  details[open] summary::before { transform: rotate(90deg); }
+  .stat-number { font-variant-numeric: tabular-nums; }
+  .tag { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .tag-p1 { background: rgba(46,49,146,0.3); color: #80D1E9; border: 1px solid rgba(128,209,233,0.3); }
+  .tag-p2 { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+  .tag-p3 { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+  .tag-p4 { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+  .tag-dynamic { background: rgba(236,72,153,0.15); color: #ec4899; border: 1px solid rgba(236,72,153,0.3); }
+  .role-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+  .toc-link { transition: all 0.2s; padding: 6px 12px; border-radius: 8px; display: block; font-size: 14px; color: #9ca3af; }
+  .toc-link:hover { background: rgba(255,255,255,0.05); color: #80D1E9; }
+  .grid-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 glass border-b border-white/10" id="topnav">
+  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-nesma-primary flex items-center justify-center font-bold text-sm text-white">N</div>
+      <span class="font-bold text-white text-sm">NIT Supply Chain V2</span>
+    </div>
+    <div class="hidden md:flex items-center gap-1 text-xs">
+      <a href="#overview" class="toc-link">Overview</a>
+      <a href="#architecture" class="toc-link">Architecture</a>
+      <a href="#modules" class="toc-link">Modules</a>
+      <a href="#features" class="toc-link">Features</a>
+      <a href="#dynamic" class="toc-link">Dynamic Platform</a>
+      <a href="#roles" class="toc-link">Roles</a>
+      <a href="#dataflow" class="toc-link">Data Flow</a>
+      <a href="#phases" class="toc-link">Phases</a>
+      <a href="#tech" class="toc-link">Tech Stack</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section id="overview" class="pt-20 pb-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="text-center mb-12">
+      <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 text-xs text-gray-400">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+        Enterprise Logistics Digital Platform
+      </div>
+      <h1 class="text-4xl md:text-6xl font-black mb-4">
+        <span class="gradient-text">NIT Supply Chain</span>
+        <span class="text-white"> V2</span>
+      </h1>
+      <p class="text-lg text-gray-400 max-w-2xl mx-auto mb-8">
+        A comprehensive warehouse management system replacing paper-based and Excel-based operations across <strong class="text-white">75 warehouse locations</strong> for Nesma Infrastructure &amp; Technology.
+      </p>
+    </div>
+
+    <!-- Key Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-12">
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">5</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Modules</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">43</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Features</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">14</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">User Roles</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">40</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Data Entities</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">4</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Phases</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">75</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Warehouses</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">178</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Max Users</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center feature-card">
+        <div class="text-2xl font-black text-white stat-number">157</div>
+        <div class="text-[10px] uppercase tracking-widest text-gray-500 mt-1">DB Models</div>
+      </div>
+    </div>
+
+    <!-- SOW Summary -->
+    <div class="glass rounded-2xl p-6 glow mb-8">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-nesma-primary/30 flex items-center justify-center">
+          <svg width="20" height="20" fill="none" stroke="#80D1E9" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <h3 class="font-semibold text-white">Scope of Work — FINAL</h3>
+          <p class="text-xs text-gray-400">Prepared by Idaratech for NIT | Feb 26, 2026</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <div class="glass rounded-lg p-3"><span class="text-gray-400">Modules</span><div class="text-white font-bold">5 modules</div></div>
+        <div class="glass rounded-lg p-3"><span class="text-gray-400">Features</span><div class="text-white font-bold">43 features</div></div>
+        <div class="glass rounded-lg p-3"><span class="text-gray-400">Exclusions</span><div class="text-white font-bold">14 items</div></div>
+        <div class="glass rounded-lg p-3"><span class="text-gray-400">Assumptions</span><div class="text-white font-bold">13 items</div></div>
+        <div class="glass rounded-lg p-3"><span class="text-gray-400">Notifications</span><div class="text-white font-bold">13 types</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Architecture Section -->
+<section id="architecture" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">System Architecture</h2>
+    <p class="text-gray-400 mb-8">Domain-driven monorepo with 14 backend domains and dynamic configuration layer</p>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <!-- Tech Stack -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+          <svg width="18" height="18" fill="none" stroke="#80D1E9" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Technology Stack
+        </h3>
+        <div class="space-y-3">
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Frontend</span><span class="text-sm text-gray-300">React 19 + Vite 6 + Tailwind CSS 3.4</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Backend</span><span class="text-sm text-gray-300">Express 5 + TypeScript + Node.js</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Database</span><span class="text-sm text-gray-300">PostgreSQL + Prisma 6 ORM (157 models)</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">State</span><span class="text-sm text-gray-300">React Query v5 + Zustand + React Hook Form</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Real-time</span><span class="text-sm text-gray-300">Socket.IO for live updates</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Validation</span><span class="text-sm text-gray-300">Zod schemas (shared package)</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Monorepo</span><span class="text-sm text-gray-300">pnpm workspace (frontend + backend + shared)</span></div>
+          <div class="flex items-center gap-3"><span class="tag tag-p1">Testing</span><span class="text-sm text-gray-300">Vitest (3,388 tests) + Playwright E2E</span></div>
+        </div>
+      </div>
+
+      <!-- Domain Structure -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
+          <svg width="18" height="18" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          14 Backend Domains
+        </h3>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">🔐 auth</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📦 master-data</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📥 inbound</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📤 outbound</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📊 inventory</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">🏭 warehouse-ops</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">🔄 transfers</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">🚚 logistics</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📋 job-orders</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">🔧 equipment</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">✅ workflow</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📑 compliance</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">📈 reporting</div>
+          <div class="glass rounded-lg px-3 py-2 text-gray-300">⚙️ system</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture Diagram -->
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-semibold text-white mb-4">Layered Architecture</h3>
+      <div class="mermaid">
+graph TB
+  subgraph Client["🖥️ Frontend (React 19 + Vite 6)"]
+    UI["Pages & Components"]
+    Hooks["React Query Hooks (170+)"]
+    Store["Zustand Stores"]
+    RHF["React Hook Form + Zod"]
+  end
+
+  subgraph API["🔌 Backend (Express 5)"]
+    Routes["Domain Routes (14 domains)"]
+    MW["Middleware (Auth, RBAC, Rate Limit)"]
+    Services["Services (92 files)"]
+    Events["Event Bus (Socket.IO)"]
+  end
+
+  subgraph Config["⚙️ Configuration Layer"]
+    CF["Custom Fields"]
+    DD["Dynamic Documents"]
+    WF["Workflow Engine"]
+    DB_["Dashboard Builder"]
+    RB["Report Builder"]
+    SL["Semantic Layer"]
+  end
+
+  subgraph Data["💾 Database (PostgreSQL + Prisma 6)"]
+    Models["157 Models across 16 schema files"]
+    JSONB["JSONB Fields (30+ dynamic columns)"]
+    Audit["Audit Trail (old/new values)"]
+  end
+
+  UI --> Hooks --> Routes
+  RHF --> Hooks
+  Store --> UI
+  Routes --> MW --> Services
+  Services --> Events
+  Services --> Config
+  Config --> Models
+  Services --> Models
+  Models --> JSONB
+  Models --> Audit
+
+  style Client fill:#1e1b4b,stroke:#80D1E9,color:#e5e7eb
+  style API fill:#1e1b4b,stroke:#2E3192,color:#e5e7eb
+  style Config fill:#1e1b4b,stroke:#34d399,color:#e5e7eb
+  style Data fill:#1e1b4b,stroke:#f59e0b,color:#e5e7eb
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Modules Section -->
+<section id="modules" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">5 Modules</h2>
+    <p class="text-gray-400 mb-8">Complete coverage of NIT's warehouse, equipment, shipping, admin, and gate control operations</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <!-- Module 1 -->
+      <div class="glass rounded-2xl p-6 feature-card glow-cyan">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-2xl">📦</div>
+          <div>
+            <h3 class="font-bold text-white">M1: Warehousing & Inventory</h3>
+            <span class="text-xs text-gray-400">14 features</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Material receiving (GRN), issuing (MIRV), stock transfers (IMSF), bin cards, cycle counts, QC inspections, scrap disposal, and inventory dashboards.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-p1">7 in Phase 1</span>
+          <span class="tag tag-p2">2 in Phase 2</span>
+          <span class="tag tag-p3">5 in Phase 3</span>
+        </div>
+      </div>
+
+      <!-- Module 2 -->
+      <div class="glass rounded-2xl p-6 feature-card">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl">🔧</div>
+          <div>
+            <h3 class="font-bold text-white">M2: Equipment & Transport</h3>
+            <span class="text-xs text-gray-400">7 features</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Equipment rental requests (job orders), delivery & return tracking, transport management, supplier evaluation, rate cards, and emergency requests.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-p2">4 in Phase 2</span>
+          <span class="tag tag-p3">2 in Phase 3</span>
+          <span class="tag tag-p4">1 in Phase 4</span>
+        </div>
+      </div>
+
+      <!-- Module 3 -->
+      <div class="glass rounded-2xl p-6 feature-card">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">🚢</div>
+          <div>
+            <h3 class="font-bold text-white">M3: Shipping & Customs</h3>
+            <span class="text-xs text-gray-400">6 features</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Shipment tracking (7-stage lifecycle), customs documentation, import clearance, VAT & duties management, release authorization, and shipment dashboards.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-p2">1 in Phase 2</span>
+          <span class="tag tag-p3">4 in Phase 3</span>
+          <span class="tag tag-p4">1 in Phase 4</span>
+        </div>
+      </div>
+
+      <!-- Module 4 -->
+      <div class="glass rounded-2xl p-6 feature-card">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-2xl">⚙️</div>
+          <div>
+            <h3 class="font-bold text-white">M4: Support & Administration</h3>
+            <span class="text-xs text-gray-400">11 features</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Master data, employee management, user roles (14 roles), approval engine, notifications, reporting dashboards, scheduled reports, compliance, and KPIs.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-p1">6 in Phase 1</span>
+          <span class="tag tag-p3">1 in Phase 3</span>
+          <span class="tag tag-p4">4 in Phase 4</span>
+        </div>
+      </div>
+
+      <!-- Module 5 -->
+      <div class="glass rounded-2xl p-6 feature-card">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl">🚧</div>
+          <div>
+            <h3 class="font-bold text-white">M5: Gate Pass & Access</h3>
+            <span class="text-xs text-gray-400">5 features</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Outbound/inbound gate passes, visitor management, material movement tracking & daily reconciliation, access control & security incidents.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-p1">3 in Phase 1</span>
+          <span class="tag tag-p2">1 in Phase 2</span>
+          <span class="tag tag-p3">1 in Phase 3</span>
+        </div>
+      </div>
+
+      <!-- Dynamic -->
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/20">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center text-2xl">✨</div>
+          <div>
+            <h3 class="font-bold text-white">Dynamic Platform</h3>
+            <span class="text-xs text-gray-400">Config-driven</span>
+          </div>
+        </div>
+        <p class="text-sm text-gray-300 mb-4">Custom fields, dynamic document types, workflow builder, dashboard builder, report builder, semantic analytics — all configurable from the admin UI without code.</p>
+        <div class="flex flex-wrap gap-1">
+          <span class="tag tag-dynamic">Zero-Code</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">43 Features — Complete Catalog</h2>
+    <p class="text-gray-400 mb-8">Every feature with phase assignment, description, and acceptance criteria</p>
+
+    <!-- Module 1 Features -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <span class="text-2xl">📦</span> Module 1 — Warehousing & Inventory Management
+      </h3>
+      <div class="space-y-3">
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F01</span><span class="font-medium text-white">Material Receiving (GRN)</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p class="mb-2">Digital Goods Receipt Note for recording inbound materials against Purchase Orders. Auto-generates OSD reports for variances, triggers QC inspection with 4-hour SLA, auto-updates bin card balances on approval.</p>
+            <p class="text-xs text-gray-500"><strong>Key fields:</strong> GRN Number (auto), Warehouse, PO Number, Supplier, Invoice, Delivery Note, Items (Code, Desc, UOM, PO Qty, Received Good, Received Damaged, Over/Short), Bin Location, QC Result, Timestamps</p>
+            <p class="text-xs text-gray-500 mt-1"><strong>Format:</strong> GRN-YYYY-NNNNN</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F02</span><span class="font-medium text-white">Material Issue to Projects (MIRV)</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p class="mb-2">Digital Material Issue Request Voucher. Real-time stock availability check blocks over-issue. Multi-level approval: Technical Manager → WH Manager (≤SAR 200K) → SC Manager (>SAR 200K). Auto-generates pick list and gate pass. Delivery confirmation with digital signature decrements inventory and allocates cost to project.</p>
+            <p class="text-xs text-gray-500"><strong>Format:</strong> MIRV-YYYY-NNNNN | <strong>Threshold:</strong> SAR 200,000</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F03</span><span class="font-medium text-white">Stock Transfer Between Warehouses (IMSF)</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p>Internal Material Shifting Form. Dual approval from source and destination WH Managers. QC inspection of transferred materials. Auto-linked gate pass. Source decrements on approval, destination increments on receipt confirmation. OSD auto-generated for quantity mismatches.</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F04</span><span class="font-medium text-white">Cycle Count & Physical Inventory</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p>Scheduled counting (monthly cycle + annual full). Blind count sheets hide system quantities. 5% variance threshold triggers NCR. Stock Adjustment requires WH Manager approval. Auto-generated accuracy reports.</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F05</span><span class="font-medium text-white">Bin Card Management</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p>Computed real-time views (NOT manually maintained). Running balance = sum of all transactions per item per bin. Auto-updated by GRN, MIRV, IMSF, MRV, and adjustments. Searchable by item, warehouse, bin location. Date range filtering.</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F06</span><span class="font-medium text-white">Material Returns from Projects (MRV)</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3">
+            <p>Linked to original MIRV. QC condition assessment: Good → re-stock, Damaged → quarantine, Unusable → scrap (M1-F08). Photo documentation required for non-Good items. Full traceability: issued → returned → re-shelved or disposed.</p>
+          </div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F07</span><span class="font-medium text-white">Tools Issue & Return</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Digital checkout linked to employee. Auto-alerts for overdue returns. Condition tracking (issued vs. returned). Maintenance scheduling based on usage.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F08</span><span class="font-medium text-white">Scrap & Waste Disposal</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Flag items by reason (expired, damaged, obsolete). Mandatory photos. QC assessment → Decision (Scrap/Sell/Return to Supplier/Reclassify). WH Manager approval. Auto-decrement on disposal. Quarterly scrap summary report.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F09</span><span class="font-medium text-white">Minimum Stock Alerts & Reordering</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Configurable minimum stock per item per warehouse. Daily auto-check. Alerts to Inventory Specialist + WH Manager. Consumption trend report (avg daily consumption from historical issues).</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F10</span><span class="font-medium text-white">Warehouse Handover & Shift Management</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Digital handover form mandatory at shift change. Auto-populates pending issues, in-progress transactions, active alerts. Both outgoing + incoming sign off digitally. Searchable history.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F11</span><span class="font-medium text-white">Warehouse Compliance & Safety Audits</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Digital audit checklists (TUV, SGS, ISO 9001). Findings: Conforming/Minor NC/Major NC/Observation. Corrective action plans with owners and deadlines. Follow-up reminders.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F12</span><span class="font-medium text-white">Annual Maintenance Contracts (AMC)</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Contract storage (vendor, dates, scope, cost). Auto-renewal alerts 30 days before expiry. Maintenance scheduling linked to contracts. Cost tracking per warehouse.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F13</span><span class="font-medium text-white">Inventory Dashboard</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Real-time stock levels. Material movement summary (GRN/MIRV/IMSF/MRV). Accuracy metrics from cycle counts. Drill-down to individual transactions. Filterable by warehouse, date, category.</p></div>
+        </details>
+
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M1-F14</span><span class="font-medium text-white">QC Inspection Workflow</span></div>
+            <span class="tag tag-p1">Phase 1</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Cross-cutting QC for GRN, MIRV, MRV, IMSF. Results: Approved/Rejected/Quarantine. Photo attachments (max 5, 5MB each). 4-hour SLA notification to QC Inspector. Result updates parent transaction.</p></div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Module 2 Features -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <span class="text-2xl">🔧</span> Module 2 — Equipment & Transportation Management
+      </h3>
+      <div class="space-y-3">
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F01</span><span class="font-medium text-white">Equipment Rental Request (Job Order)</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Request form for Heavy Equipment/Generator/AC. Auto-pulls rate card. Cost calc: (rate × duration) + transport + operator + fuel + insurance. Approval: WH Mgr ≤200K, SC Mgr >200K. Return date alerts.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F02</span><span class="font-medium text-white">Equipment Delivery & Return</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Delivery note with condition photos + hours/mileage. PM digital sign-off starts rental period. Auto-cost accrual. Return note with side-by-side condition comparison. Damage cost tracking. Final cost = actual days + damages + fuel.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F03</span><span class="font-medium text-white">Transportation of Materials</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Transport request: origin, destination, load, vehicle type. Vehicle/driver assignment. Auto-linked gate pass. Status: Loading → In Transit → Delivered. Cost per trip linked to project.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F04</span><span class="font-medium text-white">Supplier Performance Evaluation</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Auto-collected metrics: on-time delivery, equipment quality, pricing compliance, responsiveness, safety. Weighted scoring. Decision: Continue/Improve/Terminate. Historical trends.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F05</span><span class="font-medium text-white">Rental Agreements & Rate Cards</span></div>
+            <span class="tag tag-p2">Phase 2</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Rate card records with daily/weekly/monthly rates. Auto-referenced by job orders. Expired cards flagged. Deviation requires approval. Rate history. Quarterly review scheduling.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F06</span><span class="font-medium text-white">Emergency Equipment Requests</span></div>
+            <span class="tag tag-p3">Phase 3</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Emergency request with mandatory justification. Routes directly to SC Manager (bypasses WH Manager). Premium cost tracking. Post-incident review.</p></div>
+        </details>
+        <details class="glass rounded-xl overflow-hidden">
+          <summary class="p-4 flex items-center justify-between hover:bg-white/5">
+            <div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M2-F07</span><span class="font-medium text-white">Equipment Dashboard</span></div>
+            <span class="tag tag-p4">Phase 4</span>
+          </summary>
+          <div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Active rentals with status, location, cost-to-date. Costs by project. Supplier performance scores. Drill-down to job orders.</p></div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Module 3 -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <span class="text-2xl">🚢</span> Module 3 — Shipping & Customs Clearance
+      </h3>
+      <div class="space-y-3">
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F01</span><span class="font-medium text-white">Shipment Notification & Tracking</span></div><span class="tag tag-p2">Phase 2</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>7-stage lifecycle: Booked → In Transit → At Port → In Customs → Released → In Transport → Delivered. Carrier types: Sea/Air/Land. Overdue auto-flagging.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F02</span><span class="font-medium text-white">Customs Documentation</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Auto-generated document checklist. HS Code classification per item (reusable). Manages: Commercial Invoice, Packing List, COO, BOL, Insurance.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F03</span><span class="font-medium text-white">Import Clearance Process</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Step-by-step clearance tracking. Auto-notifications on customs requests. Physical inspection tracking. Hold/reject with reason documentation.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F04</span><span class="font-medium text-white">VAT & Duties Management</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Duties auto-calculated from HS codes. VAT at KSA 15%. Finance User approval for payments. Cost auto-allocated to projects.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F05</span><span class="font-medium text-white">Shipment Release Authorization</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Verifies: docs approved + inspection passed + duties paid + VAT paid. SC Manager authorizes release. Triggers transport order to warehouse → GRN.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M3-F06</span><span class="font-medium text-white">Shipment Dashboard</span></div><span class="tag tag-p4">Phase 4</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>All shipments by status. Overdue highlighting. Drill-down to individual records. Filterable by project, carrier, date.</p></div></details>
+      </div>
+    </div>
+
+    <!-- Module 4 -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <span class="text-2xl">⚙️</span> Module 4 — Support & Administration
+      </h3>
+      <div class="space-y-3">
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F01</span><span class="font-medium text-white">Master Data Management</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>CRUD for Warehouses (75), Items, Suppliers, Projects. Sys Admin only. Soft-delete to preserve referential integrity. All changes logged.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F02</span><span class="font-medium text-white">Employee Management</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Employee records: name, ID, position, department, warehouse assignment, qualifications, training. Role-based access. Row Owner assignment. Onboarding/offboarding workflows.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F03</span><span class="font-medium text-white">User & Role Management</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>14 role-based access levels. Row Owner scoping per warehouse. User ↔ Employee link. Password management, session management, audit logging.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F04</span><span class="font-medium text-white">Approval Engine</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Multi-step workflows for MIRV, JO, Stock Adj, Scrap, Shipment Release, Customs Payment, Emergency Equipment. 4-hour SLA default. <strong>Configurable:</strong> SLA durations, recipients, thresholds. <strong>NOT configurable:</strong> Adding/removing steps (requires Change Request).</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F05</span><span class="font-medium text-white">Notification Engine</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>13 notification types. Push + In-app. Delivery within 5 seconds. Read/unread status. Users can mute non-critical; critical notifications cannot be muted.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F06</span><span class="font-medium text-white">Reporting & Analytics</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Dashboards for Inventory, MIRV/GRN, Gate, Equipment, Shipments. Drill-down paths defined per SOW. Row Owner restrictions apply.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F07</span><span class="font-medium text-white">Scheduled Reports</span></div><span class="tag tag-p4">Phase 4</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Daily, weekly, monthly, quarterly reports. In-app + CSV export.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F08</span><span class="font-medium text-white">Compliance & Audits</span></div><span class="tag tag-p4">Phase 4</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Digital audit checklists. NCR with corrective action plans. Auto-reminders. Follow-up verification. Compliance dashboard.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F09</span><span class="font-medium text-white">Maintenance Tracking</span></div><span class="tag tag-p4">Phase 4</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Work orders, technician assignment, execution recording. Preventive maintenance with auto-alerts.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F10</span><span class="font-medium text-white">Full KPI Dashboard</span></div><span class="tag tag-p4">Phase 4</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>15 KPIs with current vs. target. Trend display (monthly). Quarterly business review. CSV export.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M4-F11</span><span class="font-medium text-white">Administrative Support</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>System config management. Audit log viewer. Bulk CSV export. System health page.</p></div></details>
+      </div>
+    </div>
+
+    <!-- Module 5 -->
+    <div class="mb-8">
+      <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+        <span class="text-2xl">🚧</span> Module 5 — Gate Pass & Access Control
+      </h3>
+      <div class="space-y-3">
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M5-F01</span><span class="font-medium text-white">Outbound Gate Pass</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Gate Officer looks up MIRV/IMSF/JO by reference. Verifies physical load matches digital authorization. No valid auth = deny + notify WH Manager + log. Captures driver, vehicle, materials, timestamp.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M5-F02</span><span class="font-medium text-white">Inbound Gate Pass</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Check delivery note + PO. Verify against expected deliveries (pending GRNs/shipments). Log entry, direct to warehouse, link to subsequent GRN.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M5-F03</span><span class="font-medium text-white">Visitor Management</span></div><span class="tag tag-p2">Phase 2</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Digital registration, host approval, visitor pass. Timed visits with 8-hour overstay alerts. Exit logging. Searchable history.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M5-F04</span><span class="font-medium text-white">Material Movement Tracking</span></div><span class="tag tag-p1">Phase 1</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Every gate movement linked to source transaction. Quantity verification. Daily auto-reconciliation (gate vs inventory). Mismatches flagged immediately.</p></div></details>
+        <details class="glass rounded-xl overflow-hidden"><summary class="p-4 flex items-center justify-between hover:bg-white/5"><div class="flex items-center gap-3"><span class="font-mono text-xs text-nesma-secondary">M5-F05</span><span class="font-medium text-white">Access Control & Security</span></div><span class="tag tag-p3">Phase 3</span></summary><div class="px-4 pb-4 text-sm text-gray-300 border-t border-white/5 pt-3"><p>Authorized personnel list. Unauthorized persons flagged. Security Incident Reports with evidence. Investigation tracking. Access pattern analysis.</p></div></details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Dynamic Platform Section -->
+<section id="dynamic" class="py-16 px-4 bg-gradient-to-b from-transparent via-nesma-primary/5 to-transparent">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">Dynamic Configuration Platform</h2>
+    <p class="text-gray-400 mb-8">Everything configurable from the admin UI — zero code changes required</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">🧩</div>
+        <h3 class="font-bold text-white mb-2">Custom Fields</h3>
+        <p class="text-sm text-gray-300 mb-3">Add custom fields to any document type (GRN, MIRV, JO, etc.) without schema migration. Stored as JSONB.</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Field types: text, number, date, select, textarea, checkbox, email, url, phone, currency</div>
+          <div>Validation: min, max, pattern (regex), required</div>
+          <div>Display: showInGrid, sortOrder</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">📄</div>
+        <h3 class="font-bold text-white mb-2">Dynamic Document Types</h3>
+        <p class="text-sm text-gray-300 mb-3">Create entirely new document types from the UI. Define fields, status flows, approval levels, permissions, and line items.</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Custom status flows with transitions and colors</div>
+          <div>Multi-level approval config with amount thresholds</div>
+          <div>Role-based visibility and permissions</div>
+          <div>Auto-numbering with custom prefixes</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">⚡</div>
+        <h3 class="font-bold text-white mb-2">Workflow Engine</h3>
+        <p class="text-sm text-gray-300 mb-3">Visual WHEN → IF → THEN automation builder. Trigger on events, evaluate conditions, execute actions.</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Triggers: document created, status changed, cron schedule</div>
+          <div>Conditions: AND/OR logic trees with field operators</div>
+          <div>Actions: send email, create task, assign to role, webhook</div>
+          <div>Execution log with audit trail</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">📊</div>
+        <h3 class="font-bold text-white mb-2">Dashboard Builder</h3>
+        <p class="text-sm text-gray-300 mb-3">Drag-and-drop dashboard creation. Add KPI, chart, table, list, and activity widgets. CSS grid positioning.</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Widget types: kpi, chart, table, list, activity, status_count</div>
+          <div>Custom data source binding</div>
+          <div>Public/private sharing per role</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">📈</div>
+        <h3 class="font-bold text-white mb-2">Report Builder</h3>
+        <p class="text-sm text-gray-300 mb-3">Create ad-hoc reports without coding. Select data source, apply filters, choose columns, pick visualization.</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Visualizations: table, bar, line, pie charts</div>
+          <div>Scheduled delivery: daily, weekly, monthly, quarterly</div>
+          <div>Email recipients for automated reports</div>
+          <div>Save as templates for team reuse</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6 feature-card border border-pink-500/10">
+        <div class="text-2xl mb-3">🔮</div>
+        <h3 class="font-bold text-white mb-2">Semantic Analytics Layer</h3>
+        <p class="text-sm text-gray-300 mb-3">Business-friendly analytics. Predefined measures (count, sum, avg) with compatible dimensions (by status, date, project).</p>
+        <div class="text-xs text-gray-500 space-y-1">
+          <div>Query: measure + dimensions + filters + dateRange</div>
+          <div>Auto-groupBy and aggregation</div>
+          <div>Powers both dashboards and reports</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture of Dynamic Platform -->
+    <div class="glass rounded-2xl p-6 mt-8">
+      <h3 class="font-semibold text-white mb-4">Configuration Platform Architecture</h3>
+      <div class="mermaid">
+graph LR
+  Admin["🔧 Admin UI"] --> FF["Form Builder"]
+  Admin --> WB["Workflow Designer"]
+  Admin --> DB["Dashboard Builder"]
+  Admin --> RB["Report Builder"]
+  Admin --> NM["Nav Manager"]
+  Admin --> PM["Permission Manager"]
+
+  FF --> CFD["CustomFieldDefinition"]
+  FF --> DFD["DynamicFieldDefinition"]
+  WB --> WR["WorkflowRule"]
+  DB --> DW["DashboardWidget"]
+  RB --> SR["SavedReport"]
+  NM --> NO["NavigationOverride"]
+  PM --> RP["RolePermission"]
+
+  CFD --> PG["PostgreSQL JSONB"]
+  DFD --> PG
+  WR --> PG
+  DW --> PG
+  SR --> PG
+  NO --> PG
+  RP --> PG
+
+  PG --> RT["Runtime Engine"]
+  RT --> UI["User-Facing UI"]
+
+  style Admin fill:#7c3aed,stroke:#a855f7,color:#fff
+  style PG fill:#f59e0b,stroke:#d97706,color:#000
+  style RT fill:#2E3192,stroke:#80D1E9,color:#fff
+  style UI fill:#059669,stroke:#34d399,color:#fff
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Roles Section -->
+<section id="roles" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">14 User Roles</h2>
+    <p class="text-gray-400 mb-8">Role-based access with Row Owner scoping per warehouse</p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">1</div><div><div class="font-medium text-white text-sm">Warehouse Officer</div><div class="text-xs text-gray-400">M1 | Phase 1</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">2</div><div><div class="font-medium text-white text-sm">Warehouse Manager</div><div class="text-xs text-gray-400">M1, M2 | Phase 1 | Approves ≤SAR 200K</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">3</div><div><div class="font-medium text-white text-sm">QC Inspector</div><div class="text-xs text-gray-400">M1, M2 | Phase 1 | Quality gatekeeper</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">4</div><div><div class="font-medium text-white text-sm">Technical Manager</div><div class="text-xs text-gray-400">M1 | Phase 1 | Approves MIRV specs</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">5</div><div><div class="font-medium text-white text-sm">Gate Officer</div><div class="text-xs text-gray-400">M5 | Phase 1 | Gate verification</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">6</div><div><div class="font-medium text-white text-sm">Supply Chain Manager</div><div class="text-xs text-gray-400">All | Phase 1 | Approves >SAR 200K</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-xs font-bold text-blue-400">7</div><div><div class="font-medium text-white text-sm">System Administrator</div><div class="text-xs text-gray-400">All | Phase 1 | Full config access</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">8</div><div><div class="font-medium text-white text-sm">Logistics Coordinator</div><div class="text-xs text-gray-400">M2 | Phase 2</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">9</div><div><div class="font-medium text-white text-sm">Transport Supervisor</div><div class="text-xs text-gray-400">M2 | Phase 2</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">10</div><div><div class="font-medium text-white text-sm">Inventory Specialist</div><div class="text-xs text-gray-400">M1 | Phase 2</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">11</div><div><div class="font-medium text-white text-sm">Shipping Officer</div><div class="text-xs text-gray-400">M3 | Phase 2</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">12</div><div><div class="font-medium text-white text-sm">Finance User</div><div class="text-xs text-gray-400">M3, M4 | Phase 2 | Payment approval</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400">13</div><div><div class="font-medium text-white text-sm">Customs Specialist</div><div class="text-xs text-gray-400">M3 | Phase 3</div></div></div>
+      <div class="glass rounded-xl p-4 flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-400">14</div><div><div class="font-medium text-white text-sm">Compliance Officer</div><div class="text-xs text-gray-400">M4 | Phase 3 | Audit findings</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Data Flow Section -->
+<section id="dataflow" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">Cross-Module Data Flows</h2>
+    <p class="text-gray-400 mb-8">22 defined data flows connecting all 5 modules</p>
+
+    <div class="glass rounded-2xl p-6">
+      <div class="mermaid">
+graph TD
+  GRN["📥 GRN<br/>Material Receiving"] --> BIN["📊 Bin Cards"]
+  GRN --> IGATE["🚧 Inbound Gate"]
+  GRN --> QC["🔍 QC Inspection"]
+
+  MIRV["📤 MIRV<br/>Material Issue"] --> BIN
+  MIRV --> OGATE["🚧 Outbound Gate"]
+  MIRV --> MRV["↩️ MRV<br/>Material Return"]
+
+  IMSF["🔄 IMSF<br/>Stock Transfer"] --> BIN
+  IMSF --> OGATE
+  IMSF --> IGATE
+
+  MRV --> BIN
+  MRV --> SCRAP["🗑️ Scrap Disposal"]
+
+  JO["📋 Job Order"] --> RATE["💰 Rate Cards"]
+  JO --> OGATE
+  JO --> DELRET["📦 Delivery/Return"]
+
+  SHIP["🚢 Shipment"] --> CUSTOMS["📑 Customs Docs"]
+  CUSTOMS --> VAT["💵 VAT/Duties"]
+  SHIP --> GRN
+
+  RELEASE["✅ Release Auth"] --> TRANSPORT["🚚 Transport"]
+
+  ALL["All Transactions"] --> DASH["📈 Dashboards"]
+  ALL --> AUDIT["📝 Audit Trail"]
+
+  EVAL["⭐ Supplier Eval"] --> SUPPLIER["👥 Supplier Record"]
+  GATE["🚧 Gate Tracking"] --> BIN
+
+  style GRN fill:#1e40af,stroke:#3b82f6,color:#fff
+  style MIRV fill:#7c2d12,stroke:#ea580c,color:#fff
+  style IMSF fill:#065f46,stroke:#10b981,color:#fff
+  style BIN fill:#4a1d96,stroke:#8b5cf6,color:#fff
+  style SHIP fill:#92400e,stroke:#f59e0b,color:#fff
+  style DASH fill:#1e1b4b,stroke:#80D1E9,color:#fff
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Phases Section -->
+<section id="phases" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">4-Phase Delivery Plan</h2>
+    <p class="text-gray-400 mb-8">Phase 1 baseline: 3 months from kickoff | 16 features + Multi-Locations + MRV additions</p>
+
+    <div class="space-y-6 phase-line pl-6">
+      <!-- Phase 1 -->
+      <div class="relative">
+        <div class="absolute -left-6 top-4 w-10 h-10 rounded-full bg-nesma-primary flex items-center justify-center font-bold text-white text-sm z-10 border-2 border-nesma-secondary">1</div>
+        <div class="glass rounded-2xl p-6 ml-8 border border-nesma-secondary/20">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-white text-lg">Phase 1 — Core Material Flow & Foundation</h3>
+            <span class="tag tag-p1">16 Features | 3 Months</span>
+          </div>
+          <p class="text-sm text-gray-400 mb-4">7 roles active: WH Officer, WH Manager, QC Inspector, Tech Manager, Gate Officer, SC Manager, Sys Admin</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F01 GRN</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F02 MIRV</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F03 IMSF</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F05 Bin Cards</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F08 Scrap</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F13 Inv Dashboard</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F14 QC Workflow</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F01 Master Data</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F02 Employees</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F03 Users/Roles</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F04 Approvals</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F05 Notifications</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F06 Reports</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M5-F01 Outbound Gate</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M5-F02 Inbound Gate</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M5-F04 Movement Track</div>
+          </div>
+          <div class="mt-3 flex gap-2">
+            <span class="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">+ Multi-Locations (added)</span>
+            <span class="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">+ MRV (moved from P2)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2 -->
+      <div class="relative">
+        <div class="absolute -left-6 top-4 w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-sm z-10">2</div>
+        <div class="glass rounded-2xl p-6 ml-8">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-white text-lg">Phase 2 — Equipment, Returns & Shipment Visibility</h3>
+            <span class="tag tag-p2">8 Features</span>
+          </div>
+          <p class="text-sm text-gray-400 mb-3">+5 roles: Logistics Coordinator, Transport Supervisor, Inventory Specialist, Shipping Officer, Finance User</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F04 Cycle Count</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F06 MRV</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F01 Job Orders</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F02 Delivery/Return</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F03 Transport</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F05 Rate Cards</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F01 Shipments</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M5-F03 Visitors</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 3 -->
+      <div class="relative">
+        <div class="absolute -left-6 top-4 w-10 h-10 rounded-full bg-amber-600 flex items-center justify-center font-bold text-white text-sm z-10">3</div>
+        <div class="glass rounded-2xl p-6 ml-8">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-white text-lg">Phase 3 — Customs, Compliance & Extended Ops</h3>
+            <span class="tag tag-p3">13 Features</span>
+          </div>
+          <p class="text-sm text-gray-400 mb-3">+2 roles: Customs Specialist, Compliance Officer</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F07 Tools</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F09 Min Stock</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F10 Handover</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F11 Compliance</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M1-F12 AMC</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F04 Supplier Eval</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F06 Emergency Eq</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F02 Customs Docs</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F03 Import Clear</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F04 VAT/Duties</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F05 Release Auth</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F11 Admin Support</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M5-F05 Access Control</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4 -->
+      <div class="relative">
+        <div class="absolute -left-6 top-4 w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center font-bold text-white text-sm z-10">4</div>
+        <div class="glass rounded-2xl p-6 ml-8">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-white text-lg">Phase 4 — Dashboards, Reporting & Advanced Admin</h3>
+            <span class="tag tag-p4">6 Features</span>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+            <div class="glass rounded-lg p-2 text-gray-300">M2-F07 Equipment Dash</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M3-F06 Shipment Dash</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F07 Scheduled Reports</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F08 Compliance</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F09 Maintenance</div>
+            <div class="glass rounded-lg p-2 text-gray-300">M4-F10 Full KPI Dash</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Tech Stack Section -->
+<section id="tech" class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">Technical Foundation</h2>
+    <p class="text-gray-400 mb-8">Enterprise-grade monorepo with 157 database models and 3,388 tests</p>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-8">
+      <!-- Database Stats -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4">Database (Prisma 6 + PostgreSQL)</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-400">Total models</span><span class="text-white font-bold">157</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Schema files</span><span class="text-white font-bold">16</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">JSONB fields</span><span class="text-white font-bold">30+</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Composite indexes</span><span class="text-white font-bold">12</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Polymorphic patterns</span><span class="text-white font-bold">13</span></div>
+        </div>
+      </div>
+
+      <!-- Backend Stats -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4">Backend (Express 5 + TypeScript)</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-400">Domain modules</span><span class="text-white font-bold">14</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Route files</span><span class="text-white font-bold">100+</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Service files</span><span class="text-white font-bold">92</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Backend tests</span><span class="text-white font-bold">3,388</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Routes index</span><span class="text-white font-bold">52 LOC</span></div>
+        </div>
+      </div>
+
+      <!-- Frontend Stats -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4">Frontend (React 19 + Vite 6)</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-400">React Query hooks</span><span class="text-white font-bold">170+</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Domain hook barrels</span><span class="text-white font-bold">13</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Components</span><span class="text-white font-bold">87+</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Pages</span><span class="text-white font-bold">104+</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">E2E specs</span><span class="text-white font-bold">7 files</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Hierarchy -->
+    <div class="glass rounded-2xl p-6">
+      <h3 class="font-semibold text-white mb-4">Warehouse Location Hierarchy</h3>
+      <div class="mermaid">
+graph LR
+  R["🌍 Region<br/>(8 Saudi regions)"] --> C["🏙️ City"]
+  C --> W["🏭 Warehouse<br/>(75 locations)"]
+  W --> Z["📍 Zone<br/>(civil, mechanical,<br/>electrical, scrap,<br/>hazardous...)"]
+  Z --> B["📦 Bin<br/>(zone-aisle-shelf<br/>e.g. A-03-12)"]
+  W --> D["🚪 Dock Door<br/>(inbound/outbound)"]
+  D --> Y["🚛 Yard Appointment"]
+  Z --> S["🌡️ Sensor<br/>(temp, humidity,<br/>motion, smoke)"]
+
+  style R fill:#1e40af,stroke:#3b82f6,color:#fff
+  style W fill:#065f46,stroke:#10b981,color:#fff
+  style Z fill:#7c2d12,stroke:#ea580c,color:#fff
+  style B fill:#4a1d96,stroke:#8b5cf6,color:#fff
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Notification Catalog -->
+<section class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">Notification Catalog</h2>
+    <p class="text-gray-400 mb-8">13 notification types across Push and In-App channels</p>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-gray-400 border-b border-white/10">
+            <th class="py-3 px-4">ID</th>
+            <th class="py-3 px-4">Trigger</th>
+            <th class="py-3 px-4">Recipients</th>
+            <th class="py-3 px-4">Channel</th>
+            <th class="py-3 px-4">Priority</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-300">
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-01</td><td class="py-2.5 px-4">MIRV submitted for approval</td><td class="py-2.5 px-4">Next approver</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p1">High</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-02</td><td class="py-2.5 px-4">Stock below minimum level</td><td class="py-2.5 px-4">Inv Specialist + WH Mgr</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p1">High</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-03</td><td class="py-2.5 px-4">Equipment return approaching (3d)</td><td class="py-2.5 px-4">Logistics Coord + PM</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p2">Medium</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-04</td><td class="py-2.5 px-4">Shipment status change</td><td class="py-2.5 px-4">PM, Warehouse, Customs</td><td class="py-2.5 px-4">In-app</td><td class="py-2.5 px-4"><span class="tag tag-p2">Medium</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-05</td><td class="py-2.5 px-4">Shipment delayed</td><td class="py-2.5 px-4">Shipping Officer + PM</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p1">High</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-06</td><td class="py-2.5 px-4">QC inspection required</td><td class="py-2.5 px-4">Assigned QC Inspector</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p1">High</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-07</td><td class="py-2.5 px-4">Approval SLA exceeded</td><td class="py-2.5 px-4">Approver + manager</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p1">High</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-08</td><td class="py-2.5 px-4">Cycle count scheduled</td><td class="py-2.5 px-4">Count team</td><td class="py-2.5 px-4">In-app</td><td class="py-2.5 px-4"><span class="tag tag-p2">Medium</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-09</td><td class="py-2.5 px-4">Rate card expiring (30d)</td><td class="py-2.5 px-4">Logistics Coordinator</td><td class="py-2.5 px-4">In-app</td><td class="py-2.5 px-4"><span class="tag tag-p3">Low</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-10</td><td class="py-2.5 px-4">Unauthorized gate exit</td><td class="py-2.5 px-4">Gate Supervisor + WH Mgr</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="px-2 py-0.5 rounded-full text-xs font-bold bg-red-500/30 text-red-400 border border-red-500/30">CRITICAL</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-11</td><td class="py-2.5 px-4">NCR deadline approaching (3d)</td><td class="py-2.5 px-4">NCR owner</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p2">Medium</span></td></tr>
+          <tr class="border-b border-white/5 hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-12</td><td class="py-2.5 px-4">Contract renewal (30d)</td><td class="py-2.5 px-4">Admin Manager</td><td class="py-2.5 px-4">In-app</td><td class="py-2.5 px-4"><span class="tag tag-p3">Low</span></td></tr>
+          <tr class="hover:bg-white/5"><td class="py-2.5 px-4 font-mono text-nesma-secondary">N-13</td><td class="py-2.5 px-4">Overdue tool return</td><td class="py-2.5 px-4">Employee + WH Manager</td><td class="py-2.5 px-4">Push + In-app</td><td class="py-2.5 px-4"><span class="tag tag-p2">Medium</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Exclusions -->
+<section class="py-16 px-4">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-3xl font-bold text-white mb-2">Exclusions & Assumptions</h2>
+    <p class="text-gray-400 mb-8">14 exclusions and 13 assumptions that define scope boundaries</p>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4 text-red-400">14 Exclusions</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-01</span>No Oracle ERP Integration</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-02</span>No Payroll Processing</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-03</span>No Procurement/Purchasing</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-04</span>No GPS/Live Vehicle Tracking</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-05</span>No Barcode/RFID Scanning</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-06</span>No Native Mobile App (PWA only)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-07</span>No Carrier API Integration</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-08</span>No Financial Accounting</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-09</span>No ML/AI Predictions</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-10</span>No Government Integration (ZATCA)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-11</span>No Invoice/Payment Tracking</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-12</span>No MRF (MIRV is sole issue type)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-13</span>No Scrap Committee Bidding</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-red-400 font-mono text-xs min-w-[46px]">EX-14</span>No Performance Guarantees/ROI</div>
+        </div>
+      </div>
+
+      <div class="glass rounded-2xl p-6">
+        <h3 class="font-semibold text-white mb-4 text-amber-400">Key Assumptions</h3>
+        <div class="space-y-2 text-sm">
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-01</span>Max 178 users (150 warehouse + 28 logistics)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-02</span>SAR 200K approval threshold (30-day finalization)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-03</span>Master data CSV within 30 business days</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-05</span>Internet at all 75 warehouses</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-06</span>Greenfield build (from scratch)</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-08</span>Single-tenant deployment</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-11</span>Photo storage: max 5/context, 5MB each, 50GB/year</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-12</span>5% cycle count NCR variance threshold</div>
+          <div class="flex gap-2 text-gray-300"><span class="text-amber-400 font-mono text-xs min-w-[42px]">AS-13</span>4-hour default SLA for all approvals</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-12 px-4 border-t border-white/5">
+  <div class="max-w-7xl mx-auto text-center">
+    <div class="flex items-center justify-center gap-3 mb-4">
+      <div class="w-8 h-8 rounded-lg bg-nesma-primary flex items-center justify-center font-bold text-sm text-white">N</div>
+      <span class="font-bold text-white">NIT Supply Chain V2</span>
+    </div>
+    <p class="text-sm text-gray-500 mb-2">Prepared by Idaratech for Nesma Infrastructure & Technology (NIT)</p>
+    <p class="text-xs text-gray-600">5 Modules | 43 Features | 14 Roles | 40 Entities | 4 Phases | 75 Warehouses</p>
+    <p class="text-xs text-gray-600 mt-2">React 19 + Express 5 + Prisma 6 + PostgreSQL | 157 Models | 3,388 Tests</p>
+    <p class="text-xs text-gray-700 mt-4">Generated March 2026</p>
+  </div>
+</footer>
+
+<!-- Scripts -->
+<script>
+  // Initialize Mermaid
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#2E3192',
+      primaryTextColor: '#e5e7eb',
+      primaryBorderColor: '#80D1E9',
+      lineColor: '#4b5563',
+      secondaryColor: '#1e1b4b',
+      tertiaryColor: '#0a1628',
+      background: '#0a1628',
+      mainBkg: '#1e1b4b',
+      nodeBorder: '#80D1E9',
+      clusterBkg: 'rgba(255,255,255,0.05)',
+      clusterBorder: 'rgba(255,255,255,0.1)',
+      titleColor: '#e5e7eb',
+      edgeLabelBackground: '#0a1628'
+    },
+    flowchart: { curve: 'basis', padding: 15 },
+    fontFamily: 'Inter, system-ui, sans-serif'
+  });
+
+  // Scroll fade-in
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // Active nav highlighting
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
