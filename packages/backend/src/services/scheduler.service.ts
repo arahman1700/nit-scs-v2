@@ -1,66 +1,38 @@
 /**
- * Background Job Scheduler
+ * Background Job Scheduler — Thin Orchestrator
  *
  * Runs periodic maintenance tasks using simple setInterval.
  * No external dependency required (no node-cron, no bull).
  *
- * Jobs:
- * 1. SLA breach detection — every 5 minutes
- * 2. SLA warning detection — every 5 minutes
- * 3. Email retry — every 2 minutes
- * 4. Expired lot marking — every hour
- * 5. Low-stock alert check — every 30 minutes
- * 6. Expired refresh token cleanup — every 6 hours
- * 7. ABC classification recalculation — every 7 days
- * 8. Anomaly detection — every 6 hours
- * 9. Reorder point auto-update — every 7 days
+ * Job handler functions are registered by domain modules via the job registry.
+ * This file keeps the scheduler lifecycle (acquireLock, scheduleLoop, start/stop)
+ * and all shared helper functions used by domain job handlers.
  *
- * SOW Notification Jobs:
- * N-03: Equipment return date approaching — daily
- * N-05: Shipment delayed — every 6 hours
- * N-08: Cycle count scheduled — daily
- * N-09: Rate card expiring — daily
- * N-10: Vehicle maintenance due — every 12 hours
- * N-12: NCR/DR deadline approaching — daily
- * N-13: Contract/insurance renewal due — daily
- * N-14: Overdue tool return — every 12 hours
- *
- * L2 Expiry Date Alerts:
- * Expiry alerts — daily (30/60/90 day thresholds)
- * Auto-quarantine expired lots — every 12 hours
+ * Domain job modules (imported for side-effect registration):
+ * - domains/system/jobs/sla-jobs.ts
+ * - domains/system/jobs/maintenance-jobs.ts
+ * - domains/system/jobs/notification-jobs.ts
+ * - domains/inventory/jobs/expiry-jobs.ts
  */
 
 import { prisma } from '../utils/prisma.js';
-import { processQueuedEmails } from './email.service.js';
 import { createNotification } from './notification.service.js';
-import { cleanupExpiredTokens } from './auth.service.js';
-import { calculateABCClassification, applyABCClassification } from './abc-analysis.service.js';
-import { autoCreateCycleCounts } from './cycle-count.service.js';
-import { detectAnomalies } from './anomaly-detection.service.js';
-import { autoUpdateReorderPoints } from './reorder-prediction.service.js';
-import { checkExpiringContracts as checkAmcExpiry } from './amc.service.js';
-import { calculateDepreciation } from './asset.service.js';
-import { processScheduledRules, initializeScheduledRules } from '../events/scheduled-rule-runner.js';
-import {
-  checkEquipmentReturnDue,
-  checkShipmentDelays,
-  checkScheduledCycleCounts,
-  checkRateCardExpiry,
-  checkVehicleMaintenanceDue,
-  checkNcrDeadlines,
-  checkContractRenewals,
-  checkOverdueToolReturns,
-} from './notification-dispatcher.service.js';
-import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from './vehicle-maintenance.service.js';
-import { detectSuspiciousActivity } from './security.service.js';
-import { checkExpiringLots, autoQuarantineExpired } from './expiry-alert.service.js';
+import { initializeScheduledRules } from '../events/scheduled-rule-runner.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 import { emitToRole, emitToUser } from '../socket/setup.js';
 import { sendPushToUser } from './push-notification.service.js';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
 import { getAllSlaHours } from './system-config.service.js';
+import { getAllJobs, clearJobs } from '../utils/job-registry.js';
+import type { PrismaDelegate, JobContext } from '../utils/job-registry.js';
 import type { Server as SocketIOServer } from 'socket.io';
+
+// ── Import domain job modules for side-effect registration ───────────────
+import '../domains/system/jobs/sla-jobs.js';
+import '../domains/system/jobs/maintenance-jobs.js';
+import '../domains/system/jobs/notification-jobs.js';
+import '../domains/inventory/jobs/expiry-jobs.js';
 
 const timers: ReturnType<typeof setTimeout>[] = [];
 let io: SocketIOServer | null = null;
@@ -104,21 +76,15 @@ function scheduleLoop(name: string, fn: () => Promise<void>, intervalMs: number,
   timers.push(timer);
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
+// ── Helpers (shared across domain job handlers via JobContext) ────────────
 
-/** Prisma delegate type for dynamic model access */
-type PrismaDelegate = {
-  findMany: (args: unknown) => Promise<Array<Record<string, unknown>>>;
-  update: (args: unknown) => Promise<unknown>;
-  updateMany: (args: unknown) => Promise<{ count: number }>;
-};
-
-function getDelegate(modelName: string): PrismaDelegate {
+/** Prisma delegate for dynamic model access */
+export function getDelegate(modelName: string): PrismaDelegate {
   return (prisma as unknown as Record<string, PrismaDelegate>)[modelName];
 }
 
 /** Convert SLA hours to milliseconds */
-function slaHoursToMs(hours: number): number {
+export function slaHoursToMs(hours: number): number {
   return hours * 60 * 60 * 1000;
 }
 
@@ -129,7 +95,7 @@ function slaHoursToMs(hours: number): number {
 let _slaConfig: Record<string, number> = { ...SLA_HOURS };
 
 /** Refresh SLA config from DB. Call once per scheduler cycle. */
-async function refreshSlaConfig(): Promise<void> {
+export async function refreshSlaConfig(): Promise<void> {
   try {
     _slaConfig = await getAllSlaHours();
   } catch {
@@ -137,12 +103,17 @@ async function refreshSlaConfig(): Promise<void> {
   }
 }
 
+/** Get the current SLA config (read-only snapshot). */
+export function getSlaConfig(): Record<string, number> {
+  return _slaConfig;
+}
+
 /**
  * Compute the SLA deadline from a reference date and SLA key.
  * Uses DB-backed SLA config (refreshed each scheduler cycle).
  * Returns null if SLA key not found.
  */
-function _computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date | null {
+export function _computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date | null {
   const hours = _slaConfig[slaKey] ?? SLA_HOURS[slaKey];
   if (!hours) return null;
   const ref = typeof referenceDate === 'string' ? new Date(referenceDate) : referenceDate;
@@ -153,7 +124,7 @@ function _computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date
  * Check for duplicate notification within the last hour.
  * Returns true if a notification already exists (should skip).
  */
-async function hasRecentNotification(
+export async function hasRecentNotification(
   referenceTable: string,
   referenceId: string,
   titleFragment: string,
@@ -174,7 +145,7 @@ async function hasRecentNotification(
  * Batch check for recent notifications across multiple document IDs.
  * Returns a Set of referenceIds that already have a recent notification (should skip).
  */
-async function getRecentNotificationRefs(
+export async function getRecentNotificationRefs(
   referenceTable: string,
   referenceIds: string[],
   titleFragment: string,
@@ -194,7 +165,7 @@ async function getRecentNotificationRefs(
 }
 
 /** Fetch admin employee IDs */
-async function getAdminIds(): Promise<string[]> {
+export async function getAdminIds(): Promise<string[]> {
   const admins = await prisma.employee.findMany({
     where: { systemRole: 'admin', isActive: true },
     select: { id: true },
@@ -203,7 +174,7 @@ async function getAdminIds(): Promise<string[]> {
 }
 
 /** Fetch employee IDs by role */
-async function getEmployeeIdsByRole(role: string): Promise<string[]> {
+export async function getEmployeeIdsByRole(role: string): Promise<string[]> {
   const employees = await prisma.employee.findMany({
     where: { systemRole: role, isActive: true },
     select: { id: true },
@@ -215,7 +186,7 @@ async function getEmployeeIdsByRole(role: string): Promise<string[]> {
  * Send SLA notifications to a set of recipients and emit socket events.
  * Uses createMany for batch DB insert, then emits socket + push per recipient.
  */
-async function notifySla(params: {
+export async function notifySla(params: {
   recipientIds: string[];
   title: string;
   body: string;
@@ -280,1315 +251,25 @@ async function notifySla(params: {
   }
 }
 
-// ── SLA Breach Detection ─────────────────────────────────────────────────
-
-async function checkSlaBreaches(): Promise<void> {
-  try {
-    await refreshSlaConfig(); // Load DB-configurable SLA values
-    const now = new Date();
-
-    // ── 1. MIRV & Job Order: approval-based SLA (existing logic, refactored) ──
-    await checkApprovalBasedSlaBreaches(now);
-
-    // ── 2. Material Requisition: Stock Verification SLA (4 hours) ──
-    await checkMrStockVerificationBreaches(now);
-
-    // ── 3. Job Order: Execution SLA (48 hours after quoted) ──
-    await checkJoExecutionBreaches(now);
-
-    // ── 4. Gate Pass SLA (24 hours after creation) ──
-    await checkGatePassBreaches(now);
-
-    // ── 5. Scrap Buyer Pickup SLA (10 days after sold) ──
-    await checkScrapBuyerPickupBreaches(now);
-
-    // ── 6. Surplus Timeout SLA (14 days after OU Head approval) ──
-    await checkSurplusTimeoutBreaches(now);
-
-    // ── 7. QCI Inspection SLA (14 days after creation) ──
-    await checkQciInspectionBreaches(now);
-  } catch (err) {
-    log('error', `[Scheduler] SLA check failed: ${(err as Error).message}`);
-  }
-}
-
-/**
- * Original approval-based SLA breach check for MIRV.
- * Only MIRV has a direct slaDueDate field on the model.
- * JobOrder SLA is on JoSlaTracking — handled by checkJoExecutionBreaches().
- */
-async function checkApprovalBasedSlaBreaches(now: Date): Promise<void> {
-  const models = [{ name: 'mirv', label: 'MIRV' }] as const;
-
-  for (const model of models) {
-    const delegate = getDelegate(model.name);
-
-    const overdue = await delegate.findMany({
-      where: {
-        status: 'pending_approval',
-        slaDueDate: { lt: now },
-      },
-      select: { id: true, slaDueDate: true },
-    } as unknown);
-
-    for (const doc of overdue) {
-      const docId = doc.id as string;
-      if (await hasRecentNotification(model.name, docId, 'SLA Breached', now)) continue;
-
-      // Find the current pending approval step
-      const pendingStep = await prisma.approvalStep.findFirst({
-        where: {
-          documentType: model.name,
-          documentId: docId,
-          status: 'pending',
-        },
-        orderBy: { level: 'asc' },
-      });
-
-      if (!pendingStep) continue;
-
-      const adminIds = await getAdminIds();
-      const approverIds = await getEmployeeIdsByRole(pendingStep.approverRole);
-      const allRecipients = [...new Set([...adminIds, ...approverIds])];
-
-      await notifySla({
-        recipientIds: allRecipients,
-        title: `SLA Breached: ${model.label}`,
-        body: `${model.label} ${docId} has exceeded its SLA deadline. Requires ${pendingStep.approverRole} approval.`,
-        notificationType: 'sla_breach',
-        referenceTable: model.name,
-        referenceId: docId,
-        socketEvent: 'sla:breached',
-        socketRoles: ['admin', pendingStep.approverRole],
-      });
-
-      log('warn', `[Scheduler] SLA breach: ${model.label} ${docId} (approver: ${pendingStep.approverRole})`);
-    }
-  }
-}
-
-/**
- * Stock Verification SLA (4 hours).
- * MR has stockVerificationSla (DateTime) and slaBreached (Boolean) fields.
- * When MR status = 'approved' and stockVerificationSla < now, it's breached.
- * Also handles date-based fallback: if stockVerificationSla is not set,
- * compute from approvalDate + _slaConfig.stock_verification.
- */
-async function checkMrStockVerificationBreaches(now: Date): Promise<void> {
-  const delegate = getDelegate('materialRequisition');
-
-  // Case 1: MRs with explicit stockVerificationSla that has passed
-  const overdueExplicit = await delegate.findMany({
-    where: {
-      status: { in: ['approved', 'checking_stock'] },
-      slaBreached: false,
-      stockVerificationSla: { lt: now },
-    },
-    select: { id: true, mrfNumber: true, stockVerificationSla: true },
-  } as unknown);
-
-  // Case 2: MRs without explicit SLA — compute from approvalDate
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.stock_verification));
-  const overdueComputed = await delegate.findMany({
-    where: {
-      status: { in: ['approved', 'checking_stock'] },
-      slaBreached: false,
-      stockVerificationSla: null,
-      approvalDate: { lt: cutoff },
-    },
-    select: { id: true, mrfNumber: true, approvalDate: true },
-  } as unknown);
-
-  const allOverdue = [...overdueExplicit, ...overdueComputed];
-
-  for (const doc of allOverdue) {
-    const docId = doc.id as string;
-    const docNumber = (doc.mrfNumber as string) || docId;
-
-    if (await hasRecentNotification('materialRequisition', docId, 'SLA Breached', now)) continue;
-
-    // Mark as breached
-    await delegate.update({
-      where: { id: docId },
-      data: { slaBreached: true },
-    } as unknown);
-
-    const adminIds = await getAdminIds();
-    const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
-    const allRecipients = [...new Set([...adminIds, ...warehouseIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'SLA Breached: Material Requisition',
-      body: `MR ${docNumber} has exceeded its stock verification SLA (${_slaConfig.stock_verification}h). Warehouse must respond.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'materialRequisition',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'warehouse_staff', 'warehouse_supervisor'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: MR Stock Verification ${docNumber}`);
-  }
-}
-
-/**
- * JO Execution SLA (48 hours after quotation accepted).
- * Uses JoSlaTracking relation: slaDueDate set when status = 'quoted'.
- * Falls back to date-based: updatedAt when status changed to 'quoted' + _slaConfig.
- */
-async function checkJoExecutionBreaches(now: Date): Promise<void> {
-  // Check via JoSlaTracking for JOs with explicit slaDueDate
-  const overdueTracked = await prisma.joSlaTracking.findMany({
-    where: {
-      slaDueDate: { lt: now },
-      slaMet: null, // not yet resolved
-      jobOrder: {
-        status: { in: ['quoted', 'approved', 'assigned', 'in_progress'] },
-      },
-    },
-    select: {
-      id: true,
-      jobOrderId: true,
-      slaDueDate: true,
-      jobOrder: { select: { id: true, joNumber: true, status: true } },
-    },
-  });
-
-  for (const tracking of overdueTracked) {
-    const jo = tracking.jobOrder as { id: string; joNumber: string; status: string };
-    const docId = jo.id;
-
-    if (await hasRecentNotification('jobOrder', docId, 'Execution SLA Breached', now)) continue;
-
-    // Mark SLA as not met
-    await prisma.joSlaTracking.update({
-      where: { id: tracking.id },
-      data: { slaMet: false },
-    });
-
-    const adminIds = await getAdminIds();
-    const logisticsIds = await getEmployeeIdsByRole('logistics_coordinator');
-    const allRecipients = [...new Set([...adminIds, ...logisticsIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'Execution SLA Breached: Job Order',
-      body: `JO ${jo.joNumber} has exceeded its execution SLA (${_slaConfig.jo_execution}h). Status: ${jo.status}.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'jobOrder',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'logistics_coordinator', 'manager'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: JO Execution ${jo.joNumber}`);
-  }
-
-  // Fallback: JOs in 'quoted' status without SlaTracking record, past the deadline
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.jo_execution));
-  const overdueNoTracking = await getDelegate('jobOrder').findMany({
-    where: {
-      status: 'quoted',
-      updatedAt: { lt: cutoff },
-      slaTracking: null,
-    },
-    select: { id: true, joNumber: true },
-  } as unknown);
-
-  for (const doc of overdueNoTracking) {
-    const docId = doc.id as string;
-    const docNumber = (doc.joNumber as string) || docId;
-
-    if (await hasRecentNotification('jobOrder', docId, 'Execution SLA Breached', now)) continue;
-
-    const adminIds = await getAdminIds();
-    const logisticsIds = await getEmployeeIdsByRole('logistics_coordinator');
-    const allRecipients = [...new Set([...adminIds, ...logisticsIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'Execution SLA Breached: Job Order',
-      body: `JO ${docNumber} has exceeded its execution SLA (${_slaConfig.jo_execution}h) since quotation.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'jobOrder',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'logistics_coordinator', 'manager'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: JO Execution (no tracking) ${docNumber}`);
-  }
-}
-
-/**
- * Gate Pass SLA (24 hours).
- * No SLA-specific fields on GatePass model — use date-based approach.
- * After GP is created (status = 'pending' or 'approved'), it must be released within 24h.
- */
-async function checkGatePassBreaches(now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.gate_pass));
-  const delegate = getDelegate('gatePass');
-
-  const overdue = await delegate.findMany({
-    where: {
-      status: { in: ['pending', 'approved'] },
-      createdAt: { lt: cutoff },
-    },
-    select: { id: true, gatePassNumber: true, status: true, createdAt: true },
-  } as unknown);
-
-  for (const doc of overdue) {
-    const docId = doc.id as string;
-    const docNumber = (doc.gatePassNumber as string) || docId;
-
-    if (await hasRecentNotification('gatePass', docId, 'SLA Breached', now)) continue;
-
-    const adminIds = await getAdminIds();
-    const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
-    const supervisorIds = await getEmployeeIdsByRole('warehouse_supervisor');
-    const allRecipients = [...new Set([...adminIds, ...warehouseIds, ...supervisorIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'SLA Breached: Gate Pass',
-      body: `Gate Pass ${docNumber} has exceeded its SLA (${_slaConfig.gate_pass}h). Status: ${doc.status}. Must be released.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'gatePass',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'warehouse_staff', 'warehouse_supervisor'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: Gate Pass ${docNumber}`);
-  }
-}
-
-/**
- * Scrap Buyer Pickup SLA (10 days).
- * ScrapItem has buyerPickupDeadline (DateTime?) — set when status = 'sold'.
- * Falls back to date-based: updatedAt when status is 'sold' + _slaConfig.
- */
-async function checkScrapBuyerPickupBreaches(now: Date): Promise<void> {
-  const delegate = getDelegate('scrapItem');
-
-  // Case 1: Scrap items with explicit buyerPickupDeadline that has passed
-  const overdueExplicit = await delegate.findMany({
-    where: {
-      status: 'sold',
-      buyerPickupDeadline: { lt: now },
-    },
-    select: { id: true, scrapNumber: true, buyerName: true, buyerPickupDeadline: true },
-  } as unknown);
-
-  // Case 2: Scrap items without deadline — use date-based approach
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.scrap_buyer_pickup));
-  const overdueComputed = await delegate.findMany({
-    where: {
-      status: 'sold',
-      buyerPickupDeadline: null,
-      updatedAt: { lt: cutoff },
-    },
-    select: { id: true, scrapNumber: true, buyerName: true, updatedAt: true },
-  } as unknown);
-
-  const allOverdue = [...overdueExplicit, ...overdueComputed];
-
-  for (const doc of allOverdue) {
-    const docId = doc.id as string;
-    const docNumber = (doc.scrapNumber as string) || docId;
-    const buyerName = (doc.buyerName as string) || 'Unknown buyer';
-
-    if (await hasRecentNotification('scrapItem', docId, 'SLA Breached', now)) continue;
-
-    const adminIds = await getAdminIds();
-    const scrapCommitteeIds = await getEmployeeIdsByRole('scrap_committee_member');
-    const allRecipients = [...new Set([...adminIds, ...scrapCommitteeIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'SLA Breached: Scrap Buyer Pickup',
-      body: `Scrap ${docNumber} — buyer "${buyerName}" has not picked up within ${_slaConfig.scrap_buyer_pickup / 24} days.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'scrapItem',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'scrap_committee_member', 'manager'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: Scrap Buyer Pickup ${docNumber}`);
-  }
-}
-
-/**
- * Surplus Timeout SLA (14 days).
- * After OU Head approval (ouHeadApprovalDate set), SCM can approve after 14 days.
- * Status must still be in a pre-closed state and ouHeadApprovalDate + 14 days < now.
- */
-async function checkSurplusTimeoutBreaches(now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.surplus_timeout));
-  const delegate = getDelegate('surplusItem');
-
-  const overdue = await delegate.findMany({
-    where: {
-      status: { in: ['identified', 'evaluated'] },
-      ouHeadApprovalDate: { lt: cutoff },
-    },
-    select: { id: true, surplusNumber: true, ouHeadApprovalDate: true, status: true },
-  } as unknown);
-
-  for (const doc of overdue) {
-    const docId = doc.id as string;
-    const docNumber = (doc.surplusNumber as string) || docId;
-
-    if (await hasRecentNotification('surplusItem', docId, 'SLA Breached', now)) continue;
-
-    const adminIds = await getAdminIds();
-    const managerIds = await getEmployeeIdsByRole('manager');
-    const allRecipients = [...new Set([...adminIds, ...managerIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'SLA Breached: Surplus Timeout',
-      body: `Surplus ${docNumber} has exceeded the ${_slaConfig.surplus_timeout / 24}-day timeout since OU Head approval. SCM can now approve.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'surplusItem',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'manager'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: Surplus Timeout ${docNumber}`);
-  }
-}
-
-/**
- * QCI Inspection SLA (14 days).
- * Rfim model (QCI) has status 'pending' or 'in_progress'.
- * No SLA-specific fields — use createdAt + _slaConfig.qc_inspection.
- */
-async function checkQciInspectionBreaches(now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - slaHoursToMs(_slaConfig.qc_inspection));
-  const delegate = getDelegate('rfim');
-
-  const overdue = await delegate.findMany({
-    where: {
-      status: { in: ['pending', 'in_progress'] },
-      createdAt: { lt: cutoff },
-    },
-    select: { id: true, rfimNumber: true, status: true, createdAt: true },
-  } as unknown);
-
-  for (const doc of overdue) {
-    const docId = doc.id as string;
-    const docNumber = (doc.rfimNumber as string) || docId;
-
-    if (await hasRecentNotification('rfim', docId, 'SLA Breached', now)) continue;
-
-    const adminIds = await getAdminIds();
-    const qcIds = await getEmployeeIdsByRole('qc_officer');
-    const allRecipients = [...new Set([...adminIds, ...qcIds])];
-
-    await notifySla({
-      recipientIds: allRecipients,
-      title: 'SLA Breached: QC Inspection',
-      body: `QCI ${docNumber} has exceeded its inspection SLA (${_slaConfig.qc_inspection / 24} days). Status: ${doc.status}.`,
-      notificationType: 'sla_breach',
-      referenceTable: 'rfim',
-      referenceId: docId,
-      socketEvent: 'sla:breached',
-      socketRoles: ['admin', 'qc_officer'],
-    });
-
-    log('warn', `[Scheduler] SLA breach: QCI Inspection ${docNumber}`);
-  }
-}
-
-// ── SLA Warning Detection ────────────────────────────────────────────────
-
-/**
- * Checks for documents whose SLA deadline is within the next hour.
- * Emits sla:warning events and creates warning notifications.
- */
-async function checkSlaWarnings(): Promise<void> {
-  try {
-    await refreshSlaConfig(); // Load DB-configurable SLA values
-    const now = new Date();
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
-
-    // ── 1. MIRV & JobOrder: approval SLA warnings ──
-    await checkApprovalBasedSlaWarnings(now, oneHourFromNow);
-
-    // ── 2. MR: stock verification SLA warning ──
-    await checkMrStockVerificationWarnings(now, oneHourFromNow);
-
-    // ── 3. JO: execution SLA warning (via JoSlaTracking) ──
-    await checkJoExecutionWarnings(now, oneHourFromNow);
-
-    // ── 4. Gate Pass: SLA warning ──
-    await checkGatePassWarnings(now, oneHourFromNow);
-
-    // ── 5. Scrap Buyer Pickup: SLA warning ──
-    await checkScrapBuyerPickupWarnings(now, oneHourFromNow);
-
-    // ── 6. Surplus Timeout: SLA warning ──
-    await checkSurplusTimeoutWarnings(now, oneHourFromNow);
-
-    // ── 7. QCI Inspection: SLA warning ──
-    await checkQciInspectionWarnings(now, oneHourFromNow);
-  } catch (err) {
-    log('error', `[Scheduler] SLA warning check failed: ${(err as Error).message}`);
-  }
-}
-
-/**
- * Approval-based SLA warnings for MIRV.
- * Deadline is within the next hour and status is still pending_approval.
- * JobOrder SLA warnings handled separately via JoSlaTracking.
- */
-async function checkApprovalBasedSlaWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const models = [{ name: 'mirv', label: 'MIRV' }] as const;
-
-  for (const model of models) {
-    const delegate = getDelegate(model.name);
-
-    const atRisk = await delegate.findMany({
-      where: {
-        status: 'pending_approval',
-        slaDueDate: { gt: now, lt: oneHourFromNow },
-      },
-      select: { id: true, slaDueDate: true },
-    } as unknown);
-
-    for (const doc of atRisk) {
-      const docId = doc.id as string;
-      if (await hasRecentNotification(model.name, docId, 'SLA Warning', now)) continue;
-
-      const pendingStep = await prisma.approvalStep.findFirst({
-        where: {
-          documentType: model.name,
-          documentId: docId,
-          status: 'pending',
-        },
-        orderBy: { level: 'asc' },
-      });
-
-      if (!pendingStep) continue;
-
-      const approverIds = await getEmployeeIdsByRole(pendingStep.approverRole);
-
-      await notifySla({
-        recipientIds: approverIds,
-        title: `SLA Warning: ${model.label}`,
-        body: `${model.label} ${docId} SLA deadline is within the next hour. Requires ${pendingStep.approverRole} approval.`,
-        notificationType: 'sla_warning',
-        referenceTable: model.name,
-        referenceId: docId,
-        socketEvent: 'sla:warning',
-        socketRoles: [pendingStep.approverRole, 'admin'],
-      });
-
-      log('info', `[Scheduler] SLA warning: ${model.label} ${docId}`);
-    }
-  }
-}
-
-/**
- * MR stock verification SLA warning.
- * Deadline is within the next hour.
- */
-async function checkMrStockVerificationWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const delegate = getDelegate('materialRequisition');
-
-  // Explicit SLA deadline within next hour
-  const atRiskExplicit = await delegate.findMany({
-    where: {
-      status: { in: ['approved', 'checking_stock'] },
-      slaBreached: false,
-      stockVerificationSla: { gt: now, lt: oneHourFromNow },
-    },
-    select: { id: true, mrfNumber: true },
-  } as unknown);
-
-  // Date-based: approvalDate + SLA_HOURS is within next hour
-  const slaMs = slaHoursToMs(_slaConfig.stock_verification);
-  const windowStart = new Date(now.getTime() - slaMs);
-  const windowEnd = new Date(oneHourFromNow.getTime() - slaMs);
-  const atRiskComputed = await delegate.findMany({
-    where: {
-      status: { in: ['approved', 'checking_stock'] },
-      slaBreached: false,
-      stockVerificationSla: null,
-      approvalDate: { gt: windowStart, lt: windowEnd },
-    },
-    select: { id: true, mrfNumber: true },
-  } as unknown);
-
-  const allAtRisk = [...atRiskExplicit, ...atRiskComputed];
-
-  // Hoist role lookup before the loop
-  const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
-
-  // Batch check recent notifications
-  const atRiskIds = allAtRisk.map(d => d.id as string);
-  const recentlyNotified = await getRecentNotificationRefs('materialRequisition', atRiskIds, 'SLA Warning', now);
-
-  for (const doc of allAtRisk) {
-    const docId = doc.id as string;
-    const docNumber = (doc.mrfNumber as string) || docId;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: warehouseIds,
-      title: 'SLA Warning: Material Requisition',
-      body: `MR ${docNumber} stock verification SLA deadline is within the next hour.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'materialRequisition',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['warehouse_staff', 'warehouse_supervisor', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: MR Stock Verification ${docNumber}`);
-  }
-}
-
-/**
- * JO Execution SLA warning via JoSlaTracking.
- */
-async function checkJoExecutionWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  // Hoist role lookup before the loop
-  const logisticsIds = await getEmployeeIdsByRole('logistics_coordinator');
-
-  const atRisk = await prisma.joSlaTracking.findMany({
-    where: {
-      slaDueDate: { gt: now, lt: oneHourFromNow },
-      slaMet: null,
-      jobOrder: {
-        status: { in: ['quoted', 'approved', 'assigned', 'in_progress'] },
-      },
-    },
-    select: {
-      id: true,
-      jobOrderId: true,
-      jobOrder: { select: { id: true, joNumber: true } },
-    },
-  });
-
-  // Batch check recent notifications
-  const atRiskDocIds = atRisk.map(t => (t.jobOrder as { id: string }).id);
-  const recentlyNotified = await getRecentNotificationRefs('jobOrder', atRiskDocIds, 'Execution SLA Warning', now);
-
-  for (const tracking of atRisk) {
-    const jo = tracking.jobOrder as { id: string; joNumber: string };
-    const docId = jo.id;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: logisticsIds,
-      title: 'Execution SLA Warning: Job Order',
-      body: `JO ${jo.joNumber} execution SLA deadline is within the next hour.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'jobOrder',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['logistics_coordinator', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: JO Execution ${jo.joNumber}`);
-  }
-}
-
-/**
- * Gate Pass SLA warning.
- * Date-based: createdAt + 24h deadline is within the next hour.
- */
-async function checkGatePassWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const slaMs = slaHoursToMs(_slaConfig.gate_pass);
-  const windowStart = new Date(now.getTime() - slaMs);
-  const windowEnd = new Date(oneHourFromNow.getTime() - slaMs);
-
-  const delegate = getDelegate('gatePass');
-
-  const atRisk = await delegate.findMany({
-    where: {
-      status: { in: ['pending', 'approved'] },
-      createdAt: { gt: windowStart, lt: windowEnd },
-    },
-    select: { id: true, gatePassNumber: true },
-  } as unknown);
-
-  // Hoist role lookup before the loop
-  const warehouseIds = await getEmployeeIdsByRole('warehouse_staff');
-
-  // Batch check recent notifications
-  const atRiskIds = atRisk.map(d => d.id as string);
-  const recentlyNotified = await getRecentNotificationRefs('gatePass', atRiskIds, 'SLA Warning', now);
-
-  for (const doc of atRisk) {
-    const docId = doc.id as string;
-    const docNumber = (doc.gatePassNumber as string) || docId;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: warehouseIds,
-      title: 'SLA Warning: Gate Pass',
-      body: `Gate Pass ${docNumber} SLA deadline is within the next hour.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'gatePass',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['warehouse_staff', 'warehouse_supervisor', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: Gate Pass ${docNumber}`);
-  }
-}
-
-/**
- * Scrap Buyer Pickup SLA warning.
- * buyerPickupDeadline within the next hour or date-based approach.
- */
-async function checkScrapBuyerPickupWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const delegate = getDelegate('scrapItem');
-
-  // Explicit deadline
-  const atRiskExplicit = await delegate.findMany({
-    where: {
-      status: 'sold',
-      buyerPickupDeadline: { gt: now, lt: oneHourFromNow },
-    },
-    select: { id: true, scrapNumber: true, buyerName: true },
-  } as unknown);
-
-  // Date-based fallback
-  const slaMs = slaHoursToMs(_slaConfig.scrap_buyer_pickup);
-  const windowStart = new Date(now.getTime() - slaMs);
-  const windowEnd = new Date(oneHourFromNow.getTime() - slaMs);
-  const atRiskComputed = await delegate.findMany({
-    where: {
-      status: 'sold',
-      buyerPickupDeadline: null,
-      updatedAt: { gt: windowStart, lt: windowEnd },
-    },
-    select: { id: true, scrapNumber: true, buyerName: true },
-  } as unknown);
-
-  const allAtRisk = [...atRiskExplicit, ...atRiskComputed];
-
-  // Hoist role lookup before the loop
-  const scrapCommitteeIds = await getEmployeeIdsByRole('scrap_committee_member');
-
-  // Batch check recent notifications
-  const atRiskIds = allAtRisk.map(d => d.id as string);
-  const recentlyNotified = await getRecentNotificationRefs('scrapItem', atRiskIds, 'SLA Warning', now);
-
-  for (const doc of allAtRisk) {
-    const docId = doc.id as string;
-    const docNumber = (doc.scrapNumber as string) || docId;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: scrapCommitteeIds,
-      title: 'SLA Warning: Scrap Buyer Pickup',
-      body: `Scrap ${docNumber} buyer pickup SLA deadline is within the next hour.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'scrapItem',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['scrap_committee_member', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: Scrap Buyer Pickup ${docNumber}`);
-  }
-}
-
-/**
- * Surplus Timeout SLA warning.
- * ouHeadApprovalDate + 14 days is within the next hour.
- */
-async function checkSurplusTimeoutWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const slaMs = slaHoursToMs(_slaConfig.surplus_timeout);
-  const windowStart = new Date(now.getTime() - slaMs);
-  const windowEnd = new Date(oneHourFromNow.getTime() - slaMs);
-
-  const delegate = getDelegate('surplusItem');
-
-  const atRisk = await delegate.findMany({
-    where: {
-      status: { in: ['identified', 'evaluated'] },
-      ouHeadApprovalDate: { gt: windowStart, lt: windowEnd },
-    },
-    select: { id: true, surplusNumber: true },
-  } as unknown);
-
-  // Hoist role lookup before the loop
-  const managerIds = await getEmployeeIdsByRole('manager');
-
-  // Batch check recent notifications
-  const atRiskIds = atRisk.map(d => d.id as string);
-  const recentlyNotified = await getRecentNotificationRefs('surplusItem', atRiskIds, 'SLA Warning', now);
-
-  for (const doc of atRisk) {
-    const docId = doc.id as string;
-    const docNumber = (doc.surplusNumber as string) || docId;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: managerIds,
-      title: 'SLA Warning: Surplus Timeout',
-      body: `Surplus ${docNumber} timeout SLA deadline is within the next hour. SCM approval will be available.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'surplusItem',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['manager', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: Surplus Timeout ${docNumber}`);
-  }
-}
-
-/**
- * QCI Inspection SLA warning.
- * createdAt + 14 days deadline is within the next hour.
- */
-async function checkQciInspectionWarnings(now: Date, oneHourFromNow: Date): Promise<void> {
-  const slaMs = slaHoursToMs(_slaConfig.qc_inspection);
-  const windowStart = new Date(now.getTime() - slaMs);
-  const windowEnd = new Date(oneHourFromNow.getTime() - slaMs);
-
-  const delegate = getDelegate('rfim');
-
-  const atRisk = await delegate.findMany({
-    where: {
-      status: { in: ['pending', 'in_progress'] },
-      createdAt: { gt: windowStart, lt: windowEnd },
-    },
-    select: { id: true, rfimNumber: true },
-  } as unknown);
-
-  // Hoist role lookup before the loop
-  const qcIds = await getEmployeeIdsByRole('qc_officer');
-
-  // Batch check recent notifications
-  const atRiskIds = atRisk.map(d => d.id as string);
-  const recentlyNotified = await getRecentNotificationRefs('rfim', atRiskIds, 'SLA Warning', now);
-
-  for (const doc of atRisk) {
-    const docId = doc.id as string;
-    const docNumber = (doc.rfimNumber as string) || docId;
-
-    if (recentlyNotified.has(docId)) continue;
-
-    await notifySla({
-      recipientIds: qcIds,
-      title: 'SLA Warning: QC Inspection',
-      body: `QCI ${docNumber} inspection SLA deadline is within the next hour.`,
-      notificationType: 'sla_warning',
-      referenceTable: 'rfim',
-      referenceId: docId,
-      socketEvent: 'sla:warning',
-      socketRoles: ['qc_officer', 'admin'],
-    });
-
-    log('info', `[Scheduler] SLA warning: QCI Inspection ${docNumber}`);
-  }
-}
-
-// ── Email Retry ──────────────────────────────────────────────────────────
-
-async function retryEmails(): Promise<void> {
-  try {
-    const sent = await processQueuedEmails();
-    if (sent > 0) {
-      log('info', `[Scheduler] Email retry: ${sent} sent`);
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Email retry failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Expired Lot Marking ──────────────────────────────────────────────────
-
-async function markExpiredLots(): Promise<void> {
-  try {
-    const result = await prisma.inventoryLot.updateMany({
-      where: {
-        status: 'active',
-        expiryDate: { lt: new Date() },
-      },
-      data: { status: 'expired' },
-    });
-
-    if (result.count > 0) {
-      log('info', `[Scheduler] Marked ${result.count} expired lot(s)`);
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Expired lot check failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Low Stock Alert Check ────────────────────────────────────────────────
-
-async function checkLowStock(): Promise<void> {
-  try {
-    // Find items below minimum level that haven't been alerted
-    const lowStockItems = await prisma.$queryRaw<
-      Array<{
-        item_id: string;
-        warehouse_id: string;
-        qty_on_hand: number;
-        qty_reserved: number;
-        min_level: number | null;
-        reorder_point: number | null;
-        item_code: string;
-        item_description: string;
-        warehouse_code: string;
-      }>
-    >`
-      SELECT
-        il.item_id,
-        il.warehouse_id,
-        il.qty_on_hand::float,
-        il.qty_reserved::float,
-        il.min_level::float,
-        il.reorder_point::float,
-        i.item_code,
-        i.item_description,
-        w.warehouse_code
-      FROM inventory_levels il
-      JOIN items i ON i.id = il.item_id
-      JOIN warehouses w ON w.id = il.warehouse_id
-      WHERE il.alert_sent = false
-        AND (
-          (il.min_level IS NOT NULL AND (il.qty_on_hand - il.qty_reserved) <= il.min_level)
-          OR (il.reorder_point IS NOT NULL AND (il.qty_on_hand - il.qty_reserved) <= il.reorder_point)
-        )
-      LIMIT 100
-    `;
-
-    if (lowStockItems.length === 0) return;
-
-    // Mark alerts as sent — batch update using Prisma query builder
-    await prisma.inventoryLevel.updateMany({
-      where: {
-        OR: lowStockItems.map(i => ({
-          itemId: i.item_id,
-          warehouseId: i.warehouse_id,
-        })),
-      },
-      data: { alertSent: true },
-    });
-
-    // Notify warehouse staff
-    const warehouseStaff = await prisma.employee.findMany({
-      where: { systemRole: { in: ['warehouse_staff', 'admin'] }, isActive: true },
-      select: { id: true },
-    });
-
-    const isCritical = lowStockItems.some(i => i.min_level !== null && i.qty_on_hand - i.qty_reserved <= i.min_level);
-    const notificationBody =
-      lowStockItems
-        .slice(0, 5)
-        .map(i => `${i.item_code} at ${i.warehouse_code}: ${(i.qty_on_hand - i.qty_reserved).toFixed(0)} available`)
-        .join(', ') + (lowStockItems.length > 5 ? ` (+${lowStockItems.length - 5} more)` : '');
-
-    await Promise.all(
-      warehouseStaff.map(staff =>
-        createNotification(
-          {
-            recipientId: staff.id,
-            title: `Low Stock Alert: ${lowStockItems.length} item(s)`,
-            body: notificationBody,
-            notificationType: isCritical ? 'alert' : 'warning',
-            referenceTable: 'inventory_levels',
-          },
-          io ?? undefined,
-        ),
-      ),
-    );
-
-    log('warn', `[Scheduler] Low stock: ${lowStockItems.length} item(s) below threshold`);
-  } catch (err) {
-    log('error', `[Scheduler] Low stock check failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Token Cleanup ────────────────────────────────────────────────────────
-
-async function cleanupTokens(): Promise<void> {
-  try {
-    const count = await cleanupExpiredTokens();
-    if (count > 0) {
-      log('info', `[Scheduler] Cleaned up ${count} expired refresh token(s)`);
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Token cleanup failed: ${(err as Error).message}`);
-  }
-}
-
-// ── ABC Classification Recalculation ─────────────────────────────────────
-
-async function recalculateAbcClassification(): Promise<void> {
-  try {
-    const results = await calculateABCClassification();
-    if (results.length > 0) {
-      await applyABCClassification(results);
-      log(
-        'info',
-        `[Scheduler] ABC classification: ${results.length} items updated (A: ${results.filter(r => r.abcClass === 'A').length}, B: ${results.filter(r => r.abcClass === 'B').length}, C: ${results.filter(r => r.abcClass === 'C').length})`,
-      );
-    }
-  } catch (err) {
-    log('error', `[Scheduler] ABC classification failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Cycle Count Auto-Create ───────────────────────────────────────────────
-
-async function runCycleCountAutoCreate(): Promise<void> {
-  try {
-    await autoCreateCycleCounts();
-    log('info', '[Scheduler] Cycle count auto-creation completed');
-  } catch (err) {
-    log('error', `[Scheduler] Cycle count auto-creation failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Gate Pass Expiry Check ────────────────────────────────────────────────
-
-async function expireGatePasses(): Promise<void> {
-  try {
-    // Find gate passes that have passed their validUntil date and are still active
-    const result = await prisma.gatePass.updateMany({
-      where: {
-        status: { in: ['approved', 'pending'] },
-        validUntil: { lt: new Date() },
-      },
-      data: { status: 'cancelled' },
-    });
-
-    if (result.count > 0) {
-      log('info', `[Scheduler] Expired ${result.count} gate pass(es) past validUntil date`);
-
-      // Notify security staff about expired passes
-      const securityStaff = await prisma.employee.findMany({
-        where: {
-          systemRole: { in: ['security_officer', 'warehouse_supervisor'] },
-          isActive: true,
-        },
-        select: { id: true },
-      });
-
-      if (securityStaff.length > 0) {
-        await prisma.notification.createMany({
-          data: securityStaff.map(r => ({
-            recipientId: r.id,
-            title: `${result.count} gate pass(es) auto-expired`,
-            body: `${result.count} gate pass(es) exceeded their valid-until date and have been automatically cancelled.`,
-            notificationType: 'gate_pass_expired',
-          })),
-        });
-      }
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Gate pass expiry check failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Anomaly Detection (Scheduled) ────────────────────────────────────────
-
-async function runAnomalyDetection(): Promise<void> {
-  try {
-    const anomalies = await detectAnomalies({ notify: true });
-    const highCount = anomalies.filter(a => a.severity === 'high').length;
-    if (anomalies.length > 0) {
-      log(
-        highCount > 0 ? 'warn' : 'info',
-        `[Scheduler] Anomaly detection: ${anomalies.length} found (${highCount} high severity)`,
-      );
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Anomaly detection failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Reorder Point Auto-Update (Scheduled) ────────────────────────────────
-
-async function runReorderPointUpdate(): Promise<void> {
-  try {
-    const result = await autoUpdateReorderPoints();
-    if (result.updated > 0) {
-      log('info', `[Scheduler] Reorder points auto-updated: ${result.updated}/${result.total}`);
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Reorder point update failed: ${(err as Error).message}`);
-  }
-}
-
-// ── C7: Daily Material Movement Reconciliation ─────────────────────────
-
-/**
- * SOW C7 — Daily reconciliation engine.
- * Compares InventoryLevel.qtyOnHand against the sum of all transaction movements
- * (GRN receipts, MI issuances, WT transfers, MRN returns) to detect drift.
- * Flags discrepancies as notifications to warehouse supervisors.
- */
-async function runDailyReconciliation(): Promise<void> {
-  log('info', '[Scheduler] Running daily material movement reconciliation');
-
-  try {
-    // Compute expected quantities from lot records (source of truth)
-    const lotSummaries = await prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; lot_total: number }>>`
-      SELECT
-        il."item_id",
-        il."warehouse_id",
-        COALESCE(SUM(il."available_qty"), 0)::numeric AS lot_total
-      FROM inventory_lots il
-      WHERE il.status IN ('active', 'blocked')
-      GROUP BY il."item_id", il."warehouse_id"
-    `;
-
-    // Fetch current InventoryLevel records
-    const levels = await prisma.inventoryLevel.findMany({
-      select: { id: true, itemId: true, warehouseId: true, qtyOnHand: true },
-    });
-
-    const lotMap = new Map<string, number>();
-    for (const row of lotSummaries) {
-      lotMap.set(`${row.item_id}:${row.warehouse_id}`, Number(row.lot_total));
-    }
-
-    const discrepancies: Array<{
-      itemId: string;
-      warehouseId: string;
-      qtyOnHand: number;
-      lotTotal: number;
-      diff: number;
-    }> = [];
-
-    for (const level of levels) {
-      const key = `${level.itemId}:${level.warehouseId}`;
-      const lotTotal = lotMap.get(key) ?? 0;
-      const onHand = Number(level.qtyOnHand);
-      const diff = Math.abs(onHand - lotTotal);
-
-      // Flag if difference exceeds 0.001 (floating point tolerance)
-      if (diff > 0.001) {
-        discrepancies.push({
-          itemId: level.itemId,
-          warehouseId: level.warehouseId,
-          qtyOnHand: onHand,
-          lotTotal,
-          diff,
-        });
-      }
-    }
-
-    if (discrepancies.length === 0) {
-      log('info', '[Scheduler] Reconciliation complete — no discrepancies found');
-      return;
-    }
-
-    log('warn', `[Scheduler] Reconciliation found ${discrepancies.length} discrepancies`);
-
-    // Notify warehouse supervisors and admins
-    const supervisorIds = await getEmployeeIdsByRole('warehouse_supervisor');
-    const inventorySpecialistIds = await getEmployeeIdsByRole('inventory_specialist');
-    const adminIds = await getAdminIds();
-    const allRecipients = [...new Set([...supervisorIds, ...inventorySpecialistIds, ...adminIds])];
-
-    if (allRecipients.length > 0) {
-      const top5 = discrepancies
-        .slice(0, 5)
-        .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (Δ${d.diff.toFixed(3)})`);
-
-      await notifySla({
-        recipientIds: allRecipients,
-        title: `Reconciliation Alert: ${discrepancies.length} discrepancies`,
-        body: `Daily reconciliation found ${discrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
-        notificationType: 'reconciliation_alert',
-        referenceTable: 'inventory_levels',
-        referenceId: 'daily-reconciliation',
-        socketEvent: 'inventory:reconciliation',
-        socketRoles: ['admin', 'warehouse_supervisor', 'inventory_specialist'],
-      });
-    }
-
-    // Auto-correct discrepancies where lot total is authoritative
-    for (const d of discrepancies) {
-      await prisma.inventoryLevel.updateMany({
-        where: { itemId: d.itemId, warehouseId: d.warehouseId },
-        data: { qtyOnHand: d.lotTotal },
-      });
-    }
-
-    log('info', `[Scheduler] Reconciliation: auto-corrected ${discrepancies.length} inventory levels`);
-  } catch (err) {
-    log('error', `[Scheduler] Reconciliation failed: ${(err as Error).message}`);
-  }
-}
-
-// ── SOW M4-F07: Scheduled Report Auto-Generation ─────────────────────────
-
-async function runScheduledReports(): Promise<void> {
-  try {
-    const now = new Date();
-
-    // Find all reports due for generation
-    const dueReports = await prisma.savedReport.findMany({
-      where: {
-        scheduleFrequency: { not: null },
-        nextRunAt: { lte: now },
-      },
-      include: {
-        owner: { select: { id: true, fullName: true, email: true } },
-      },
-    });
-
-    if (dueReports.length === 0) return;
-
-    log('info', `[Scheduler] Processing ${dueReports.length} scheduled report(s)`);
-
-    for (const report of dueReports) {
-      try {
-        // Calculate next run time based on frequency
-        const nextRun = new Date(now);
-        switch (report.scheduleFrequency) {
-          case 'daily':
-            nextRun.setDate(nextRun.getDate() + 1);
-            break;
-          case 'weekly':
-            nextRun.setDate(nextRun.getDate() + 7);
-            break;
-          case 'monthly':
-            nextRun.setMonth(nextRun.getMonth() + 1);
-            break;
-          case 'quarterly':
-            nextRun.setMonth(nextRun.getMonth() + 3);
-            break;
-          default:
-            nextRun.setDate(nextRun.getDate() + 1); // fallback daily
-        }
-
-        // Update report with last/next run times
-        await prisma.savedReport.update({
-          where: { id: report.id },
-          data: { lastRunAt: now, nextRunAt: nextRun },
-        });
-
-        // Notify the report owner that their scheduled report is ready
-        await prisma.notification.create({
-          data: {
-            recipientId: report.ownerId,
-            title: `Scheduled report ready: ${report.name}`.slice(0, 200),
-            body: `Your ${report.scheduleFrequency} report "${report.name}" has been generated and is ready for viewing.`,
-            notificationType: 'scheduled_report',
-            isRead: false,
-          },
-        });
-
-        log('info', `[Scheduler] Generated scheduled report: ${report.name} (next: ${nextRun.toISOString()})`);
-      } catch (err) {
-        log('error', `[Scheduler] Failed to process report ${report.name}: ${(err as Error).message}`);
-      }
-    }
-  } catch (err) {
-    log('error', `[Scheduler] Scheduled reports check failed: ${(err as Error).message}`);
-  }
-}
-
-// ── Visitor Overstay Detection (SOW M5-F03) ──────────────────────────────
-
-async function checkVisitorOverstays(): Promise<void> {
-  try {
-    const now = new Date();
-
-    // Find checked-in visitors where checkInTime + expectedDuration < now
-    const overstayVisitors = await prisma.visitorPass.findMany({
-      where: {
-        status: 'checked_in',
-        checkInTime: { not: null },
-      },
-      include: {
-        warehouse: { select: { id: true, warehouseName: true, managerId: true } },
-        registeredBy: { select: { id: true } },
-      },
-    });
-
-    // Filter in JS because Prisma doesn't support computed date comparison
-    const overstayIds: string[] = [];
-    const notifyTargets: Array<{
-      visitorName: string;
-      passNumber: string;
-      warehouseManagerId: string | null;
-      registeredById: string;
-    }> = [];
-
-    for (const visitor of overstayVisitors) {
-      if (!visitor.checkInTime) continue;
-      const expectedEnd = new Date(visitor.checkInTime.getTime() + visitor.expectedDuration * 60 * 1000);
-      if (expectedEnd < now) {
-        overstayIds.push(visitor.id);
-        notifyTargets.push({
-          visitorName: visitor.visitorName,
-          passNumber: visitor.passNumber,
-          warehouseManagerId: visitor.warehouse.managerId,
-          registeredById: visitor.registeredBy.id,
-        });
-      }
-    }
-
-    if (overstayIds.length === 0) return;
-
-    // Batch update status to overstay
-    await prisma.visitorPass.updateMany({
-      where: { id: { in: overstayIds } },
-      data: { status: 'overstay' },
-    });
-
-    // Find gate officers and warehouse supervisors to notify
-    const staffToNotify = await prisma.employee.findMany({
-      where: {
-        systemRole: { in: ['gate_officer', 'warehouse_supervisor'] },
-        isActive: true,
-      },
-      select: { id: true },
-    });
-
-    const recipientIds = new Set(staffToNotify.map(s => s.id));
-    // Also add warehouse managers and the registering officers
-    for (const target of notifyTargets) {
-      if (target.warehouseManagerId) recipientIds.add(target.warehouseManagerId);
-      recipientIds.add(target.registeredById);
-    }
-
-    // Send notifications
-    await Promise.allSettled(
-      Array.from(recipientIds).map(recipientId =>
-        createNotification(
-          {
-            recipientId,
-            title: 'Visitor Overstay Alert',
-            body: `${overstayIds.length} visitor(s) have exceeded their expected visit duration and require attention.`,
-            notificationType: 'visitor_overstay',
-            referenceTable: 'visitor_passes',
-          },
-          io ?? undefined,
-        ),
-      ),
-    );
-
-    log('warn', `[Scheduler] Visitor overstay: ${overstayIds.length} visitor(s) marked as overstay`);
-  } catch (err) {
-    log('error', `[Scheduler] Visitor overstay check failed: ${(err as Error).message}`);
-  }
+// ── Build JobContext ─────────────────────────────────────────────────────
+
+function buildJobContext(): JobContext {
+  return {
+    prisma: prisma as unknown as JobContext['prisma'],
+    io,
+    log,
+    notifySla,
+    getAdminIds,
+    getEmployeeIdsByRole,
+    getRecentNotificationRefs,
+    hasRecentNotification,
+    refreshSlaConfig,
+    getDelegate,
+    slaHoursToMs,
+    _computeSlaDeadline,
+    getSlaConfig,
+    createNotification,
+  };
 }
 
 // ── Scheduler Lifecycle ──────────────────────────────────────────────────
@@ -1599,95 +280,13 @@ export function startScheduler(socketIo?: SocketIOServer): void {
 
   log('info', '[Scheduler] Starting background job scheduler');
 
-  // Sequential loops with distributed locks (lock TTL slightly less than interval)
-  // SLA breach detection — every 5 minutes (lock: 4 min)
-  scheduleLoop('sla_breach', checkSlaBreaches, 5 * 60 * 1000, 240);
+  const ctx = buildJobContext();
 
-  // SLA warning detection — every 5 minutes (lock: 4 min)
-  scheduleLoop('sla_warning', checkSlaWarnings, 5 * 60 * 1000, 240);
-
-  // Email retry — every 2 minutes (lock: 90 sec)
-  scheduleLoop('email_retry', retryEmails, 2 * 60 * 1000, 90);
-
-  // Expired lot marking — every hour (lock: 50 min)
-  scheduleLoop('expired_lots', markExpiredLots, 60 * 60 * 1000, 3000);
-
-  // Low stock alert — every 30 minutes (lock: 25 min)
-  scheduleLoop('low_stock', checkLowStock, 30 * 60 * 1000, 1500);
-
-  // Token cleanup — every 6 hours (lock: 5 hours)
-  scheduleLoop('token_cleanup', cleanupTokens, 6 * 60 * 60 * 1000, 18000);
-
-  // ABC classification — every 7 days (lock: 6 days)
-  scheduleLoop('abc_classification', recalculateAbcClassification, 7 * 24 * 60 * 60 * 1000, 518400);
-
-  // Cycle count auto-creation — daily (lock: 23 hours)
-  scheduleLoop('cycle_count_auto', runCycleCountAutoCreate, 24 * 60 * 60 * 1000, 82800);
-
-  // Gate pass expiry — every hour (lock: 50 min)
-  scheduleLoop('gate_pass_expiry', expireGatePasses, 60 * 60 * 1000, 3000);
-
-  // Anomaly detection — every 6 hours (lock: 5 hours)
-  scheduleLoop('anomaly_detection', runAnomalyDetection, 6 * 60 * 60 * 1000, 18000);
-
-  // Reorder point auto-update — every 7 days (lock: 6 days)
-  scheduleLoop('reorder_update', runReorderPointUpdate, 7 * 24 * 60 * 60 * 1000, 518400);
-
-  // Scheduled workflow rules — every 60 seconds (lock: 50 sec)
-  scheduleLoop('scheduled_rules', processScheduledRules, 60 * 1000, 50);
-
-  // SOW C7: Daily material movement reconciliation — every 24 hours (lock: 23 hours)
-  scheduleLoop('daily_reconciliation', runDailyReconciliation, 24 * 60 * 60 * 1000, 82800);
-
-  // SOW M4-F07: Scheduled report auto-generation — every hour (lock: 50 min)
-  scheduleLoop('scheduled_reports', runScheduledReports, 60 * 60 * 1000, 3000);
-
-  // Asset depreciation calculation — daily check, quarterly execution (lock: 2 hours)
-  scheduleLoop('asset_depreciation', calculateDepreciation, 24 * 60 * 60 * 1000, 7200);
-
-  // ── SOW Notification Checks (N-03, N-05, N-08, N-09, N-10, N-12, N-13, N-14) ──
-
-  // N-03: Equipment return date approaching — daily (lock: 23 hours)
-  scheduleLoop('sow_equipment_return', checkEquipmentReturnDue, 24 * 60 * 60 * 1000, 82800);
-
-  // N-05: Shipment delayed — every 6 hours (lock: 5 hours)
-  scheduleLoop('sow_shipment_delays', checkShipmentDelays, 6 * 60 * 60 * 1000, 18000);
-
-  // N-08: Cycle count scheduled — daily (lock: 23 hours)
-  scheduleLoop('sow_cycle_count', checkScheduledCycleCounts, 24 * 60 * 60 * 1000, 82800);
-
-  // N-09: Rate card expiring — daily (lock: 23 hours)
-  scheduleLoop('sow_rate_card_expiry', checkRateCardExpiry, 24 * 60 * 60 * 1000, 82800);
-
-  // N-10: Vehicle maintenance due — every 12 hours (lock: 11 hours)
-  scheduleLoop('sow_vehicle_maint', checkVehicleMaintenanceDue, 12 * 60 * 60 * 1000, 39600);
-
-  // M8: Vehicle maintenance usage-based scheduling — every 12 hours (lock: 11 hours)
-  scheduleLoop('vehicle_maintenance', checkVehicleMaintenanceDueM8, 12 * 60 * 60 * 1000, 39600);
-
-  // N-12: NCR/DR deadline approaching — daily (lock: 23 hours)
-  scheduleLoop('sow_ncr_deadline', checkNcrDeadlines, 24 * 60 * 60 * 1000, 82800);
-
-  // N-13: Contract/insurance renewal due — daily (lock: 23 hours)
-  scheduleLoop('sow_contract_renewal', checkContractRenewals, 24 * 60 * 60 * 1000, 82800);
-
-  // N-14: Overdue tool return — every 12 hours (lock: 11 hours)
-  scheduleLoop('sow_overdue_tools', checkOverdueToolReturns, 12 * 60 * 60 * 1000, 39600);
-
-  // SOW M5-F03: Visitor overstay detection — every 30 minutes (lock: 25 min)
-  scheduleLoop('visitor_overstay', checkVisitorOverstays, 30 * 60 * 1000, 1500);
-
-  // SOW M1: AMC expiry check — daily (lock: 2 hours)
-  scheduleLoop('amc_expiry', checkAmcExpiry, 24 * 60 * 60 * 1000, 7200);
-
-  // M6: Security monitor — suspicious login activity detection — every hour (lock: 50 min)
-  scheduleLoop('security_monitor', detectSuspiciousActivity, 60 * 60 * 1000, 3000);
-
-  // L2: Expiry date alerts — daily (lock: 2 hours)
-  scheduleLoop('expiry_alerts', checkExpiringLots, 24 * 60 * 60 * 1000, 7200);
-
-  // L2: Auto-quarantine expired lots — every 12 hours (lock: ~83 min)
-  scheduleLoop('expiry_quarantine', autoQuarantineExpired, 12 * 60 * 60 * 1000, 5000);
+  // Register all domain jobs via the job registry and start their loops
+  const jobs = getAllJobs();
+  for (const job of jobs) {
+    scheduleLoop(job.name, () => job.handler(ctx), job.intervalMs, job.lockTtlSec);
+  }
 
   // Initialize nextRunAt for any scheduled rules that don't have one
   initializeScheduledRules().catch(err =>
@@ -1699,13 +298,10 @@ export function startScheduler(socketIo?: SocketIOServer): void {
     if (!running) return;
     const hasLock = await acquireLock('initial_run', 30);
     if (hasLock) {
-      const initialJobs = [
-        { name: 'checkSlaBreaches', fn: checkSlaBreaches },
-        { name: 'checkSlaWarnings', fn: checkSlaWarnings },
-        { name: 'retryEmails', fn: retryEmails },
-        { name: 'markExpiredLots', fn: markExpiredLots },
-      ];
-      const results = await Promise.allSettled(initialJobs.map(j => j.fn()));
+      // Find initial jobs by name from the registry
+      const initialJobNames = ['sla_breach', 'sla_warning', 'email_retry', 'expired_lots'];
+      const initialJobs = jobs.filter(j => initialJobNames.includes(j.name));
+      const results = await Promise.allSettled(initialJobs.map(j => j.handler(ctx)));
       results.forEach((r, i) => {
         if (r.status === 'rejected') {
           log('error', `[Scheduler] Initial ${initialJobs[i].name} failed: ${(r.reason as Error).message}`);
@@ -1725,5 +321,6 @@ export function stopScheduler(): void {
   }
   timers.length = 0;
   io = null;
+  clearJobs();
   log('info', '[Scheduler] Scheduler stopped');
 }
