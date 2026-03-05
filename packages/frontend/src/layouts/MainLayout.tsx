@@ -149,7 +149,14 @@ export const MainLayout: React.FC<{
       <div
         className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out h-full`}
       >
-        <Sidebar role={role} isOpen={isSidebarOpen} setRole={setRole} isMobile={isMobile} onLogout={onLogout} />
+        <Sidebar
+          role={role}
+          isOpen={isSidebarOpen}
+          setRole={setRole}
+          isMobile={isMobile}
+          onLogout={onLogout}
+          userName={user.name}
+        />
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden transition-all duration-300 w-full">

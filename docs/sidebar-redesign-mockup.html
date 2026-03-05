@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIT SCS V2 — Sidebar Redesign Proposal</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0a1628; color: #fff; display: flex; min-height: 100vh; }
+
+  /* Layout */
+  .container { display: flex; width: 100%; }
+  .sidebar-wrap { display: flex; gap: 32px; padding: 24px; }
+  .sidebar-column { display: flex; flex-direction: column; gap: 12px; }
+  .sidebar-column h2 { font-size: 14px; font-weight: 600; color: #80D1E9; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+
+  /* Sidebar shell */
+  .sidebar {
+    width: 260px;
+    background: rgba(5,16,32,0.95);
+    backdrop-filter: blur(24px);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
+    overflow: hidden;
+    height: 720px;
+  }
+
+  /* Logo area */
+  .logo-area {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #2E3192, #80D1E9);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; color: #fff;
+  }
+  .logo-text { font-size: 14px; font-weight: 600; }
+  .logo-sub { font-size: 10px; color: #9ca3af; }
+
+  /* Search */
+  .search-bar {
+    margin: 8px 12px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6b7280;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .search-bar:hover { background: rgba(255,255,255,0.08); }
+  .search-kbd {
+    margin-left: auto;
+    font-size: 10px;
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #9ca3af;
+  }
+
+  /* Nav sections */
+  .nav-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+  .nav-content::-webkit-scrollbar { width: 4px; }
+  .nav-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .nav-section { margin-bottom: 4px; }
+  .section-header {
+    padding: 8px 16px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 16px;
+    font-size: 13px;
+    color: #d1d5db;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .nav-item.active {
+    background: rgba(46,49,146,0.3);
+    color: #80D1E9;
+    border-left: 3px solid #80D1E9;
+    padding-left: 13px;
+  }
+  .nav-item .icon {
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.7;
+  }
+  .nav-item:hover .icon { opacity: 1; }
+  .nav-item.active .icon { opacity: 1; }
+
+  .badge {
+    margin-left: auto;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .badge.info { background: #2E3192; }
+
+  /* User footer */
+  .user-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #2E3192, #80D1E9);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-role { font-size: 10px; color: #9ca3af; }
+
+  /* Old sidebar styles */
+  .old-sidebar .nav-item { padding-left: 20px; }
+  .old-sidebar .nav-group-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+  }
+  .old-sidebar .nav-group-title .icon { opacity: 0.7; }
+  .old-sidebar .nav-child {
+    padding: 5px 16px 5px 42px;
+    font-size: 12px;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .old-sidebar .nav-child:hover { color: #d1d5db; background: rgba(255,255,255,0.03); }
+  .old-sidebar .dot { width: 4px; height: 4px; background: #6b7280; border-radius: 50%; }
+
+  /* Info panel */
+  .info-panel {
+    flex: 1;
+    padding: 32px;
+    max-width: 600px;
+    overflow-y: auto;
+  }
+  .info-panel h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .info-panel .subtitle { color: #9ca3af; font-size: 14px; margin-bottom: 24px; }
+
+  .change-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .change-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .change-card p { font-size: 13px; color: #9ca3af; line-height: 1.5; }
+  .change-num {
+    width: 22px; height: 22px;
+    background: #2E3192;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* Role switcher */
+  .role-switcher {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .role-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    background: transparent;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .role-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .role-btn.active { background: #2E3192; border-color: #2E3192; color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+  <!-- NEW SIDEBAR -->
+  <div class="sidebar-column">
+    <h2>Proposed</h2>
+    <div class="sidebar" id="new-sidebar"></div>
+  </div>
+
+  <!-- OLD SIDEBAR -->
+  <div class="sidebar-column">
+    <h2>Current</h2>
+    <div class="sidebar old-sidebar" id="old-sidebar"></div>
+  </div>
+
+  <!-- INFO PANEL -->
+  <div class="info-panel" id="info-panel"></div>
+</div>
+
+<script>
+// ── NAV DATA ────────────────────────────────────────────────────────────
+
+const NEW_NAV = {
+  ADMIN: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+      { label: 'Pending Approvals', icon: 'clock', badge: '5' },
+      { label: 'Documents', icon: 'file' },
+    ]},
+    { section: 'OPERATIONS', items: [
+      { label: 'GRN (Receiving)', icon: 'download' },
+      { label: 'MI (Issuing)', icon: 'upload' },
+      { label: 'MRN (Returns)', icon: 'corner-down-left' },
+      { label: 'MR (Requests)', icon: 'clipboard' },
+      { label: 'WT (Transfers)', icon: 'repeat' },
+      { label: 'IMSF (Inter-Store)', icon: 'git-branch' },
+    ]},
+    { section: 'QUALITY', items: [
+      { label: 'QCI (Inspections)', icon: 'check-circle' },
+      { label: 'DR (Discrepancy)', icon: 'alert-triangle' },
+    ]},
+    { section: 'EQUIPMENT & FLEET', items: [
+      { label: 'Job Orders', icon: 'tool', badge: '3' },
+      { label: 'Gate Passes', icon: 'log-out' },
+      { label: 'Fleet & Rentals', icon: 'truck' },
+      { label: 'Tools & Issues', icon: 'wrench' },
+      { label: 'Generators', icon: 'zap' },
+      { label: 'Assets & AMC', icon: 'box' },
+    ]},
+    { section: 'INVENTORY', items: [
+      { label: 'Stock Levels', icon: 'layers' },
+      { label: 'Bin Cards', icon: 'database' },
+      { label: 'Scrap & Surplus', icon: 'trash-2' },
+      { label: 'Expiry Alerts', icon: 'alert-circle', badge: '12', badgeType: 'info' },
+    ]},
+    { section: 'LOGISTICS', items: [
+      { label: 'Shipments', icon: 'truck' },
+      { label: 'Customs & Tariffs', icon: 'globe' },
+      { label: 'Route Optimizer', icon: 'map' },
+    ]},
+    { section: 'ANALYTICS', items: [
+      { label: 'KPI Dashboard', icon: 'bar-chart-2' },
+      { label: 'Cost Allocation', icon: 'dollar-sign' },
+      { label: 'Security Monitor', icon: 'shield' },
+      { label: 'Compliance', icon: 'clipboard-check' },
+    ]},
+    { section: 'ADMIN', items: [
+      { label: 'Master Data', icon: 'database' },
+      { label: 'Employees & Org', icon: 'users' },
+      { label: 'Workflows', icon: 'git-merge' },
+      { label: 'System Settings', icon: 'settings' },
+    ]},
+  ],
+  WAREHOUSE: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+      { label: 'Pending Tasks', icon: 'clock', badge: '8' },
+    ]},
+    { section: 'RECEIVING', items: [
+      { label: 'GRN (Receiving)', icon: 'download' },
+      { label: 'QCI (Inspections)', icon: 'check-circle' },
+      { label: 'DR (Discrepancy)', icon: 'alert-triangle' },
+    ]},
+    { section: 'ISSUING', items: [
+      { label: 'MI (Issuing)', icon: 'upload' },
+      { label: 'MRN (Returns)', icon: 'corner-down-left' },
+    ]},
+    { section: 'INVENTORY', items: [
+      { label: 'Bin Cards', icon: 'database' },
+      { label: 'Stock Levels', icon: 'layers' },
+      { label: 'Expiry Alerts', icon: 'alert-circle', badge: '12', badgeType: 'info' },
+    ]},
+    { section: 'TRANSFERS', items: [
+      { label: 'WT (Transfers)', icon: 'repeat' },
+      { label: 'IMSF (Inter-Store)', icon: 'git-branch' },
+      { label: 'Handovers', icon: 'user-check' },
+    ]},
+    { section: 'TOOLS', items: [
+      { label: 'Gate Passes', icon: 'log-out' },
+      { label: 'Tool Issues', icon: 'wrench' },
+    ]},
+  ],
+  LOGISTICS: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+    ]},
+    { section: 'SHIPPING', items: [
+      { label: 'Shipments', icon: 'truck' },
+      { label: 'Gate Passes', icon: 'log-out' },
+      { label: 'Transport Orders', icon: 'navigation' },
+    ]},
+    { section: 'CUSTOMS', items: [
+      { label: 'Customs Documents', icon: 'globe' },
+      { label: 'Tariffs', icon: 'file-text' },
+    ]},
+    { section: 'PLANNING', items: [
+      { label: 'Route Optimizer', icon: 'map' },
+      { label: 'Interactive Map', icon: 'map-pin' },
+    ]},
+  ],
+  QC: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+    ]},
+    { section: 'INSPECTIONS', items: [
+      { label: 'QCI (Inspections)', icon: 'check-circle' },
+      { label: 'DR (Discrepancy)', icon: 'alert-triangle' },
+      { label: 'Supplier Evaluations', icon: 'star' },
+    ]},
+    { section: 'DOCUMENTS', items: [
+      { label: 'GRN (Receiving)', icon: 'download' },
+    ]},
+  ],
+  ENGINEER: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+    ]},
+    { section: 'JOB ORDERS', items: [
+      { label: 'Job Orders', icon: 'tool', badge: '3' },
+      { label: 'Labor Records', icon: 'users' },
+    ]},
+    { section: 'EQUIPMENT', items: [
+      { label: 'Tools & Issues', icon: 'wrench' },
+      { label: 'Generators', icon: 'zap' },
+      { label: 'Vehicles', icon: 'truck' },
+      { label: 'Assets & AMC', icon: 'box' },
+    ]},
+    { section: 'MATERIALS', items: [
+      { label: 'MR (Requests)', icon: 'clipboard' },
+      { label: 'MI (Issuing)', icon: 'upload' },
+    ]},
+  ],
+  MANAGER: [
+    { section: 'OVERVIEW', items: [
+      { label: 'Dashboard', icon: 'grid', active: true },
+      { label: 'Pending Approvals', icon: 'clock', badge: '7' },
+    ]},
+    { section: 'OPERATIONS', items: [
+      { label: 'GRN (Receiving)', icon: 'download' },
+      { label: 'MI (Issuing)', icon: 'upload' },
+      { label: 'MRN (Returns)', icon: 'corner-down-left' },
+      { label: 'MR (Requests)', icon: 'clipboard' },
+      { label: 'Job Orders', icon: 'tool' },
+    ]},
+    { section: 'ANALYTICS', items: [
+      { label: 'KPI Dashboard', icon: 'bar-chart-2' },
+      { label: 'Cost Allocation', icon: 'dollar-sign' },
+      { label: 'Compliance', icon: 'clipboard-check' },
+    ]},
+    { section: 'REPORTS', items: [
+      { label: 'Saved Reports', icon: 'file-text' },
+      { label: 'Scrap & Surplus', icon: 'trash-2' },
+    ]},
+  ],
+};
+
+const OLD_NAV = {
+  ADMIN: [
+    { group: 'Dashboard', icon: 'grid', children: [] },
+    { group: 'Material Management', icon: 'package', children: ['GRN', 'MI', 'MRN', 'MR', 'WT', 'IMSF', 'Handover', 'QCI', 'DR'] },
+    { group: 'Job Orders & Fleet', icon: 'tool', children: ['Job Orders', 'Gate Passes', 'Rental Contracts', 'Tools', 'Tool Issues', 'Generator Fuel', 'Generator Maint.', 'Vehicle Maint.', 'Assets', 'AMC', 'Equipment Notes'] },
+    { group: 'Inventory', icon: 'layers', children: ['Bin Cards', 'Cycle Counts', 'Surplus', 'Scrap', 'Expiry Alerts', 'ABC Analysis'] },
+    { group: 'Logistics', icon: 'truck', children: ['Shipments', 'Transport Orders', 'Customs Docs', 'Tariffs', 'Route Optimizer'] },
+    { group: 'Analytics', icon: 'bar-chart', children: ['KPIs', 'Cost Allocation', 'Security', 'Demand Forecast'] },
+    { group: 'Compliance', icon: 'shield', children: ['Audits', 'Supplier Evals', 'Visitors'] },
+    { group: 'Workflows', icon: 'git-merge', children: ['Rules', 'Templates', 'Approvals', 'Delegations'] },
+    { group: 'Settings', icon: 'settings', children: ['Master Data', 'Users', 'Permissions', 'Email Templates', 'Navigation', 'System'] },
+    { group: 'Documents', icon: 'file', children: ['Search', 'Bulk Ops', 'Import'] },
+  ],
+  WAREHOUSE: [
+    { group: 'Dashboard', icon: 'grid', children: [] },
+    { group: 'Receiving', icon: 'download', children: ['GRN', 'QCI', 'DR'] },
+    { group: 'Issuing', icon: 'upload', children: ['MI', 'MRN'] },
+    { group: 'Inventory', icon: 'layers', children: ['Bin Cards', 'Stock Levels'] },
+    { group: 'Transfers', icon: 'repeat', children: ['WT', 'IMSF', 'Handovers'] },
+    { group: 'Gate Passes', icon: 'log-out', children: [] },
+  ],
+};
+
+// ── ICON SVGs (safe, no innerHTML) ──────────────────────────────────────
+
+function createSvgIcon(name) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+
+  const paths = {
+    'grid': ['M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z'],
+    'clock': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 6v6l4 2'],
+    'file': ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M16 13H8', 'M16 17H8', 'M10 9H8'],
+    'download': ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M7 10l5 5 5-5', 'M12 15V3'],
+    'upload': ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M17 8l-5-5-5 5', 'M12 3v12'],
+    'corner-down-left': ['M9 10l-5 5 5 5', 'M20 4v7a4 4 0 0 1-4 4H4'],
+    'clipboard': ['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2', 'M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z'],
+    'repeat': ['M17 1l4 4-4 4', 'M3 11V9a4 4 0 0 1 4-4h14', 'M7 23l-4-4 4-4', 'M21 13v2a4 4 0 0 1-4 4H3'],
+    'git-branch': ['M6 3v12', 'M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M18 9a9 9 0 0 1-9 9'],
+    'check-circle': ['M22 11.08V12a10 10 0 1 1-5.93-9.14', 'M22 4L12 14.01l-3-3'],
+    'alert-triangle': ['M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z', 'M12 9v4', 'M12 17h.01'],
+    'tool': ['M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'],
+    'log-out': ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'],
+    'truck': ['M1 3h15v13H1z', 'M16 8h4l3 3v5h-7V8z', 'M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z', 'M18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z'],
+    'wrench': ['M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'],
+    'zap': ['M13 2L3 14h9l-1 8 10-12h-9l1-8z'],
+    'box': ['M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z', 'M3.27 6.96L12 12.01l8.73-5.05', 'M12 22.08V12'],
+    'layers': ['M12 2L2 7l10 5 10-5-10-5z', 'M2 17l10 5 10-5', 'M2 12l10 5 10-5'],
+    'database': ['M12 2C6.48 2 2 4.02 2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11C22 4.02 17.52 2 12 2z', 'M2 6.5C2 8.98 6.48 11 12 11s10-2.02 10-4.5', 'M2 12c0 2.48 4.48 4.5 10 4.5s10-2.02 10-4.5'],
+    'trash-2': ['M3 6h18', 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', 'M10 11v6', 'M14 11v6'],
+    'alert-circle': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 8v4', 'M12 16h.01'],
+    'globe': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M2 12h20', 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'],
+    'map': ['M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z', 'M8 2v16', 'M16 6v16'],
+    'bar-chart-2': ['M18 20V10', 'M12 20V4', 'M6 20v-6'],
+    'dollar-sign': ['M12 1v22', 'M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'],
+    'shield': ['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'],
+    'clipboard-check': ['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2', 'M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z', 'M9 14l2 2 4-4'],
+    'users': ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M23 21v-2a4 4 0 0 0-3-3.87', 'M16 3.13a4 4 0 0 1 0 7.75'],
+    'git-merge': ['M18 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M6 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M6 21V9a9 9 0 0 0 9 9'],
+    'settings': ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z'],
+    'search': ['M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z', 'M21 21l-4.35-4.35'],
+    'package': ['M16.5 9.4l-9-5.19', 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z', 'M3.27 6.96L12 12.01l8.73-5.05', 'M12 22.08V12'],
+    'file-text': ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M16 13H8', 'M16 17H8', 'M10 9H8'],
+    'navigation': ['M3 11l19-9-9 19-2-8-8-2z'],
+    'map-pin': ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z', 'M12 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'],
+    'star': ['M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'],
+    'user-check': ['M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M8.5 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', 'M17 11l2 2 4-4'],
+    'bar-chart': ['M12 20V10', 'M18 20V4', 'M6 20v-4'],
+  };
+
+  for (const pList of Object.values(paths)) {
+    for (const d of pList) {
+      const el = document.createElementNS(ns, 'path');
+      el.setAttribute('d', d);
+      svg.appendChild(el);
+    }
+  }
+
+  // If unknown icon, draw a simple circle
+  if (!paths[name]) {
+    const c = document.createElementNS(ns, 'circle');
+    c.setAttribute('cx', '12');
+    c.setAttribute('cy', '12');
+    c.setAttribute('r', '10');
+    svg.appendChild(c);
+  }
+
+  return svg;
+}
+
+// Correct version that creates the SVG properly for each call
+function makeIcon(name) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+
+  const allPaths = {
+    'grid': ['M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z'],
+    'clock': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 6v6l4 2'],
+    'file': ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M16 13H8', 'M16 17H8', 'M10 9H8'],
+    'download': ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M7 10l5 5 5-5', 'M12 15V3'],
+    'upload': ['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'M17 8l-5-5-5 5', 'M12 3v12'],
+    'corner-down-left': ['M9 10l-5 5 5 5', 'M20 4v7a4 4 0 0 1-4 4H4'],
+    'clipboard': ['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2', 'M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z'],
+    'repeat': ['M17 1l4 4-4 4', 'M3 11V9a4 4 0 0 1 4-4h14', 'M7 23l-4-4 4-4', 'M21 13v2a4 4 0 0 1-4 4H3'],
+    'git-branch': ['M6 3v12', 'M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M18 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M18 9a9 9 0 0 1-9 9'],
+    'check-circle': ['M22 11.08V12a10 10 0 1 1-5.93-9.14', 'M22 4L12 14.01l-3-3'],
+    'alert-triangle': ['M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z', 'M12 9v4', 'M12 17h.01'],
+    'tool': ['M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'],
+    'log-out': ['M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4', 'M16 17l5-5-5-5', 'M21 12H9'],
+    'truck': ['M1 3h15v13H1z', 'M16 8h4l3 3v5h-7V8z'],
+    'wrench': ['M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'],
+    'zap': ['M13 2L3 14h9l-1 8 10-12h-9l1-8z'],
+    'box': ['M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z', 'M3.27 6.96L12 12.01l8.73-5.05', 'M12 22.08V12'],
+    'layers': ['M12 2L2 7l10 5 10-5-10-5z', 'M2 17l10 5 10-5', 'M2 12l10 5 10-5'],
+    'database': ['M12 2C6.48 2 2 4.02 2 6.5S6.48 11 12 11s10-2.02 10-4.5S17.52 2 12 2z', 'M2 6.5v11C2 19.98 6.48 22 12 22s10-2.02 10-4.5v-11'],
+    'trash-2': ['M3 6h18', 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', 'M10 11v6', 'M14 11v6'],
+    'alert-circle': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M12 8v4', 'M12 16h.01'],
+    'globe': ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z', 'M2 12h20'],
+    'map': ['M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z', 'M8 2v16', 'M16 6v16'],
+    'bar-chart-2': ['M18 20V10', 'M12 20V4', 'M6 20v-6'],
+    'dollar-sign': ['M12 1v22', 'M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'],
+    'shield': ['M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'],
+    'clipboard-check': ['M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2', 'M9 2h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z', 'M9 14l2 2 4-4'],
+    'users': ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M23 21v-2a4 4 0 0 0-3-3.87'],
+    'git-merge': ['M18 18a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M6 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', 'M6 21V9a9 9 0 0 0 9 9'],
+    'settings': ['M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'],
+    'search': ['M21 21l-4.35-4.35'],
+    'package': ['M16.5 9.4l-9-5.19', 'M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'],
+    'file-text': ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6', 'M16 13H8', 'M16 17H8'],
+    'navigation': ['M3 11l19-9-9 19-2-8-8-2z'],
+    'map-pin': ['M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'],
+    'star': ['M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'],
+    'user-check': ['M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2', 'M17 11l2 2 4-4'],
+    'bar-chart': ['M12 20V10', 'M18 20V4', 'M6 20v-4'],
+  };
+
+  var pArr = allPaths[name] || ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z'];
+  for (var i = 0; i < pArr.length; i++) {
+    var p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', pArr[i]);
+    svg.appendChild(p);
+  }
+  return svg;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────
+
+var currentNewRole = 'ADMIN';
+var currentOldRole = 'ADMIN';
+
+function renderNewSidebar(role) {
+  var container = document.getElementById('new-sidebar');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  // Logo
+  var logoArea = document.createElement('div');
+  logoArea.className = 'logo-area';
+  var logoIcon = document.createElement('div');
+  logoIcon.className = 'logo-icon';
+  logoIcon.textContent = 'N';
+  var logoTextWrap = document.createElement('div');
+  var logoText = document.createElement('div');
+  logoText.className = 'logo-text';
+  logoText.textContent = 'NIT SCS';
+  var logoSub = document.createElement('div');
+  logoSub.className = 'logo-sub';
+  logoSub.textContent = 'Supply Chain V2';
+  logoTextWrap.appendChild(logoText);
+  logoTextWrap.appendChild(logoSub);
+  logoArea.appendChild(logoIcon);
+  logoArea.appendChild(logoTextWrap);
+  container.appendChild(logoArea);
+
+  // Search
+  var searchBar = document.createElement('div');
+  searchBar.className = 'search-bar';
+  searchBar.appendChild(makeIcon('search'));
+  var searchText = document.createElement('span');
+  searchText.textContent = 'Search...';
+  searchBar.appendChild(searchText);
+  var kbd = document.createElement('span');
+  kbd.className = 'search-kbd';
+  kbd.textContent = '\u2318K';
+  searchBar.appendChild(kbd);
+  container.appendChild(searchBar);
+
+  // Nav content
+  var navContent = document.createElement('div');
+  navContent.className = 'nav-content';
+
+  var sections = NEW_NAV[role] || NEW_NAV['ADMIN'];
+  for (var s = 0; s < sections.length; s++) {
+    var sec = sections[s];
+    var sectionDiv = document.createElement('div');
+    sectionDiv.className = 'nav-section';
+
+    var header = document.createElement('div');
+    header.className = 'section-header';
+    header.textContent = sec.section;
+    sectionDiv.appendChild(header);
+
+    for (var i = 0; i < sec.items.length; i++) {
+      var item = sec.items[i];
+      var navItem = document.createElement('div');
+      navItem.className = 'nav-item' + (item.active ? ' active' : '');
+
+      var iconWrap = document.createElement('span');
+      iconWrap.className = 'icon';
+      iconWrap.appendChild(makeIcon(item.icon));
+      navItem.appendChild(iconWrap);
+
+      var label = document.createElement('span');
+      label.textContent = item.label;
+      navItem.appendChild(label);
+
+      if (item.badge) {
+        var badge = document.createElement('span');
+        badge.className = 'badge' + (item.badgeType === 'info' ? ' info' : '');
+        badge.textContent = item.badge;
+        navItem.appendChild(badge);
+      }
+
+      sectionDiv.appendChild(navItem);
+    }
+    navContent.appendChild(sectionDiv);
+  }
+  container.appendChild(navContent);
+
+  // User footer
+  var footer = document.createElement('div');
+  footer.className = 'user-footer';
+  var avatar = document.createElement('div');
+  avatar.className = 'user-avatar';
+  avatar.textContent = 'AH';
+  var userInfo = document.createElement('div');
+  var userName = document.createElement('div');
+  userName.className = 'user-name';
+  userName.textContent = 'Abdulrahman';
+  var userRole = document.createElement('div');
+  userRole.className = 'user-role';
+  userRole.textContent = role.replace('_', ' ');
+  userInfo.appendChild(userName);
+  userInfo.appendChild(userRole);
+  footer.appendChild(avatar);
+  footer.appendChild(userInfo);
+  container.appendChild(footer);
+}
+
+function renderOldSidebar(role) {
+  var container = document.getElementById('old-sidebar');
+  while (container.firstChild) container.removeChild(container.firstChild);
+
+  // Logo (old — taller)
+  var logoArea = document.createElement('div');
+  logoArea.className = 'logo-area';
+  logoArea.style.padding = '20px 16px';
+  var logoIcon = document.createElement('div');
+  logoIcon.className = 'logo-icon';
+  logoIcon.style.width = '40px';
+  logoIcon.style.height = '40px';
+  logoIcon.textContent = 'N';
+  var logoTextWrap = document.createElement('div');
+  var logoText = document.createElement('div');
+  logoText.className = 'logo-text';
+  logoText.textContent = 'Nesma IT SCS';
+  var logoSub = document.createElement('div');
+  logoSub.className = 'logo-sub';
+  logoSub.textContent = 'V2 - Supply Chain';
+  logoTextWrap.appendChild(logoText);
+  logoTextWrap.appendChild(logoSub);
+  logoArea.appendChild(logoIcon);
+  logoArea.appendChild(logoTextWrap);
+  container.appendChild(logoArea);
+
+  // Nav content
+  var navContent = document.createElement('div');
+  navContent.className = 'nav-content';
+
+  var groups = OLD_NAV[role] || OLD_NAV['ADMIN'];
+  for (var g = 0; g < groups.length; g++) {
+    var group = groups[g];
+    var groupTitle = document.createElement('div');
+    groupTitle.className = 'nav-group-title';
+    var iconWrap = document.createElement('span');
+    iconWrap.className = 'icon';
+    iconWrap.appendChild(makeIcon(group.icon));
+    groupTitle.appendChild(iconWrap);
+    var titleText = document.createElement('span');
+    titleText.textContent = group.group;
+    groupTitle.appendChild(titleText);
+    navContent.appendChild(groupTitle);
+
+    for (var c = 0; c < group.children.length; c++) {
+      var child = document.createElement('div');
+      child.className = 'nav-child';
+      var dot = document.createElement('span');
+      dot.className = 'dot';
+      child.appendChild(dot);
+      var childText = document.createElement('span');
+      childText.textContent = group.children[c];
+      child.appendChild(childText);
+      navContent.appendChild(child);
+    }
+  }
+  container.appendChild(navContent);
+
+  // Old footer — raw role select
+  var footer = document.createElement('div');
+  footer.className = 'user-footer';
+  footer.style.flexDirection = 'column';
+  footer.style.gap = '4px';
+  var footerLabel = document.createElement('div');
+  footerLabel.style.fontSize = '10px';
+  footerLabel.style.color = '#6b7280';
+  footerLabel.textContent = 'Switch Role';
+  var sel = document.createElement('select');
+  sel.style.cssText = 'background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#fff;padding:6px 8px;font-size:12px;width:100%;font-family:inherit;';
+  var roles = ['Admin', 'WH Supervisor', 'WH Staff', 'Logistics', 'QC Officer', 'Engineer', 'Manager'];
+  for (var r = 0; r < roles.length; r++) {
+    var opt = document.createElement('option');
+    opt.textContent = roles[r];
+    sel.appendChild(opt);
+  }
+  footer.appendChild(footerLabel);
+  footer.appendChild(sel);
+  container.appendChild(footer);
+}
+
+function renderInfoPanel() {
+  var panel = document.getElementById('info-panel');
+  while (panel.firstChild) panel.removeChild(panel.firstChild);
+
+  var h1 = document.createElement('h1');
+  h1.textContent = 'Sidebar Redesign Proposal';
+  panel.appendChild(h1);
+
+  var sub = document.createElement('div');
+  sub.className = 'subtitle';
+  sub.textContent = 'NIT Supply Chain V2 \u2014 Comparing proposed vs current navigation';
+  panel.appendChild(sub);
+
+  // Role switcher
+  var switcherLabel = document.createElement('div');
+  switcherLabel.style.cssText = 'font-size:12px;color:#6b7280;margin-bottom:6px;';
+  switcherLabel.textContent = 'Switch role to compare:';
+  panel.appendChild(switcherLabel);
+
+  var switcher = document.createElement('div');
+  switcher.className = 'role-switcher';
+  var roleNames = ['ADMIN', 'WAREHOUSE', 'LOGISTICS', 'QC', 'ENGINEER', 'MANAGER'];
+  for (var i = 0; i < roleNames.length; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'role-btn' + (roleNames[i] === currentNewRole ? ' active' : '');
+    btn.textContent = roleNames[i];
+    btn.setAttribute('data-role', roleNames[i]);
+    btn.addEventListener('click', function() {
+      var role = this.getAttribute('data-role');
+      currentNewRole = role;
+      renderNewSidebar(role);
+      var oldRole = (OLD_NAV[role]) ? role : 'ADMIN';
+      renderOldSidebar(oldRole);
+      renderInfoPanel();
+    });
+    switcher.appendChild(btn);
+  }
+  panel.appendChild(switcher);
+
+  // Changes
+  var changes = [
+    { title: 'Domain-based section grouping', desc: '8 flat-labeled sections with uppercase headers instead of 10 expandable dropdown groups. Items are grouped by business domain (Operations, Quality, Inventory, etc.) for faster scanning.' },
+    { title: 'Icons on every item', desc: 'Every nav item has its own icon, not just top-level groups. This improves scannability and helps users find items by visual pattern, not just text.' },
+    { title: 'Section headers (not nested dropdowns)', desc: 'Replace collapsible groups with always-visible section headers. Users see all items at once without clicking to expand. Reduces clicks-to-target by 1.' },
+    { title: 'Quick search (\u2318K)', desc: 'Searchable command palette at the top of the sidebar. For 30+ nav items, search is faster than scrolling. Common in enterprise SaaS (Notion, Linear, GitHub).' },
+    { title: 'Notification badges', desc: 'Red/blue count badges on items needing attention (Pending Approvals: 5, Job Orders: 3, Expiry Alerts: 12). Pulls users toward action items without a separate notification page.' },
+    { title: 'Compact logo area', desc: 'Reduced from h-24 (96px) to h-16 (64px). Reclaims vertical space for navigation, especially important on laptop screens (768px viewport).' },
+    { title: 'Proper user footer', desc: 'Avatar + name + role display instead of raw <select> dropdown. Role switching moves to Settings page (admin-only). Cleaner, more professional.' },
+  ];
+
+  for (var c = 0; c < changes.length; c++) {
+    var card = document.createElement('div');
+    card.className = 'change-card';
+    var h3 = document.createElement('h3');
+    var num = document.createElement('span');
+    num.className = 'change-num';
+    num.textContent = String(c + 1);
+    h3.appendChild(num);
+    var titleSpan = document.createElement('span');
+    titleSpan.textContent = ' ' + changes[c].title;
+    h3.appendChild(titleSpan);
+    var p = document.createElement('p');
+    p.textContent = changes[c].desc;
+    card.appendChild(h3);
+    card.appendChild(p);
+    panel.appendChild(card);
+  }
+}
+
+// Initial render
+renderNewSidebar('ADMIN');
+renderOldSidebar('ADMIN');
+renderInfoPanel();
+</script>
+</body>
+</html>

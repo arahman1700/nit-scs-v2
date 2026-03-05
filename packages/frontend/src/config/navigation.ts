@@ -1,400 +1,452 @@
-import type { NavItem } from '@nit-scs-v2/shared/types';
+import type { NavSection } from '@nit-scs-v2/shared/types';
 import { UserRole } from '@nit-scs-v2/shared/types';
 
-export const NAVIGATION_LINKS: Record<string, NavItem[]> = {
+// ── Section-based navigation config ─────────────────────────────────────
+// Each role gets an array of NavSections. Each section has a header label
+// and flat items with icons. No nested dropdowns — sections are always visible.
+
+export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.ADMIN]: [
-    // ── 1. Dashboard ──
-    { label: 'Dashboard', path: '/admin' },
-
-    // ── 2. Warehouses & Stores ──
     {
-      label: 'Warehouses & Stores',
-      path: '/admin/warehouses',
-      children: [
-        { label: 'Overview', path: '/admin/warehouses' },
-        { label: '---', type: 'divider' },
-        { label: 'GRN - Goods Receipt', path: '/admin/warehouses?tab=grn' },
-        { label: 'MI - Material Issuance', path: '/admin/warehouses?tab=mi' },
-        { label: 'MRN - Material Return', path: '/admin/warehouses?tab=mrn' },
-        { label: 'MR - Material Request', path: '/admin/warehouses?tab=mr' },
-        { label: '---', type: 'divider' },
-        { label: 'QCI - Quality Inspection', path: '/admin/warehouses?tab=qci' },
-        { label: 'DR - Discrepancy Report', path: '/admin/warehouses?tab=dr' },
-        { label: '---', type: 'divider' },
-        { label: 'Inventory', path: '/admin/warehouses?tab=inventory' },
-        { label: 'Bin Cards', path: '/admin/warehouses?tab=bin-cards' },
-        { label: 'Non-Moving Materials', path: '/admin/warehouses?tab=non-moving' },
-        { label: '---', type: 'divider' },
-        { label: 'IMSF - Material Shifting', path: '/admin/warehouses?tab=imsf' },
-        { label: 'WT - Warehouse Transfer', path: '/admin/warehouses?tab=wt' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' },
+        { label: 'Pending Approvals', path: '/admin/settings?tab=approval-levels', icon: 'Clock', badge: 0 },
+        { label: 'Documents', path: '/admin/documents', icon: 'FileText' },
       ],
     },
-
-    // ── 3. Equipment & Transport ──
     {
-      label: 'Equipment & Transport',
-      path: '/admin/equipment',
-      children: [
-        { label: 'Overview', path: '/admin/equipment' },
-        { label: '---', type: 'divider' },
-        { label: 'Job Orders Board', path: '/admin/equipment?tab=kanban' },
-        { label: 'All Job Orders', path: '/admin/equipment?tab=all-jobs' },
-        { label: '---', type: 'divider' },
-        { label: 'Gate Passes', path: '/admin/equipment?tab=gate-passes' },
-        { label: '---', type: 'divider' },
-        { label: 'Fleet Management', path: '/admin/equipment?tab=fleet' },
-        { label: 'Rental Contracts', path: '/admin/equipment?tab=rental-contracts' },
-        { label: '---', type: 'divider' },
-        { label: 'Generators', path: '/admin/equipment?tab=generators' },
-        { label: 'Generator Fuel', path: '/admin/equipment?tab=generator-fuel' },
-        { label: 'Generator Maintenance', path: '/admin/equipment?tab=generator-maintenance' },
-        { label: '---', type: 'divider' },
-        { label: 'Tools Management', path: '/admin/equipment?tab=tools' },
-        { label: 'Tool Issues', path: '/admin/equipment?tab=tool-issues' },
-        { label: '---', type: 'divider' },
-        { label: 'AMC Contracts', path: '/admin/amc' },
-        { label: 'Vehicle Maintenance', path: '/admin/vehicle-maintenance' },
-        { label: 'Asset Register', path: '/admin/assets' },
+      section: 'OPERATIONS',
+      items: [
+        { label: 'GRN - Receiving', path: '/admin/warehouses?tab=grn', icon: 'PackageCheck' },
+        { label: 'MI - Issuing', path: '/admin/warehouses?tab=mi', icon: 'Send' },
+        { label: 'MRN - Returns', path: '/admin/warehouses?tab=mrn', icon: 'CornerDownLeft' },
+        { label: 'MR - Requests', path: '/admin/warehouses?tab=mr', icon: 'ClipboardList' },
+        { label: 'WT - Transfers', path: '/admin/warehouses?tab=wt', icon: 'Repeat' },
+        { label: 'IMSF - Inter-Store', path: '/admin/warehouses?tab=imsf', icon: 'GitBranch' },
       ],
     },
-
-    // ── 4. Scrap & Surplus ──
     {
-      label: 'Scrap & Surplus',
-      path: '/admin/scrap',
-      children: [
-        { label: 'Overview', path: '/admin/scrap' },
-        { label: 'Scrap Management', path: '/admin/scrap?tab=scrap' },
-        { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
-        { label: 'Surplus Items', path: '/admin/scrap?tab=surplus' },
+      section: 'QUALITY',
+      items: [
+        { label: 'QCI - Inspections', path: '/admin/warehouses?tab=qci', icon: 'CheckCircle' },
+        { label: 'DR - Discrepancy', path: '/admin/warehouses?tab=dr', icon: 'AlertTriangle' },
       ],
     },
-
-    // ── 5. Shipping & Customs ──
     {
-      label: 'Shipping & Customs',
-      path: '/admin/shipping',
-      children: [
-        { label: 'Overview', path: '/admin/shipping' },
-        { label: 'Shipments', path: '/admin/shipping?tab=shipments' },
-        { label: 'Customs Clearance', path: '/admin/shipping?tab=customs' },
-        { label: 'SLA Performance', path: '/admin/shipping?tab=sla' },
-        { label: 'Customs Documents', path: '/admin/customs-documents' },
-        { label: 'Tariff & Duties', path: '/admin/tariffs' },
+      section: 'EQUIPMENT & FLEET',
+      items: [
+        { label: 'Job Orders', path: '/admin/equipment?tab=all-jobs', icon: 'Wrench', badge: 0 },
+        { label: 'Gate Passes', path: '/admin/equipment?tab=gate-passes', icon: 'DoorOpen' },
+        { label: 'Fleet & Rentals', path: '/admin/equipment?tab=fleet', icon: 'Truck' },
+        { label: 'Tools & Issues', path: '/admin/equipment?tab=tools', icon: 'Hammer' },
+        { label: 'Generators', path: '/admin/equipment?tab=generators', icon: 'Zap' },
+        { label: 'Assets & AMC', path: '/admin/amc', icon: 'Box' },
       ],
     },
-
-    // ── 6. Interactive Map ──
-    { label: 'Interactive Map', path: '/admin/map' },
-
-    // ── 7. Documents ──
-    { label: 'Documents', path: '/admin/documents' },
-
-    // ── 8. Master Data ──
     {
-      label: 'Master Data',
-      path: '/admin/master',
-      children: [
-        { label: 'Overview', path: '/admin/master' },
-        { label: 'Items', path: '/admin/master?tab=items' },
-        { label: 'Suppliers', path: '/admin/master?tab=suppliers' },
-        { label: 'Projects', path: '/admin/master?tab=projects' },
-        { label: 'Warehouses', path: '/admin/master?tab=warehouses' },
-        { label: 'Equipment', path: '/admin/master?tab=equipment' },
+      section: 'INVENTORY',
+      items: [
+        { label: 'Stock Overview', path: '/admin/warehouses?tab=inventory', icon: 'Layers' },
+        { label: 'Bin Cards', path: '/admin/warehouses?tab=bin-cards', icon: 'Database' },
+        { label: 'Scrap & Surplus', path: '/admin/scrap', icon: 'Recycle' },
+        { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts', icon: 'AlertCircle', badge: 0 },
       ],
     },
-
-    // ── 9. Employees & Org ──
     {
-      label: 'Employees & Org',
-      path: '/admin/employees',
-      children: [
-        { label: 'Employees', path: '/admin/employees?tab=employees' },
-        { label: 'Departments', path: '/admin/employees?tab=departments' },
-        { label: 'Org Chart', path: '/admin/employees?tab=org-chart' },
-        { label: 'Delegations', path: '/admin/employees?tab=delegations' },
+      section: 'LOGISTICS',
+      items: [
+        { label: 'Shipments', path: '/admin/shipping?tab=shipments', icon: 'Ship' },
+        { label: 'Customs & Tariffs', path: '/admin/customs-documents', icon: 'Globe' },
+        { label: 'Route Optimizer', path: '/admin/map', icon: 'Map' },
       ],
     },
-
-    // ── 10. Settings ──
     {
-      label: 'Settings',
-      path: '/admin/settings',
-      children: [
-        { label: 'Roles & Permissions', path: '/admin/settings?tab=roles' },
-        { label: 'Audit Log', path: '/admin/settings?tab=audit' },
-        { label: 'System Settings', path: '/admin/settings?tab=settings' },
-        { label: 'Reports', path: '/admin/settings?tab=reports' },
-        { label: '---', type: 'divider' },
-        { label: 'Approval Levels', path: '/admin/settings?tab=approval-levels' },
-        { label: 'Workflows', path: '/admin/settings?tab=workflows' },
-        { label: '---', type: 'divider' },
-        { label: 'Email Templates', path: '/admin/settings?tab=email-templates' },
-        { label: 'Email Logs', path: '/admin/settings?tab=email-logs' },
-        { label: '---', type: 'divider' },
-        { label: 'KPI Dashboard', path: '/admin/dashboards/kpis' },
-        { label: 'Security', path: '/admin/dashboards/security' },
-        { label: 'Compliance', path: '/admin/compliance' },
+      section: 'ANALYTICS',
+      items: [
+        { label: 'KPI Dashboard', path: '/admin/dashboards/kpis', icon: 'BarChart2' },
+        { label: 'Cost Allocation', path: '/admin/dashboards/cost-allocation', icon: 'DollarSign' },
+        { label: 'Security Monitor', path: '/admin/dashboards/security', icon: 'Shield' },
+        { label: 'Compliance', path: '/admin/compliance', icon: 'ClipboardCheck' },
+      ],
+    },
+    {
+      section: 'ADMIN',
+      items: [
+        { label: 'Master Data', path: '/admin/master', icon: 'Database' },
+        { label: 'Employees & Org', path: '/admin/employees', icon: 'Users' },
+        { label: 'Workflows', path: '/admin/settings?tab=workflows', icon: 'GitMerge' },
+        { label: 'System Settings', path: '/admin/settings', icon: 'Settings' },
       ],
     },
   ],
+
   [UserRole.WAREHOUSE_SUPERVISOR]: [
-    { label: 'Dashboard', path: '/warehouse' },
     {
-      label: 'Operations',
-      path: '/warehouse/receive',
-      children: [
-        { label: 'Receive (GRN)', path: '/warehouse/receive' },
-        { label: 'Issue (MI)', path: '/warehouse/issue' },
-        { label: 'Returns (MRN)', path: '/warehouse/return' },
-        { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' },
+        { label: 'Mobile Dashboard', path: '/warehouse/mobile', icon: 'Smartphone' },
       ],
     },
-    { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Labor Dashboard', path: '/warehouse/labor' },
-    { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts' },
-    { label: 'Demand Analytics', path: '/warehouse/demand-analytics' },
+    {
+      section: 'RECEIVING',
+      items: [
+        { label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' },
+        { label: 'QCI - Inspections', path: '/qc/inspections', icon: 'CheckCircle' },
+        { label: 'DR - Discrepancy', path: '/qc/dr', icon: 'AlertTriangle' },
+      ],
+    },
+    {
+      section: 'ISSUING',
+      items: [
+        { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
+        { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+      ],
+    },
+    {
+      section: 'INVENTORY',
+      items: [
+        { label: 'Stock Levels', path: '/warehouse/inventory', icon: 'Layers' },
+        { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts', icon: 'AlertCircle', badge: 0 },
+        { label: 'Demand Analytics', path: '/warehouse/demand-analytics', icon: 'TrendingUp' },
+      ],
+    },
+    {
+      section: 'TRANSFERS',
+      items: [
+        { label: 'WT - Transfers', path: '/logistics/wt', icon: 'Repeat' },
+        { label: 'IMSF - Inter-Store', path: '/logistics/imsf', icon: 'GitBranch' },
+      ],
+    },
+    {
+      section: 'PEOPLE',
+      items: [{ label: 'Labor Dashboard', path: '/warehouse/labor', icon: 'Users' }],
+    },
   ],
+
   [UserRole.WAREHOUSE_STAFF]: [
-    { label: 'Dashboard', path: '/warehouse' },
     {
-      label: 'Operations',
-      path: '/warehouse/receive',
-      children: [
-        { label: 'Receive (GRN)', path: '/warehouse/receive' },
-        { label: 'Issue (MI)', path: '/warehouse/issue' },
-        { label: 'Returns (MRN)', path: '/warehouse/return' },
-        { label: 'Mobile Dashboard', path: '/warehouse/mobile' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' },
+        { label: 'Mobile Dashboard', path: '/warehouse/mobile', icon: 'Smartphone' },
       ],
     },
-    { label: 'Inventory', path: '/warehouse/inventory' },
-    { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts' },
-    { label: 'Demand Analytics', path: '/warehouse/demand-analytics' },
+    {
+      section: 'RECEIVING',
+      items: [{ label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' }],
+    },
+    {
+      section: 'ISSUING',
+      items: [
+        { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
+        { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+      ],
+    },
+    {
+      section: 'INVENTORY',
+      items: [
+        { label: 'Stock Levels', path: '/warehouse/inventory', icon: 'Layers' },
+        { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts', icon: 'AlertCircle', badge: 0 },
+        { label: 'Demand Analytics', path: '/warehouse/demand-analytics', icon: 'TrendingUp' },
+      ],
+    },
   ],
+
   [UserRole.FREIGHT_FORWARDER]: [
-    { label: 'Dashboard', path: '/transport' },
     {
-      label: 'Logistics',
-      path: '/transport/shipments',
-      children: [
-        { label: 'Shipments', path: '/transport/shipments' },
-        { label: 'Gate Passes', path: '/transport/gate-passes' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/transport', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'SHIPPING',
+      items: [
+        { label: 'Shipments', path: '/transport/shipments', icon: 'Ship' },
+        { label: 'Gate Passes', path: '/transport/gate-passes', icon: 'DoorOpen' },
       ],
     },
   ],
+
   [UserRole.MANAGER]: [
-    { label: 'Dashboard', path: '/manager' },
     {
-      label: 'Workflow',
-      path: '/manager/approvals',
-      children: [
-        { label: 'Approval Queue', path: '/manager/approvals' },
-        { label: 'Documents', path: '/manager/documents' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/manager', icon: 'LayoutDashboard' },
+        { label: 'Pending Approvals', path: '/manager/approvals', icon: 'Clock', badge: 0 },
       ],
     },
     {
-      label: 'Oversight',
-      path: '/manager/projects',
-      children: [
-        { label: 'Projects', path: '/manager/projects' },
-        { label: 'Tasks', path: '/manager/tasks' },
+      section: 'OPERATIONS',
+      items: [
+        { label: 'GRN - Receiving', path: '/manager/documents', icon: 'PackageCheck' },
+        { label: 'Job Orders', path: '/manager/tasks', icon: 'Wrench' },
+        { label: 'Projects', path: '/manager/projects', icon: 'Briefcase' },
+      ],
+    },
+    {
+      section: 'ANALYTICS',
+      items: [
+        { label: 'KPI Dashboard', path: '/manager/kpis', icon: 'BarChart2' },
+        { label: 'Reports', path: '/manager/reports', icon: 'FileText' },
       ],
     },
   ],
+
   [UserRole.QC_OFFICER]: [
-    { label: 'Dashboard', path: '/qc' },
     {
-      label: 'Inspections',
-      path: '/qc/inspections',
-      children: [
-        { label: 'Inspections (QCI)', path: '/qc/inspections' },
-        { label: 'Discrepancy Reports (DR)', path: '/qc/dr' },
-        { label: 'Incoming', path: '/qc/incoming' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/qc', icon: 'LayoutDashboard' },
+        { label: 'Tasks', path: '/qc/tasks', icon: 'ListTodo' },
       ],
     },
-    { label: 'Tasks', path: '/qc/tasks' },
+    {
+      section: 'INSPECTIONS',
+      items: [
+        { label: 'QCI - Inspections', path: '/qc/inspections', icon: 'CheckCircle' },
+        { label: 'DR - Discrepancy', path: '/qc/dr', icon: 'AlertTriangle' },
+        { label: 'Incoming', path: '/qc/incoming', icon: 'PackageCheck' },
+      ],
+    },
   ],
+
   [UserRole.LOGISTICS_COORDINATOR]: [
-    { label: 'Dashboard', path: '/logistics' },
     {
-      label: 'Operations',
-      path: '/logistics/jobs',
-      children: [
-        { label: 'Job Orders', path: '/logistics/jobs' },
-        { label: 'IMSF', path: '/logistics/imsf' },
-        { label: 'Warehouse Transfers', path: '/logistics/wt' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' },
+        { label: 'Tasks', path: '/logistics/tasks', icon: 'ListTodo' },
       ],
     },
     {
-      label: 'Shipping',
-      path: '/logistics/shipments',
-      children: [
-        { label: 'Shipments', path: '/logistics/shipments' },
-        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      section: 'OPERATIONS',
+      items: [
+        { label: 'Job Orders', path: '/logistics/jobs', icon: 'Wrench' },
+        { label: 'IMSF - Inter-Store', path: '/logistics/imsf', icon: 'GitBranch' },
+        { label: 'WT - Transfers', path: '/logistics/wt', icon: 'Repeat' },
       ],
     },
-    { label: 'Tasks', path: '/logistics/tasks' },
+    {
+      section: 'SHIPPING',
+      items: [
+        { label: 'Shipments', path: '/logistics/shipments', icon: 'Ship' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes', icon: 'DoorOpen' },
+      ],
+    },
   ],
+
   [UserRole.SITE_ENGINEER]: [
-    { label: 'Dashboard', path: '/site-engineer' },
     {
-      label: 'Requests',
-      path: '/site-engineer/new',
-      children: [
-        { label: 'New Request (MR)', path: '/site-engineer/new' },
-        { label: 'My Requests', path: '/site-engineer/my-requests' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/site-engineer', icon: 'LayoutDashboard' },
+        { label: 'Tasks', path: '/site-engineer/tasks', icon: 'ListTodo' },
       ],
     },
     {
-      label: 'Project',
-      path: '/site-engineer/project',
-      children: [
-        { label: 'My Project', path: '/site-engineer/project' },
-        { label: 'Site Inventory', path: '/site-engineer/inventory' },
+      section: 'REQUESTS',
+      items: [
+        { label: 'New Request (MR)', path: '/site-engineer/new', icon: 'PlusCircle' },
+        { label: 'My Requests', path: '/site-engineer/my-requests', icon: 'FileText' },
       ],
     },
-    { label: 'Tasks', path: '/site-engineer/tasks' },
+    {
+      section: 'PROJECT',
+      items: [
+        { label: 'My Project', path: '/site-engineer/project', icon: 'Briefcase' },
+        { label: 'Site Inventory', path: '/site-engineer/inventory', icon: 'Package' },
+      ],
+    },
   ],
+
   [UserRole.TRANSPORT_SUPERVISOR]: [
-    { label: 'Dashboard', path: '/logistics/transport' },
     {
-      label: 'Operations',
-      path: '/logistics?tab=all-jobs',
-      children: [
-        { label: 'Job Orders', path: '/logistics?tab=all-jobs' },
-        { label: 'Fleet', path: '/logistics?tab=fleet' },
-        { label: 'Rental Contracts', path: '/logistics?tab=rental-contracts' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/logistics/transport', icon: 'LayoutDashboard' },
+        { label: 'Tasks', path: '/logistics/tasks', icon: 'ListTodo' },
       ],
     },
-    { label: 'Tasks', path: '/logistics/tasks' },
+    {
+      section: 'OPERATIONS',
+      items: [
+        { label: 'Job Orders', path: '/logistics?tab=all-jobs', icon: 'Wrench' },
+        { label: 'Fleet', path: '/logistics?tab=fleet', icon: 'Truck' },
+        { label: 'Rental Contracts', path: '/logistics?tab=rental-contracts', icon: 'FileText' },
+      ],
+    },
   ],
+
   [UserRole.SCRAP_COMMITTEE_MEMBER]: [
-    { label: 'Dashboard', path: '/admin/scrap' },
     {
-      label: 'Scrap & Surplus',
-      path: '/admin/scrap?tab=ssc',
-      children: [
-        { label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc' },
-        { label: 'Scrap Items', path: '/admin/scrap?tab=scrap' },
-        { label: 'Surplus', path: '/admin/scrap?tab=surplus' },
+      section: 'OVERVIEW',
+      items: [{ label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'SCRAP & SURPLUS',
+      items: [
+        { label: 'Scrap Items', path: '/admin/scrap?tab=scrap', icon: 'Recycle' },
+        { label: 'Surplus', path: '/admin/scrap?tab=surplus', icon: 'Package' },
       ],
     },
   ],
-  // SOW Section 13.1 — additional roles
+
   [UserRole.TECHNICAL_MANAGER]: [
-    { label: 'Dashboard', path: '/manager' },
     {
-      label: 'Approvals',
-      path: '/manager/approvals',
-      children: [
-        { label: 'Approval Queue', path: '/manager/approvals' },
-        { label: 'Documents', path: '/manager/documents' },
+      section: 'OVERVIEW',
+      items: [
+        { label: 'Dashboard', path: '/manager', icon: 'LayoutDashboard' },
+        { label: 'Pending Approvals', path: '/manager/approvals', icon: 'Clock', badge: 0 },
       ],
     },
     {
-      label: 'Oversight',
-      path: '/manager/projects',
-      children: [
-        { label: 'Projects', path: '/manager/projects' },
-        { label: 'Inventory', path: '/manager/inventory' },
+      section: 'OVERSIGHT',
+      items: [
+        { label: 'Documents', path: '/manager/documents', icon: 'FileText' },
+        { label: 'Projects', path: '/manager/projects', icon: 'Briefcase' },
+        { label: 'Inventory', path: '/manager/inventory', icon: 'Layers' },
       ],
     },
   ],
+
   [UserRole.GATE_OFFICER]: [
-    { label: 'Dashboard', path: '/warehouse' },
     {
-      label: 'Gate Operations',
-      path: '/warehouse/gate-passes',
-      children: [
-        { label: 'Gate Passes', path: '/warehouse/gate-passes' },
-        { label: 'Inbound Verification', path: '/warehouse/gate-inbound' },
-        { label: 'Outbound Verification', path: '/warehouse/gate-outbound' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'GATE OPERATIONS',
+      items: [
+        { label: 'Gate Passes', path: '/warehouse/gate-passes', icon: 'DoorOpen' },
+        { label: 'Inbound Verification', path: '/warehouse/gate-inbound', icon: 'PackageCheck' },
+        { label: 'Outbound Verification', path: '/warehouse/gate-outbound', icon: 'Send' },
       ],
     },
   ],
+
   [UserRole.INVENTORY_SPECIALIST]: [
-    { label: 'Dashboard', path: '/warehouse' },
     {
-      label: 'Inventory',
-      path: '/warehouse/inventory',
-      children: [
-        { label: 'Stock Levels', path: '/warehouse/inventory' },
-        { label: 'Bin Cards', path: '/warehouse/bin-cards' },
-        { label: 'Cycle Counts', path: '/warehouse/cycle-counts' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'INVENTORY',
+      items: [
+        { label: 'Stock Levels', path: '/warehouse/inventory', icon: 'Layers' },
+        { label: 'Bin Cards', path: '/warehouse/bin-cards', icon: 'Database' },
+        { label: 'Cycle Counts', path: '/warehouse/cycle-counts', icon: 'RefreshCw' },
       ],
     },
     {
-      label: 'Operations',
-      path: '/warehouse/receive',
-      children: [
-        { label: 'Receive (GRN)', path: '/warehouse/receive' },
-        { label: 'Issue (MI)', path: '/warehouse/issue' },
-        { label: 'Returns (MRN)', path: '/warehouse/return' },
+      section: 'OPERATIONS',
+      items: [
+        { label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' },
+        { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
+        { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
       ],
     },
   ],
+
   [UserRole.SHIPPING_OFFICER]: [
-    { label: 'Dashboard', path: '/logistics' },
     {
-      label: 'Shipments',
-      path: '/logistics/shipments',
-      children: [
-        { label: 'All Shipments', path: '/logistics/shipments' },
-        { label: 'Customs Clearance', path: '/logistics/customs' },
-        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'SHIPMENTS',
+      items: [
+        { label: 'All Shipments', path: '/logistics/shipments', icon: 'Ship' },
+        { label: 'Customs Clearance', path: '/logistics/customs', icon: 'Globe' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes', icon: 'DoorOpen' },
       ],
     },
   ],
+
   [UserRole.FINANCE_USER]: [
-    { label: 'Dashboard', path: '/admin' },
     {
-      label: 'Reports',
-      path: '/admin/settings?tab=reports',
-      children: [
-        { label: 'Financial Reports', path: '/admin/settings?tab=reports' },
-        { label: 'Inventory Valuation', path: '/admin/warehouses?tab=inventory' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'REPORTS',
+      items: [
+        { label: 'Financial Reports', path: '/admin/settings?tab=reports', icon: 'BarChart2' },
+        { label: 'Inventory Valuation', path: '/admin/warehouses?tab=inventory', icon: 'DollarSign' },
       ],
     },
     {
-      label: 'Documents',
-      path: '/admin/documents',
-      children: [
-        { label: 'All Documents', path: '/admin/documents' },
-        { label: 'Job Orders', path: '/admin/equipment?tab=all-jobs' },
+      section: 'DOCUMENTS',
+      items: [
+        { label: 'All Documents', path: '/admin/documents', icon: 'FileText' },
+        { label: 'Job Orders', path: '/admin/equipment?tab=all-jobs', icon: 'Wrench' },
       ],
     },
   ],
+
   [UserRole.CUSTOMS_SPECIALIST]: [
-    { label: 'Dashboard', path: '/logistics' },
     {
-      label: 'Customs',
-      path: '/logistics/customs',
-      children: [
-        { label: 'Customs Clearance', path: '/logistics/customs' },
-        { label: 'Shipments', path: '/logistics/shipments' },
-        { label: 'Gate Passes', path: '/logistics/gate-passes' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'CUSTOMS',
+      items: [
+        { label: 'Customs Clearance', path: '/logistics/customs', icon: 'Globe' },
+        { label: 'Shipments', path: '/logistics/shipments', icon: 'Ship' },
+        { label: 'Gate Passes', path: '/logistics/gate-passes', icon: 'DoorOpen' },
       ],
     },
   ],
+
   [UserRole.COMPLIANCE_OFFICER]: [
-    { label: 'Dashboard', path: '/admin' },
     {
-      label: 'Compliance',
-      path: '/admin/settings?tab=audit',
-      children: [
-        { label: 'Audit Log', path: '/admin/settings?tab=audit' },
-        { label: 'Reports', path: '/admin/settings?tab=reports' },
+      section: 'OVERVIEW',
+      items: [{ label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' }],
+    },
+    {
+      section: 'COMPLIANCE',
+      items: [
+        { label: 'Audit Log', path: '/admin/settings?tab=audit', icon: 'Shield' },
+        { label: 'Reports', path: '/admin/settings?tab=reports', icon: 'FileText' },
+        { label: 'Quality (QCI)', path: '/admin/warehouses?tab=qci', icon: 'CheckCircle' },
       ],
     },
     {
-      label: 'Documents',
-      path: '/admin/documents',
-      children: [
-        { label: 'All Documents', path: '/admin/documents' },
-        { label: 'Quality (QCI)', path: '/admin/warehouses?tab=qci' },
-      ],
+      section: 'DOCUMENTS',
+      items: [{ label: 'All Documents', path: '/admin/documents', icon: 'FileText' }],
     },
   ],
 };
+
+// ── Backward compatibility ──────────────────────────────────────────────
+// Legacy flat NavItem[] format used by MobileTabBar and useNavigation hook.
+// Converts section-based config to flat list with section as parent group.
+import type { NavItem } from '@nit-scs-v2/shared/types';
+
+function sectionsToFlatNav(sections: NavSection[]): NavItem[] {
+  const result: NavItem[] = [];
+  for (const sec of sections) {
+    if (sec.items.length === 1 && sec.section === 'OVERVIEW') {
+      // Dashboard item stays flat
+      result.push(sec.items[0]);
+    } else if (sec.items.length <= 2 && sec.section === 'OVERVIEW') {
+      // Short overview sections stay flat
+      for (const item of sec.items) result.push(item);
+    } else {
+      // Create a group parent with children
+      result.push({
+        label: sec.section.charAt(0) + sec.section.slice(1).toLowerCase(),
+        path: sec.items[0]?.path,
+        children: sec.items,
+      });
+    }
+  }
+  return result;
+}
+
+export const NAVIGATION_LINKS: Record<string, NavItem[]> = Object.fromEntries(
+  Object.entries(SECTION_NAVIGATION).map(([role, sections]) => [role, sectionsToFlatNav(sections)]),
+);
 
 export const STATIC_NAVIGATION = NAVIGATION_LINKS;

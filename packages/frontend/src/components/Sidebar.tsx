@@ -1,117 +1,104 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import type { NavItem } from '@nit-scs-v2/shared/types';
+import type { NavItem, NavSection } from '@nit-scs-v2/shared/types';
 import { UserRole } from '@nit-scs-v2/shared/types';
-import { NAVIGATION_LINKS } from '@/config/navigation';
+import { SECTION_NAVIGATION } from '@/config/navigation';
 import { useNavigation } from '@/api/hooks/useNavigation';
+import { NesmaLogo } from '@/components/NesmaLogo';
 import {
   LogOut,
-  ChevronDown,
+  Search,
   type LucideIcon,
   LayoutDashboard,
-  Warehouse,
+  Clock,
+  FileText,
   PackageCheck,
   Send,
-  ShieldCheck,
-  Truck,
-  Database,
-  Settings,
-  Package,
-  RotateCcw,
+  CornerDownLeft,
   ClipboardList,
-  Users,
-  PlusCircle,
-  FileText,
-  Briefcase,
-  CheckSquare,
-  ListTodo,
-  Ship,
-  DoorOpen,
-  Search,
+  Repeat,
+  GitBranch,
+  CheckCircle,
   AlertTriangle,
-  Map,
+  Wrench,
+  DoorOpen,
+  Truck,
+  Hammer,
+  Zap,
+  Box,
+  Layers,
+  Database,
   Recycle,
+  AlertCircle,
+  Ship,
+  Globe,
+  Map,
+  BarChart2,
+  DollarSign,
+  Shield,
+  ClipboardCheck,
+  Users,
+  GitMerge,
+  Settings,
+  Smartphone,
+  TrendingUp,
+  ListTodo,
+  PlusCircle,
+  Briefcase,
+  Package,
+  RefreshCw,
 } from 'lucide-react';
-import { NesmaLogo } from '@/components/NesmaLogo';
 
-// Map nav item labels to lucide icons (icons can't live in shared config since they're React components)
-const ICON_MAP: Record<string, LucideIcon> = {
-  // ── Top-level sections ──
-  Dashboard: LayoutDashboard,
-  'Warehouses & Stores': Warehouse,
-  'Equipment & Transport': Truck,
-  'Scrap & Surplus': Recycle,
-  'Shipping & Customs': Ship,
-  'Interactive Map': Map,
-  Documents: FileText,
-  'Master Data': Database,
-  'Employees & Org': Users,
-  Settings: Settings,
-  // ── Legacy section labels (backward compat) ──
-  'Inventory & Warehouses': Warehouse,
-  'Material Management': Warehouse,
-  'Logistics & Fleet': Truck,
-  'Asset Lifecycle': Recycle,
-  'Admin & Settings': Settings,
-  'Receiving & Inbound': PackageCheck,
-  'Issuing & Outbound': Send,
-  'Returns & Quality': ShieldCheck,
-  'Logistics & Jobs': Truck,
-  // ── Section groups (for non-admin roles) ──
-  Operations: Briefcase,
-  Workflow: CheckSquare,
-  Oversight: Users,
-  Requests: FileText,
-  Project: Briefcase,
-  Logistics: Truck,
-  Shipping: Ship,
-  // ── Child / role-specific items ──
-  'Receive (MRRV)': PackageCheck,
-  'Receive (GRN)': PackageCheck,
-  'GRN - Goods Receipt': PackageCheck,
-  'Issue (MIRV)': Send,
-  'Issue (MI)': Send,
-  'MI - Material Issuance': Send,
-  'QCI - Quality Inspection': Search,
-  'Inspections (QCI)': Search,
-  'DR - Discrepancy Report': AlertTriangle,
-  'Discrepancy Reports (DR)': AlertTriangle,
-  'MRN - Material Return': RotateCcw,
-  'Returns (MRN)': RotateCcw,
-  'MR - Material Request': FileText,
-  'New Request (MR)': PlusCircle,
-  Inventory: Package,
-  Return: RotateCcw,
-  'Job Orders': ClipboardList,
-  Fleet: Truck,
-  Suppliers: Users,
-  'New Request': PlusCircle,
-  'My Requests': FileText,
-  'My Project': Briefcase,
-  'Approval Queue': CheckSquare,
-  Projects: Briefcase,
-  Tasks: ListTodo,
-  Inspections: Search,
-  'OSD Reports': AlertTriangle,
-  'Discrepancy Reports': AlertTriangle,
-  Incoming: PackageCheck,
-  Shipments: Ship,
-  'Gate Passes': DoorOpen,
-  Receiving: PackageCheck,
-  'Site Inventory': Package,
-  'SSC Dashboard': ShieldCheck,
-  'Scrap Items': Recycle,
-  Surplus: Package,
-  IMSF: Package,
-  'Warehouse Transfers': Package,
-  'Rental Contracts': FileText,
+// ── Icon Registry ────────────────────────────────────────────────────────
+// Maps string icon names from navigation config to Lucide components
+
+const ICON_REGISTRY: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Clock,
+  FileText,
+  PackageCheck,
+  Send,
+  CornerDownLeft,
+  ClipboardList,
+  Repeat,
+  GitBranch,
+  CheckCircle,
+  AlertTriangle,
+  Wrench,
+  DoorOpen,
+  Truck,
+  Hammer,
+  Zap,
+  Box,
+  Layers,
+  Database,
+  Recycle,
+  AlertCircle,
+  Ship,
+  Globe,
+  Map,
+  BarChart2,
+  DollarSign,
+  Shield,
+  ClipboardCheck,
+  Users,
+  GitMerge,
+  Settings,
+  Smartphone,
+  TrendingUp,
+  ListTodo,
+  PlusCircle,
+  Briefcase,
+  Package,
+  RefreshCw,
 };
 
-// Extend NavItem with icon for frontend use (shared type omits it since icons are React components)
-interface NavItemWithIcon extends NavItem {
-  icon?: LucideIcon;
-  children?: NavItemWithIcon[];
+function getIcon(name?: string): LucideIcon | undefined {
+  if (!name) return undefined;
+  return ICON_REGISTRY[name];
 }
+
+// ── Props ────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
   role: UserRole;
@@ -119,212 +106,200 @@ interface SidebarProps {
   setRole: (role: UserRole) => void;
   isMobile?: boolean;
   onLogout?: () => void;
+  userName?: string;
 }
 
-const NavItemComponent: React.FC<{ item: NavItemWithIcon; isOpen: boolean; isActive: (path?: string) => boolean }> = ({
-  item,
-  isOpen,
-  isActive,
-}) => {
-  const Icon = item.icon;
-  const active = item.path ? isActive(item.path) : false;
-  const hasChildren = item.children && item.children.length > 0;
-  // Auto-expand when a child is active
-  const anyChildActive = hasChildren && (item.children?.some(c => c.path && isActive(c.path)) ?? false);
-  const [isExpanded, setIsExpanded] = useState(anyChildActive);
+// ── Active Link Detection ────────────────────────────────────────────────
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (hasChildren) {
-      e.preventDefault();
-      setIsExpanded(!isExpanded);
-    }
+const BASE_PATHS = ['/admin', '/warehouse', '/transport', '/logistics', '/manager', '/qc', '/site-engineer'];
+
+function useActiveCheck() {
+  const location = useLocation();
+
+  return (path?: string) => {
+    if (!path) return false;
+    const [pathPart, queryPart] = path.split('?');
+    // Exact match including query
+    if (queryPart && location.pathname === pathPart && location.search === `?${queryPart}`) return true;
+    // Path-only exact match
+    if (!queryPart && location.pathname === pathPart) return true;
+    // Prefix match for non-root paths
+    if (!queryPart && !BASE_PATHS.includes(pathPart) && location.pathname.startsWith(pathPart)) return true;
+    return false;
   };
+}
+
+// ── Nav Item Component ───────────────────────────────────────────────────
+
+const SidebarNavItem: React.FC<{
+  item: NavItem;
+  isActive: (path?: string) => boolean;
+  isOpen: boolean;
+}> = ({ item, isActive, isOpen }) => {
+  const Icon = getIcon(item.icon);
+  const active = isActive(item.path);
 
   return (
-    <li className="mb-2">
-      <div className={`flex flex-col transition-all duration-200`}>
-        <Link
-          to={item.path || '#'}
-          onClick={handleClick}
-          className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl w-full transition-all duration-300 relative overflow-hidden group
-            ${
-              active
-                ? 'bg-gradient-to-r from-nesma-primary/90 to-nesma-primary/40 text-white shadow-[0_0_20px_rgba(46,49,146,0.5)] border border-white/10'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-            }
-          `}
-        >
-          {active && (
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-nesma-secondary shadow-[0_0_10px_#80D1E9]"></div>
-          )}
-
-          {Icon && (
-            <Icon
-              size={22}
-              className={`min-w-[22px] z-10 transition-transform duration-300 ${active ? 'text-nesma-secondary scale-110' : 'group-hover:scale-110'}`}
-            />
-          )}
-
-          <div
-            className={`flex-1 flex justify-between items-center overflow-hidden z-10 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:hidden'}`}
-          >
-            <span className={`font-medium whitespace-nowrap text-sm tracking-wide ${active ? 'text-white' : ''}`}>
-              {item.label}
+    <Link
+      to={item.path || '#'}
+      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition-all duration-200 group relative
+        ${
+          active
+            ? 'bg-nesma-primary/30 text-nesma-secondary font-medium border-l-[3px] border-nesma-secondary pl-[9px]'
+            : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent pl-[9px]'
+        }
+      `}
+    >
+      {Icon && (
+        <Icon
+          size={17}
+          className={`flex-shrink-0 transition-all duration-200 ${active ? 'text-nesma-secondary' : 'opacity-60 group-hover:opacity-100'}`}
+        />
+      )}
+      {isOpen && (
+        <>
+          <span className="truncate">{item.label}</span>
+          {item.badge !== undefined && item.badge > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+              {item.badge > 99 ? '99+' : item.badge}
             </span>
-            {hasChildren && (
-              <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                <ChevronDown size={14} className={active ? 'text-white' : 'text-gray-500'} />
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Children */}
-        {isOpen && hasChildren && isExpanded && (
-          <div className="mt-2 ml-4 pl-4 border-l border-white/10 space-y-1 animate-fade-in">
-            {(item.children as NavItemWithIcon[] | undefined)?.map((child, idx) =>
-              child.type === 'divider' ? (
-                <div key={idx} className="h-px w-full bg-white/10 my-2"></div>
-              ) : (
-                <Link
-                  key={idx}
-                  to={child.path || '#'}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200
-                    ${
-                      isActive(child.path)
-                        ? 'text-nesma-secondary bg-white/10 font-medium translate-x-1'
-                        : 'text-gray-500 hover:text-gray-200 hover:bg-white/5 hover:translate-x-1'
-                    }
-                  `}
-                >
-                  <div
-                    className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isActive(child.path) ? 'bg-nesma-secondary shadow-[0_0_5px_#80D1E9]' : 'bg-gray-600'}`}
-                  ></div>
-                  <span className="truncate">{child.label}</span>
-                </Link>
-              ),
-            )}
-          </div>
-        )}
-      </div>
-    </li>
+          )}
+        </>
+      )}
+    </Link>
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogout }) => {
-  const location = useLocation();
+// ── Section Component ────────────────────────────────────────────────────
+
+const SidebarSection: React.FC<{
+  section: NavSection;
+  isActive: (path?: string) => boolean;
+  isOpen: boolean;
+}> = ({ section, isActive, isOpen }) => (
+  <div className="mb-1">
+    {isOpen && (
+      <div className="px-3 pt-4 pb-1.5">
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">{section.section}</span>
+      </div>
+    )}
+    <div className="space-y-0.5">
+      {section.items.map((item, idx) => (
+        <SidebarNavItem key={idx} item={item} isActive={isActive} isOpen={isOpen} />
+      ))}
+    </div>
+  </div>
+);
+
+// ── Main Sidebar ─────────────────────────────────────────────────────────
+
+export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogout, userName }) => {
+  const isActive = useActiveCheck();
+
+  // Use dynamic nav from backend if available, fall back to static config
   const { data: dynamicNav } = useNavigation();
-  const rawLinks =
-    (dynamicNav as NavItemWithIcon[] | undefined) ||
-    (NAVIGATION_LINKS as Record<string, NavItemWithIcon[]>)[role] ||
-    [];
-  const links = rawLinks.map(link => ({ ...link, icon: link.icon || ICON_MAP[link.label] }));
+  const sections: NavSection[] = (dynamicNav as NavSection[] | undefined) || SECTION_NAVIGATION[role] || [];
 
-  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRole(e.target.value as UserRole);
-  };
-
-  const isLinkActive = (path?: string) => {
-    if (!path) return false;
-    // Handle paths with query params (e.g. /admin/inventory?tab=stock-levels)
-    const [pathPart, queryPart] = path.split('?');
-    const currentSearch = location.search;
-    // Exact match including query
-    if (queryPart && location.pathname === pathPart && currentSearch === `?${queryPart}`) return true;
-    // Path-only match (for parent items and simple paths)
-    if (!queryPart && location.pathname === pathPart) return true;
-    // Prefix match for non-root paths (e.g. /admin/inventory matches /admin/inventory?tab=xxx)
-    if (
-      !queryPart &&
-      pathPart !== '/' &&
-      !['/admin', '/warehouse', '/transport', '/engineer', '/logistics', '/manager', '/qc', '/site-engineer'].includes(
-        pathPart,
-      ) &&
-      location.pathname.startsWith(pathPart)
-    )
-      return true;
-    return false;
-  };
+  // Role display name
+  const roleLabel = role.replace(/_/g, ' ');
+  const initials = userName
+    ? userName
+        .split(' ')
+        .map(w => w[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase()
+    : roleLabel.slice(0, 2).toUpperCase();
 
   return (
     <aside
-      className={`${isOpen ? 'w-80' : 'w-24 hidden lg:flex'} glass-panel transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-nesma-dark/95 backdrop-blur-xl shadow-2xl`}
+      className={`${isOpen ? 'w-72' : 'w-20 hidden lg:flex'} transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-nesma-dark/95 backdrop-blur-xl shadow-2xl`}
     >
-      {/* Logo Area */}
-      <div className="h-24 flex items-center justify-center p-6 relative overflow-hidden group border-b border-white/5">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-nesma-primary/20 blur-[60px] rounded-full pointer-events-none group-hover:bg-nesma-secondary/10 transition-all duration-700"></div>
+      {/* ── Logo Area (compact) ── */}
+      <div className="h-16 flex items-center px-4 border-b border-white/5 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-nesma-primary/15 blur-[50px] rounded-full pointer-events-none"></div>
 
         {isOpen ? (
-          <div className="z-10 flex flex-col items-center animate-fade-in transform hover:scale-105 transition-transform duration-300 w-full">
-            <NesmaLogo className="h-8 w-full mb-1 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]" />
-            <div className="flex items-center gap-2 mt-1">
-              <div className="h-px w-6 bg-gradient-to-r from-transparent to-nesma-secondary/50"></div>
-              <span className="text-[9px] tracking-[0.2em] text-nesma-secondary font-bold uppercase whitespace-nowrap">
-                Supply Chain
-              </span>
-              <div className="h-px w-6 bg-gradient-to-l from-transparent to-nesma-secondary/50"></div>
+          <div className="z-10 flex items-center gap-3 w-full">
+            <div className="w-8 h-8 bg-gradient-to-br from-nesma-primary to-nesma-secondary rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-sm">N</span>
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-white truncate">NIT SCS</div>
+              <div className="text-[10px] text-gray-500 tracking-wide">Supply Chain V2</div>
             </div>
           </div>
         ) : (
-          <div className="font-black text-3xl text-transparent bg-clip-text bg-gradient-to-br from-white to-nesma-secondary tracking-widest z-10">
-            N
+          <div className="w-10 h-10 mx-auto bg-gradient-to-br from-nesma-primary to-nesma-secondary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">N</span>
           </div>
         )}
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 overflow-hidden flex flex-col px-3 pt-4">
-        <p
-          className={`text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4 transition-opacity duration-300 px-2 ${!isOpen && 'text-center opacity-0 lg:hidden'}`}
-        >
-          Main Menu
-        </p>
-        <nav className="flex-1 overflow-y-auto custom-scrollbar pr-1 pb-6">
-          <ul className="space-y-1">
-            {links.map((link, idx) => (
-              <NavItemComponent key={idx} item={link} isOpen={isOpen} isActive={isLinkActive} />
-            ))}
-          </ul>
-        </nav>
-      </div>
-
-      {/* Footer / User Controls */}
-      <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-md">
-        {isOpen ? (
-          <div className="mb-3 bg-white/5 p-3 rounded-xl border border-white/5 shadow-inner">
-            <label className="text-[10px] text-gray-400 block mb-1.5 font-bold uppercase tracking-wide">
-              Current Persona
-            </label>
-            <select
-              value={role}
-              onChange={handleRoleChange}
-              className="w-full bg-black/40 text-white text-xs rounded-lg p-2.5 border border-white/10 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none cursor-pointer hover:bg-black/60 transition-colors appearance-none"
-            >
-              {Object.values(UserRole).map(r => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
+      {/* ── Search Bar ── */}
+      {isOpen && (
+        <div className="px-3 pt-3 pb-1">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 text-[13px] cursor-pointer hover:bg-white/8 hover:border-white/15 transition-all">
+            <Search size={14} />
+            <span>Search...</span>
+            <kbd className="ml-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-500">&#8984;K</kbd>
           </div>
-        ) : (
-          <div className="flex justify-center mb-4">
-            <div
-              className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-xs font-bold text-nesma-secondary border border-white/10"
-              title={role}
-            >
-              {role.charAt(0)}
+        </div>
+      )}
+
+      {/* ── Navigation Sections ── */}
+      <nav className="flex-1 overflow-y-auto px-2 pt-1 pb-4 custom-scrollbar">
+        {sections.map((section, idx) => (
+          <SidebarSection key={idx} section={section} isActive={isActive} isOpen={isOpen} />
+        ))}
+      </nav>
+
+      {/* ── User Footer ── */}
+      <div className="p-3 border-t border-white/5 bg-black/20">
+        {isOpen ? (
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-nesma-primary to-nesma-secondary rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold">{initials}</span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-medium text-white truncate">{userName || 'User'}</div>
+              <div className="text-[10px] text-gray-500 capitalize truncate">{roleLabel}</div>
             </div>
           </div>
+        ) : (
+          <div className="flex justify-center mb-2">
+            <div
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-nesma-primary to-nesma-secondary flex items-center justify-center text-xs font-bold text-white"
+              title={roleLabel}
+            >
+              {initials}
+            </div>
+          </div>
+        )}
+
+        {/* Dev-only: Role Switcher (hidden in production) */}
+        {process.env.NODE_ENV === 'development' && isOpen && (
+          <select
+            value={role}
+            onChange={e => setRole(e.target.value as UserRole)}
+            className="w-full mb-2 bg-white/5 text-gray-400 text-[11px] rounded-lg p-2 border border-white/10 outline-none cursor-pointer hover:bg-white/8 transition-colors"
+            aria-label="Switch role (dev only)"
+          >
+            {Object.values(UserRole).map(r => (
+              <option key={r} value={r}>
+                {r.replace(/_/g, ' ')}
+              </option>
+            ))}
+          </select>
         )}
 
         <button
           onClick={onLogout}
-          className={`flex items-center ${isOpen ? 'justify-start gap-3 px-4' : 'justify-center'} text-gray-400 hover:text-white w-full py-3 rounded-xl hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all group`}
+          className={`flex items-center ${isOpen ? 'justify-start gap-3 px-3' : 'justify-center'} text-gray-400 hover:text-white w-full py-2.5 rounded-xl hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all group`}
           aria-label="Sign Out"
         >
-          <LogOut size={20} className="group-hover:text-red-400 transition-colors" />
-          {isOpen && <span className="text-sm font-medium group-hover:text-red-400">Sign Out</span>}
+          <LogOut size={18} className="group-hover:text-red-400 transition-colors" />
+          {isOpen && <span className="text-[13px] font-medium group-hover:text-red-400">Sign Out</span>}
         </button>
       </div>
     </aside>

@@ -213,6 +213,13 @@ export interface NavItem {
   children?: NavItem[];
   type?: 'link' | 'dropdown' | 'divider';
   badge?: number;
+  icon?: string;
+  section?: string;
+}
+
+export interface NavSection {
+  section: string;
+  items: NavItem[];
 }
 
 // ── Reports & SLA ────────────────────────────────────────────────────────
