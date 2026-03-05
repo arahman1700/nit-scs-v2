@@ -1,0 +1,101 @@
+// SECTION 10: WORKFLOW ENGINE & AUTOMATION (4 models)
+// ############################################################################
+
+/// System settings (replaces file-based JSON config)
+model SystemSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @db.VarChar(100)
+  value     String
+  /// NULL = global setting, non-NULL = per-user override
+  userId    String?  @map("user_id") @db.Uuid
+  category  String   @default("general") @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user Employee? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([key, userId], map: "uq_setting_key_user")
+  @@index([category], map: "idx_settings_category")
+  @@map("system_settings")
+}
+
+/// Named workflow definition
+model Workflow {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(200)
+  description String?
+  /// Entity type this workflow applies to (e.g. 'mirv', 'jo', 'mrrv', or '*' for all)
+  entityType  String   @map("entity_type") @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  /// Higher priority workflows are evaluated first
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  rules WorkflowRule[]
+
+  @@index([entityType, isActive], map: "idx_workflows_entity_active")
+  @@map("workflows")
+}
+
+/// IF-THEN rule within a workflow
+model WorkflowRule {
+  id             String    @id @default(uuid()) @db.Uuid
+  workflowId     String    @map("workflow_id") @db.Uuid
+  name           String    @db.VarChar(200)
+  /// Event that triggers this rule (e.g. 'document:status_changed')
+  triggerEvent   String    @map("trigger_event") @db.VarChar(100)
+  /// JSON condition tree: { operator: 'AND'|'OR', conditions: [...] }
+  conditions     Json      @default("{}")
+  /// JSON array of actions: [{ type: 'send_email', params: {...} }]
+  actions        Json      @default("[]")
+  isActive       Boolean   @default(true) @map("is_active")
+  /// Stop evaluating further rules if this one matches
+  stopOnMatch    Boolean   @default(false) @map("stop_on_match")
+  /// Order within workflow
+  sortOrder      Int       @default(0) @map("sort_order")
+  /// Cron expression for scheduled rules (standard 5-part cron format)
+  cronExpression String?   @map("cron_expression") @db.VarChar(50)
+  /// Next scheduled execution time (maintained by scheduler)
+  nextRunAt      DateTime? @map("next_run_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  workflow      Workflow               @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  executionLogs WorkflowExecutionLog[]
+
+  @@index([workflowId, isActive], map: "idx_rules_workflow_active")
+  @@index([triggerEvent], map: "idx_rules_trigger")
+  @@map("workflow_rules")
+}
+
+/// Audit trail of every rule execution
+model WorkflowExecutionLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  ruleId     String   @map("rule_id") @db.Uuid
+  /// The event that triggered execution
+  eventType  String   @map("event_type") @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String   @map("entity_id") @db.Uuid
+  /// Whether conditions were met
+  matched    Boolean  @default(false)
+  /// Whether actions executed successfully
+  success    Boolean  @default(false)
+  error      String?
+  /// Snapshot of the event payload
+  eventData  Json?    @map("event_data")
+  /// Actions that were executed
+  actionsRun Json?    @map("actions_run")
+  executedAt DateTime @default(now()) @map("executed_at") @db.Timestamptz
+
+  // Relations
+  rule WorkflowRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId], map: "idx_exec_log_rule")
+  @@index([entityType, entityId], map: "idx_exec_log_entity")
+  @@index([executedAt], map: "idx_exec_log_date")
+  @@map("workflow_execution_logs")
+}

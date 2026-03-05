@@ -6,4 +6,7 @@ export * from './job-orders.js';
 export * from './logistics.js';
 export * from './inventory.js';
 export * from './system.js';
-export * from './v2-modules.js';
+export * from './equipment.js';
+export * from './transfers.js';
+export * from './warehouse.js';
+export * from './compliance.js';

@@ -1,0 +1,520 @@
+// ############################################################################
+// SECTION 2: CORE MASTER TABLES (8 models)
+// ############################################################################
+
+/// Legal entities within Nesma group
+model Entity {
+  id             String   @id @default(uuid()) @db.Uuid
+  entityCode     String   @unique @map("entity_code") @db.VarChar(20)
+  entityName     String   @map("entity_name") @db.VarChar(200)
+  parentEntityId String?  @map("parent_entity_id") @db.Uuid
+  /// CHECK: status IN ('active', 'inactive')
+  status         String   @default("active") @map("status") @db.VarChar(20)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations - self-referencing
+  parentEntity  Entity?  @relation("EntityHierarchy", fields: [parentEntityId], references: [id], onDelete: Restrict)
+  childEntities Entity[] @relation("EntityHierarchy")
+
+  // Relations - other tables
+  projects  Project[]
+  jobOrders JobOrder[]
+
+  @@map("entities")
+}
+
+/// Construction projects and sites
+model Project {
+  id               String    @id @default(uuid()) @db.Uuid
+  projectCode      String    @unique @map("project_code") @db.VarChar(50)
+  projectName      String    @map("project_name") @db.VarChar(300)
+  client           String    @db.VarChar(200)
+  entityId         String?   @map("entity_id") @db.Uuid
+  regionId         String?   @map("region_id") @db.Uuid
+  cityId           String?   @map("city_id") @db.Uuid
+  projectManagerId String?   @map("project_manager_id") @db.Uuid
+  /// CHECK: status IN ('active', 'on_hold', 'completed', 'cancelled')
+  status           String    @default("active") @map("status") @db.VarChar(20)
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  budget           Decimal?  @db.Decimal(15, 2)
+  description      String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  entity         Entity?   @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  region         Region?   @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  city           City?     @relation(fields: [cityId], references: [id], onDelete: Restrict)
+  projectManager Employee? @relation("ProjectManager", fields: [projectManagerId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  assignedEmployees    Employee[]            @relation("EmployeeProject")
+  warehouses           Warehouse[]
+  mrrv                 Mrrv[]
+  mirv                 Mirv[]
+  mrv                  Mrv[]
+  gatePasses           GatePass[]
+  materialRequisitions MaterialRequisition[]
+  stockTransfersFrom   StockTransfer[]       @relation("StockTransferFromProject")
+  stockTransfersTo     StockTransfer[]       @relation("StockTransferToProject")
+  jobOrders            JobOrder[]
+  generators           Generator[]
+  leftoverMaterials    LeftoverMaterial[]
+  shipments            Shipment[]
+  tasks                Task[]
+  imsfSent             Imsf[]                @relation("ImsfSenderProject")
+  imsfReceived         Imsf[]                @relation("ImsfReceiverProject")
+  surplusItems         SurplusItem[]
+  scrapItems           ScrapItem[]
+  dynamicDocuments     DynamicDocument[]     @relation("DynDocProject")
+  transportOrders      TransportOrder[]
+
+  @@map("projects")
+}
+
+/// System users and employees
+model Employee {
+  id                  String    @id @default(uuid()) @db.Uuid
+  /// HR employee ID
+  employeeIdNumber    String    @unique @map("employee_id_number") @db.VarChar(20)
+  fullName            String    @map("full_name") @db.VarChar(200)
+  email               String    @unique @db.VarChar(200)
+  phone               String?   @db.VarChar(20)
+  /// CHECK: department IN ('logistics', 'warehouse', 'transport', 'projects', 'quality', 'finance', 'admin')
+  department          String    @db.VarChar(50)
+  role                String    @db.VarChar(50)
+  /// CHECK: system_role IN ('admin', 'manager', 'warehouse_supervisor', 'warehouse_staff', 'logistics_coordinator', 'site_engineer', 'qc_officer', 'freight_forwarder', 'transport_supervisor', 'scrap_committee_member', 'technical_manager', 'gate_officer', 'inventory_specialist', 'shipping_officer', 'finance_user', 'customs_specialist', 'compliance_officer')
+  systemRole          String    @map("system_role") @db.VarChar(50)
+  assignedProjectId   String?   @map("assigned_project_id") @db.Uuid
+  assignedWarehouseId String?   @map("assigned_warehouse_id") @db.Uuid
+  managerId           String?   @map("manager_id") @db.Uuid
+  isActive            Boolean   @default(true) @map("is_active")
+  hireDate            DateTime? @map("hire_date") @db.Date
+  /// Hashed password (never store plain text)
+  passwordHash        String?   @map("password_hash") @db.VarChar(500)
+  lastLogin           DateTime? @map("last_login") @db.Timestamptz
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  assignedProject   Project?   @relation("EmployeeProject", fields: [assignedProjectId], references: [id], onDelete: SetNull)
+  assignedWarehouse Warehouse? @relation("EmployeeWarehouse", fields: [assignedWarehouseId], references: [id], onDelete: SetNull)
+  manager           Employee?  @relation("EmployeeManager", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports     Employee[] @relation("EmployeeManager")
+
+  // Reverse relations - Project Manager
+  managedProjects Project[] @relation("ProjectManager")
+
+  // Reverse relations - Warehouses
+  managedWarehouses Warehouse[] @relation("WarehouseManager")
+
+  // Reverse relations - MRRV
+  mrrvReceivedBy  Mrrv[] @relation("MrrvReceivedBy")
+  mrrvQcInspector Mrrv[] @relation("MrrvQcInspector")
+
+  // Reverse relations - RFIM
+  rfimInspector    Rfim[] @relation("RfimInspector")
+  rfimPmApprovalBy Rfim[] @relation("RfimPmApprovalBy")
+
+  // Reverse relations - OSD
+  osdResolvedBy OsdReport[] @relation("OsdResolvedBy")
+
+  // Reverse relations - MIRV
+  mirvRequestedBy Mirv[] @relation("MirvRequestedBy")
+  mirvApprovedBy  Mirv[] @relation("MirvApprovedBy")
+  mirvIssuedBy    Mirv[] @relation("MirvIssuedBy")
+
+  // Reverse relations - MRV
+  mrvReturnedBy Mrv[] @relation("MrvReturnedBy")
+  mrvReceivedBy Mrv[] @relation("MrvReceivedBy")
+
+  // Reverse relations - Gate Passes
+  gatePassIssuedBy GatePass[] @relation("GatePassIssuedBy")
+
+  // Reverse relations - MRF
+  mrfRequestedBy MaterialRequisition[] @relation("MrfRequestedBy")
+  mrfReviewedBy  MaterialRequisition[] @relation("MrfReviewedBy")
+  mrfApprovedBy  MaterialRequisition[] @relation("MrfApprovedBy")
+
+  // Reverse relations - Stock Transfers
+  stockTransfersRequested StockTransfer[] @relation("StockTransferRequestedBy")
+
+  // Reverse relations - Job Orders
+  joRequestedBy JobOrder[]   @relation("JoRequestedBy")
+  joCompletedBy JobOrder[]   @relation("JoCompletedBy")
+  joApprovals   JoApproval[]
+
+  // Reverse relations - Equipment Fleet
+  driverOfVehicles EquipmentFleet[] @relation("FleetDriver")
+
+  // Reverse relations - Leftover Materials
+  leftoverCreatedBy  LeftoverMaterial[] @relation("LeftoverCreatedBy")
+  leftoverApprovedBy LeftoverMaterial[] @relation("LeftoverApprovedBy")
+
+  // Reverse relations - Audit Log
+  auditLogs AuditLog[]
+
+  // Reverse relations - Notifications
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
+
+  // Reverse relations - Tasks
+  tasksAssigned Task[]        @relation("TaskAssignee")
+  tasksCreated  Task[]        @relation("TaskCreator")
+  taskComments  TaskComment[]
+
+  // Reverse relations - Company Documents
+  uploadedDocuments CompanyDocument[]
+
+  // Reverse relations - Workflow & Dashboard
+  ownedDashboards Dashboard[]
+  savedReports    SavedReport[]
+  systemSettings  SystemSetting[]
+
+  // Reverse relations — v2 additions
+  refreshTokens  RefreshToken[]    @relation("EmployeeRefreshTokens")
+  docComments    DocumentComment[] @relation("EmployeeDocComments")
+  approvalSteps  ApprovalStep[]    @relation("EmployeeApprovalSteps")
+  delegationsOut DelegationRule[]  @relation("EmployeeDelegationsOut")
+  delegationsIn  DelegationRule[]  @relation("EmployeeDelegationsIn")
+
+  // Reverse relations — v3 additions
+  attachments Attachment[] @relation("AttachmentUploadedBy")
+  userViews   UserView[]   @relation("UserViewOwner")
+
+  // V2 reverse relations
+  imsfCreatedBy          Imsf[]                 @relation("ImsfCreatedBy")
+  binCardsVerified       BinCard[]              @relation("BinCardVerifiedBy")
+  binCardTxPerformed     BinCardTransaction[]   @relation("BinCardTxPerformedBy")
+  rentalContractsCreated RentalContract[]       @relation("RentalContractCreatedBy")
+  fuelLogsCreated        GeneratorFuelLog[]     @relation("FuelLoggedBy")
+  maintenancePerformed   GeneratorMaintenance[] @relation("MaintenancePerformedBy")
+  surplusCreated         SurplusItem[]          @relation("SurplusCreatedBy")
+  scrapCreated           ScrapItem[]            @relation("ScrapCreatedBy")
+  toolsOwned             Tool[]                 @relation("ToolOwner")
+  toolsIssuedTo          ToolIssue[]            @relation("ToolIssuedTo")
+  toolsIssuedBy          ToolIssue[]            @relation("ToolIssuedBy")
+  toolsReturnVerified    ToolIssue[]            @relation("ToolReturnVerifiedBy")
+  handoversOutgoing      StorekeeperHandover[]  @relation("HandoverOutgoing")
+  handoversIncoming      StorekeeperHandover[]  @relation("HandoverIncoming")
+
+  // Reverse relations — Cycle Counting
+  createdCycleCounts CycleCount[]     @relation("CycleCountCreator")
+  countedLines       CycleCountLine[] @relation("CycleCountLineCounter")
+
+  // Reverse relations — Parallel Approvals
+  parallelApprovalResponses ParallelApprovalResponse[] @relation("ParallelApprovalResponses")
+
+  // Reverse relations — Dynamic Documents & AI
+  dynTypesCreated   DynamicDocumentType[]    @relation("DynTypeCreatedBy")
+  dynDocsCreated    DynamicDocument[]        @relation("DynDocCreatedBy")
+  dynDocsUpdated    DynamicDocument[]        @relation("DynDocUpdatedBy")
+  dynHistoryActions DynamicDocumentHistory[] @relation("DynHistoryPerformedBy")
+  customDataSources CustomDataSource[]       @relation("DataSourceCreatedBy")
+  aiConversations   AiConversation[]         @relation("AiConvUser")
+
+  // Reverse relations — Packing & Staging
+  packingSessions    PackingSession[]    @relation("PackedBy")
+  stagingAssignments StagingAssignment[] @relation("StagingAssignedBy")
+
+  // Reverse relations — Notification Preferences
+  notificationPreferences NotificationPreference[]
+
+  // Reverse relations — Equipment Delivery & Return Notes
+  deliveryNotesReceived  EquipmentDeliveryNote[] @relation("DeliveryNoteReceivedBy")
+  deliveryNotesConfirmed EquipmentDeliveryNote[] @relation("DeliveryNoteConfirmedBy")
+  returnNotesReturned    EquipmentReturnNote[]   @relation("ReturnNoteReturnedBy")
+  returnNotesInspected   EquipmentReturnNote[]   @relation("ReturnNoteInspectedBy")
+  returnNotesConfirmed   EquipmentReturnNote[]   @relation("ReturnNoteConfirmedBy")
+
+  // Reverse relations — Vehicle Maintenance
+  vehicleMaintenancePerformed VehicleMaintenance[] @relation("VehicleMaintenancePerformedBy")
+
+  // Reverse relations — Supplier Evaluations
+  supplierEvaluations SupplierEvaluation[] @relation("EvaluationEvaluator")
+
+  // Reverse relations — Transport Orders
+  transportOrdersRequested TransportOrder[] @relation("TransportOrderRequestedBy")
+
+  // Reverse relations — Visitor Management
+  visitorPassesHosted     VisitorPass[] @relation("VisitorHost")
+  visitorPassesRegistered VisitorPass[] @relation("VisitorRegisteredBy")
+
+  // Reverse relations — Shipment Release
+  shipmentsReleased Shipment[] @relation("ShipmentReleasedBy")
+
+  // Reverse relations — Compliance Audits
+  complianceAudits ComplianceAudit[] @relation("ComplianceAuditor")
+
+  // Reverse relations — Login Attempts (Security)
+  loginAttempts LoginAttempt[] @relation("EmployeeLoginAttempts")
+
+  // Reverse relations — Annual Maintenance Contracts (M1)
+  amcCreated AnnualMaintenanceContract[] @relation("AmcCreatedBy")
+
+  // Reverse relations — Customs Documents (M9)
+  customsDocsVerified CustomsDocument[] @relation("CustomsDocVerifiedBy")
+
+  // Reverse relations — Asset Register (M10)
+  assetsAssigned       Asset[]          @relation("AssetAssignedTo")
+  assetTransfersFrom   AssetTransfer[]  @relation("AssetTransferFromEmp")
+  assetTransfersTo     AssetTransfer[]  @relation("AssetTransferToEmp")
+  assetTransfersDone   AssetTransfer[]  @relation("AssetTransferredBy")
+
+  // Reverse relations — Digital Signatures (L6)
+  digitalSignatures DigitalSignature[] @relation("DigitalSignatures")
+
+  @@index([systemRole], map: "idx_employees_system_role")
+  @@index([isActive], map: "idx_employees_active")
+  @@index([assignedProjectId], map: "idx_employees_project")
+  @@index([assignedWarehouseId], map: "idx_employees_warehouse")
+  @@index([department], map: "idx_employees_department")
+  @@map("employees")
+}
+
+/// Suppliers, vendors, and freight forwarders
+model Supplier {
+  id            String   @id @default(uuid()) @db.Uuid
+  supplierCode  String   @unique @map("supplier_code") @db.VarChar(50)
+  supplierName  String   @map("supplier_name") @db.VarChar(300)
+  /// Supplier type tags (array)
+  types         String[] @db.VarChar(200)
+  contactPerson String?  @map("contact_person") @db.VarChar(200)
+  phone         String?  @db.VarChar(20)
+  email         String?  @db.VarChar(200)
+  address       String?
+  cityId        String?  @map("city_id") @db.Uuid
+  /// Commercial registration number
+  crNumber      String?  @map("cr_number") @db.VarChar(50)
+  /// VAT registration number
+  vatNumber     String?  @map("vat_number") @db.VarChar(50)
+  /// CHECK: rating BETWEEN 1 AND 5
+  rating        Int?     @db.SmallInt
+  /// CHECK: status IN ('active', 'inactive', 'blocked')
+  status        String   @default("active") @map("status") @db.VarChar(20)
+  paymentTerms  String?  @map("payment_terms") @db.VarChar(50)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  city City? @relation(fields: [cityId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrrv                   Mrrv[]
+  osdReports             OsdReport[]
+  jobOrders              JobOrder[]
+  inventoryLots          InventoryLot[]
+  supplierEquipmentRates SupplierEquipmentRate[]
+  shipmentsAsSupplier    Shipment[]              @relation("ShipmentSupplier")
+  shipmentsAsForwarder   Shipment[]              @relation("ShipmentForwarder")
+  rentalContracts        RentalContract[]
+  advanceShippingNotices AdvanceShippingNotice[]
+  supplierEvaluations    SupplierEvaluation[]
+  annualMaintenanceContracts AnnualMaintenanceContract[]
+
+  @@index([cityId], map: "idx_suppliers_city")
+  @@map("suppliers")
+}
+
+/// Warehouse and storage locations
+model Warehouse {
+  id              String   @id @default(uuid()) @db.Uuid
+  warehouseCode   String   @unique @map("warehouse_code") @db.VarChar(50)
+  warehouseName   String   @map("warehouse_name") @db.VarChar(200)
+  warehouseTypeId String   @map("warehouse_type_id") @db.Uuid
+  projectId       String?  @map("project_id") @db.Uuid
+  regionId        String   @map("region_id") @db.Uuid
+  cityId          String?  @map("city_id") @db.Uuid
+  address         String?
+  managerId       String?  @map("manager_id") @db.Uuid
+  contactPhone    String?  @map("contact_phone") @db.VarChar(20)
+  /// CHECK: status IN ('active', 'inactive', 'closed')
+  status          String   @default("active") @map("status") @db.VarChar(20)
+  latitude        Decimal? @db.Decimal(10, 7)
+  longitude       Decimal? @db.Decimal(10, 7)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouseType WarehouseType @relation(fields: [warehouseTypeId], references: [id], onDelete: Restrict)
+  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  region        Region        @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  city          City?         @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  manager       Employee?     @relation("WarehouseManager", fields: [managerId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  assignedEmployees      Employee[]              @relation("EmployeeWarehouse")
+  generators             Generator[]
+  mrrv                   Mrrv[]
+  osdReports             OsdReport[]
+  mirv                   Mirv[]
+  mrvFrom                Mrv[]                   @relation("MrvFromWarehouse")
+  mrvTo                  Mrv[]                   @relation("MrvToWarehouse")
+  gatePasses             GatePass[]
+  stockTransfersFrom     StockTransfer[]         @relation("StockTransferFromWarehouse")
+  stockTransfersTo       StockTransfer[]         @relation("StockTransferToWarehouse")
+  inventoryLevels        InventoryLevel[]
+  inventoryLots          InventoryLot[]
+  leftoverMaterials      LeftoverMaterial[]
+  shipmentsDestination   Shipment[]
+  binCards               BinCard[]
+  warehouseZones         WarehouseZone[]
+  surplusItems           SurplusItem[]
+  scrapItems             ScrapItem[]
+  tools                  Tool[]
+  handovers              StorekeeperHandover[]
+  putAwayRules           PutAwayRule[]
+  cycleCounts            CycleCount[]
+  advanceShippingNotices AdvanceShippingNotice[]
+  crossDocks             CrossDock[]
+  dockDoors              DockDoor[]
+  yardAppointments       YardAppointment[]
+  truckVisits            TruckVisit[]
+  sensors                Sensor[]
+  dynamicDocuments       DynamicDocument[]       @relation("DynDocWarehouse")
+  packingSessions        PackingSession[]
+  stagingAssignments     StagingAssignment[]
+  visitorPasses          VisitorPass[]
+  transportOrdersOrigin  TransportOrder[]        @relation("TransportOrderOrigin")
+  transportOrdersDest    TransportOrder[]        @relation("TransportOrderDestination")
+  complianceAudits       ComplianceAudit[]
+
+  // Reverse relations — Asset Register (M10)
+  assets                 Asset[]                 @relation("AssetLocation")
+  assetTransfersFrom     AssetTransfer[]         @relation("AssetTransferFrom")
+  assetTransfersTo       AssetTransfer[]         @relation("AssetTransferTo")
+
+  @@index([warehouseTypeId], map: "idx_warehouses_type")
+  @@index([projectId], map: "idx_warehouses_project")
+  @@index([regionId], map: "idx_warehouses_region")
+  @@index([cityId], map: "idx_warehouses_city")
+  @@index([managerId], map: "idx_warehouses_manager")
+  @@map("warehouses")
+}
+
+/// Material and item master catalog
+model Item {
+  id              String    @id @default(uuid()) @db.Uuid
+  itemCode        String    @unique @map("item_code") @db.VarChar(50)
+  itemDescription String    @map("item_description") @db.VarChar(500)
+  /// CHECK: category IN ('construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts')
+  category        String    @db.VarChar(50)
+  subCategory     String?   @map("sub_category") @db.VarChar(100)
+  uomId           String    @map("uom_id") @db.Uuid
+  minStock        Decimal?  @default(0) @map("min_stock") @db.Decimal(12, 3)
+  reorderPoint    Decimal?  @map("reorder_point") @db.Decimal(12, 3)
+  standardCost    Decimal?  @map("standard_cost") @db.Decimal(15, 2)
+  barcode         String?   @unique @db.VarChar(100)
+  isSerialized    Boolean?  @default(false) @map("is_serialized")
+  isExpirable     Boolean?  @default(false) @map("is_expirable")
+  /// CHECK: status IN ('active', 'inactive', 'discontinued')
+  status          String    @default("active") @map("status") @db.VarChar(20)
+  masterItemCode  String?   @unique @map("master_item_code") @db.VarChar(20)
+  mainCategory    String?   @map("main_category") @db.VarChar(50)
+  commodity       String?   @db.VarChar(100)
+  templateName    String?   @map("template_name") @db.VarChar(100)
+  abcClass        String?   @map("abc_class") @db.VarChar(1)
+  abcUpdatedAt    DateTime? @map("abc_updated_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  uom UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  mrrvLines           MrrvLine[]
+  osdLines            OsdLine[]
+  mirvLines           MirvLine[]
+  mrvLines            MrvLine[]
+  gatePassItems       GatePassItem[]
+  mrfLines            MrfLine[]
+  stockTransferLines  StockTransferLine[]
+  inventoryLevels     InventoryLevel[]
+  inventoryLots       InventoryLot[]
+  leftoverMaterials   LeftoverMaterial[]
+  shipmentLines       ShipmentLine[]
+  imsfLines           ImsfLine[]
+  binCards            BinCard[]
+  surplusItems        SurplusItem[]
+  cycleCountLines     CycleCountLine[]
+  asnLines            AsnLine[]
+  crossDocks          CrossDock[]
+  packingLines        PackingLine[]
+  stagingAssignments  StagingAssignment[]
+  transportOrderItems TransportOrderItem[]
+
+  @@index([status], map: "idx_items_status")
+  @@index([category], map: "idx_items_category")
+  @@index([uomId], map: "idx_items_uom")
+  @@map("items")
+}
+
+/// Generator asset register
+model Generator {
+  id                   String    @id @default(uuid()) @db.Uuid
+  generatorCode        String    @unique @map("generator_code") @db.VarChar(50)
+  generatorName        String    @map("generator_name") @db.VarChar(200)
+  capacityKva          Int       @map("capacity_kva")
+  equipmentTypeId      String?   @map("equipment_type_id") @db.Uuid
+  currentProjectId     String?   @map("current_project_id") @db.Uuid
+  currentWarehouseId   String?   @map("current_warehouse_id") @db.Uuid
+  /// CHECK: status IN ('available', 'assigned', 'maintenance', 'decommissioned')
+  status               String    @default("available") @map("status") @db.VarChar(30)
+  purchaseDate         DateTime? @map("purchase_date") @db.Date
+  purchaseValue        Decimal?  @map("purchase_value") @db.Decimal(15, 2)
+  salvageValue         Decimal?  @map("salvage_value") @db.Decimal(15, 2)
+  usefulLifeMonths     Int?      @map("useful_life_months")
+  /// CHECK: depreciation_method IN ('straight_line', 'usage_based')
+  depreciationMethod   String?   @map("depreciation_method") @db.VarChar(20)
+  inServiceDate        DateTime? @map("in_service_date") @db.Date
+  hoursTotal           Decimal?  @default(0) @map("hours_total") @db.Decimal(10, 1)
+  lastDepreciationDate DateTime? @map("last_depreciation_date") @db.Date
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  equipmentType    EquipmentType? @relation(fields: [equipmentTypeId], references: [id], onDelete: SetNull)
+  currentProject   Project?       @relation(fields: [currentProjectId], references: [id], onDelete: SetNull)
+  currentWarehouse Warehouse?     @relation(fields: [currentWarehouseId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  joGeneratorDetails  JoGeneratorDetail[]
+  depreciationEntries DepreciationEntry[]
+  fuelLogs            GeneratorFuelLog[]
+  maintenanceRecords  GeneratorMaintenance[]
+
+  @@index([currentProjectId], map: "idx_generators_project")
+  @@index([currentWarehouseId], map: "idx_generators_warehouse")
+  @@index([equipmentTypeId], map: "idx_generators_equipment_type")
+  @@map("generators")
+}
+
+/// Vehicle and heavy equipment fleet
+model EquipmentFleet {
+  id                  String    @id @default(uuid()) @db.Uuid
+  vehicleCode         String    @unique @map("vehicle_code") @db.VarChar(50)
+  vehicleType         String    @map("vehicle_type") @db.VarChar(100)
+  plateNumber         String?   @unique @map("plate_number") @db.VarChar(30)
+  equipmentTypeId     String?   @map("equipment_type_id") @db.Uuid
+  driverId            String?   @map("driver_id") @db.Uuid
+  status              String    @default("available") @map("status") @db.VarChar(30)
+  mileageKm           Int?      @default(0) @map("mileage_km")
+  nextMaintenanceDate DateTime? @map("next_maintenance_date") @db.Date
+  insuranceExpiry     DateTime? @map("insurance_expiry") @db.Date
+  registrationExpiry  DateTime? @map("registration_expiry") @db.Date
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  equipmentType EquipmentType? @relation(fields: [equipmentTypeId], references: [id], onDelete: SetNull)
+  driver        Employee?      @relation("FleetDriver", fields: [driverId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  vehicleMaintenanceRecords VehicleMaintenance[]
+
+  @@index([equipmentTypeId], map: "idx_equipment_fleet_type")
+  @@index([driverId], map: "idx_equipment_fleet_driver")
+  @@map("equipment_fleet")
+}

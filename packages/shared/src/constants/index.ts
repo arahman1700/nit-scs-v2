@@ -1,5 +1,8 @@
 import type { ApprovalLevel } from '../types/approval.js';
 
+// Re-export V1↔V2 naming registry
+export { CANONICAL_NAMES, type CanonicalDocType, v1ModelToDisplayName, v1PathToV2Path } from './naming.js';
+
 // Re-export event catalog
 export {
   ALL_EVENTS,

@@ -1,0 +1,165 @@
+// SECTION 8: SYSTEM TABLES (3 models)
+// ############################################################################
+
+/// Sequential document number generators per type per year
+model DocumentCounter {
+  id           String @id @default(uuid()) @db.Uuid
+  documentType String @map("document_type") @db.VarChar(30)
+  prefix       String @db.VarChar(10)
+  year         Int
+  lastNumber   Int    @default(0) @map("last_number")
+
+  @@unique([documentType, year], map: "uq_doc_counter_type_year")
+  @@map("document_counters")
+}
+
+/// Comprehensive audit trail for all data changes
+model AuditLog {
+  id            String   @id @default(uuid()) @db.Uuid
+  tableName     String   @map("table_name") @db.VarChar(50)
+  recordId      String   @map("record_id") @db.Uuid
+  /// CHECK: action IN ('create', 'update', 'delete')
+  action        String   @db.VarChar(20)
+  changedFields Json?    @map("changed_fields") @db.JsonB
+  oldValues     Json?    @map("old_values") @db.JsonB
+  newValues     Json?    @map("new_values") @db.JsonB
+  performedById String?  @map("performed_by_id") @db.Uuid
+  performedAt   DateTime @default(now()) @map("performed_at") @db.Timestamptz
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+
+  // Relations
+  performedBy Employee? @relation(fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([tableName, recordId], map: "idx_audit_log_table")
+  @@index([performedAt(sort: Desc)], map: "idx_audit_log_date")
+  @@index([performedById], map: "idx_audit_log_user")
+  @@map("audit_log")
+}
+
+/// User notification messages
+model Notification {
+  id               String   @id @default(uuid()) @db.Uuid
+  recipientId      String   @map("recipient_id") @db.Uuid
+  title            String   @db.VarChar(200)
+  body             String?
+  notificationType String   @map("notification_type") @db.VarChar(30)
+  referenceTable   String?  @map("reference_table") @db.VarChar(50)
+  referenceId      String?  @map("reference_id") @db.Uuid
+  isRead           Boolean? @default(false) @map("is_read")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  recipient Employee @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, isRead], map: "idx_notifications_recipient")
+  @@index([createdAt(sort: Desc)], map: "idx_notifications_date")
+  @@map("notifications")
+}
+
+/// Web push notification subscriptions (per user, per device/browser)
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  endpoint  String   @db.Text
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(50)
+  userAgent String?  @map("user_agent") @db.VarChar(500)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user Employee @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
+}
+
+// ############################################################################
+// SECTION 9: TASK & DOCUMENT MANAGEMENT (3 models)
+// ############################################################################
+
+/// Internal team tasks with assignment and tracking
+model Task {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(300)
+  description String?
+  /// CHECK: status IN ('open', 'in_progress', 'completed', 'cancelled')
+  status      String    @default("open") @map("status") @db.VarChar(20)
+  /// CHECK: priority IN ('high', 'medium', 'low')
+  priority    String    @default("medium") @map("priority") @db.VarChar(10)
+  dueDate     DateTime? @map("due_date") @db.Date
+  assigneeId  String?   @map("assignee_id") @db.Uuid
+  creatorId   String    @map("creator_id") @db.Uuid
+  projectId   String?   @map("project_id") @db.Uuid
+  tags        String[]  @db.VarChar(50)
+  startedAt   DateTime? @map("started_at") @db.Timestamptz
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  assignee Employee? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  creator  Employee  @relation("TaskCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  comments TaskComment[]
+
+  @@index([status], map: "idx_tasks_status")
+  @@index([assigneeId], map: "idx_tasks_assignee")
+  @@map("tasks")
+}
+
+/// Comments on tasks
+model TaskComment {
+  id        String   @id @default(uuid()) @db.Uuid
+  taskId    String   @map("task_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  body      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author Employee @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@map("task_comments")
+}
+
+/// Password reset codes (database-backed, replaces in-memory Map)
+model PasswordResetCode {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @db.VarChar(255)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email, code], map: "idx_password_reset_email_code")
+  @@map("password_reset_codes")
+}
+
+/// Company-level documents (policies, SOPs, templates)
+model CompanyDocument {
+  id           String   @id @default(uuid()) @db.Uuid
+  title        String   @db.VarChar(300)
+  description  String?
+  /// CHECK: category IN ('policy', 'procedure', 'contract', 'certificate', 'template', 'sop', 'other')
+  category     String   @db.VarChar(20)
+  filePath     String   @map("file_path") @db.VarChar(500)
+  fileName     String   @map("file_name") @db.VarChar(300)
+  fileSize     Int      @map("file_size")
+  mimeType     String   @map("mime_type") @db.VarChar(100)
+  version      Int      @default(1)
+  tags         String[] @db.VarChar(50)
+  uploadedById String   @map("uploaded_by_id") @db.Uuid
+  /// CHECK: visibility IN ('all', 'admin_only', 'management')
+  visibility   String   @default("all") @db.VarChar(20)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  uploadedBy Employee @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([category], map: "idx_company_docs_category")
+  @@map("company_documents")
+}

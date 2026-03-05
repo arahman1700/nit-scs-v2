@@ -1,0 +1,190 @@
+// SECTION 3: MATERIAL MANAGEMENT TABLES (15 models)
+// ############################################################################
+
+/// Material Receiving Report Voucher (MRRV)
+model Mrrv {
+  id             String    @id @default(uuid()) @db.Uuid
+  mrrvNumber     String    @unique @map("mrrv_number") @db.VarChar(20)
+  supplierId     String    @map("supplier_id") @db.Uuid
+  poNumber       String?   @map("po_number") @db.VarChar(50)
+  warehouseId    String    @map("warehouse_id") @db.Uuid
+  projectId      String?   @map("project_id") @db.Uuid
+  receivedById   String    @map("received_by_id") @db.Uuid
+  receiveDate    DateTime  @map("receive_date") @db.Timestamptz
+  invoiceNumber  String?   @map("invoice_number") @db.VarChar(50)
+  deliveryNote   String?   @map("delivery_note") @db.VarChar(100)
+  totalValue     Decimal?  @default(0) @map("total_value") @db.Decimal(15, 2)
+  rfimRequired   Boolean?  @default(false) @map("rfim_required")
+  hasOsd         Boolean?  @default(false) @map("has_osd")
+  /// CHECK: status IN ('draft', 'pending_qc', 'qc_approved', 'received', 'stored', 'rejected')
+  status         String    @default("draft") @map("status") @db.VarChar(20)
+  qcInspectorId  String?   @map("qc_inspector_id") @db.Uuid
+  qcApprovedDate DateTime? @map("qc_approved_date") @db.Timestamptz
+  notes          String?
+  binLocation    String?   @map("bin_location") @db.VarChar(30)
+  receivingDock  String?   @map("receiving_dock") @db.VarChar(50)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier    Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  receivedBy  Employee  @relation("MrrvReceivedBy", fields: [receivedById], references: [id], onDelete: Restrict)
+  qcInspector Employee? @relation("MrrvQcInspector", fields: [qcInspectorId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  mrrvLines  MrrvLine[]
+  rfims      Rfim[]
+  osdReports OsdReport[]
+  shipments  Shipment[]
+
+  @@index([status], map: "idx_mrrv_status")
+  @@index([supplierId], map: "idx_mrrv_supplier")
+  @@index([warehouseId], map: "idx_mrrv_warehouse")
+  @@index([projectId], map: "idx_mrrv_project")
+  @@index([receivedById], map: "idx_mrrv_received_by")
+  @@index([createdAt], map: "idx_mrrv_created")
+  @@index([warehouseId, status], map: "idx_mrrv_warehouse_status")
+  @@index([supplierId, createdAt], map: "idx_mrrv_supplier_created")
+  @@index([status, createdAt], map: "idx_mrrv_status_created")
+  @@map("mrrv")
+}
+
+/// MRRV line items
+model MrrvLine {
+  id              String    @id @default(uuid()) @db.Uuid
+  mrrvId          String    @map("mrrv_id") @db.Uuid
+  itemId          String    @map("item_id") @db.Uuid
+  qtyOrdered      Decimal?  @map("qty_ordered") @db.Decimal(12, 3)
+  /// CHECK: qty_received > 0
+  qtyReceived     Decimal   @map("qty_received") @db.Decimal(12, 3)
+  qtyDamaged      Decimal?  @default(0) @map("qty_damaged") @db.Decimal(12, 3)
+  uomId           String    @map("uom_id") @db.Uuid
+  unitCost        Decimal?  @map("unit_cost") @db.Decimal(15, 2)
+  /// CHECK: condition IN ('good', 'damaged', 'mixed')
+  condition       String    @default("good") @map("condition") @db.VarChar(20)
+  storageLocation String?   @map("storage_location") @db.VarChar(100)
+  expiryDate      DateTime? @map("expiry_date") @db.Date
+  notes           String?
+
+  // Relations
+  mrrv Mrrv          @relation(fields: [mrrvId], references: [id], onDelete: Cascade)
+  item Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom  UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  osdLines      OsdLine[]
+  inventoryLots InventoryLot[]
+
+  @@index([mrrvId], map: "idx_mrrv_lines_mrrv")
+  @@index([itemId], map: "idx_mrrv_lines_item")
+  @@index([uomId], map: "idx_mrrv_lines_uom")
+  @@map("mrrv_lines")
+}
+
+/// Request for Inspection of Materials (RFIM)
+model Rfim {
+  id                 String    @id @default(uuid()) @db.Uuid
+  rfimNumber         String    @unique @map("rfim_number") @db.VarChar(20)
+  mrrvId             String    @map("mrrv_id") @db.Uuid
+  inspectorId        String?   @map("inspector_id") @db.Uuid
+  requestDate        DateTime  @default(now()) @map("request_date") @db.Timestamptz
+  inspectionDate     DateTime? @map("inspection_date") @db.Timestamptz
+  /// CHECK: inspection_type IN ('Visual', 'Functional', 'Dimensional', 'Lab Test')
+  inspectionType     String?   @map("inspection_type") @db.VarChar(30)
+  /// CHECK: priority IN ('Normal', 'Urgent', 'Critical')
+  priority           String?   @default("Normal") @map("priority") @db.VarChar(20)
+  itemsDescription   String?   @map("items_description")
+  specifications     String?
+  /// CHECK: result IN ('pass', 'fail', 'conditional')
+  result             String?   @db.VarChar(20)
+  comments           String?
+  /// CHECK: status IN ('pending', 'in_progress', 'completed')
+  status             String    @default("pending") @map("status") @db.VarChar(20)
+  pmApprovalRequired Boolean   @default(false) @map("pm_approval_required")
+  pmApprovalDate     DateTime? @map("pm_approval_date") @db.Timestamptz
+  pmApprovalById     String?   @map("pm_approval_by_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mrrv         Mrrv      @relation(fields: [mrrvId], references: [id], onDelete: Restrict)
+  inspector    Employee? @relation("RfimInspector", fields: [inspectorId], references: [id], onDelete: SetNull)
+  pmApprovalBy Employee? @relation("RfimPmApprovalBy", fields: [pmApprovalById], references: [id], onDelete: SetNull)
+
+  @@index([mrrvId], map: "idx_rfim_mrrv")
+  @@index([status], map: "idx_rfim_status")
+  @@map("rfim")
+}
+
+/// Over/Short/Damage reports linked to MRRVs
+model OsdReport {
+  id               String    @id @default(uuid()) @db.Uuid
+  osdNumber        String    @unique @map("osd_number") @db.VarChar(20)
+  mrrvId           String    @map("mrrv_id") @db.Uuid
+  poNumber         String?   @map("po_number") @db.VarChar(50)
+  supplierId       String?   @map("supplier_id") @db.Uuid
+  warehouseId      String?   @map("warehouse_id") @db.Uuid
+  reportDate       DateTime  @map("report_date") @db.Date
+  /// OSD type flags (over/short/damage) as VARCHAR(50)[] array
+  reportTypes      String[]  @map("report_types") @db.VarChar(50)
+  /// CHECK: status IN ('draft', 'under_review', 'claim_sent', 'awaiting_response', 'negotiating', 'resolved', 'closed')
+  status           String    @default("draft") @map("status") @db.VarChar(30)
+  totalOverValue   Decimal?  @default(0) @map("total_over_value") @db.Decimal(15, 2)
+  totalShortValue  Decimal?  @default(0) @map("total_short_value") @db.Decimal(15, 2)
+  totalDamageValue Decimal?  @default(0) @map("total_damage_value") @db.Decimal(15, 2)
+  claimSentDate    DateTime? @map("claim_sent_date") @db.Date
+  claimReference   String?   @map("claim_reference") @db.VarChar(100)
+  supplierResponse String?   @map("supplier_response")
+  responseDate     DateTime? @map("response_date") @db.Date
+  /// CHECK: resolution_type IN ('credit_note', 'replacement', 'price_adjustment', 'insurance_claim', 'write_off', 'returned')
+  resolutionType   String?   @map("resolution_type") @db.VarChar(30)
+  resolutionAmount Decimal?  @map("resolution_amount") @db.Decimal(15, 2)
+  resolutionDate   DateTime? @map("resolution_date") @db.Date
+  resolvedById     String?   @map("resolved_by_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mrrv       Mrrv       @relation(fields: [mrrvId], references: [id], onDelete: Restrict)
+  supplier   Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  warehouse  Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  resolvedBy Employee?  @relation("OsdResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  osdLines OsdLine[]
+
+  @@index([mrrvId], map: "idx_osd_mrrv")
+  @@index([status], map: "idx_osd_status")
+  @@index([supplierId], map: "idx_osd_supplier")
+  @@index([warehouseId], map: "idx_osd_warehouse")
+  @@index([createdAt], map: "idx_osd_created")
+  @@map("osd_reports")
+}
+
+/// OSD report line items
+model OsdLine {
+  id          String   @id @default(uuid()) @db.Uuid
+  osdId       String   @map("osd_id") @db.Uuid
+  itemId      String   @map("item_id") @db.Uuid
+  uomId       String   @map("uom_id") @db.Uuid
+  mrrvLineId  String?  @map("mrrv_line_id") @db.Uuid
+  qtyInvoice  Decimal  @map("qty_invoice") @db.Decimal(12, 3)
+  qtyReceived Decimal  @map("qty_received") @db.Decimal(12, 3)
+  qtyDamaged  Decimal? @default(0) @map("qty_damaged") @db.Decimal(12, 3)
+  /// CHECK: damage_type IN ('physical', 'water', 'missing_parts', 'wrong_item', 'expired', 'other')
+  damageType  String?  @map("damage_type") @db.VarChar(30)
+  unitCost    Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  notes       String?
+
+  // Relations
+  osd      OsdReport     @relation(fields: [osdId], references: [id], onDelete: Cascade)
+  item     Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom      UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  mrrvLine MrrvLine?     @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
+
+  @@index([osdId], map: "idx_osd_lines_osd")
+  @@index([itemId], map: "idx_osd_lines_item")
+  @@map("osd_lines")
+}

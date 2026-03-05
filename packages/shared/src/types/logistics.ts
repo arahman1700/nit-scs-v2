@@ -41,37 +41,6 @@ export interface GatePass {
   items?: VoucherLineItem[];
 }
 
-// ── Stock Transfer ───────────────────────────────────────────────────────
-
-export interface StockTransfer {
-  id: string;
-  transferNumber?: string;
-  transferType: 'warehouse_to_warehouse' | 'project_to_project' | 'warehouse_to_project' | 'project_to_warehouse';
-  fromWarehouseId: string;
-  fromWarehouse?: WarehouseRef;
-  toWarehouseId: string;
-  toWarehouse?: WarehouseRef;
-  fromProjectId?: string;
-  toProjectId?: string;
-  requestedById: string;
-  requestedBy?: EmployeeRef;
-  transferDate: string;
-  status: 'draft' | 'pending' | 'approved' | 'shipped' | 'received' | 'completed' | 'cancelled';
-  shippedDate?: string;
-  receivedDate?: string;
-  sourceMrvId?: string;
-  destinationMirvId?: string;
-  transportJoId?: string;
-  gatePassId?: string;
-  notes?: string;
-  lineItems?: VoucherLineItem[];
-  totalValue?: number;
-  approvalChain?: ApprovalChain;
-  statusHistory?: StatusHistoryEntry[];
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 // ── Material Requisition (MRF) ───────────────────────────────────────────
 
 export interface MaterialRequisition {

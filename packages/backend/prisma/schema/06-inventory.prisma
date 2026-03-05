@@ -1,0 +1,125 @@
+// SECTION 5: INVENTORY TABLES (4 models)
+// ############################################################################
+
+/// Real-time inventory quantities per item per warehouse
+model InventoryLevel {
+  id               String    @id @default(uuid()) @db.Uuid
+  itemId           String    @map("item_id") @db.Uuid
+  warehouseId      String    @map("warehouse_id") @db.Uuid
+  /// CHECK: qty_on_hand >= 0
+  qtyOnHand        Decimal   @default(0) @map("qty_on_hand") @db.Decimal(12, 3)
+  /// CHECK: qty_reserved >= 0
+  qtyReserved      Decimal   @default(0) @map("qty_reserved") @db.Decimal(12, 3)
+  minLevel         Decimal?  @map("min_level") @db.Decimal(12, 3)
+  reorderPoint     Decimal?  @map("reorder_point") @db.Decimal(12, 3)
+  lastMovementDate DateTime? @map("last_movement_date") @db.Timestamptz
+  alertSent        Boolean?  @default(false) @map("alert_sent")
+  /// Optimistic locking version counter
+  version          Int       @default(0)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, warehouseId], map: "uq_inventory_item_wh")
+  @@map("inventory_levels")
+}
+
+/// Inventory lot tracking for FIFO costing and expiry management
+model InventoryLot {
+  id           String    @id @default(uuid()) @db.Uuid
+  lotNumber    String    @unique @map("lot_number") @db.VarChar(20)
+  itemId       String    @map("item_id") @db.Uuid
+  warehouseId  String    @map("warehouse_id") @db.Uuid
+  mrrvLineId   String?   @map("mrrv_line_id") @db.Uuid
+  receiptDate  DateTime  @map("receipt_date") @db.Timestamptz
+  expiryDate   DateTime? @map("expiry_date") @db.Date
+  initialQty   Decimal   @map("initial_qty") @db.Decimal(12, 3)
+  /// CHECK: available_qty >= 0
+  availableQty Decimal   @map("available_qty") @db.Decimal(12, 3)
+  /// CHECK: reserved_qty >= 0
+  reservedQty  Decimal?  @default(0) @map("reserved_qty") @db.Decimal(12, 3)
+  unitCost     Decimal?  @map("unit_cost") @db.Decimal(15, 2)
+  supplierId   String?   @map("supplier_id") @db.Uuid
+  binLocation  String?   @map("bin_location") @db.VarChar(50)
+  /// CHECK: status IN ('active', 'depleted', 'expired', 'blocked')
+  status       String    @default("active") @map("status") @db.VarChar(20)
+  /// Optimistic locking version for concurrent reservation safety
+  version      Int       @default(0)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  mrrvLine  MrrvLine? @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
+  supplier  Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  lotConsumptions LotConsumption[]
+
+  @@index([itemId, warehouseId, status], map: "idx_inventory_lots_item")
+  @@index([itemId, warehouseId, receiptDate], map: "idx_inventory_lots_fifo")
+  @@index([status], map: "idx_inventory_lots_status")
+  @@map("inventory_lots")
+}
+
+/// Lot consumption log for FIFO tracking
+model LotConsumption {
+  id              String   @id @default(uuid()) @db.Uuid
+  lotId           String   @map("lot_id") @db.Uuid
+  mirvLineId      String?  @map("mirv_line_id") @db.Uuid
+  /// Generic reference for non-MIRV consumptions (e.g. stock_transfer_line)
+  referenceType   String?  @map("reference_type") @db.VarChar(50)
+  referenceId     String?  @map("reference_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity        Decimal  @db.Decimal(12, 3)
+  unitCost        Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  consumptionDate DateTime @default(now()) @map("consumption_date") @db.Timestamptz
+
+  // Relations
+  lot      InventoryLot @relation(fields: [lotId], references: [id], onDelete: Restrict)
+  mirvLine MirvLine?    @relation(fields: [mirvLineId], references: [id], onDelete: SetNull)
+
+  @@index([referenceType, referenceId], map: "idx_lot_consumption_ref")
+  @@map("lot_consumptions")
+}
+
+/// Leftover materials from projects requiring disposition
+model LeftoverMaterial {
+  id             String   @id @default(uuid()) @db.Uuid
+  leftoverNumber String   @unique @map("leftover_number") @db.VarChar(20)
+  itemId         String   @map("item_id") @db.Uuid
+  projectId      String   @map("project_id") @db.Uuid
+  warehouseId    String?  @map("warehouse_id") @db.Uuid
+  originalMirvId String?  @map("original_mirv_id") @db.Uuid
+  quantity       Decimal  @db.Decimal(12, 3)
+  uomId          String   @map("uom_id") @db.Uuid
+  /// CHECK: condition IN ('new', 'used', 'damaged')
+  condition      String   @db.VarChar(20)
+  /// CHECK: ownership IN ('nit', 'client', 'third_party')
+  ownership      String   @default("nit") @db.VarChar(20)
+  ownershipBasis String?  @map("ownership_basis") @db.VarChar(30)
+  unitCost       Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  /// CHECK: disposition IN ('return_to_warehouse', 'reuse', 'transfer_to_client', 'sell', 'scrap')
+  disposition    String?  @db.VarChar(30)
+  /// CHECK: status IN ('identified', 'under_review', 'approved', 'in_progress', 'completed')
+  status         String   @default("identified") @map("status") @db.VarChar(20)
+  createdById    String?  @map("created_by_id") @db.Uuid
+  approvedById   String?  @map("approved_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  item         Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse?    @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  originalMirv Mirv?         @relation(fields: [originalMirvId], references: [id], onDelete: SetNull)
+  uom          UnitOfMeasure @relation(fields: [uomId], references: [id], onDelete: Restrict)
+  createdBy    Employee?     @relation("LeftoverCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  approvedBy   Employee?     @relation("LeftoverApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@map("leftover_materials")
+}
+
+// ############################################################################

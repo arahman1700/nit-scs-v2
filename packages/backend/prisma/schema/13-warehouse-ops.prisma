@@ -1,0 +1,189 @@
+// SECTION: PACKING STATION
+// ############################################################################
+
+/// Packing session — groups items from an MI into containers for dispatch
+model PackingSession {
+  id            String    @id @default(uuid()) @db.Uuid
+  sessionNumber String    @unique @map("session_number") @db.VarChar(30)
+  mirvId        String    @map("mirv_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  packedById    String    @map("packed_by_id") @db.Uuid
+  /// CHECK: status IN ('in_progress', 'completed', 'cancelled')
+  status        String    @default("in_progress") @db.VarChar(20)
+  totalWeight   Decimal?  @map("total_weight") @db.Decimal(12, 3)
+  totalVolume   Decimal?  @map("total_volume") @db.Decimal(12, 3)
+  cartonCount   Int       @default(0) @map("carton_count")
+  palletCount   Int       @default(0) @map("pallet_count")
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  mirv      Mirv      @relation(fields: [mirvId], references: [id], onDelete: Restrict)
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  packedBy  Employee  @relation("PackedBy", fields: [packedById], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  lines PackingLine[]
+
+  @@index([mirvId], map: "idx_packing_session_mirv")
+  @@index([warehouseId], map: "idx_packing_session_warehouse")
+  @@index([status], map: "idx_packing_session_status")
+  @@map("packing_sessions")
+}
+
+/// Packing line — one packed item within a packing session
+model PackingLine {
+  id               String   @id @default(uuid()) @db.Uuid
+  packingSessionId String   @map("packing_session_id") @db.Uuid
+  itemId           String   @map("item_id") @db.Uuid
+  qtyPacked        Decimal  @map("qty_packed") @db.Decimal(12, 3)
+  /// CHECK: container_type IN ('carton', 'pallet', 'crate', 'loose')
+  containerType    String   @map("container_type") @db.VarChar(20)
+  containerLabel   String?  @map("container_label") @db.VarChar(50)
+  weight           Decimal? @db.Decimal(12, 3)
+  volume           Decimal? @db.Decimal(12, 3)
+  scannedBarcode   String?  @map("scanned_barcode") @db.VarChar(100)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  session PackingSession @relation(fields: [packingSessionId], references: [id], onDelete: Cascade)
+  item    Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+
+  @@index([packingSessionId], map: "idx_packing_line_session")
+  @@map("packing_lines")
+}
+
+// ############################################################################
+// SECTION: STAGING AREA MANAGEMENT
+// ############################################################################
+
+/// Staging assignment — tracks items placed in staging zones before put-away or dispatch
+model StagingAssignment {
+  id            String    @id @default(uuid()) @db.Uuid
+  zoneId        String    @map("zone_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  itemId        String    @map("item_id") @db.Uuid
+  /// CHECK: source_doc_type IN ('grn', 'mi', 'wt', 'cross_dock')
+  sourceDocType String    @map("source_doc_type") @db.VarChar(20)
+  sourceDocId   String    @map("source_doc_id") @db.Uuid
+  quantity      Decimal   @db.Decimal(12, 3)
+  assignedById  String    @map("assigned_by_id") @db.Uuid
+  /// CHECK: direction IN ('inbound', 'outbound')
+  direction     String    @map("direction") @db.VarChar(10)
+  /// CHECK: status IN ('staged', 'moved', 'expired')
+  status        String    @default("staged") @db.VarChar(20)
+  stagedAt      DateTime  @default(now()) @map("staged_at") @db.Timestamptz
+  movedAt       DateTime? @map("moved_at") @db.Timestamptz
+  maxDwellHours Int?      @default(24) @map("max_dwell_hours")
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  zone       WarehouseZone @relation(fields: [zoneId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  item       Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  assignedBy Employee      @relation("StagingAssignedBy", fields: [assignedById], references: [id], onDelete: Restrict)
+
+  @@index([warehouseId, status], map: "idx_staging_warehouse_status")
+  @@index([zoneId], map: "idx_staging_zone")
+  @@index([direction], map: "idx_staging_direction")
+  @@map("staging_assignments")
+}
+
+// ############################################################################
+// SECTION: LABOR STANDARDS
+// ############################################################################
+
+model LaborStandard {
+  id              String   @id @default(uuid()) @db.Uuid
+  taskType        String   @unique @map("task_type") @db.VarChar(30)
+  description     String?
+  standardMinutes Decimal  @map("standard_minutes") @db.Decimal(8, 2)
+  unitOfMeasure   String   @default("document") @map("unit_of_measure") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("labor_standards")
+}
+
+// ############################################################################
+// SECTION: NAVIGATION OVERRIDES
+// ############################################################################
+
+model NavigationOverride {
+  id         String   @id @default(uuid()) @db.Uuid
+  role       String   @db.VarChar(50)
+  path       String   @db.VarChar(200)
+  sortOrder  Int      @default(0) @map("sort_order")
+  hidden     Boolean  @default(false)
+  parentPath String?  @map("parent_path") @db.VarChar(200)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@unique([role, path])
+  @@map("navigation_overrides")
+}
+
+// ############################################################################
+// SECTION: SEMANTIC ANALYTICS LAYER
+// ############################################################################
+
+model SemanticMeasure {
+  id             String   @id @default(uuid()) @db.Uuid
+  key            String   @unique @db.VarChar(60)
+  name           String   @db.VarChar(100)
+  description    String?
+  category       String   @db.VarChar(40)
+  entityType     String   @map("entity_type") @db.VarChar(40)
+  aggregation    String   @db.VarChar(20)
+  field          String?  @db.VarChar(60)
+  defaultFilters Json?    @map("default_filters")
+  unit           String?  @db.VarChar(20)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("semantic_measures")
+}
+
+model SemanticDimension {
+  id            String   @id @default(uuid()) @db.Uuid
+  key           String   @unique @db.VarChar(60)
+  name          String   @db.VarChar(100)
+  description   String?
+  entityTypes   Json     @map("entity_types")
+  field         String   @db.VarChar(60)
+  dimensionType String   @map("dimension_type") @db.VarChar(20)
+  hierarchy     Json?
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("semantic_dimensions")
+}
+
+// ############################################################################
+// SECTION: NOTIFICATION PREFERENCES (GDPR Unsubscribe)
+// ############################################################################
+
+/// Per-employee, per-template notification channel preferences (GDPR compliant)
+model NotificationPreference {
+  id           String   @id @default(uuid()) @db.Uuid
+  employeeId   String   @map("employee_id") @db.Uuid
+  templateCode String   @map("template_code") @db.VarChar(50)
+  emailEnabled Boolean  @default(true) @map("email_enabled")
+  pushEnabled  Boolean  @default(true) @map("push_enabled")
+  inAppEnabled Boolean  @default(true) @map("in_app_enabled")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, templateCode])
+  @@map("notification_preferences")
+}
+
+// ############################################################################

@@ -1,0 +1,291 @@
+// SECTION 11: EMAIL SYSTEM (2 models)
+// ############################################################################
+
+/// Handlebars email templates
+model EmailTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  code      String   @unique @db.VarChar(100)
+  name      String   @db.VarChar(200)
+  subject   String   @db.VarChar(500)
+  bodyHtml  String   @map("body_html")
+  /// JSON array of variable names available in this template
+  variables Json     @default("[]")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  emailLogs EmailLog[]
+
+  @@map("email_templates")
+}
+
+/// Email delivery tracking
+model EmailLog {
+  id             String    @id @default(uuid()) @db.Uuid
+  templateId     String?   @map("template_id") @db.Uuid
+  toEmail        String    @map("to_email") @db.VarChar(255)
+  subject        String    @db.VarChar(500)
+  /// Rendered HTML body (stored for reliable retries)
+  bodyHtml       String?   @map("body_html")
+  /// CHECK: status IN ('queued', 'sent', 'delivered', 'bounced', 'failed')
+  status         String    @default("queued") @db.VarChar(20)
+  /// Number of delivery attempts
+  retryCount     Int       @default(0) @map("retry_count")
+  /// Resend message ID for tracking
+  externalId     String?   @map("external_id") @db.VarChar(200)
+  error          String?
+  referenceTable String?   @map("reference_table") @db.VarChar(50)
+  referenceId    String?   @map("reference_id") @db.Uuid
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  deliveredAt    DateTime? @map("delivered_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  template EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([status], map: "idx_email_log_status")
+  @@index([templateId], map: "idx_email_log_template")
+  @@index([createdAt], map: "idx_email_log_date")
+  @@map("email_logs")
+}
+
+// ############################################################################
+// SECTION 12: DASHBOARD BUILDER (3 models)
+// ############################################################################
+
+/// User-customizable dashboard layout
+model Dashboard {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String   @db.VarChar(200)
+  description    String?
+  ownerId        String   @map("owner_id") @db.Uuid
+  /// If set, this dashboard is the default for users with this role
+  defaultForRole String?  @map("default_for_role") @db.VarChar(50)
+  isPublic       Boolean  @default(false) @map("is_public")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  owner   Employee          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  widgets DashboardWidget[]
+
+  @@index([ownerId], map: "idx_dashboards_owner")
+  @@index([defaultForRole], map: "idx_dashboards_role")
+  @@map("dashboards")
+}
+
+/// Single widget on a dashboard
+model DashboardWidget {
+  id            String   @id @default(uuid()) @db.Uuid
+  dashboardId   String   @map("dashboard_id") @db.Uuid
+  /// Widget display type: 'kpi', 'chart', 'table', 'list', 'activity', 'status_count'
+  widgetType    String   @map("widget_type") @db.VarChar(50)
+  title         String   @db.VarChar(200)
+  /// Data source key (e.g. 'stats/projects', 'grouped/jo_by_status')
+  dataSource    String   @map("data_source") @db.VarChar(100)
+  /// JSON config for query filters, date range, groupBy, limit
+  queryConfig   Json     @default("{}") @map("query_config")
+  /// JSON config for display options (colors, chart type, columns)
+  displayConfig Json     @default("{}") @map("display_config")
+  /// CSS Grid position: { col, row, colSpan, rowSpan }
+  gridPosition  Json     @default("{}") @map("grid_position")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@index([dashboardId], map: "idx_widgets_dashboard")
+  @@map("dashboard_widgets")
+}
+
+/// User-built report configurations
+model SavedReport {
+  id                 String    @id @default(uuid()) @db.Uuid
+  name               String    @db.VarChar(200)
+  description        String?
+  ownerId            String    @map("owner_id") @db.Uuid
+  /// Data source / entity type (e.g. 'mrrv', 'jo', 'inventory')
+  dataSource         String    @map("data_source") @db.VarChar(100)
+  /// JSON array of column definitions
+  columns            Json      @default("[]")
+  /// JSON filter configuration
+  filters            Json      @default("{}")
+  /// Visualization type: 'table', 'bar', 'line', 'pie'
+  visualization      String    @default("table") @db.VarChar(20)
+  isPublic           Boolean   @default(false) @map("is_public")
+  isTemplate         Boolean   @default(false) @map("is_template")
+  category           String?   @map("category") @db.VarChar(50)
+  /// SOW M4-F07: Schedule frequency for auto-generation ('daily', 'weekly', 'monthly', 'quarterly', null = manual)
+  scheduleFrequency  String?   @map("schedule_frequency") @db.VarChar(20)
+  /// Next scheduled run time — updated by scheduler after each run
+  nextRunAt          DateTime? @map("next_run_at") @db.Timestamptz
+  /// Last time this report was auto-generated
+  lastRunAt          DateTime? @map("last_run_at") @db.Timestamptz
+  /// Email recipients for scheduled reports (JSON array of email addresses)
+  scheduleRecipients Json?     @map("schedule_recipients")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  owner Employee @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId], map: "idx_reports_owner")
+  @@index([isTemplate, category], map: "idx_reports_template_category")
+  @@index([scheduleFrequency, nextRunAt], map: "idx_reports_schedule")
+  @@map("saved_reports")
+}
+
+// ############################################################################
+// SECTION 13: TOKEN MANAGEMENT (1 model) — Added in v2
+// ############################################################################
+
+/// Server-side refresh-token store for revocation support
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user Employee @relation("EmployeeRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_refresh_tokens_user")
+  @@index([expiresAt], map: "idx_refresh_tokens_expiry")
+  @@map("refresh_tokens")
+}
+
+// ############################################################################
+// SECTION 14: DOCUMENT COMMENTS (1 model) — Added in v2
+// ############################################################################
+
+/// Comments on any document (MRRV, MIRV, JO, etc.)
+model DocumentComment {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Document type key (e.g. 'mrrv', 'mirv', 'jo', 'osd')
+  documentType String    @map("document_type") @db.VarChar(50)
+  documentId   String    @map("document_id") @db.Uuid
+  authorId     String    @map("author_id") @db.Uuid
+  content      String
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  author Employee @relation("EmployeeDocComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([documentType, documentId], map: "idx_doc_comments_doc")
+  @@index([authorId], map: "idx_doc_comments_author")
+  @@map("document_comments")
+}
+
+// ############################################################################
+// SECTION 15: MULTI-LEVEL APPROVAL (1 model) — Added in v2
+// ############################################################################
+
+/// Tracks each step in a multi-level approval chain
+model ApprovalStep {
+  id           String    @id @default(uuid()) @db.Uuid
+  /// Document type key (e.g. 'mirv', 'jo', 'mrf')
+  documentType String    @map("document_type") @db.VarChar(50)
+  documentId   String    @map("document_id") @db.Uuid
+  /// Sequential approval level (1, 2, 3, ...)
+  level        Int
+  approverRole String    @map("approver_role") @db.VarChar(50)
+  approverId   String?   @map("approver_id") @db.Uuid
+  /// 'pending' | 'approved' | 'rejected' | 'skipped'
+  status       String    @default("pending") @db.VarChar(20)
+  notes        String?
+  decidedAt    DateTime? @map("decided_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  approver Employee? @relation("EmployeeApprovalSteps", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@unique([documentType, documentId, level], map: "uq_approval_step_doc_level")
+  @@index([documentType, documentId], map: "idx_approval_steps_doc")
+  @@index([approverId], map: "idx_approval_steps_approver")
+  @@index([status], map: "idx_approval_steps_status")
+  @@map("approval_steps")
+}
+
+// ############################################################################
+// SECTION 16: DELEGATION RULES (1 model) — Added in v2
+// ############################################################################
+
+/// Approval delegation rules (out-of-office coverage)
+model DelegationRule {
+  id          String   @id @default(uuid()) @db.Uuid
+  /// The employee delegating authority
+  delegatorId String   @map("delegator_id") @db.Uuid
+  /// The employee receiving delegated authority
+  delegateId  String   @map("delegate_id") @db.Uuid
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  /// Scope: 'all' | 'mirv' | 'jo' | 'mrf' etc.
+  scope       String   @default("all") @db.VarChar(50)
+  isActive    Boolean  @default(true) @map("is_active")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  delegator Employee @relation("EmployeeDelegationsOut", fields: [delegatorId], references: [id], onDelete: Cascade)
+  delegate  Employee @relation("EmployeeDelegationsIn", fields: [delegateId], references: [id], onDelete: Cascade)
+
+  @@index([delegatorId], map: "idx_delegation_delegator")
+  @@index([delegateId], map: "idx_delegation_delegate")
+  @@index([startDate, endDate], map: "idx_delegation_dates")
+  @@map("delegation_rules")
+}
+
+// ############################################################################
+// SECTION: FILE ATTACHMENTS
+// ############################################################################
+
+/// Polymorphic file attachments for any entity (entityType + recordId)
+model Attachment {
+  id           String    @id @default(uuid()) @db.Uuid
+  entityType   String    @map("entity_type") @db.VarChar(50)
+  recordId     String    @map("record_id") @db.Uuid
+  fileName     String    @map("file_name") @db.VarChar(500)
+  originalName String    @map("original_name") @db.VarChar(500)
+  fileSize     Int       @map("file_size")
+  mimeType     String    @map("mime_type") @db.VarChar(100)
+  storagePath  String    @map("storage_path") @db.VarChar(1000)
+  uploadedById String    @map("uploaded_by_id") @db.Uuid
+  uploadedAt   DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  // Relations
+  uploadedBy Employee @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([entityType, recordId], map: "idx_attachment_entity")
+  @@index([uploadedById], map: "idx_attachment_uploader")
+  @@map("attachments")
+}
+
+// ############################################################################
+// SECTION: USER VIEW PREFERENCES
+// ############################################################################
+
+/// Saved grid/list view configurations per user per entity
+model UserView {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  entityType String   @map("entity_type") @db.VarChar(50)
+  name       String   @default("Default") @db.VarChar(100)
+  viewType   String   @default("grid") @map("view_type") @db.VarChar(20)
+  config     Json     @db.JsonB
+  isDefault  Boolean  @default(false) @map("is_default")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user Employee @relation("UserViewOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, entityType], map: "idx_user_view_user_entity")
+  @@map("user_views")
+}

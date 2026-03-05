@@ -67,3 +67,69 @@ export interface StockReservation {
   status: 'active' | 'released' | 'consumed';
   createdAt: string;
 }
+
+// ── Surplus Management ──────────────────────────────────────────────────
+
+import type { StatusHistoryEntry } from './common.js';
+
+export interface SurplusItem {
+  id: string;
+  surplusNumber: string;
+  itemId: string;
+  warehouseId: string;
+  projectId?: string;
+  qty: number;
+  condition: string;
+  estimatedValue?: number;
+  disposition: 'transfer' | 'return' | 'retain' | 'sell';
+  status: 'identified' | 'evaluated' | 'approved' | 'actioned' | 'closed' | 'rejected';
+  ouHeadApprovalDate?: string;
+  scmApprovalDate?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  item?: { id: string; itemCode: string; itemDescription: string };
+  warehouse?: { id: string; warehouseName: string };
+  statusHistory?: StatusHistoryEntry[];
+}
+
+// ── Scrap Management ────────────────────────────────────────────────────
+
+export interface ScrapItem {
+  id: string;
+  scrapNumber: string;
+  projectId?: string;
+  warehouseId: string;
+  materialType: 'cable' | 'mv_cable' | 'hv_cable' | 'aluminum' | 'copper' | 'steel' | 'cable_tray' | 'wood' | 'other';
+  description?: string;
+  qty: number;
+  packaging?: string;
+  condition?: string;
+  estimatedValue?: number;
+  actualSaleValue?: number;
+  status: 'identified' | 'reported' | 'approved' | 'in_ssc' | 'sold' | 'disposed' | 'closed' | 'rejected';
+  photos?: string[];
+  siteManagerApproval?: boolean;
+  qcApproval?: boolean;
+  storekeeperApproval?: boolean;
+  buyerName?: string;
+  buyerPickupDeadline?: string;
+  smartContainerId?: string;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+  statusHistory?: StatusHistoryEntry[];
+}
+
+export interface SscBid {
+  id: string;
+  scrapBatchId: string;
+  bidderName: string;
+  bidderContact?: string;
+  bidAmount: number;
+  bidDate: string;
+  status: 'submitted' | 'under_review' | 'accepted' | 'rejected';
+  sscMemoSigned?: boolean;
+  financeCopyDate?: string;
+  createdAt: string;
+}

@@ -1,0 +1,240 @@
+// SECTION 4: JOB ORDER TABLES (9 models)
+// ############################################################################
+
+/// Job Orders base table - supports 7 types via subtype tables
+model JobOrder {
+  id                    String    @id @default(uuid()) @db.Uuid
+  joNumber              String    @unique @map("jo_number") @db.VarChar(20)
+  /// CHECK: jo_type IN ('transport', 'equipment', 'rental_monthly', 'rental_daily', 'scrap', 'generator_rental', 'generator_maintenance')
+  joType                String    @map("jo_type") @db.VarChar(30)
+  entityId              String?   @map("entity_id") @db.Uuid
+  projectId             String    @map("project_id") @db.Uuid
+  supplierId            String?   @map("supplier_id") @db.Uuid
+  requestedById         String    @map("requested_by_id") @db.Uuid
+  requestDate           DateTime  @map("request_date") @db.Timestamptz
+  requiredDate          DateTime? @map("required_date") @db.Date
+  /// CHECK: status IN ('draft', 'pending_approval', 'quoted', 'approved', 'assigned', 'in_progress', 'on_hold', 'completed', 'closure_pending', 'closure_approved', 'invoiced', 'rejected', 'cancelled')
+  status                String    @default("draft") @map("status") @db.VarChar(20)
+  /// CHECK: priority IN ('low', 'normal', 'high', 'urgent')
+  priority              String?   @default("normal") @map("priority") @db.VarChar(20)
+  description           String
+  notes                 String?
+  totalAmount           Decimal?  @default(0) @map("total_amount") @db.Decimal(15, 2)
+  startDate             DateTime? @map("start_date") @db.Timestamptz
+  completionDate        DateTime? @map("completion_date") @db.Timestamptz
+  googleMapsPickup      String?   @map("google_maps_pickup") @db.VarChar(500)
+  googleMapsDelivery    String?   @map("google_maps_delivery") @db.VarChar(500)
+  driverName            String?   @map("driver_name") @db.VarChar(200)
+  driverNationality     String?   @map("driver_nationality") @db.VarChar(50)
+  driverIdNumber        String?   @map("driver_id_number") @db.VarChar(30)
+  vehicleBrand          String?   @map("vehicle_brand") @db.VarChar(100)
+  vehicleYear           Int?      @map("vehicle_year")
+  vehiclePlate          String?   @map("vehicle_plate") @db.VarChar(30)
+  insuranceValue        Decimal?  @map("insurance_value") @db.Decimal(15, 2)
+  insuranceRequired     Boolean   @default(false) @map("insurance_required")
+  projectBudgetApproved Boolean?  @map("project_budget_approved")
+  cnNumber              String?   @map("cn_number") @db.VarChar(50)
+  coaApprovalRequired   Boolean   @default(false) @map("coa_approval_required")
+  shiftStartTime        DateTime? @map("shift_start_time") @db.Timestamptz
+  completedById         String?   @map("completed_by_id") @db.Uuid
+  gatePassAutoCreated   Boolean   @default(false) @map("gate_pass_auto_created")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  entity      Entity?   @relation(fields: [entityId], references: [id], onDelete: Restrict)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Restrict)
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  requestedBy Employee  @relation("JoRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+  completedBy Employee? @relation("JoCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations - subtype details (1:1)
+  transportDetails JoTransportDetail?
+  rentalDetails    JoRentalDetail?
+  generatorDetails JoGeneratorDetail?
+  scrapDetails     JoScrapDetail?
+
+  // Reverse relations - child collections
+  equipmentLines         JoEquipmentLine[]
+  slaTracking            JoSlaTracking?
+  approvals              JoApproval[]
+  payments               JoPayment[]
+  gatePasses             GatePass[]
+  stockTransfers         StockTransfer[]
+  shipments              Shipment[]
+  transportOrders        TransportOrder[]
+  equipmentDeliveryNotes EquipmentDeliveryNote[]
+  equipmentReturnNotes   EquipmentReturnNote[]
+
+  @@index([joType, status], map: "idx_job_orders_type_status")
+  @@index([projectId], map: "idx_job_orders_project")
+  @@index([requestDate(sort: Desc)], map: "idx_job_orders_date")
+  @@index([supplierId], map: "idx_job_orders_supplier")
+  @@index([requestedById], map: "idx_job_orders_requested_by")
+  @@index([status], map: "idx_job_orders_status")
+  @@index([createdAt], map: "idx_job_orders_created")
+  @@index([projectId, status], map: "idx_job_orders_project_status")
+  @@index([status, createdAt], map: "idx_job_orders_status_created")
+  @@map("job_orders")
+}
+
+/// Transport-type job order details
+model JoTransportDetail {
+  id                      String   @id @default(uuid()) @db.Uuid
+  jobOrderId              String   @unique @map("job_order_id") @db.Uuid
+  pickupLocation          String   @map("pickup_location") @db.VarChar(300)
+  pickupLocationUrl       String?  @map("pickup_location_url") @db.VarChar(500)
+  pickupContactName       String?  @map("pickup_contact_name") @db.VarChar(200)
+  pickupContactPhone      String?  @map("pickup_contact_phone") @db.VarChar(20)
+  deliveryLocation        String   @map("delivery_location") @db.VarChar(300)
+  deliveryLocationUrl     String?  @map("delivery_location_url") @db.VarChar(500)
+  deliveryContactName     String?  @map("delivery_contact_name") @db.VarChar(200)
+  deliveryContactPhone    String?  @map("delivery_contact_phone") @db.VarChar(20)
+  cargoType               String   @map("cargo_type") @db.VarChar(50)
+  cargoWeightTons         Decimal? @map("cargo_weight_tons") @db.Decimal(10, 2)
+  numberOfTrailers        Int?     @map("number_of_trailers") @db.SmallInt
+  numberOfTrips           Int?     @map("number_of_trips") @db.SmallInt
+  includeLoadingEquipment Boolean? @default(false) @map("include_loading_equipment")
+  loadingEquipmentType    String?  @map("loading_equipment_type") @db.VarChar(100)
+  insuranceRequired       Boolean? @default(false) @map("insurance_required")
+  materialPriceSar        Decimal? @map("material_price_sar") @db.Decimal(15, 2)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_transport_details")
+}
+
+/// Rental-type job order details (monthly and daily)
+model JoRentalDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  jobOrderId       String   @unique @map("job_order_id") @db.Uuid
+  rentalStartDate  DateTime @map("rental_start_date") @db.Date
+  rentalEndDate    DateTime @map("rental_end_date") @db.Date
+  monthlyRate      Decimal? @map("monthly_rate") @db.Decimal(15, 2)
+  dailyRate        Decimal? @map("daily_rate") @db.Decimal(15, 2)
+  withOperator     Boolean? @default(false) @map("with_operator")
+  overtimeHours    Decimal? @default(0) @map("overtime_hours") @db.Decimal(8, 2)
+  overtimeApproved Boolean? @default(false) @map("overtime_approved")
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_rental_details")
+}
+
+/// Generator rental and maintenance job order details
+model JoGeneratorDetail {
+  id               String    @id @default(uuid()) @db.Uuid
+  jobOrderId       String    @unique @map("job_order_id") @db.Uuid
+  generatorId      String?   @map("generator_id") @db.Uuid
+  capacityKva      Int?      @map("capacity_kva")
+  /// CHECK: maintenance_type IN ('preventive', 'corrective', 'emergency')
+  maintenanceType  String?   @map("maintenance_type") @db.VarChar(30)
+  issueDescription String?   @map("issue_description")
+  shiftStartTime   DateTime? @map("shift_start_time") @db.Time(6)
+
+  // Relations
+  jobOrder  JobOrder   @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  generator Generator? @relation(fields: [generatorId], references: [id], onDelete: SetNull)
+
+  @@map("jo_generator_details")
+}
+
+/// Scrap disposal job order details
+model JoScrapDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  jobOrderId       String   @unique @map("job_order_id") @db.Uuid
+  scrapType        String   @map("scrap_type") @db.VarChar(50)
+  scrapWeightTons  Decimal  @map("scrap_weight_tons") @db.Decimal(10, 2)
+  scrapDescription String?  @map("scrap_description")
+  scrapDestination String?  @map("scrap_destination") @db.VarChar(300)
+  materialPriceSar Decimal? @map("material_price_sar") @db.Decimal(15, 2)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_scrap_details")
+}
+
+/// Equipment request line items for job orders
+model JoEquipmentLine {
+  id              String   @id @default(uuid()) @db.Uuid
+  jobOrderId      String   @map("job_order_id") @db.Uuid
+  equipmentTypeId String   @map("equipment_type_id") @db.Uuid
+  /// CHECK: quantity > 0
+  quantity        Int      @db.SmallInt
+  withOperator    Boolean? @default(false) @map("with_operator")
+  siteLocation    String?  @map("site_location") @db.VarChar(200)
+  dailyRate       Decimal? @map("daily_rate") @db.Decimal(10, 2)
+  durationDays    Int?     @map("duration_days") @db.SmallInt
+
+  // Relations
+  jobOrder      JobOrder      @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  equipmentType EquipmentType @relation(fields: [equipmentTypeId], references: [id], onDelete: Restrict)
+
+  @@index([jobOrderId], map: "idx_jo_equipment_lines_jo")
+  @@map("jo_equipment_lines")
+}
+
+/// Service Level Agreement tracking for job orders
+model JoSlaTracking {
+  id               String    @id @default(uuid()) @db.Uuid
+  jobOrderId       String    @unique @map("job_order_id") @db.Uuid
+  slaDueDate       DateTime? @map("sla_due_date") @db.Timestamptz
+  slaResponseHours Int?      @map("sla_response_hours")
+  slaBusinessDays  Int?      @map("sla_business_days")
+  stopClockStart   DateTime? @map("stop_clock_start") @db.Timestamptz
+  stopClockEnd     DateTime? @map("stop_clock_end") @db.Timestamptz
+  stopClockReason  String?   @map("stop_clock_reason")
+  slaMet           Boolean?  @map("sla_met")
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@map("jo_sla_tracking")
+}
+
+/// Job order approval records
+model JoApproval {
+  id           String    @id @default(uuid()) @db.Uuid
+  jobOrderId   String    @map("job_order_id") @db.Uuid
+  approvalType String    @map("approval_type") @db.VarChar(30)
+  approverId   String    @map("approver_id") @db.Uuid
+  approvedDate DateTime? @map("approved_date") @db.Timestamptz
+  approved     Boolean?
+  quoteAmount  Decimal?  @map("quote_amount") @db.Decimal(15, 2)
+  comments     String?
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+  approver Employee @relation(fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@index([jobOrderId], map: "idx_jo_approvals_jo")
+  @@map("jo_approvals")
+}
+
+/// Job order invoice and payment tracking
+model JoPayment {
+  id                  String    @id @default(uuid()) @db.Uuid
+  jobOrderId          String    @map("job_order_id") @db.Uuid
+  invoiceNumber       String?   @map("invoice_number") @db.VarChar(50)
+  invoiceReceiptDate  DateTime? @map("invoice_receipt_date") @db.Date
+  costExclVat         Decimal?  @map("cost_excl_vat") @db.Decimal(15, 2)
+  vatAmount           Decimal?  @map("vat_amount") @db.Decimal(15, 2)
+  grandTotal          Decimal?  @map("grand_total") @db.Decimal(15, 2)
+  /// CHECK: payment_status IN ('pending', 'approved', 'paid', 'disputed')
+  paymentStatus       String?   @default("pending") @map("payment_status") @db.VarChar(20)
+  paymentApprovedDate DateTime? @map("payment_approved_date") @db.Date
+  actualPaymentDate   DateTime? @map("actual_payment_date") @db.Date
+  oracleVoucher       String?   @map("oracle_voucher") @db.VarChar(50)
+  attachmentUrl       String?   @map("attachment_url") @db.VarChar(500)
+
+  // Relations
+  jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
+
+  @@index([jobOrderId], map: "idx_jo_payments_jo")
+  @@map("jo_payments")
+}
+
+// ############################################################################

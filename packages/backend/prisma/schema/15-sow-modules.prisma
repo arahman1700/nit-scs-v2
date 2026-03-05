@@ -1,0 +1,352 @@
+// ############################################################################
+// SECTION: ACCESS CONTROL & SECURITY
+// ############################################################################
+
+/// Login attempt tracking for security monitoring and account lockout
+model LoginAttempt {
+  id            String   @id @default(uuid()) @db.Uuid
+  employeeId    String   @map("employee_id") @db.Uuid
+  ipAddress     String   @map("ip_address") @db.VarChar(45)
+  userAgent     String?  @map("user_agent") @db.VarChar(500)
+  success       Boolean
+  failureReason String?  @map("failure_reason") @db.VarChar(100)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  employee Employee @relation("EmployeeLoginAttempts", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId, createdAt], map: "idx_login_attempts_employee")
+  @@index([ipAddress, createdAt], map: "idx_login_attempts_ip")
+  @@map("login_attempts")
+}
+
+// ############################################################################
+// SECTION: MAINTENANCE CONTRACTS (M1)
+// ############################################################################
+
+/// Annual Maintenance Contracts (AMC) — SOW M1
+model AnnualMaintenanceContract {
+  id                              String   @id @default(uuid()) @db.Uuid
+  contractNumber                  String   @unique @map("contract_number") @db.VarChar(20)
+  supplierId                      String   @map("supplier_id") @db.Uuid
+  equipmentTypeId                 String   @map("equipment_type_id") @db.Uuid
+  startDate                       DateTime @map("start_date") @db.Date
+  endDate                         DateTime @map("end_date") @db.Date
+  contractValue                   Decimal  @map("contract_value") @db.Decimal(15, 2)
+  /// CHECK: status IN ('draft', 'active', 'expired', 'terminated')
+  status                          String   @default("draft") @map("status") @db.VarChar(20)
+  /// CHECK: coverage_type IN ('comprehensive', 'parts_only', 'labor_only')
+  coverageType                    String   @map("coverage_type") @db.VarChar(50)
+  responseTimeSlaHours            Int      @map("response_time_sla_hours")
+  /// CHECK: preventive_maintenance_frequency IN ('weekly', 'monthly', 'quarterly', 'yearly')
+  preventiveMaintenanceFrequency  String   @map("preventive_maintenance_frequency") @db.VarChar(30)
+  includesSpares                  Boolean  @default(false) @map("includes_spares")
+  maxCallouts                     Int?     @map("max_callouts")
+  notes                           String?
+  terminationReason               String?  @map("termination_reason")
+  createdById                     String   @map("created_by_id") @db.Uuid
+  createdAt                       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier      Supplier      @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  equipmentType EquipmentType @relation(fields: [equipmentTypeId], references: [id], onDelete: Restrict)
+  createdBy     Employee      @relation("AmcCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([status], map: "idx_amc_status")
+  @@index([supplierId], map: "idx_amc_supplier")
+  @@index([endDate], map: "idx_amc_end_date")
+  @@map("annual_maintenance_contracts")
+}
+
+// ############################################################################
+// SECTION: ASSET REGISTER (M10)
+// ############################################################################
+
+/// Fixed asset register — full lifecycle tracking with depreciation
+model Asset {
+  id                   String    @id @default(uuid()) @db.Uuid
+  assetCode            String    @unique @map("asset_code") @db.VarChar(30)
+  description          String    @db.VarChar(500)
+  /// CHECK: category IN ('equipment', 'vehicle', 'furniture', 'it_hardware', 'tools', 'other')
+  category             String    @db.VarChar(50)
+  serialNumber         String?   @map("serial_number") @db.VarChar(100)
+  manufacturer         String?   @db.VarChar(200)
+  model                String?   @db.VarChar(200)
+  purchaseDate         DateTime? @map("purchase_date") @db.Date
+  purchaseCost         Decimal?  @map("purchase_cost") @db.Decimal(15, 2)
+  currentValue         Decimal?  @map("current_value") @db.Decimal(15, 2)
+  /// CHECK: depreciation_method IN ('straight_line', 'declining_balance', 'none')
+  depreciationMethod   String?   @map("depreciation_method") @db.VarChar(30)
+  usefulLifeYears      Int?      @map("useful_life_years")
+  salvageValue         Decimal?  @map("salvage_value") @db.Decimal(15, 2)
+  /// CHECK: status IN ('active', 'maintenance', 'retired', 'disposed', 'lost')
+  status               String    @default("active") @db.VarChar(20)
+  locationWarehouseId  String?   @map("location_warehouse_id") @db.Uuid
+  assignedToId         String?   @map("assigned_to_id") @db.Uuid
+  /// CHECK: condition IN ('new', 'good', 'fair', 'poor')
+  condition            String?   @db.VarChar(20)
+  lastAuditDate        DateTime? @map("last_audit_date") @db.Date
+  notes                String?
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  locationWarehouse    Warehouse? @relation("AssetLocation", fields: [locationWarehouseId], references: [id], onDelete: SetNull)
+  assignedTo           Employee?  @relation("AssetAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  transfers            AssetTransfer[]
+  depreciationRecords  AssetDepreciation[]
+
+  @@index([status], map: "idx_assets_status")
+  @@index([category], map: "idx_assets_category")
+  @@index([locationWarehouseId], map: "idx_assets_warehouse")
+  @@index([assignedToId], map: "idx_assets_assigned_to")
+  @@map("assets")
+}
+
+/// Asset transfer history — tracks movement between warehouses and employees
+model AssetTransfer {
+  id              String    @id @default(uuid()) @db.Uuid
+  assetId         String    @map("asset_id") @db.Uuid
+  fromWarehouseId String?   @map("from_warehouse_id") @db.Uuid
+  toWarehouseId   String?   @map("to_warehouse_id") @db.Uuid
+  fromEmployeeId  String?   @map("from_employee_id") @db.Uuid
+  toEmployeeId    String?   @map("to_employee_id") @db.Uuid
+  transferDate    DateTime  @map("transfer_date") @db.Date
+  reason          String?
+  transferredById String    @map("transferred_by_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  asset           Asset      @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  fromWarehouse   Warehouse? @relation("AssetTransferFrom", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
+  toWarehouse     Warehouse? @relation("AssetTransferTo", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+  fromEmployee    Employee?  @relation("AssetTransferFromEmp", fields: [fromEmployeeId], references: [id], onDelete: SetNull)
+  toEmployee      Employee?  @relation("AssetTransferToEmp", fields: [toEmployeeId], references: [id], onDelete: SetNull)
+  transferredBy   Employee   @relation("AssetTransferredBy", fields: [transferredById], references: [id], onDelete: Restrict)
+
+  @@index([assetId], map: "idx_asset_transfers_asset")
+  @@index([transferDate], map: "idx_asset_transfers_date")
+  @@map("asset_transfers")
+}
+
+/// Asset depreciation records — quarterly depreciation calculations
+model AssetDepreciation {
+  id                 String   @id @default(uuid()) @db.Uuid
+  assetId            String   @map("asset_id") @db.Uuid
+  /// Period identifier, e.g. "2026-Q1"
+  period             String   @db.VarChar(10)
+  openingValue       Decimal  @map("opening_value") @db.Decimal(15, 2)
+  depreciationAmount Decimal  @map("depreciation_amount") @db.Decimal(15, 2)
+  closingValue       Decimal  @map("closing_value") @db.Decimal(15, 2)
+  calculatedAt       DateTime @default(now()) @map("calculated_at") @db.Timestamptz
+
+  // Relations
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@unique([assetId, period], map: "uq_asset_depreciation_period")
+  @@index([assetId], map: "idx_asset_depreciations_asset")
+  @@map("asset_depreciations")
+}
+
+// ############################################################################
+// SECTION: CUSTOMS DOCUMENTATION MANAGEMENT (M9)
+// ############################################################################
+
+/// Customs documents required for shipment clearance (SOW M9)
+model CustomsDocument {
+  id             String    @id @default(uuid()) @db.Uuid
+  shipmentId     String    @map("shipment_id") @db.Uuid
+  /// CHECK: document_type IN ('bill_of_lading', 'commercial_invoice', 'packing_list', 'certificate_of_origin', 'insurance_certificate', 'customs_declaration', 'import_permit', 'phytosanitary', 'conformity_certificate', 'other')
+  documentType   String    @map("document_type") @db.VarChar(50)
+  documentNumber String?   @map("document_number") @db.VarChar(100)
+  issueDate      DateTime? @map("issue_date") @db.Date
+  expiryDate     DateTime? @map("expiry_date") @db.Date
+  /// CHECK: status IN ('pending', 'received', 'verified', 'rejected')
+  status         String    @default("pending") @map("status") @db.VarChar(20)
+  filePath       String?   @map("file_path") @db.VarChar(500)
+  verifiedById   String?   @map("verified_by_id") @db.Uuid
+  verifiedAt     DateTime? @map("verified_at") @db.Timestamptz
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  shipment   Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  verifiedBy Employee? @relation("CustomsDocVerifiedBy", fields: [verifiedById], references: [id], onDelete: SetNull)
+
+  @@index([shipmentId], map: "idx_customs_documents_shipment")
+  @@index([status], map: "idx_customs_documents_status")
+  @@index([documentType], map: "idx_customs_documents_type")
+  @@map("customs_documents")
+}
+
+// ############################################################################
+// SECTION: VEHICLE MAINTENANCE (M8)
+// ############################################################################
+
+/// Usage-based vehicle maintenance scheduling and tracking
+model VehicleMaintenance {
+  id                      String    @id @default(uuid()) @db.Uuid
+  vehicleId               String    @map("vehicle_id") @db.Uuid
+  maintenanceNumber       String    @unique @map("maintenance_number") @db.VarChar(20)
+  /// CHECK: maintenance_type IN ('preventive', 'corrective', 'emergency', 'inspection')
+  maintenanceType         String    @map("maintenance_type") @db.VarChar(30)
+  scheduledDate           DateTime  @map("scheduled_date") @db.Date
+  completedDate           DateTime? @map("completed_date") @db.Timestamptz
+  /// CHECK: status IN ('scheduled', 'in_progress', 'completed', 'cancelled')
+  status                  String    @default("scheduled") @map("status") @db.VarChar(20)
+  currentHoursAtService   Decimal?  @map("current_hours_at_service") @db.Decimal(10, 2)
+  currentMileageAtService Decimal?  @map("current_mileage_at_service") @db.Decimal(12, 2)
+  description             String
+  workPerformed           String?   @map("work_performed")
+  partsUsed               String?   @map("parts_used")
+  cost                    Decimal?  @db.Decimal(15, 2)
+  vendorName              String?   @map("vendor_name") @db.VarChar(200)
+  performedById           String?   @map("performed_by_id") @db.Uuid
+  nextServiceHours        Decimal?  @map("next_service_hours") @db.Decimal(10, 2)
+  nextServiceMileage      Decimal?  @map("next_service_mileage") @db.Decimal(12, 2)
+  nextServiceDate         DateTime? @map("next_service_date") @db.Date
+  notes                   String?
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  vehicle     EquipmentFleet @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  performedBy Employee?      @relation("VehicleMaintenancePerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([vehicleId], map: "idx_vehicle_maint_vehicle")
+  @@index([status], map: "idx_vehicle_maint_status")
+  @@index([scheduledDate], map: "idx_vehicle_maint_scheduled")
+  @@map("vehicle_maintenance")
+}
+
+// ############################################################################
+// SECTION: COMPLIANCE AUDIT CHECKLISTS (ISO 9001) — SOW M2
+// ############################################################################
+
+/// Compliance checklist templates (ISO 9001, ISO 14001, etc.)
+model ComplianceChecklist {
+  id            String   @id @default(uuid()) @db.Uuid
+  checklistCode String   @unique @map("checklist_code") @db.VarChar(20)
+  title         String   @db.VarChar(200)
+  /// CHECK: standard IN ('ISO_9001', 'ISO_14001', 'OHSAS_18001', 'custom')
+  standard      String   @db.VarChar(50)
+  /// CHECK: category IN ('receiving', 'storage', 'dispatch', 'safety', 'environmental')
+  category      String   @db.VarChar(50)
+  version       Int      @default(1)
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Reverse relations
+  items  ComplianceChecklistItem[]
+  audits ComplianceAudit[]
+
+  @@index([standard], map: "idx_compliance_checklists_standard")
+  @@index([category], map: "idx_compliance_checklists_category")
+  @@index([isActive], map: "idx_compliance_checklists_active")
+  @@map("compliance_checklists")
+}
+
+/// Individual checklist questions/items within a compliance checklist
+model ComplianceChecklistItem {
+  id               String  @id @default(uuid()) @db.Uuid
+  checklistId      String  @map("checklist_id") @db.Uuid
+  itemNumber       Int     @map("item_number")
+  question         String
+  category         String? @db.VarChar(50)
+  requiredEvidence String? @map("required_evidence")
+  weight           Int     @default(1)
+
+  // Relations
+  checklist ComplianceChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  // Reverse relations
+  responses ComplianceAuditResponse[]
+
+  @@index([checklistId], map: "idx_compliance_checklist_items_checklist")
+  @@map("compliance_checklist_items")
+}
+
+/// A compliance audit conducted against a checklist at a specific warehouse
+model ComplianceAudit {
+  id                String    @id @default(uuid()) @db.Uuid
+  auditNumber       String    @unique @map("audit_number") @db.VarChar(20)
+  checklistId       String    @map("checklist_id") @db.Uuid
+  warehouseId       String    @map("warehouse_id") @db.Uuid
+  auditorId         String    @map("auditor_id") @db.Uuid
+  auditDate         DateTime  @map("audit_date") @db.Date
+  /// CHECK: status IN ('draft', 'in_progress', 'completed', 'action_required')
+  status            String    @default("draft") @db.VarChar(20)
+  overallScore      Decimal?  @map("overall_score") @db.Decimal(5, 2)
+  findings          String?
+  correctiveActions String?   @map("corrective_actions")
+  dueDate           DateTime? @map("due_date") @db.Date
+  completedDate     DateTime? @map("completed_date") @db.Date
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  checklist ComplianceChecklist @relation(fields: [checklistId], references: [id], onDelete: Restrict)
+  warehouse Warehouse           @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  auditor   Employee            @relation("ComplianceAuditor", fields: [auditorId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  responses ComplianceAuditResponse[]
+
+  @@index([checklistId], map: "idx_compliance_audits_checklist")
+  @@index([warehouseId], map: "idx_compliance_audits_warehouse")
+  @@index([auditorId], map: "idx_compliance_audits_auditor")
+  @@index([status], map: "idx_compliance_audits_status")
+  @@index([auditDate], map: "idx_compliance_audits_date")
+  @@map("compliance_audits")
+}
+
+/// Individual responses to checklist items within an audit
+model ComplianceAuditResponse {
+  id              String  @id @default(uuid()) @db.Uuid
+  auditId         String  @map("audit_id") @db.Uuid
+  checklistItemId String  @map("checklist_item_id") @db.Uuid
+  /// CHECK: response IN ('compliant', 'non_compliant', 'partial', 'not_applicable')
+  response        String  @db.VarChar(20)
+  evidence        String?
+  notes           String?
+  score           Int?
+
+  // Relations
+  audit         ComplianceAudit         @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  checklistItem ComplianceChecklistItem @relation(fields: [checklistItemId], references: [id], onDelete: Restrict)
+
+  @@index([auditId], map: "idx_compliance_audit_responses_audit")
+  @@index([checklistItemId], map: "idx_compliance_audit_responses_item")
+  @@map("compliance_audit_responses")
+}
+
+// ############################################################################
+// SECTION: DIGITAL SIGNATURES (L6)
+// ############################################################################
+
+/// Digital signatures for document approval, delivery confirmation, etc.
+model DigitalSignature {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentType  String   @map("document_type") @db.VarChar(50)
+  documentId    String   @map("document_id") @db.Uuid
+  signedById    String   @map("signed_by_id") @db.Uuid
+  /// Base64 encoded PNG signature image
+  signatureData String   @map("signature_data") @db.Text
+  signedAt      DateTime @default(now()) @map("signed_at") @db.Timestamptz
+  ipAddress     String?  @map("ip_address") @db.VarChar(45)
+  /// CHECK: purpose IN ('approval', 'delivery_confirmation', 'receipt', 'inspection', 'handover')
+  purpose       String   @db.VarChar(50)
+  notes         String?
+
+  // Relations
+  signedBy Employee @relation("DigitalSignatures", fields: [signedById], references: [id], onDelete: Restrict)
+
+  @@index([documentType, documentId], map: "idx_digital_signatures_document")
+  @@index([signedById], map: "idx_digital_signatures_signed_by")
+  @@map("digital_signatures")
+}

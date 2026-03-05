@@ -1,0 +1,19 @@
+// ============================================================================
+// NIT Supply Chain System V2
+// Prisma Schema
+// ============================================================================
+// Company:   Nesma Infrastructure & Technology (NIT) - Saudi Arabia
+// Version:   2.0
+// Date:      2026-02-09
+// Database:  PostgreSQL (Xano - Saudi Region)
+// Reference: schema.sql v1.0, ERD_DESIGN.md v1.0
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

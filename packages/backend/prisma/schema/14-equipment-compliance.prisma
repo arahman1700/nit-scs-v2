@@ -1,0 +1,255 @@
+// SECTION: EQUIPMENT DELIVERY & RETURN NOTES (SOW M2-F02)
+// ############################################################################
+
+/// Equipment Delivery Note — records equipment arriving at a job site
+model EquipmentDeliveryNote {
+  id                        String    @id @default(uuid()) @db.Uuid
+  noteNumber                String    @unique @map("note_number") @db.VarChar(30)
+  jobOrderId                String    @map("job_order_id") @db.Uuid
+  rentalContractId          String?   @map("rental_contract_id") @db.Uuid
+  deliveryDate              DateTime  @map("delivery_date") @db.Timestamptz
+  receivedById              String    @map("received_by_id") @db.Uuid
+  equipmentDescription      String    @map("equipment_description")
+  serialNumber              String?   @map("serial_number") @db.VarChar(100)
+  hoursOnDelivery           Decimal?  @map("hours_on_delivery") @db.Decimal(12, 2)
+  mileageOnDelivery         Decimal?  @map("mileage_on_delivery") @db.Decimal(12, 2)
+  /// CHECK: condition_on_delivery IN ('excellent', 'good', 'fair', 'poor')
+  conditionOnDelivery       String    @map("condition_on_delivery") @db.VarChar(20)
+  conditionNotes            String?   @map("condition_notes")
+  safetyCertificateVerified Boolean   @default(false) @map("safety_certificate_verified")
+  /// CHECK: status IN ('draft', 'confirmed', 'cancelled')
+  status                    String    @default("draft") @map("status") @db.VarChar(20)
+  confirmedAt               DateTime? @map("confirmed_at") @db.Timestamptz
+  confirmedById             String?   @map("confirmed_by_id") @db.Uuid
+  notes                     String?
+  createdAt                 DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                 DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  jobOrder       JobOrder        @relation(fields: [jobOrderId], references: [id], onDelete: Restrict)
+  rentalContract RentalContract? @relation(fields: [rentalContractId], references: [id], onDelete: SetNull)
+  receivedBy     Employee        @relation("DeliveryNoteReceivedBy", fields: [receivedById], references: [id], onDelete: Restrict)
+  confirmedBy    Employee?       @relation("DeliveryNoteConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  returnNotes EquipmentReturnNote[]
+
+  @@index([jobOrderId], map: "idx_equip_delivery_notes_jo")
+  @@index([rentalContractId], map: "idx_equip_delivery_notes_rental")
+  @@index([status], map: "idx_equip_delivery_notes_status")
+  @@map("equipment_delivery_notes")
+}
+
+/// Equipment Return Note — records equipment being returned from a job site
+model EquipmentReturnNote {
+  id                  String    @id @default(uuid()) @db.Uuid
+  noteNumber          String    @unique @map("note_number") @db.VarChar(30)
+  jobOrderId          String    @map("job_order_id") @db.Uuid
+  deliveryNoteId      String    @map("delivery_note_id") @db.Uuid
+  returnDate          DateTime  @map("return_date") @db.Timestamptz
+  returnedById        String    @map("returned_by_id") @db.Uuid
+  hoursOnReturn       Decimal?  @map("hours_on_return") @db.Decimal(12, 2)
+  mileageOnReturn     Decimal?  @map("mileage_on_return") @db.Decimal(12, 2)
+  /// CHECK: condition_on_return IN ('excellent', 'good', 'fair', 'poor')
+  conditionOnReturn   String    @map("condition_on_return") @db.VarChar(20)
+  conditionNotes      String?   @map("condition_notes")
+  damageDescription   String?   @map("damage_description")
+  damageEstimatedCost Decimal?  @map("damage_estimated_cost") @db.Decimal(15, 2)
+  /// CHECK: fuel_level IN ('full', 'three_quarter', 'half', 'quarter', 'empty')
+  fuelLevel           String?   @map("fuel_level") @db.VarChar(20)
+  actualDays          Int?      @map("actual_days")
+  actualCost          Decimal?  @map("actual_cost") @db.Decimal(15, 2)
+  /// CHECK: status IN ('draft', 'inspected', 'confirmed', 'disputed')
+  status              String    @default("draft") @map("status") @db.VarChar(20)
+  inspectedAt         DateTime? @map("inspected_at") @db.Timestamptz
+  inspectedById       String?   @map("inspected_by_id") @db.Uuid
+  confirmedAt         DateTime? @map("confirmed_at") @db.Timestamptz
+  confirmedById       String?   @map("confirmed_by_id") @db.Uuid
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  jobOrder     JobOrder              @relation(fields: [jobOrderId], references: [id], onDelete: Restrict)
+  deliveryNote EquipmentDeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Restrict)
+  returnedBy   Employee              @relation("ReturnNoteReturnedBy", fields: [returnedById], references: [id], onDelete: Restrict)
+  inspectedBy  Employee?             @relation("ReturnNoteInspectedBy", fields: [inspectedById], references: [id], onDelete: SetNull)
+  confirmedBy  Employee?             @relation("ReturnNoteConfirmedBy", fields: [confirmedById], references: [id], onDelete: SetNull)
+
+  @@index([jobOrderId], map: "idx_equip_return_notes_jo")
+  @@index([deliveryNoteId], map: "idx_equip_return_notes_delivery")
+  @@index([status], map: "idx_equip_return_notes_status")
+  @@map("equipment_return_notes")
+}
+
+// ############################################################################
+// SECTION: SUPPLIER PERFORMANCE EVALUATION (SOW M2-F05)
+// ############################################################################
+
+/// Supplier performance evaluation header — tracks periodic supplier assessments
+model SupplierEvaluation {
+  id               String   @id @default(uuid()) @db.Uuid
+  evaluationNumber String   @unique @map("evaluation_number") @db.VarChar(30)
+  supplierId       String   @map("supplier_id") @db.Uuid
+  evaluatorId      String   @map("evaluator_id") @db.Uuid
+  periodStart      DateTime @map("period_start") @db.Timestamptz
+  periodEnd        DateTime @map("period_end") @db.Timestamptz
+  /// CHECK: status IN ('draft', 'completed')
+  status           String   @default("draft") @map("status") @db.VarChar(20)
+  overallScore     Decimal? @map("overall_score") @db.Decimal(5, 2)
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier  Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  evaluator Employee @relation("EvaluationEvaluator", fields: [evaluatorId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  metrics SupplierEvaluationMetric[]
+
+  @@index([supplierId], map: "idx_supplier_eval_supplier")
+  @@index([evaluatorId], map: "idx_supplier_eval_evaluator")
+  @@index([status], map: "idx_supplier_eval_status")
+  @@index([periodStart, periodEnd], map: "idx_supplier_eval_period")
+  @@index([createdAt], map: "idx_supplier_eval_created")
+  @@map("supplier_evaluations")
+}
+
+/// Individual metric scores within a supplier evaluation
+model SupplierEvaluationMetric {
+  id            String  @id @default(uuid()) @db.Uuid
+  evaluationId  String  @map("evaluation_id") @db.Uuid
+  metricName    String  @map("metric_name") @db.VarChar(50)
+  /// Weight as percentage (0-100), all weights in an evaluation should sum to 100
+  weight        Decimal @db.Decimal(5, 2)
+  /// Raw score before weighting (0-100)
+  rawScore      Decimal @map("raw_score") @db.Decimal(5, 2)
+  /// Weighted score = (rawScore * weight) / 100
+  weightedScore Decimal @map("weighted_score") @db.Decimal(5, 2)
+  notes         String?
+
+  // Relations
+  evaluation SupplierEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+
+  @@index([evaluationId], map: "idx_supplier_eval_metric_eval")
+  @@map("supplier_evaluation_metrics")
+}
+
+// ############################################################################
+// SECTION: TRANSPORT ORDERS (SOW M2-F03 — H9)
+// ############################################################################
+
+/// Dedicated Transport Order entity — separate from Job Orders.
+/// Tracks origin/destination, load description, vehicle/driver assignment,
+/// and gate pass linking for material transport operations.
+model TransportOrder {
+  id                     String    @id @default(uuid()) @db.Uuid
+  orderNumber            String    @unique @map("order_number") @db.VarChar(30)
+  jobOrderId             String?   @map("job_order_id") @db.Uuid
+  originWarehouseId      String    @map("origin_warehouse_id") @db.Uuid
+  destinationWarehouseId String?   @map("destination_warehouse_id") @db.Uuid
+  destinationAddress     String?   @map("destination_address")
+  projectId              String?   @map("project_id") @db.Uuid
+  loadDescription        String    @map("load_description")
+  vehicleType            String?   @map("vehicle_type") @db.VarChar(50)
+  vehicleNumber          String?   @map("vehicle_number") @db.VarChar(30)
+  driverName             String?   @map("driver_name") @db.VarChar(200)
+  driverPhone            String?   @map("driver_phone") @db.VarChar(30)
+  driverIdNumber         String?   @map("driver_id_number") @db.VarChar(50)
+  scheduledDate          DateTime  @map("scheduled_date") @db.Timestamptz
+  actualPickupDate       DateTime? @map("actual_pickup_date") @db.Timestamptz
+  actualDeliveryDate     DateTime? @map("actual_delivery_date") @db.Timestamptz
+  estimatedWeight        Decimal?  @map("estimated_weight") @db.Decimal(12, 3)
+  actualWeight           Decimal?  @map("actual_weight") @db.Decimal(12, 3)
+  gatePassId             String?   @map("gate_pass_id") @db.Uuid
+  requestedById          String    @map("requested_by_id") @db.Uuid
+  /// CHECK: status IN ('draft', 'scheduled', 'in_transit', 'delivered', 'cancelled')
+  status                 String    @default("draft") @map("status") @db.VarChar(20)
+  notes                  String?
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  jobOrder             JobOrder?  @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
+  originWarehouse      Warehouse  @relation("TransportOrderOrigin", fields: [originWarehouseId], references: [id], onDelete: Restrict)
+  destinationWarehouse Warehouse? @relation("TransportOrderDestination", fields: [destinationWarehouseId], references: [id], onDelete: SetNull)
+  project              Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  gatePass             GatePass?  @relation(fields: [gatePassId], references: [id], onDelete: SetNull)
+  requestedBy          Employee   @relation("TransportOrderRequestedBy", fields: [requestedById], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  transportOrderItems TransportOrderItem[]
+
+  @@index([status], map: "idx_transport_orders_status")
+  @@index([originWarehouseId], map: "idx_transport_orders_origin")
+  @@index([scheduledDate], map: "idx_transport_orders_scheduled")
+  @@index([destinationWarehouseId], map: "idx_transport_orders_destination")
+  @@index([projectId], map: "idx_transport_orders_project")
+  @@index([jobOrderId], map: "idx_transport_orders_jo")
+  @@index([gatePassId], map: "idx_transport_orders_gate_pass")
+  @@index([createdAt], map: "idx_transport_orders_created")
+  @@map("transport_orders")
+}
+
+/// Transport order line items — items being transported
+model TransportOrderItem {
+  id               String   @id @default(uuid()) @db.Uuid
+  transportOrderId String   @map("transport_order_id") @db.Uuid
+  itemId           String?  @map("item_id") @db.Uuid
+  description      String
+  quantity         Decimal  @db.Decimal(12, 3)
+  uomId            String?  @map("uom_id") @db.Uuid
+  weight           Decimal? @db.Decimal(12, 3)
+
+  // Relations
+  transportOrder TransportOrder @relation(fields: [transportOrderId], references: [id], onDelete: Cascade)
+  item           Item?          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  uom            UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: Restrict)
+
+  @@index([transportOrderId], map: "idx_transport_order_items_order")
+  @@index([itemId], map: "idx_transport_order_items_item")
+  @@map("transport_order_items")
+}
+
+// ############################################################################
+// SECTION: VISITOR MANAGEMENT (SOW M5-F03)
+// ############################################################################
+
+/// Visitor pass for warehouse/facility access control
+model VisitorPass {
+  id               String    @id @default(uuid()) @db.Uuid
+  passNumber       String    @unique @map("pass_number") @db.VarChar(30)
+  visitorName      String    @map("visitor_name") @db.VarChar(200)
+  visitorCompany   String?   @map("visitor_company") @db.VarChar(200)
+  visitorIdNumber  String    @map("visitor_id_number") @db.VarChar(50)
+  visitorPhone     String?   @map("visitor_phone") @db.VarChar(30)
+  visitorEmail     String?   @map("visitor_email") @db.VarChar(200)
+  hostEmployeeId   String    @map("host_employee_id") @db.Uuid
+  warehouseId      String    @map("warehouse_id") @db.Uuid
+  purpose          String
+  visitDate        DateTime  @map("visit_date") @db.Timestamptz
+  expectedDuration Int       @map("expected_duration") // minutes
+  checkInTime      DateTime? @map("check_in_time") @db.Timestamptz
+  checkOutTime     DateTime? @map("check_out_time") @db.Timestamptz
+  vehicleNumber    String?   @map("vehicle_number") @db.VarChar(30)
+  vehicleType      String?   @map("vehicle_type") @db.VarChar(30)
+  badgeNumber      String?   @map("badge_number") @db.VarChar(30)
+  /// CHECK: status IN ('scheduled', 'checked_in', 'checked_out', 'overstay', 'cancelled')
+  status           String    @default("scheduled") @db.VarChar(20)
+  registeredById   String    @map("registered_by_id") @db.Uuid
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  hostEmployee Employee  @relation("VisitorHost", fields: [hostEmployeeId], references: [id], onDelete: Restrict)
+  warehouse    Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  registeredBy Employee  @relation("VisitorRegisteredBy", fields: [registeredById], references: [id], onDelete: Restrict)
+
+  @@index([status], map: "idx_visitor_passes_status")
+  @@index([warehouseId], map: "idx_visitor_passes_warehouse")
+  @@index([visitDate], map: "idx_visitor_passes_visit_date")
+  @@index([hostEmployeeId], map: "idx_visitor_passes_host")
+  @@map("visitor_passes")
+}

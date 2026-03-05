@@ -1,0 +1,510 @@
+// SECTION: PARALLEL APPROVAL GROUPS
+// ############################################################################
+
+/// Parallel approval groups — multiple approvers at the same level
+model ParallelApprovalGroup {
+  id            String    @id @default(uuid()) @db.Uuid
+  documentType  String    @map("document_type") @db.VarChar(30)
+  documentId    String    @map("document_id") @db.Uuid
+  approvalLevel Int       @map("approval_level")
+  /// 'all' = all must approve, 'any' = first approval wins
+  mode          String    @default("all") @map("mode") @db.VarChar(10)
+  /// 'pending' | 'approved' | 'rejected'
+  status        String    @default("pending") @map("status") @db.VarChar(20)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+
+  responses ParallelApprovalResponse[]
+
+  @@unique([documentType, documentId, approvalLevel], map: "uq_parallel_approval_doc_level")
+  @@index([documentType, documentId], map: "idx_parallel_approval_doc")
+  @@index([status], map: "idx_parallel_approval_status")
+  @@map("parallel_approval_groups")
+}
+
+/// Individual responses within a parallel approval group
+model ParallelApprovalResponse {
+  id         String   @id @default(uuid()) @db.Uuid
+  groupId    String   @map("group_id") @db.Uuid
+  approverId String   @map("approver_id") @db.Uuid
+  /// 'approved' | 'rejected'
+  decision   String   @map("decision") @db.VarChar(10)
+  comments   String?
+  decidedAt  DateTime @default(now()) @map("decided_at") @db.Timestamptz
+
+  group    ParallelApprovalGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  approver Employee              @relation("ParallelApprovalResponses", fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@unique([groupId, approverId], map: "uq_parallel_response_group_approver")
+  @@index([groupId], map: "idx_parallel_response_group")
+  @@index([approverId], map: "idx_parallel_response_approver")
+  @@map("parallel_approval_responses")
+}
+
+// ############################################################################
+// SECTION: YARD MANAGEMENT (stubs — full models to be added later)
+// ############################################################################
+
+/// Dock door — physical loading/unloading bay at a warehouse
+model DockDoor {
+  id          String   @id @default(uuid()) @db.Uuid
+  warehouseId String   @map("warehouse_id") @db.Uuid
+  doorNumber  String   @map("door_number") @db.VarChar(10)
+  doorType    String   @map("door_type") @db.VarChar(20)
+  /// CHECK: door_type IN ('inbound', 'outbound', 'both')
+  status      String   @default("available") @map("status") @db.VarChar(20)
+  /// CHECK: status IN ('available', 'occupied', 'maintenance')
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  warehouse    Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  appointments YardAppointment[]
+  truckVisits  TruckVisit[]
+
+  @@unique([warehouseId, doorNumber])
+  @@index([warehouseId], map: "idx_dock_door_warehouse")
+  @@map("dock_doors")
+}
+
+/// Yard appointment — scheduled delivery/pickup at a dock
+model YardAppointment {
+  id              String   @id @default(uuid()) @db.Uuid
+  warehouseId     String   @map("warehouse_id") @db.Uuid
+  dockDoorId      String?  @map("dock_door_id") @db.Uuid
+  appointmentType String   @map("appointment_type") @db.VarChar(20)
+  /// CHECK: appointment_type IN ('delivery', 'pickup', 'transfer')
+  scheduledStart  DateTime @map("scheduled_start") @db.Timestamptz
+  scheduledEnd    DateTime @map("scheduled_end") @db.Timestamptz
+  carrierName     String?  @map("carrier_name") @db.VarChar(200)
+  driverName      String?  @map("driver_name") @db.VarChar(200)
+  vehiclePlate    String?  @map("vehicle_plate") @db.VarChar(20)
+  referenceType   String?  @map("reference_type") @db.VarChar(20)
+  /// CHECK: reference_type IN ('asn', 'grn', 'mi', 'wt')
+  referenceId     String?  @map("reference_id") @db.Uuid
+  status          String   @default("scheduled") @map("status") @db.VarChar(20)
+  /// CHECK: status IN ('scheduled', 'checked_in', 'loading', 'completed', 'cancelled', 'no_show')
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  dockDoor  DockDoor? @relation(fields: [dockDoorId], references: [id], onDelete: SetNull)
+
+  @@index([warehouseId], map: "idx_yard_appt_warehouse")
+  @@index([status], map: "idx_yard_appt_status")
+  @@index([scheduledStart], map: "idx_yard_appt_start")
+  @@map("yard_appointments")
+}
+
+/// Truck visit — tracks a vehicle from yard check-in to departure
+model TruckVisit {
+  id           String    @id @default(uuid()) @db.Uuid
+  warehouseId  String    @map("warehouse_id") @db.Uuid
+  dockDoorId   String?   @map("dock_door_id") @db.Uuid
+  vehiclePlate String    @map("vehicle_plate") @db.VarChar(20)
+  driverName   String?   @map("driver_name") @db.VarChar(200)
+  carrierName  String?   @map("carrier_name") @db.VarChar(200)
+  purpose      String    @map("purpose") @db.VarChar(20)
+  /// CHECK: purpose IN ('delivery', 'pickup', 'transfer')
+  checkInAt    DateTime  @default(now()) @map("check_in_at") @db.Timestamptz
+  checkOutAt   DateTime? @map("check_out_at") @db.Timestamptz
+  status       String    @default("in_yard") @map("status") @db.VarChar(20)
+  /// CHECK: status IN ('in_yard', 'at_dock', 'departed')
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  dockDoor  DockDoor? @relation(fields: [dockDoorId], references: [id], onDelete: SetNull)
+
+  @@index([warehouseId], map: "idx_truck_visit_warehouse")
+  @@index([status], map: "idx_truck_visit_status")
+  @@map("truck_visits")
+}
+
+// ############################################################################
+// SECTION: IoT SENSOR MONITORING
+// ############################################################################
+
+/// IoT sensors deployed in warehouses for environmental monitoring
+model Sensor {
+  id            String    @id @default(uuid()) @db.Uuid
+  sensorCode    String    @unique @map("sensor_code") @db.VarChar(30)
+  /// CHECK: sensor_type IN ('temperature', 'humidity', 'smoke', 'motion', 'weight')
+  sensorType    String    @map("sensor_type") @db.VarChar(30)
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  zoneId        String?   @map("zone_id") @db.Uuid
+  location      String?   @db.VarChar(200)
+  minThreshold  Decimal?  @map("min_threshold") @db.Decimal(8, 2)
+  maxThreshold  Decimal?  @map("max_threshold") @db.Decimal(8, 2)
+  unit          String    @default("\u00B0C") @db.VarChar(10)
+  isActive      Boolean   @default(true) @map("is_active")
+  lastReadingAt DateTime? @map("last_reading_at") @db.Timestamptz
+  lastValue     Decimal?  @map("last_value") @db.Decimal(8, 2)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouse Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  zone      WarehouseZone? @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  readings SensorReading[]
+  alerts   SensorAlert[]
+
+  @@index([warehouseId], map: "idx_sensors_warehouse")
+  @@index([zoneId], map: "idx_sensors_zone")
+  @@map("sensors")
+}
+
+/// Time-series sensor readings
+model SensorReading {
+  id         String   @id @default(uuid()) @db.Uuid
+  sensorId   String   @map("sensor_id") @db.Uuid
+  value      Decimal  @db.Decimal(8, 2)
+  recordedAt DateTime @default(now()) @map("recorded_at") @db.Timestamptz
+
+  // Relations
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+
+  @@index([sensorId, recordedAt], map: "idx_sensor_readings_sensor_time")
+  @@map("sensor_readings")
+}
+
+/// Sensor alerts (threshold breaches, offline detection)
+model SensorAlert {
+  id               String    @id @default(uuid()) @db.Uuid
+  sensorId         String    @map("sensor_id") @db.Uuid
+  /// CHECK: alert_type IN ('threshold_high', 'threshold_low', 'offline')
+  alertType        String    @map("alert_type") @db.VarChar(20)
+  value            Decimal?  @db.Decimal(8, 2)
+  threshold        Decimal?  @db.Decimal(8, 2)
+  message          String
+  acknowledged     Boolean   @default(false)
+  acknowledgedById String?   @map("acknowledged_by_id") @db.Uuid
+  acknowledgedAt   DateTime? @map("acknowledged_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+
+  @@index([sensorId], map: "idx_sensor_alerts_sensor")
+  @@index([acknowledged], map: "idx_sensor_alerts_ack")
+  @@map("sensor_alerts")
+}
+
+// ############################################################################
+// SECTION: ROLE-BASED ACCESS CONTROL
+// ############################################################################
+
+/// Dynamic role-permission overrides stored in DB (replaces file-based permissions.json)
+model RolePermission {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Role key matching UserRole enum (e.g. 'admin', 'manager')
+  role      String   @db.VarChar(50)
+  /// Resource key (e.g. 'grn', 'mi', 'inventory')
+  resource  String   @db.VarChar(50)
+  /// Array of allowed actions: ["create","read","update","delete","approve","export"]
+  actions   Json     @default("[]")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  updatedBy String?  @map("updated_by") @db.VarChar(100)
+
+  @@unique([role, resource], map: "uq_role_permission")
+  @@index([role], map: "idx_role_permissions_role")
+  @@map("role_permissions")
+}
+
+// ############################################################################
+// SECTION: DYNAMIC DOCUMENT SYSTEM (5 models)
+// ############################################################################
+
+/// Custom document type definition — created by admin via UI
+model DynamicDocumentType {
+  id               String   @id @default(uuid()) @db.Uuid
+  /// Unique code slug (e.g. 'safety_inspection', 'vehicle_checklist')
+  code             String   @unique @db.VarChar(50)
+  name             String   @db.VarChar(200)
+  description      String?
+  icon             String?  @db.VarChar(50)
+  /// Grouping category (e.g. 'safety', 'quality', 'hr', 'custom')
+  category         String   @default("custom") @db.VarChar(50)
+  /// Status flow config: { initialStatus, statuses: [{key,label,color}], transitions: {from: [to...]} }
+  statusFlow       Json     @default("{}") @map("status_flow") @db.JsonB
+  /// Approval config: { levels: [{role, level}], amountField? }
+  approvalConfig   Json?    @map("approval_config") @db.JsonB
+  /// Permission config: { createRoles, viewRoles, approveRoles }
+  permissionConfig Json?    @map("permission_config") @db.JsonB
+  /// Extra settings: { requireLineItems, autoNumber, numberPrefix }
+  settings         Json     @default("{}") @db.JsonB
+  isActive         Boolean  @default(true) @map("is_active")
+  /// Roles that can see this document type in navigation
+  visibleToRoles   Json     @default("[]") @map("visible_to_roles") @db.JsonB
+  version          Int      @default(1)
+  createdById      String?  @map("created_by_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  createdBy Employee?                @relation("DynTypeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  fields    DynamicFieldDefinition[]
+  documents DynamicDocument[]
+
+  @@index([category, isActive], map: "idx_dyn_types_category_active")
+  @@map("dynamic_document_types")
+}
+
+/// Field definition for a dynamic document type
+model DynamicFieldDefinition {
+  id                 String  @id @default(uuid()) @db.Uuid
+  documentTypeId     String  @map("document_type_id") @db.Uuid
+  fieldKey           String  @map("field_key") @db.VarChar(50)
+  label              String  @db.VarChar(200)
+  /// text|number|date|datetime|select|multiselect|textarea|checkbox|file
+  /// |lookup_project|lookup_warehouse|lookup_supplier|lookup_employee|lookup_item
+  /// |signature|currency|email|phone|url
+  fieldType          String  @map("field_type") @db.VarChar(30)
+  /// Options for select/multiselect: [{ value, label, labelAr? }]
+  options            Json?   @db.JsonB
+  isRequired         Boolean @default(false) @map("is_required")
+  showInGrid         Boolean @default(false) @map("show_in_grid")
+  showInForm         Boolean @default(true) @map("show_in_form")
+  /// Section grouping within the form
+  sectionName        String? @map("section_name") @db.VarChar(100)
+  sortOrder          Int     @default(0) @map("sort_order")
+  /// Validation rules: { min?, max?, minLength?, maxLength?, pattern? }
+  validationRules    Json?   @map("validation_rules") @db.JsonB
+  defaultValue       String? @map("default_value")
+  /// Grid column span (1-4)
+  colSpan            Int     @default(2) @map("col_span")
+  /// Whether this field belongs to line items instead of header
+  isLineItem         Boolean @default(false) @map("is_line_item")
+  isReadOnly         Boolean @default(false) @map("is_read_only")
+  /// Conditional display: { dependsOn: 'fieldKey', operator: 'eq', value: 'x' }
+  conditionalDisplay Json?   @map("conditional_display") @db.JsonB
+
+  // Relations
+  documentType DynamicDocumentType @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([documentTypeId, fieldKey], map: "uq_dyn_field_type_key")
+  @@index([documentTypeId, sortOrder], map: "idx_dyn_fields_type_order")
+  @@map("dynamic_field_definitions")
+}
+
+/// Instance of a dynamic document
+model DynamicDocument {
+  id             String   @id @default(uuid()) @db.Uuid
+  documentTypeId String   @map("document_type_id") @db.Uuid
+  /// Auto-generated document number (e.g. 'SAFETY-INS-0001')
+  documentNumber String   @unique @map("document_number") @db.VarChar(50)
+  status         String   @default("draft") @db.VarChar(30)
+  /// All header field values stored as JSONB
+  data           Json     @default("{}") @db.JsonB
+  projectId      String?  @map("project_id") @db.Uuid
+  warehouseId    String?  @map("warehouse_id") @db.Uuid
+  createdById    String?  @map("created_by_id") @db.Uuid
+  updatedById    String?  @map("updated_by_id") @db.Uuid
+  version        Int      @default(1)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  documentType DynamicDocumentType      @relation(fields: [documentTypeId], references: [id], onDelete: Restrict)
+  project      Project?                 @relation("DynDocProject", fields: [projectId], references: [id], onDelete: SetNull)
+  warehouse    Warehouse?               @relation("DynDocWarehouse", fields: [warehouseId], references: [id], onDelete: SetNull)
+  createdBy    Employee?                @relation("DynDocCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    Employee?                @relation("DynDocUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  lines        DynamicDocumentLine[]
+  history      DynamicDocumentHistory[]
+
+  @@index([documentTypeId, status], map: "idx_dyn_docs_type_status")
+  @@index([projectId], map: "idx_dyn_docs_project")
+  @@index([warehouseId], map: "idx_dyn_docs_warehouse")
+  @@index([createdById], map: "idx_dyn_docs_created_by")
+  @@map("dynamic_documents")
+}
+
+/// Line item for a dynamic document
+model DynamicDocumentLine {
+  id         String @id @default(uuid()) @db.Uuid
+  documentId String @map("document_id") @db.Uuid
+  lineNumber Int    @map("line_number")
+  /// Line item field values stored as JSONB
+  data       Json   @default("{}") @db.JsonB
+
+  // Relations
+  document DynamicDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, lineNumber], map: "uq_dyn_line_doc_num")
+  @@map("dynamic_document_lines")
+}
+
+/// Status change history for dynamic documents
+model DynamicDocumentHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  documentId    String   @map("document_id") @db.Uuid
+  fromStatus    String?  @map("from_status") @db.VarChar(30)
+  toStatus      String   @map("to_status") @db.VarChar(30)
+  performedById String?  @map("performed_by_id") @db.Uuid
+  comment       String?
+  performedAt   DateTime @default(now()) @map("performed_at") @db.Timestamptz
+
+  // Relations
+  document    DynamicDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  performedBy Employee?       @relation("DynHistoryPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
+
+  @@index([documentId], map: "idx_dyn_history_doc")
+  @@map("dynamic_document_history")
+}
+
+// ############################################################################
+// SECTION: CUSTOM DATA SOURCES & CUSTOM FIELDS (3 models)
+// ############################################################################
+
+/// User-defined data sources for dashboard/report builders
+model CustomDataSource {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(200)
+  /// Unique key for registry (e.g. 'custom/weekly_grn_count')
+  sourceKey     String   @unique @map("source_key") @db.VarChar(100)
+  /// Target entity (e.g. 'mrrv', 'mirv', 'dyn:safety_inspection', or '*')
+  entityType    String   @map("entity_type") @db.VarChar(50)
+  /// count|sum|avg|group_by|timeseries
+  aggregation   String   @db.VarChar(20)
+  /// Query template: { filters, groupBy, dateField, dateRange }
+  queryTemplate Json     @map("query_template") @db.JsonB
+  /// number|grouped|timeseries|table
+  outputType    String   @map("output_type") @db.VarChar(20)
+  createdById   String?  @map("created_by_id") @db.Uuid
+  isPublic      Boolean  @default(true) @map("is_public")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  createdBy Employee? @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("custom_data_sources")
+}
+
+/// Custom field definition for extending existing document types
+model CustomFieldDefinition {
+  id              String   @id @default(uuid()) @db.Uuid
+  /// Existing entity type to extend (e.g. 'mrrv', 'mirv', 'jo')
+  entityType      String   @map("entity_type") @db.VarChar(50)
+  fieldKey        String   @map("field_key") @db.VarChar(50)
+  label           String   @db.VarChar(200)
+  fieldType       String   @map("field_type") @db.VarChar(30)
+  options         Json?    @db.JsonB
+  isRequired      Boolean  @default(false) @map("is_required")
+  showInGrid      Boolean  @default(false) @map("show_in_grid")
+  sortOrder       Int      @default(0) @map("sort_order")
+  /// Validation rules: { min?, max?, minLength?, maxLength?, pattern? }
+  validationRules Json?    @map("validation_rules") @db.JsonB
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  values CustomFieldValue[]
+
+  @@unique([entityType, fieldKey], map: "uq_custom_field_entity_key")
+  @@map("custom_field_definitions")
+}
+
+/// Custom field value for an entity instance
+model CustomFieldValue {
+  id           String @id @default(uuid()) @db.Uuid
+  definitionId String @map("definition_id") @db.Uuid
+  entityType   String @map("entity_type") @db.VarChar(50)
+  entityId     String @map("entity_id") @db.Uuid
+  value        Json   @db.JsonB
+
+  // Relations
+  definition CustomFieldDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+
+  @@unique([definitionId, entityId], map: "uq_custom_field_value")
+  @@index([entityType, entityId], map: "idx_custom_field_values_entity")
+  @@map("custom_field_values")
+}
+
+// ############################################################################
+// SECTION: WORKFLOW TEMPLATES (1 model)
+// ############################################################################
+
+/// Pre-built automation templates for the workflow marketplace
+model WorkflowTemplate {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(200)
+  description  String?
+  category     String   @default("general") @db.VarChar(50)
+  /// Full template: { workflow: {...}, rules: [...] }
+  template     Json     @db.JsonB
+  /// 'system' | 'community'
+  source       String   @default("system") @db.VarChar(20)
+  installCount Int      @default(0) @map("install_count")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("workflow_templates")
+}
+
+// ############################################################################
+// SECTION: AI MODULE (3 models — optional, behind AI_ENABLED flag)
+// ############################################################################
+
+/// AI chat conversation
+model AiConversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String?  @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user     Employee    @relation("AiConvUser", fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+
+  @@index([userId], map: "idx_ai_conv_user")
+  @@map("ai_conversations")
+}
+
+/// AI chat message within a conversation
+model AiMessage {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  /// 'user' | 'assistant'
+  role           String   @db.VarChar(20)
+  content        String
+  /// SQL query generated by AI (if applicable)
+  generatedQuery String?  @map("generated_query")
+  /// Result data from query execution
+  resultData     Json?    @map("result_data") @db.JsonB
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId], map: "idx_ai_msg_conv")
+  @@map("ai_messages")
+}
+
+/// AI-generated suggestion for system optimization
+model AiSuggestion {
+  id             String    @id @default(uuid()) @db.Uuid
+  /// slow_moving|delay|cost_anomaly|automation|supplier_rating|reorder|sla
+  suggestionType String    @map("suggestion_type") @db.VarChar(30)
+  /// 1=critical, 2=high, 3=medium, 4=low
+  priority       Int       @default(3)
+  title          String    @db.VarChar(300)
+  description    String?
+  /// Action payload for one-click apply: { type, params }
+  actionPayload  Json?     @map("action_payload") @db.JsonB
+  /// pending|applied|dismissed
+  status         String    @default("pending") @db.VarChar(20)
+  /// Dedup fingerprint to avoid duplicates
+  fingerprint    String    @unique @db.VarChar(200)
+  expiresAt      DateTime? @map("expires_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([status, priority], map: "idx_ai_suggestions_status")
+  @@map("ai_suggestions")
+}
+
+// ############################################################################

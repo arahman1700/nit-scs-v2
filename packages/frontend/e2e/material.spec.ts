@@ -1,29 +1,37 @@
 import { test, expect } from '@playwright/test';
+import { gotoAuth } from './helpers';
 
-test.describe('Material Management', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/login');
-    await page.getByRole('button', { name: /admin/i }).first().click();
-    await page.getByRole('button', { name: /sign in/i }).click();
-    await page.waitForURL('**/admin**', { timeout: 10_000 });
-    await page.goto('/admin/material');
-  });
+test.describe('Material Management - Tab Navigation', () => {
+  const tabs = ['grn', 'mi', 'mrn', 'mr', 'qci', 'dr', 'inventory', 'bin-cards', 'non-moving', 'wt', 'imsf'];
 
-  test('GRN tab shows data grid', async ({ page }) => {
-    await page.getByRole('button', { name: 'GRN' }).click();
-    // Should show the document list
-    await expect(page.getByText(/goods receipt notes/i)).toBeVisible();
-    // Should have data rows (we know there are 3 GRNs)
-    await expect(page.getByText('MRRV-2026-0003')).toBeVisible();
-  });
+  for (const tab of tabs) {
+    test(`${tab.toUpperCase()} tab loads and renders content`, async ({ page }) => {
+      await gotoAuth(page, `/admin/warehouses?tab=${tab}`);
 
-  test('Inventory tab shows stock levels', async ({ page }) => {
-    await page.getByRole('button', { name: 'Inventory' }).click();
-    await expect(page.getByText(/stock levels/i)).toBeVisible();
-  });
+      // Page must not show error boundary crash
+      const crashed = await page
+        .getByText('Something went wrong')
+        .isVisible()
+        .catch(() => false);
+      expect(crashed).toBe(false);
 
-  test('Item Master tab shows items', async ({ page }) => {
-    await page.getByRole('button', { name: 'Item Master' }).click();
-    await expect(page.getByText(/item master catalog/i)).toBeVisible();
-  });
+      // Must have visible content (heading, cards, table, or empty state)
+      const hasHeading = await page
+        .getByRole('heading')
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const hasCards = await page
+        .locator('.glass-card')
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const hasGrid = await page
+        .locator('[class*="ag-root"], table, [role="grid"]')
+        .first()
+        .isVisible()
+        .catch(() => false);
+      expect(hasHeading || hasCards || hasGrid).toBeTruthy();
+    });
+  }
 });

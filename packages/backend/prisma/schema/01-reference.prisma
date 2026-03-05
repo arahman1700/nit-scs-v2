@@ -1,0 +1,129 @@
+// ############################################################################
+// SECTION 1: REFERENCE / LOOKUP TABLES (8 models)
+// ############################################################################
+
+/// Administrative regions (Saudi Arabia)
+model Region {
+  id         String @id @default(uuid()) @db.Uuid
+  regionName String @unique @map("region_name") @db.VarChar(100)
+
+  // Relations
+  cities     City[]
+  projects   Project[]
+  warehouses Warehouse[]
+
+  @@map("regions")
+}
+
+/// Cities within regions
+model City {
+  id       String @id @default(uuid()) @db.Uuid
+  cityName String @map("city_name") @db.VarChar(100)
+  regionId String @map("region_id") @db.Uuid
+
+  // Relations
+  region     Region      @relation(fields: [regionId], references: [id], onDelete: Restrict)
+  ports      Port[]
+  projects   Project[]
+  suppliers  Supplier[]
+  warehouses Warehouse[]
+
+  @@unique([cityName, regionId], map: "uq_city_name_region")
+  @@index([regionId], map: "idx_cities_region")
+  @@map("cities")
+}
+
+/// Ports of entry (sea, air, land)
+model Port {
+  id       String  @id @default(uuid()) @db.Uuid
+  portName String  @map("port_name") @db.VarChar(200)
+  portCode String? @unique @map("port_code") @db.VarChar(20)
+  cityId   String? @map("city_id") @db.Uuid
+  /// CHECK: port_type IN ('sea', 'air', 'land')
+  portType String? @map("port_type") @db.VarChar(20)
+
+  // Relations
+  city      City?      @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  shipments Shipment[]
+
+  @@index([cityId], map: "idx_ports_city")
+  @@map("ports")
+}
+
+/// Units of measure (EA, KG, M, etc.)
+model UnitOfMeasure {
+  id       String  @id @default(uuid()) @db.Uuid
+  uomCode  String  @unique @map("uom_code") @db.VarChar(20)
+  uomName  String  @map("uom_name") @db.VarChar(50)
+  category String? @db.VarChar(30)
+
+  // Relations
+  items               Item[]
+  mrrvLines           MrrvLine[]
+  osdLines            OsdLine[]
+  mrvLines            MrvLine[]
+  gatePassItems       GatePassItem[]
+  mrfLines            MrfLine[]
+  stockTransferLines  StockTransferLine[]
+  leftoverMaterials   LeftoverMaterial[]
+  shipmentLines       ShipmentLine[]
+  imsfLines           ImsfLine[]
+  transportOrderItems TransportOrderItem[]
+
+  @@map("units_of_measure")
+}
+
+/// Warehouse type classifications
+model WarehouseType {
+  id          String  @id @default(uuid()) @db.Uuid
+  typeName    String  @unique @map("type_name") @db.VarChar(50)
+  description String?
+
+  // Relations
+  warehouses Warehouse[]
+
+  @@map("warehouse_types")
+}
+
+/// Equipment category groupings
+model EquipmentCategory {
+  id           String @id @default(uuid()) @db.Uuid
+  categoryName String @unique @map("category_name") @db.VarChar(100)
+
+  // Relations
+  equipmentTypes EquipmentType[]
+
+  @@map("equipment_categories")
+}
+
+/// Equipment type definitions
+model EquipmentType {
+  id         String  @id @default(uuid()) @db.Uuid
+  typeName   String  @unique @map("type_name") @db.VarChar(100)
+  categoryId String? @map("category_id") @db.Uuid
+
+  // Relations
+  category               EquipmentCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  generators             Generator[]
+  equipmentFleet         EquipmentFleet[]
+  joEquipmentLines       JoEquipmentLine[]
+  supplierEquipmentRates         SupplierEquipmentRate[]
+  annualMaintenanceContracts     AnnualMaintenanceContract[]
+
+  @@index([categoryId], map: "idx_equipment_types_category")
+  @@map("equipment_types")
+}
+
+/// Approval workflow rules per document type and amount threshold
+model ApprovalWorkflow {
+  id           String   @id @default(uuid()) @db.Uuid
+  /// Document type code
+  documentType String   @map("document_type") @db.VarChar(30)
+  minAmount    Decimal  @map("min_amount") @db.Decimal(15, 2)
+  maxAmount    Decimal? @map("max_amount") @db.Decimal(15, 2)
+  approverRole String   @map("approver_role") @db.VarChar(50)
+  /// Maximum hours for approval SLA
+  slaHours     Int      @map("sla_hours")
+
+  @@map("approval_workflows")
+}
