@@ -119,6 +119,8 @@ model LeftoverMaterial {
   createdBy    Employee?     @relation("LeftoverCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   approvedBy   Employee?     @relation("LeftoverApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
 
+  @@index([status, createdAt], map: "idx_leftover_status_created")
+  @@index([projectId], map: "idx_leftover_project")
   @@map("leftover_materials")
 }
 

@@ -200,6 +200,8 @@ model GatePass {
   @@index([jobOrderId], map: "idx_gate_passes_jo")
   @@index([projectId], map: "idx_gate_passes_project")
   @@index([createdAt], map: "idx_gate_passes_created")
+  @@index([warehouseId, status], map: "idx_gate_passes_warehouse_status")
+  @@index([status, createdAt], map: "idx_gate_passes_status_created")
   @@map("gate_passes")
 }
 

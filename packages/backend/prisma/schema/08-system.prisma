@@ -53,6 +53,7 @@ model Notification {
 
   @@index([recipientId, isRead], map: "idx_notifications_recipient")
   @@index([createdAt(sort: Desc)], map: "idx_notifications_date")
+  @@index([referenceTable, referenceId], map: "idx_notifications_reference")
   @@map("notifications")
 }
 

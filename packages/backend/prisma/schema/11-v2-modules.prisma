@@ -31,6 +31,7 @@ model Imsf {
   @@index([status], map: "idx_imsf_status")
   @@index([senderProjectId], map: "idx_imsf_sender")
   @@index([receiverProjectId], map: "idx_imsf_receiver")
+  @@index([status, createdAt], map: "idx_imsf_status_created")
   @@map("imsf")
 }
 
@@ -132,6 +133,7 @@ model RentalContract {
   deliveryNotes EquipmentDeliveryNote[]
 
   @@index([status], map: "idx_rental_contracts_status")
+  @@index([status, endDate], map: "idx_rental_contracts_status_end")
   @@map("rental_contracts")
 }
 
@@ -224,6 +226,8 @@ model SurplusItem {
   createdBy Employee  @relation("SurplusCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([status], map: "idx_surplus_status")
+  @@index([status, createdAt], map: "idx_surplus_status_created")
+  @@index([warehouseId, status], map: "idx_surplus_warehouse_status")
   @@map("surplus_items")
 }
 
@@ -265,6 +269,7 @@ model ScrapItem {
 
   @@index([status], map: "idx_scrap_status")
   @@index([projectId], map: "idx_scrap_project")
+  @@index([status, createdAt], map: "idx_scrap_status_created")
   @@map("scrap_items")
 }
 
@@ -340,6 +345,7 @@ model ToolIssue {
 
   @@index([toolId], map: "idx_tool_issues_tool")
   @@index([status], map: "idx_tool_issues_status")
+  @@index([issuedToId, status], map: "idx_tool_issues_user_status")
   @@map("tool_issues")
 }
 
@@ -443,6 +449,7 @@ model CycleCount {
 
   @@index([status], map: "idx_cycle_count_status")
   @@index([warehouseId], map: "idx_cycle_count_warehouse")
+  @@index([status, scheduledDate], map: "idx_cycle_count_status_scheduled")
   @@map("cycle_counts")
 }
 

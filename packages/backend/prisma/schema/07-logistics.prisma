@@ -64,6 +64,8 @@ model Shipment {
   @@index([supplierId], map: "idx_shipments_supplier")
   @@index([projectId], map: "idx_shipments_project")
   @@index([createdAt], map: "idx_shipments_created")
+  @@index([status, createdAt], map: "idx_shipments_status_created")
+  @@index([supplierId, createdAt], map: "idx_shipments_supplier_created")
   @@map("shipments")
 }
 
