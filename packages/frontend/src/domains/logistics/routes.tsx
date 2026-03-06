@@ -5,12 +5,20 @@ import { RoleGuard, LOGISTICS_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const LogisticsCoordinatorDashboard = React.lazy(() =>
-  import('@/pages/LogisticsCoordinatorDashboard').then(m => ({ default: m.LogisticsCoordinatorDashboard })),
+  import('@/domains/dashboards/pages/LogisticsCoordinatorDashboard').then(m => ({
+    default: m.LogisticsCoordinatorDashboard,
+  })),
 );
-const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
-const ShipmentForm = React.lazy(() => import('@/pages/ShipmentForm').then(m => ({ default: m.ShipmentForm })));
-const GatePassForm = React.lazy(() => import('@/pages/GatePassForm').then(m => ({ default: m.GatePassForm })));
-const TasksPage = React.lazy(() => import('@/pages/TasksPage').then(m => ({ default: m.TasksPage })));
+const ResourceForm = React.lazy(() =>
+  import('@/domains/admin/pages/ResourceForm').then(m => ({ default: m.ResourceForm })),
+);
+const ShipmentForm = React.lazy(() =>
+  import('@/domains/logistics/pages/ShipmentForm').then(m => ({ default: m.ShipmentForm })),
+);
+const GatePassForm = React.lazy(() =>
+  import('@/domains/logistics/pages/GatePassForm').then(m => ({ default: m.GatePassForm })),
+);
+const TasksPage = React.lazy(() => import('@/domains/system/pages/TasksPage').then(m => ({ default: m.TasksPage })));
 const RouteOptimizerPage = React.lazy(() =>
   import('@/pages/logistics/RouteOptimizerPage').then(m => ({ default: m.RouteOptimizerPage })),
 );

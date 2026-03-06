@@ -4,11 +4,11 @@ import { Save, AlertCircle, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { DocumentComments } from '@/components/DocumentComments';
 import { DocumentAttachments } from '@/components/DocumentAttachments';
-import { useDocumentForm } from './forms/useDocumentForm';
-import { FormFieldRenderer } from './forms/FormFieldRenderer';
-import { FormSuccessView } from './forms/FormSuccessView';
-import { StatusFlowIndicator, ApprovalLevelIndicator } from './forms/FormStatusFlow';
-import type { FormFieldDef } from './forms/formConfigs';
+import { useDocumentForm } from '@/pages/forms/useDocumentForm';
+import { FormFieldRenderer } from '@/pages/forms/FormFieldRenderer';
+import { FormSuccessView } from '@/pages/forms/FormSuccessView';
+import { StatusFlowIndicator, ApprovalLevelIndicator } from '@/pages/forms/FormStatusFlow';
+import type { FormFieldDef } from '@/pages/forms/formConfigs';
 
 export const ResourceForm: React.FC = () => {
   const { formType, id } = useParams<{ formType: string; id: string }>();

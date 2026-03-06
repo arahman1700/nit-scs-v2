@@ -8,7 +8,9 @@ import type { TabDef } from '@/components/SectionTabBar';
 import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { displayStr } from '@/utils/displayStr';
 
-const DelegationsPage = React.lazy(() => import('@/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })));
+const DelegationsPage = React.lazy(() =>
+  import('@/domains/workflow/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })),
+);
 
 const Spinner: React.FC = () => (
   <div className="flex items-center justify-center py-20">

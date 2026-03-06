@@ -5,10 +5,12 @@ import { RoleGuard, ENGINEER_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const SiteEngineerDashboard = React.lazy(() =>
-  import('@/pages/SiteEngineerDashboard').then(m => ({ default: m.SiteEngineerDashboard })),
+  import('@/domains/dashboards/pages/SiteEngineerDashboard').then(m => ({ default: m.SiteEngineerDashboard })),
 );
-const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
-const TasksPage = React.lazy(() => import('@/pages/TasksPage').then(m => ({ default: m.TasksPage })));
+const ResourceForm = React.lazy(() =>
+  import('@/domains/admin/pages/ResourceForm').then(m => ({ default: m.ResourceForm })),
+);
+const TasksPage = React.lazy(() => import('@/domains/system/pages/TasksPage').then(m => ({ default: m.TasksPage })));
 
 // ── Site Engineer route definitions ──────────────────────────────────────
 export function engineerRoutes(currentRole: UserRole) {

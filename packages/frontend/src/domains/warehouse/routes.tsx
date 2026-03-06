@@ -5,7 +5,7 @@ import { RoleGuard, WAREHOUSE_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const WarehouseDashboard = React.lazy(() =>
-  import('@/pages/WarehouseDashboard').then(m => ({ default: m.WarehouseDashboard })),
+  import('@/domains/dashboards/pages/WarehouseDashboard').then(m => ({ default: m.WarehouseDashboard })),
 );
 const LaborDashboard = React.lazy(() =>
   import('@/pages/dashboards/LaborDashboard').then(m => ({ default: m.LaborDashboard })),

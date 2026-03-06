@@ -9,7 +9,9 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useShipmentList, useSLACompliance, flattenSLA } from '@/api/hooks';
 
-const LazySla = React.lazy(() => import('@/pages/SlaDashboard').then(m => ({ default: m.SlaDashboard })));
+const LazySla = React.lazy(() =>
+  import('@/domains/reporting/pages/SlaDashboard').then(m => ({ default: m.SlaDashboard })),
+);
 
 const SuspenseFallback = (
   <div className="glass-card p-12 rounded-xl text-center text-gray-500 animate-pulse">Loading...</div>

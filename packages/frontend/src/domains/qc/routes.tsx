@@ -5,10 +5,12 @@ import { RoleGuard, QC_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const QCOfficerDashboard = React.lazy(() =>
-  import('@/pages/QCOfficerDashboard').then(m => ({ default: m.QCOfficerDashboard })),
+  import('@/domains/dashboards/pages/QCOfficerDashboard').then(m => ({ default: m.QCOfficerDashboard })),
 );
-const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
-const TasksPage = React.lazy(() => import('@/pages/TasksPage').then(m => ({ default: m.TasksPage })));
+const ResourceForm = React.lazy(() =>
+  import('@/domains/admin/pages/ResourceForm').then(m => ({ default: m.ResourceForm })),
+);
+const TasksPage = React.lazy(() => import('@/domains/system/pages/TasksPage').then(m => ({ default: m.TasksPage })));
 const InspectionToolsPage = React.lazy(() =>
   import('@/pages/quality/InspectionToolsPage').then(m => ({ default: m.InspectionToolsPage })),
 );

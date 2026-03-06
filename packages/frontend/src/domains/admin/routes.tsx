@@ -4,27 +4,41 @@ import { UserRole } from '@nit-scs-v2/shared/types';
 import { RoleGuard, ADMIN_MANAGER_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
-const AdminDashboard = React.lazy(() => import('@/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AdminDashboard = React.lazy(() =>
+  import('@/domains/admin/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })),
+);
 const AdminResourceList = React.lazy(() =>
-  import('@/pages/AdminResourceList').then(m => ({ default: m.AdminResourceList })),
+  import('@/domains/admin/pages/AdminResourceList').then(m => ({ default: m.AdminResourceList })),
 );
-const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
-const GatePassForm = React.lazy(() => import('@/pages/GatePassForm').then(m => ({ default: m.GatePassForm })));
+const ResourceForm = React.lazy(() =>
+  import('@/domains/admin/pages/ResourceForm').then(m => ({ default: m.ResourceForm })),
+);
+const GatePassForm = React.lazy(() =>
+  import('@/domains/logistics/pages/GatePassForm').then(m => ({ default: m.GatePassForm })),
+);
 const StockTransferForm = React.lazy(() =>
-  import('@/pages/StockTransferForm').then(m => ({ default: m.StockTransferForm })),
+  import('@/domains/transfers/pages/StockTransferForm').then(m => ({ default: m.StockTransferForm })),
 );
-const MrfForm = React.lazy(() => import('@/pages/MrfForm').then(m => ({ default: m.MrfForm })));
-const ShipmentForm = React.lazy(() => import('@/pages/ShipmentForm').then(m => ({ default: m.ShipmentForm })));
-const CustomsForm = React.lazy(() => import('@/pages/CustomsForm').then(m => ({ default: m.CustomsForm })));
+const MrfForm = React.lazy(() => import('@/domains/outbound/pages/MrfForm').then(m => ({ default: m.MrfForm })));
+const ShipmentForm = React.lazy(() =>
+  import('@/domains/logistics/pages/ShipmentForm').then(m => ({ default: m.ShipmentForm })),
+);
+const CustomsForm = React.lazy(() =>
+  import('@/domains/logistics/pages/CustomsForm').then(m => ({ default: m.CustomsForm })),
+);
 
 // V2 Form imports
-const ImsfForm = React.lazy(() => import('@/pages/ImsfForm').then(m => ({ default: m.ImsfForm })));
-const ScrapForm = React.lazy(() => import('@/pages/ScrapForm').then(m => ({ default: m.ScrapForm })));
-const SurplusForm = React.lazy(() => import('@/pages/SurplusForm').then(m => ({ default: m.SurplusForm })));
-const RentalContractForm = React.lazy(() =>
-  import('@/pages/RentalContractForm').then(m => ({ default: m.RentalContractForm })),
+const ImsfForm = React.lazy(() => import('@/domains/transfers/pages/ImsfForm').then(m => ({ default: m.ImsfForm })));
+const ScrapForm = React.lazy(() => import('@/domains/inventory/pages/ScrapForm').then(m => ({ default: m.ScrapForm })));
+const SurplusForm = React.lazy(() =>
+  import('@/domains/inventory/pages/SurplusForm').then(m => ({ default: m.SurplusForm })),
 );
-const ToolIssueForm = React.lazy(() => import('@/pages/ToolIssueForm').then(m => ({ default: m.ToolIssueForm })));
+const RentalContractForm = React.lazy(() =>
+  import('@/domains/equipment/pages/RentalContractForm').then(m => ({ default: m.RentalContractForm })),
+);
+const ToolIssueForm = React.lazy(() =>
+  import('@/domains/equipment/pages/ToolIssueForm').then(m => ({ default: m.ToolIssueForm })),
+);
 
 // V2 Form imports (additional)
 const HandoverForm = React.lazy(() => import('@/pages/forms/HandoverForm').then(m => ({ default: m.HandoverForm })));
@@ -67,7 +81,9 @@ const MaterialSectionPage = React.lazy(() =>
 );
 
 // Map Dashboard (standalone page)
-const MapDashboard = React.lazy(() => import('@/pages/MapDashboard').then(m => ({ default: m.MapDashboard })));
+const MapDashboard = React.lazy(() =>
+  import('@/domains/reporting/pages/MapDashboard').then(m => ({ default: m.MapDashboard })),
+);
 
 // Section Landing Pages (V3 - Reorganized)
 const EquipmentSectionPage = React.lazy(() =>
@@ -85,7 +101,7 @@ const EmployeeSectionPage = React.lazy(() =>
 
 // Workflow Builder (parametric route)
 const WorkflowBuilderPage = React.lazy(() =>
-  import('@/pages/WorkflowBuilderPage').then(m => ({ default: m.WorkflowBuilderPage })),
+  import('@/domains/workflow/pages/WorkflowBuilderPage').then(m => ({ default: m.WorkflowBuilderPage })),
 );
 
 // Inspection Tools (AQL Calculator & Checklists)
@@ -131,7 +147,7 @@ const DemandAnalyticsPage = React.lazy(() =>
 
 // Pending Approvals page
 const PendingApprovalsPage = React.lazy(() =>
-  import('@/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
+  import('@/domains/workflow/pages/PendingApprovalsPage').then(m => ({ default: m.PendingApprovalsPage })),
 );
 
 // ── Admin route definitions ──────────────────────────────────────────────

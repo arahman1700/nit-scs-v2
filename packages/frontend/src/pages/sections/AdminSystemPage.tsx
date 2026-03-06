@@ -6,17 +6,25 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 
 // Lazy-load embedded page components
-const RolesPage = React.lazy(() => import('@/pages/RolesPage').then(m => ({ default: m.RolesPage })));
-const AuditLogPage = React.lazy(() => import('@/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
-const SettingsPage = React.lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
-const ReportsPage = React.lazy(() => import('@/pages/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const RolesPage = React.lazy(() => import('@/domains/admin/pages/RolesPage').then(m => ({ default: m.RolesPage })));
+const AuditLogPage = React.lazy(() =>
+  import('@/domains/system/pages/AuditLogPage').then(m => ({ default: m.AuditLogPage })),
+);
+const SettingsPage = React.lazy(() =>
+  import('@/domains/admin/pages/SettingsPage').then(m => ({ default: m.SettingsPage })),
+);
+const ReportsPage = React.lazy(() =>
+  import('@/domains/reporting/pages/ReportsPage').then(m => ({ default: m.ReportsPage })),
+);
 const WorkflowListPage = React.lazy(() =>
-  import('@/pages/WorkflowListPage').then(m => ({ default: m.WorkflowListPage })),
+  import('@/domains/workflow/pages/WorkflowListPage').then(m => ({ default: m.WorkflowListPage })),
 );
 const EmailTemplatesPage = React.lazy(() =>
-  import('@/pages/EmailTemplatesPage').then(m => ({ default: m.EmailTemplatesPage })),
+  import('@/domains/system/pages/EmailTemplatesPage').then(m => ({ default: m.EmailTemplatesPage })),
 );
-const EmailLogsPage = React.lazy(() => import('@/pages/EmailLogsPage').then(m => ({ default: m.EmailLogsPage })));
+const EmailLogsPage = React.lazy(() =>
+  import('@/domains/system/pages/EmailLogsPage').then(m => ({ default: m.EmailLogsPage })),
+);
 const ApprovalLevelsPage = React.lazy(() =>
   import('@/pages/admin/ApprovalLevelsPage').then(m => ({ default: m.ApprovalLevelsPage })),
 );

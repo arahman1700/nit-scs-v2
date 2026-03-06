@@ -38,7 +38,7 @@ vi.mock('@/layouts/MainLayout', () => ({
   MainLayout: ({ children }: { children: React.ReactNode }) => <div data-testid="main-layout">{children}</div>,
 }));
 
-vi.mock('@/pages/LoginPage', () => ({
+vi.mock('@/domains/auth/pages/LoginPage', () => ({
   LoginPage: ({ onLogin }: { onLogin: (role: string) => void }) => (
     <div data-testid="login-page">
       <button onClick={() => onLogin('admin')}>Login</button>

@@ -5,11 +5,15 @@ import { RoleGuard, MANAGER_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const ManagerDashboard = React.lazy(() =>
-  import('@/pages/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })),
+  import('@/domains/dashboards/pages/ManagerDashboard').then(m => ({ default: m.ManagerDashboard })),
 );
-const ResourceForm = React.lazy(() => import('@/pages/ResourceForm').then(m => ({ default: m.ResourceForm })));
-const TasksPage = React.lazy(() => import('@/pages/TasksPage').then(m => ({ default: m.TasksPage })));
-const DocumentsPage = React.lazy(() => import('@/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage })));
+const ResourceForm = React.lazy(() =>
+  import('@/domains/admin/pages/ResourceForm').then(m => ({ default: m.ResourceForm })),
+);
+const TasksPage = React.lazy(() => import('@/domains/system/pages/TasksPage').then(m => ({ default: m.TasksPage })));
+const DocumentsPage = React.lazy(() =>
+  import('@/domains/system/pages/DocumentsPage').then(m => ({ default: m.DocumentsPage })),
+);
 const OperationsDashboard = React.lazy(() =>
   import('@/pages/dashboards/OperationsDashboard').then(m => ({ default: m.OperationsDashboard })),
 );

@@ -5,7 +5,7 @@ import { RoleGuard, TRANSPORT_ROLES } from '../routeUtils';
 
 // ── Lazy-loaded pages ────────────────────────────────────────────────────
 const TransportDashboard = React.lazy(() =>
-  import('@/pages/TransportDashboard').then(m => ({ default: m.TransportDashboard })),
+  import('@/domains/dashboards/pages/TransportDashboard').then(m => ({ default: m.TransportDashboard })),
 );
 
 // ── Transport route definitions ──────────────────────────────────────────

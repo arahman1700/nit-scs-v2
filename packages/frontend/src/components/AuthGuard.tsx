@@ -7,7 +7,7 @@ import { MainLayout } from '@/layouts/MainLayout';
 import { AppRouteDefinitions } from '@/routes';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 
-const LoginPage = React.lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const LoginPage = React.lazy(() => import('@/domains/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 
 /** Map backend systemRole string to UserRole enum (now 1:1 since enums match DB values) */
 function mapSystemRoleToUserRole(systemRole: string): UserRole {
