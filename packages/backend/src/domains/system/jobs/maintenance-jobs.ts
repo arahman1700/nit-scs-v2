@@ -300,42 +300,110 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
     }
 
     if (discrepancies.length === 0) {
-      ctx.log('info', '[Scheduler] Reconciliation complete — no discrepancies found');
-      return;
+      ctx.log('info', '[Scheduler] Reconciliation complete — no lot discrepancies found');
+    } else {
+      ctx.log('warn', `[Scheduler] Reconciliation found ${discrepancies.length} discrepancies`);
+
+      const supervisorIds = await ctx.getEmployeeIdsByRole('warehouse_supervisor');
+      const inventorySpecialistIds = await ctx.getEmployeeIdsByRole('inventory_specialist');
+      const adminIds = await ctx.getAdminIds();
+      const allRecipients = [...new Set([...supervisorIds, ...inventorySpecialistIds, ...adminIds])];
+
+      if (allRecipients.length > 0) {
+        const top5 = discrepancies
+          .slice(0, 5)
+          .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (Δ${d.diff.toFixed(3)})`);
+
+        await ctx.notifySla({
+          recipientIds: allRecipients,
+          title: `Reconciliation Alert: ${discrepancies.length} discrepancies`,
+          body: `Daily reconciliation found ${discrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
+          notificationType: 'reconciliation_alert',
+          referenceTable: 'inventory_levels',
+          referenceId: 'daily-reconciliation',
+          socketEvent: 'inventory:reconciliation',
+          socketRoles: ['admin', 'warehouse_supervisor', 'inventory_specialist'],
+        });
+      }
+
+      for (const d of discrepancies) {
+        await ctx.prisma.inventoryLevel.updateMany({
+          where: { itemId: d.itemId, warehouseId: d.warehouseId },
+          data: { qtyOnHand: d.lotTotal },
+        });
+      }
+
+      ctx.log('info', `[Scheduler] Reconciliation: auto-corrected ${discrepancies.length} inventory levels`);
     }
 
-    ctx.log('warn', `[Scheduler] Reconciliation found ${discrepancies.length} discrepancies`);
+    // ── SOW Gap 5: Gate movement vs inventory transaction reconciliation ──
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    const supervisorIds = await ctx.getEmployeeIdsByRole('warehouse_supervisor');
-    const inventorySpecialistIds = await ctx.getEmployeeIdsByRole('inventory_specialist');
-    const adminIds = await ctx.getAdminIds();
-    const allRecipients = [...new Set([...supervisorIds, ...inventorySpecialistIds, ...adminIds])];
+    const [gateOutbound, miIssued] = await Promise.all([
+      ctx.prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; total_qty: number }>>`
+        SELECT gpi.item_id, gp.warehouse_id, COALESCE(SUM(gpi.quantity), 0)::float AS total_qty
+        FROM gate_pass_items gpi
+        JOIN gate_passes gp ON gp.id = gpi.gate_pass_id
+        WHERE gp.status = 'released'
+          AND gp.pass_type = 'outbound'
+          AND gp.exit_time >= ${oneDayAgo}
+        GROUP BY gpi.item_id, gp.warehouse_id
+      `,
+      ctx.prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; total_qty: number }>>`
+        SELECT ml.item_id, m.warehouse_id, COALESCE(SUM(ml.qty_issued), 0)::float AS total_qty
+        FROM mirv_lines ml
+        JOIN mirv m ON m.id = ml.mirv_id
+        WHERE m.status IN ('issued', 'partially_issued')
+          AND m.issued_date >= ${oneDayAgo}
+        GROUP BY ml.item_id, m.warehouse_id
+      `,
+    ]);
 
-    if (allRecipients.length > 0) {
-      const top5 = discrepancies
+    const gateMap = new Map(gateOutbound.map(r => [`${r.item_id}:${r.warehouse_id}`, r.total_qty]));
+    const gateDiscrepancies: Array<{ itemId: string; warehouseId: string; gateQty: number; miQty: number }> = [];
+
+    for (const mi of miIssued) {
+      const key = `${mi.item_id}:${mi.warehouse_id}`;
+      const gateQty = gateMap.get(key) ?? 0;
+      if (Math.abs(gateQty - mi.total_qty) > 0.01) {
+        gateDiscrepancies.push({ itemId: mi.item_id, warehouseId: mi.warehouse_id, gateQty, miQty: mi.total_qty });
+      }
+      gateMap.delete(key);
+    }
+
+    // Items through gate with no MI record
+    for (const [key, gateQty] of gateMap) {
+      const [itemId, warehouseId] = key.split(':');
+      gateDiscrepancies.push({ itemId, warehouseId, gateQty, miQty: 0 });
+    }
+
+    if (gateDiscrepancies.length > 0) {
+      ctx.log('warn', `[reconciliation] ${gateDiscrepancies.length} gate-vs-inventory discrepancies`);
+
+      const detail = gateDiscrepancies
         .slice(0, 5)
-        .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (Δ${d.diff.toFixed(3)})`);
+        .map(d => `Item ${d.itemId.slice(0, 8)}… WH ${d.warehouseId.slice(0, 8)}…: gate=${d.gateQty} MI=${d.miQty}`)
+        .join('\n');
 
-      await ctx.notifySla({
-        recipientIds: allRecipients,
-        title: `Reconciliation Alert: ${discrepancies.length} discrepancies`,
-        body: `Daily reconciliation found ${discrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
-        notificationType: 'reconciliation_alert',
-        referenceTable: 'inventory_levels',
-        referenceId: 'daily-reconciliation',
-        socketEvent: 'inventory:reconciliation',
-        socketRoles: ['admin', 'warehouse_supervisor', 'inventory_specialist'],
-      });
+      const gateSupervisorIds = await ctx.getEmployeeIdsByRole('warehouse_supervisor');
+      const gateOfficerIds = await ctx.getEmployeeIdsByRole('gate_officer');
+      const gateRecipients = [...new Set([...gateSupervisorIds, ...gateOfficerIds])];
+
+      if (gateRecipients.length > 0) {
+        await ctx.notifySla({
+          recipientIds: gateRecipients,
+          title: 'Gate vs Inventory Mismatch',
+          body: `${gateDiscrepancies.length} discrepancies found in last 24h:\n${detail}`,
+          notificationType: 'gate_reconciliation',
+          referenceTable: 'gate_passes',
+          referenceId: 'gate-reconciliation',
+          socketEvent: 'inventory:gate-reconciliation',
+          socketRoles: ['warehouse_supervisor', 'gate_officer'],
+        });
+      }
+    } else {
+      ctx.log('info', '[reconciliation] Gate-vs-inventory check: no discrepancies');
     }
-
-    for (const d of discrepancies) {
-      await ctx.prisma.inventoryLevel.updateMany({
-        where: { itemId: d.itemId, warehouseId: d.warehouseId },
-        data: { qtyOnHand: d.lotTotal },
-      });
-    }
-
-    ctx.log('info', `[Scheduler] Reconciliation: auto-corrected ${discrepancies.length} inventory levels`);
   } catch (err) {
     ctx.log('error', `[Scheduler] Reconciliation failed: ${(err as Error).message}`);
   }
