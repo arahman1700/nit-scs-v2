@@ -15,7 +15,7 @@ export function registerWarehouseOpsRoutes(router: Router) {
   router.use('/putaway-rules', putawayRulesRoutes);
   router.use('/slotting', slottingRoutes);
   router.use('/staging', stagingRoutes);
-  router.use('/cross-dock', crossDockRoutes);
+  router.use('/cross-docks', crossDockRoutes);
   router.use('/yard', yardRoutes);
   router.use('/packing', packingRoutes);
   router.use('/sensors', sensorRoutes);

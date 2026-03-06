@@ -29,7 +29,7 @@ import { rateLimiter } from './middleware/rate-limiter.js';
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startNotificationDispatcher } from './domains/system/services/notification-dispatcher.service.js';
-import { startScheduler, stopScheduler } from './services/scheduler.service.js';
+import { startScheduler, stopScheduler } from './domains/system/services/scheduler.service.js';
 import {
   registerDynamicDataSources,
   register as registerDataSource,

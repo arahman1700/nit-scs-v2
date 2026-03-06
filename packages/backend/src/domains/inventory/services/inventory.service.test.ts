@@ -12,7 +12,7 @@ vi.mock('../../../utils/cache.js', () => ({ invalidateCachePattern: vi.fn() }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createAuditLog } from './audit.service.js';
+import { createAuditLog } from '../../system/services/audit.service.js';
 import {
   addStock,
   reserveStock,

@@ -74,7 +74,7 @@ beforeEach(async () => {
   vi.clearAllMocks();
   if (!modelCache['emailLog']) modelCache['emailLog'] = {};
   // Re-mock permission after clearAllMocks
-  const { hasPermissionDB } = await import('../domains/auth/services/permission.service.js');
+  const { hasPermissionDB } = await import('../../auth/services/permission.service.js');
   vi.mocked(hasPermissionDB).mockResolvedValue(true);
 });
 

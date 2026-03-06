@@ -15,24 +15,24 @@
  * - domains/inventory/jobs/expiry-jobs.ts
  */
 
-import { prisma } from '../utils/prisma.js';
-import { createNotification } from '../domains/system/services/notification.service.js';
-import { initializeScheduledRules } from '../events/scheduled-rule-runner.js';
-import { log } from '../config/logger.js';
-import { getRedis } from '../config/redis.js';
-import { emitToRole, emitToUser } from '../socket/setup.js';
-import { sendPushToUser } from '../domains/system/services/push-notification.service.js';
+import { prisma } from '../../../utils/prisma.js';
+import { createNotification } from './notification.service.js';
+import { initializeScheduledRules } from '../../../events/scheduled-rule-runner.js';
+import { log } from '../../../config/logger.js';
+import { getRedis } from '../../../config/redis.js';
+import { emitToRole, emitToUser } from '../../../socket/setup.js';
+import { sendPushToUser } from './push-notification.service.js';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
-import { getAllSlaHours } from '../domains/system/services/system-config.service.js';
-import { getAllJobs, clearJobs } from '../utils/job-registry.js';
-import type { PrismaDelegate, JobContext } from '../utils/job-registry.js';
+import { getAllSlaHours } from './system-config.service.js';
+import { getAllJobs, clearJobs } from '../../../utils/job-registry.js';
+import type { PrismaDelegate, JobContext } from '../../../utils/job-registry.js';
 import type { Server as SocketIOServer } from 'socket.io';
 
 // ── Import domain job modules for side-effect registration ───────────────
-import '../domains/system/jobs/sla-jobs.js';
-import '../domains/system/jobs/maintenance-jobs.js';
-import '../domains/system/jobs/notification-jobs.js';
-import '../domains/inventory/jobs/expiry-jobs.js';
+import '../jobs/sla-jobs.js';
+import '../jobs/maintenance-jobs.js';
+import '../jobs/notification-jobs.js';
+import '../../inventory/jobs/expiry-jobs.js';
 
 const timers: ReturnType<typeof setTimeout>[] = [];
 let io: SocketIOServer | null = null;

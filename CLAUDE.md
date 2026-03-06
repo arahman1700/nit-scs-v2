@@ -13,11 +13,51 @@ Enterprise supply chain management system (monorepo) with dark glassmorphism the
 
 ---
 
-## Component Organization
+## Architecture — Domain-Driven Structure
+
+### 14 Backend Domains
+
+```
+packages/backend/src/domains/
+├── auth/            # Authentication, permissions, security
+├── master-data/     # Items, suppliers, projects, warehouses, UOMs
+├── inbound/         # GRN (MRRV), QCI (RFIM), DR (OSD), ASN, inspection
+├── outbound/        # MI (MIRV), MRN (MRV), MR (MRF), pick-optimizer, wave
+├── inventory/       # Bin cards, cycle counts, surplus, scrap, expiry, ABC
+├── warehouse-ops/   # Zones, put-away, slotting, staging, cross-dock, yard
+├── transfers/       # WT (stock-transfer), handover, IMSF
+├── logistics/       # Shipments, gate passes, transport orders, customs, tariffs
+├── job-orders/      # Job orders, labor standards
+├── equipment/       # Tools, generators, vehicles, assets, AMC, rentals
+├── workflow/        # Approvals, delegation, comments, digital signatures
+├── compliance/      # Supplier evaluation, compliance audits, visitors
+├── reporting/       # Dashboards, KPIs, reports, analytics, cost allocation
+└── system/          # Notifications, audit, settings, uploads, email, barcode, search
+```
+
+Each domain has a barrel `index.ts` that exports `registerXxxRoutes(router)`.
+
+### Frontend Domains
 
 ```
 packages/frontend/src/
-├── components/           # Reusable UI components (77 files)
+├── domains/              # Domain-organized hooks (React Query)
+│   ├── auth/hooks/
+│   ├── master-data/hooks/
+│   ├── inbound/hooks/
+│   ├── outbound/hooks/
+│   ├── inventory/hooks/
+│   ├── warehouse-ops/hooks/
+│   ├── transfers/hooks/
+│   ├── logistics/hooks/
+│   ├── job-orders/hooks/
+│   ├── equipment/hooks/
+│   ├── workflow/hooks/
+│   ├── compliance/hooks/
+│   ├── reporting/hooks/
+│   └── system/hooks/
+├── api/hooks/index.ts    # Re-export barrel (backward compat)
+├── components/           # Reusable UI components
 │   ├── dashboard-builder/
 │   ├── report-builder/
 │   ├── smart-grid/
@@ -30,7 +70,6 @@ packages/frontend/src/
 │   ├── logistics/        # Logistics feature pages
 │   ├── quality/          # Quality feature pages
 │   └── transport/        # Transport feature pages
-├── api/hooks/            # React Query hooks (71 files)
 ├── contexts/             # React contexts (Direction, Auth)
 ├── hooks/                # Custom hooks (useAutoSave, useOfflineQueue)
 ├── layouts/              # MainLayout.tsx
@@ -44,9 +83,10 @@ packages/frontend/src/
 
 - IMPORTANT: Place reusable UI components in `src/components/`
 - IMPORTANT: Place page components in `src/pages/` organized by feature domain
+- Place React Query hooks in `src/domains/{domain}/hooks/` (NOT `src/api/hooks/`)
+- Place backend routes and services in `src/domains/{domain}/routes/` and `src/domains/{domain}/services/`
 - Place dashboard pages in `src/pages/dashboards/`
 - Place section landing pages in `src/pages/sections/`
-- Place React Query hooks in `src/api/hooks/`
 - Use PascalCase for component files and exports: `KpiCard.tsx`, `StatusBadge.tsx`
 - Use descriptive suffixes: `Modal`, `Form`, `Page`, `Layout`, `Builder`, `Provider`
 - Export components as named exports, not default (except lazy-loaded pages)
@@ -220,7 +260,7 @@ import type { UserRole, DocumentStatus } from '@nit-scs-v2/shared/types';
 
 // 4. Internal components, hooks, utils
 import { KpiCard } from '@/components/KpiCard';
-import { useGrn } from '@/api/hooks/useGrn';
+import { useGrn } from '@/domains/inbound/hooks/useGrn';
 
 // 5. Icons (always last)
 import { Package, Plus, Search } from 'lucide-react';

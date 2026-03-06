@@ -105,7 +105,7 @@ describe('Reports Routes', () => {
     vi.clearAllMocks();
     token = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
     // Re-mock after clearAllMocks
-    const { hasPermissionDB } = await import('../domains/auth/services/permission.service.js');
+    const { hasPermissionDB } = await import('../../auth/services/permission.service.js');
     vi.mocked(hasPermissionDB).mockResolvedValue(true);
     // Re-set prisma aggregate mocks
     vi.mocked(prisma.jobOrder.aggregate).mockResolvedValue({ _sum: { totalAmount: 0 }, _count: { id: 0 } } as any);

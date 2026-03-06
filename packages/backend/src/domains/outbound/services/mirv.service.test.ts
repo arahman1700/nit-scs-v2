@@ -27,7 +27,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, submit, approve, issue, cancel } from './mirv.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { submitForApproval, processApproval } from './approval.service.js';
+import { submitForApproval, processApproval } from '../../workflow/services/approval.service.js';
 import {
   reserveStockBatch,
   consumeReservationBatch,

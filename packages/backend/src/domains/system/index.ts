@@ -41,6 +41,6 @@ export function registerSystemRoutes(router: Router) {
   router.use('/tasks', taskRoutes);
   router.use('/rate-cards', rateCardRoutes);
   router.use('/custom-fields', customFieldsRoutes);
-  router.use('/dynamic-documents', dynamicDocumentRoutes);
-  router.use('/dynamic-document-types', dynamicDocumentTypeRoutes);
+  router.use('/dynamic', dynamicDocumentRoutes);
+  router.use('/dynamic-types', dynamicDocumentTypeRoutes);
 }

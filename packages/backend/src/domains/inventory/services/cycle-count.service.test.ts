@@ -24,7 +24,7 @@ import {
   autoCreateCycleCounts,
 } from './cycle-count.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createAuditLog } from './audit.service.js';
+import { createAuditLog } from '../../system/services/audit.service.js';
 
 // ── Helper: create model mock with findUniqueOrThrow ────────────────────
 function createModelMock(): PrismaModelMock & { findUniqueOrThrow: ReturnType<typeof vi.fn> } {

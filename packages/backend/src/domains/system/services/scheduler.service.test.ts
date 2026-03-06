@@ -56,33 +56,33 @@ const {
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: mockLog }));
 vi.mock('../../../config/redis.js', () => ({ getRedis: vi.fn().mockReturnValue(null) }));
-vi.mock('../domains/system/services/email.service.js', () => ({ processQueuedEmails: mockProcessQueuedEmails }));
-vi.mock('../domains/system/services/notification.service.js', () => ({ createNotification: mockCreateNotification }));
-vi.mock('../domains/auth/services/auth.service.js', () => ({ cleanupExpiredTokens: mockCleanupExpiredTokens }));
-vi.mock('../domains/inventory/services/abc-analysis.service.js', () => ({
+vi.mock('./email.service.js', () => ({ processQueuedEmails: mockProcessQueuedEmails }));
+vi.mock('./notification.service.js', () => ({ createNotification: mockCreateNotification }));
+vi.mock('../../auth/services/auth.service.js', () => ({ cleanupExpiredTokens: mockCleanupExpiredTokens }));
+vi.mock('../../inventory/services/abc-analysis.service.js', () => ({
   calculateABCClassification: mockCalculateABC,
   applyABCClassification: mockApplyABC,
 }));
-vi.mock('../domains/inventory/services/cycle-count.service.js', () => ({
+vi.mock('../../inventory/services/cycle-count.service.js', () => ({
   autoCreateCycleCounts: mockAutoCreateCycleCounts,
 }));
-vi.mock('../domains/reporting/services/anomaly-detection.service.js', () => ({ detectAnomalies: mockDetectAnomalies }));
-vi.mock('../domains/reporting/services/reorder-prediction.service.js', () => ({
+vi.mock('../../reporting/services/anomaly-detection.service.js', () => ({ detectAnomalies: mockDetectAnomalies }));
+vi.mock('../../reporting/services/reorder-prediction.service.js', () => ({
   autoUpdateReorderPoints: mockAutoUpdateReorderPoints,
 }));
 vi.mock('../../../events/scheduled-rule-runner.js', () => ({
   processScheduledRules: mockProcessScheduledRules,
   initializeScheduledRules: mockInitializeScheduledRules,
 }));
-vi.mock('../socket/setup.js', () => ({
+vi.mock('../../../socket/setup.js', () => ({
   emitToRole: mockEmitToRole,
   emitToUser: mockEmitToUser,
   emitToDocument: vi.fn(),
   emitToAll: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../domains/system/services/push-notification.service.js', () => ({ sendPushToUser: mockSendPushToUser }));
-vi.mock('../domains/system/services/system-config.service.js', () => ({ getAllSlaHours: mockGetAllSlaHours }));
+vi.mock('./push-notification.service.js', () => ({ sendPushToUser: mockSendPushToUser }));
+vi.mock('./system-config.service.js', () => ({ getAllSlaHours: mockGetAllSlaHours }));
 
 // ── Imports ──────────────────────────────────────────────────────────────
 
