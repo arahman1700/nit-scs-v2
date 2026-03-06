@@ -5,9 +5,9 @@ import * as mirvService from './mirv.service.js';
 import * as mrvService from './mrv.service.js';
 import * as rfimService from './rfim.service.js';
 import * as osdService from './osd.service.js';
-import * as joService from './job-order.service.js';
+import * as joService from '../domains/job-orders/services/job-order.service.js';
 import * as gatePassService from './gate-pass.service.js';
-import * as stService from './stock-transfer.service.js';
+import * as stService from '../domains/transfers/services/stock-transfer.service.js';
 import * as mrfService from './mrf.service.js';
 import * as shipmentService from './shipment.service.js';
 

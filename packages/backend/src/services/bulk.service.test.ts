@@ -20,7 +20,7 @@ vi.mock('./mrv.service.js', () => ({
 }));
 vi.mock('./rfim.service.js', () => ({ start: vi.fn() }));
 vi.mock('./osd.service.js', () => ({ sendClaim: vi.fn() }));
-vi.mock('./job-order.service.js', () => ({
+vi.mock('../domains/job-orders/services/job-order.service.js', () => ({
   submit: vi.fn(),
   start: vi.fn(),
   cancel: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('./gate-pass.service.js', () => ({
   approve: vi.fn(),
   cancel: vi.fn(),
 }));
-vi.mock('./stock-transfer.service.js', () => ({
+vi.mock('../domains/transfers/services/stock-transfer.service.js', () => ({
   submit: vi.fn(),
   approve: vi.fn(),
   cancel: vi.fn(),
@@ -43,9 +43,9 @@ import * as mirvService from './mirv.service.js';
 import * as mrvService from './mrv.service.js';
 import * as rfimService from './rfim.service.js';
 import * as osdService from './osd.service.js';
-import * as joService from './job-order.service.js';
+import * as joService from '../domains/job-orders/services/job-order.service.js';
 import * as gatePassService from './gate-pass.service.js';
-import * as stService from './stock-transfer.service.js';
+import * as stService from '../domains/transfers/services/stock-transfer.service.js';
 import * as mrfService from './mrf.service.js';
 import * as shipmentService from './shipment.service.js';
 

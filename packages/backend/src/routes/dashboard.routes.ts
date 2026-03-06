@@ -4,7 +4,7 @@ import { prisma } from '../utils/prisma.js';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess } from '../utils/response.js';
 import { cached, CacheTTL } from '../utils/cache.js';
-import { getProductivitySummary } from '../services/labor-productivity.service.js';
+import { getProductivitySummary } from '../domains/job-orders/services/labor-productivity.service.js';
 import { getCrossDepartmentInventorySummary } from '../services/inventory.service.js';
 
 const router = Router();

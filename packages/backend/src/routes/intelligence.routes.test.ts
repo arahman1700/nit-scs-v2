@@ -52,7 +52,7 @@ vi.mock('../middleware/rate-limiter.js', () => ({
   aiRateLimiter: () => (_req: unknown, _res: unknown, next: () => void) => next(),
 }));
 
-vi.mock('../services/smart-defaults.service.js', () => ({
+vi.mock('../domains/master-data/services/smart-defaults.service.js', () => ({
   getUserDefaults: vi.fn().mockResolvedValue({
     warehouseId: 'wh-1',
     projectId: 'proj-1',
@@ -79,7 +79,7 @@ vi.mock('../services/reorder-prediction.service.js', () => ({
   autoUpdateReorderPoints: vi.fn().mockResolvedValue({ updated: 12, total: 50 }),
 }));
 
-import * as smartDefaults from '../services/smart-defaults.service.js';
+import * as smartDefaults from '../domains/master-data/services/smart-defaults.service.js';
 import * as anomalyService from '../services/anomaly-detection.service.js';
 import * as reorderService from '../services/reorder-prediction.service.js';
 

@@ -78,7 +78,12 @@ import type {
 } from '../schemas/logistics.schema.js';
 
 // ── Job order schemas ───────────────────────────────────────────────────
-import type { joCreateSchema, joUpdateSchema, joApprovalSchema, joPaymentSchema } from '../schemas/job-order.schema.js';
+import type {
+  joCreateSchema,
+  joUpdateSchema,
+  joApprovalSchema,
+  joPaymentSchema,
+} from '../domains/job-orders/schemas/job-order.schema.js';
 
 // ── Auth schemas ────────────────────────────────────────────────────────
 import type {

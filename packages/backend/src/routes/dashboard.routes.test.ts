@@ -56,7 +56,7 @@ vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock('../services/labor-productivity.service.js', () => ({
+vi.mock('../domains/job-orders/services/labor-productivity.service.js', () => ({
   getProductivitySummary: vi.fn().mockResolvedValue({ avgEfficiency: 85 }),
 }));
 

@@ -9,7 +9,7 @@ import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { validate } from '../middleware/validate.js';
 import { rateLimiter } from '../middleware/rate-limiter.js';
 import { sendSuccess } from '../utils/response.js';
-import { getUserDefaults } from '../services/smart-defaults.service.js';
+import { getUserDefaults } from '../domains/master-data/services/smart-defaults.service.js';
 import { detectAnomalies, getInventoryHealthSummary } from '../services/anomaly-detection.service.js';
 import {
   generateReorderPredictions,

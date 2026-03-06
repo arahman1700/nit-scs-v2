@@ -57,7 +57,7 @@ vi.mock('../services/audit.service.js', () => ({
 }));
 
 // Mock all services used by logistics sub-routes
-vi.mock('../services/job-order.service.js', () => ({
+vi.mock('../domains/job-orders/services/job-order.service.js', () => ({
   list: vi.fn().mockResolvedValue({ data: [], total: 0 }),
   getById: vi.fn().mockResolvedValue({ id: 'jo1', status: 'draft' }),
   create: vi.fn().mockResolvedValue({ id: 'jo1' }),
@@ -86,7 +86,7 @@ vi.mock('../services/gate-pass.service.js', () => ({
   returnPass: vi.fn().mockResolvedValue({}),
   cancel: vi.fn().mockResolvedValue({}),
 }));
-vi.mock('../services/stock-transfer.service.js', () => ({
+vi.mock('../domains/transfers/services/stock-transfer.service.js', () => ({
   list: vi.fn().mockResolvedValue({ data: [], total: 0 }),
   getById: vi.fn().mockResolvedValue({ id: 'st1', status: 'draft' }),
   create: vi.fn().mockResolvedValue({ id: 'st1' }),

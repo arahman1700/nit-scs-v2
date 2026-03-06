@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import jobOrderRoutes from './job-order.routes.js';
+import jobOrderRoutes from '../domains/job-orders/routes/job-order.routes.js';
 import gatePassRoutes from './gate-pass.routes.js';
-import stockTransferRoutes from './stock-transfer.routes.js';
+import stockTransferRoutes from '../domains/transfers/routes/stock-transfer.routes.js';
 import mrfRoutes from './mrf.routes.js';
 import shipmentRoutes from './shipment.routes.js';
 import transportOrderRoutes from './transport-order.routes.js';
