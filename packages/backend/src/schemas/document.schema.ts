@@ -383,6 +383,35 @@ export const warehouseZoneUpdateSchema = z.object({
   currentOccupancy: z.number().int().optional(),
 });
 
+// ── Bin Location ──────────────────────────────────────────────────────────
+
+const binLocationTypes = ['picking', 'bulk', 'staging', 'quarantine', 'returns', 'overflow'] as const;
+
+export const binLocationCreateSchema = z.object({
+  zoneId: uuid,
+  locationCode: z.string().min(1, 'Location code is required').max(30),
+  aisle: z.string().max(10).optional(),
+  rack: z.string().max(10).optional(),
+  shelf: z.string().max(10).optional(),
+  bin: z.string().max(10).optional(),
+  locationType: z.enum(binLocationTypes).optional(),
+  maxCapacity: z.number().positive().optional(),
+  currentOccupancy: decimalNonNegative.optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const binLocationUpdateSchema = z.object({
+  locationCode: z.string().min(1).max(30).optional(),
+  aisle: z.string().max(10).nullable().optional(),
+  rack: z.string().max(10).nullable().optional(),
+  shelf: z.string().max(10).nullable().optional(),
+  bin: z.string().max(10).nullable().optional(),
+  locationType: z.enum(binLocationTypes).optional(),
+  maxCapacity: z.number().positive().nullable().optional(),
+  currentOccupancy: decimalNonNegative.nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+
 // ── Bin Card ──────────────────────────────────────────────────────────────
 
 export const binCardCreateSchema = z.object({

@@ -65,6 +65,7 @@ model MrrvLine {
   /// CHECK: condition IN ('good', 'damaged', 'mixed')
   condition       String    @default("good") @map("condition") @db.VarChar(20)
   storageLocation String?   @map("storage_location") @db.VarChar(100)
+  binLocationId   String?   @map("bin_location_id") @db.Uuid
   expiryDate      DateTime? @map("expiry_date") @db.Date
   notes           String?
 

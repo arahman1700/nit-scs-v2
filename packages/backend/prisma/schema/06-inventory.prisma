@@ -42,7 +42,8 @@ model InventoryLot {
   reservedQty  Decimal?  @default(0) @map("reserved_qty") @db.Decimal(12, 3)
   unitCost     Decimal?  @map("unit_cost") @db.Decimal(15, 2)
   supplierId   String?   @map("supplier_id") @db.Uuid
-  binLocation  String?   @map("bin_location") @db.VarChar(50)
+  binLocation   String?  @map("bin_location") @db.VarChar(50)
+  binLocationId String?  @map("bin_location_id") @db.Uuid
   /// CHECK: status IN ('active', 'depleted', 'expired', 'blocked')
   status       String    @default("active") @map("status") @db.VarChar(20)
   /// Optimistic locking version for concurrent reservation safety
@@ -53,7 +54,8 @@ model InventoryLot {
   item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   mrrvLine  MrrvLine? @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
-  supplier  Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplier       Supplier?    @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  binLocationRef BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
 
   // Reverse relations
   lotConsumptions LotConsumption[]
