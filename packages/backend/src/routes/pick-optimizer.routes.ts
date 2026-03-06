@@ -13,6 +13,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import { optimizePickPath } from '../services/pick-optimizer.service.js';
 import * as waveService from '../services/wave-picking.service.js';
 
@@ -44,6 +45,12 @@ router.get('/path', async (req: Request, res: Response, next: NextFunction) => {
       return sendError(res, 400, 'warehouseId and items (JSON) query parameters are required');
     }
 
+    // Row-level security: ensure warehouse-scoped users can only access their own warehouse
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+    if (scopeFilter.warehouseId && scopeFilter.warehouseId !== warehouseId) {
+      return sendError(res, 403, 'You do not have access to this warehouse');
+    }
+
     let items: Array<{ itemId: string; quantity: number }>;
     try {
       items = JSON.parse(itemsRaw);
@@ -73,6 +80,12 @@ router.post('/waves', async (req: Request, res: Response, next: NextFunction) =>
       return sendError(res, 400, 'warehouseId and miIds (array) are required');
     }
 
+    // Row-level security: ensure warehouse-scoped users can only create waves for their warehouse
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+    if (scopeFilter.warehouseId && scopeFilter.warehouseId !== warehouseId) {
+      return sendError(res, 403, 'You do not have access to this warehouse');
+    }
+
     const wave = await waveService.createWave(warehouseId, miIds);
     sendCreated(res, wave);
   } catch (err) {
@@ -86,7 +99,11 @@ router.get('/waves', async (req: Request, res: Response, next: NextFunction) => 
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string | undefined;
+    // Row-level security: restrict warehouse-scoped users to their assigned warehouse
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+    const scopedWarehouseId = (scopeFilter.warehouseId as string) || undefined;
+
+    const warehouseId = scopedWarehouseId ?? (req.query.warehouseId as string | undefined);
     const status = req.query.status as string | undefined;
 
     const waveList = waveService.getWaves(warehouseId, status);

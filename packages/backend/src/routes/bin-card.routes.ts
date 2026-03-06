@@ -11,6 +11,7 @@ import { createCrudRouter } from '../utils/crud-factory.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { prisma } from '../utils/prisma.js';
+import { applyScopeFilter } from '../utils/scope-filter.js';
 import {
   binCardCreateSchema,
   binCardUpdateSchema,
@@ -83,26 +84,16 @@ router.get(
   '/computed',
   authenticate,
   requireRole(...COMPUTED_ROLES),
+  applyScopeFilter({ warehouseField: 'warehouseId' }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { warehouseId, itemId, page = '1', pageSize = '50' } = req.query as Record<string, string>;
       const skip = (Number(page) - 1) * Number(pageSize);
       const take = Number(pageSize);
 
-      const where: Record<string, unknown> = {};
+      const where: Record<string, unknown> = { ...req.scopeFilter };
       if (warehouseId) where.warehouseId = warehouseId;
       if (itemId) where.itemId = itemId;
-
-      // Row-owner scoping for warehouse-bound roles
-      const user = req.user;
-      if (
-        user &&
-        ['warehouse_supervisor', 'warehouse_staff', 'gate_officer', 'inventory_specialist'].includes(user.systemRole)
-      ) {
-        if (user.assignedWarehouseId) {
-          where.warehouseId = user.assignedWarehouseId;
-        }
-      }
 
       const [levels, total] = await Promise.all([
         prisma.inventoryLevel.findMany({

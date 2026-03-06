@@ -28,6 +28,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import * as yardService from '../services/yard.service.js';
 
 const router = Router();
@@ -45,6 +46,20 @@ function checkRole(req: Request, res: Response): boolean {
   return true;
 }
 
+/**
+ * Enforce warehouse scope: scoped users are restricted to their assigned warehouse.
+ * Returns `null` when the user tries to access a different warehouse.
+ */
+function resolveWarehouseScope(req: Request, warehouseId: string | undefined): string | undefined | null {
+  const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+  if (scopedWarehouseId) {
+    if (warehouseId && warehouseId !== scopedWarehouseId) return null;
+    return scopedWarehouseId;
+  }
+  return warehouseId;
+}
+
 // ############################################################################
 // DOCK DOORS
 // ############################################################################
@@ -54,7 +69,9 @@ router.get('/dock-doors/available', async (req: Request, res: Response, next: Ne
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
 
     const doorType = req.query.doorType as string | undefined;
@@ -72,7 +89,9 @@ router.get('/dock-doors', async (req: Request, res: Response, next: NextFunction
 
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
-    const warehouseId = req.query.warehouseId as string | undefined;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
@@ -155,7 +174,9 @@ router.get('/appointments', async (req: Request, res: Response, next: NextFuncti
 
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
-    const warehouseId = req.query.warehouseId as string | undefined;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
     const date = req.query.date as string | undefined;
@@ -244,7 +265,9 @@ router.get('/trucks', async (req: Request, res: Response, next: NextFunction) =>
 
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
-    const warehouseId = req.query.warehouseId as string | undefined;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const status = req.query.status as string | undefined;
     const search = req.query.search as string | undefined;
 
@@ -312,7 +335,9 @@ router.get('/status', async (req: Request, res: Response, next: NextFunction) =>
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
 
     const data = await yardService.getYardStatus(warehouseId);
@@ -327,7 +352,9 @@ router.get('/utilization', async (req: Request, res: Response, next: NextFunctio
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const date = req.query.date as string;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
     if (!date) return sendError(res, 400, 'date is required (YYYY-MM-DD)');

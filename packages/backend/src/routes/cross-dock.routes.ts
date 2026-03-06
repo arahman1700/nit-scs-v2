@@ -9,6 +9,7 @@ import { requireRole } from '../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
 import { createAuditLog } from '../services/audit.service.js';
 import { clientIp } from '../utils/helpers.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import {
   identifyOpportunities,
   createCrossDock,
@@ -23,10 +24,29 @@ import {
 
 const router = Router();
 
+/**
+ * Enforce warehouse scope: scoped users are restricted to their assigned warehouse.
+ * Returns `null` when the user tries to access a different warehouse.
+ */
+function resolveWarehouseScope(req: Request, warehouseId: string | undefined): string | undefined | null {
+  const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+  if (scopedWarehouseId) {
+    if (warehouseId && warehouseId !== scopedWarehouseId) return null;
+    return scopedWarehouseId;
+  }
+  return warehouseId;
+}
+
 // ── GET /opportunities — Identify cross-dock opportunities ──────────────
 router.get('/opportunities', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const warehouseId = req.query.warehouseId as string | undefined;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) {
+      sendError(res, 403, 'You do not have access to this warehouse');
+      return;
+    }
+    const warehouseId = resolved;
     if (!warehouseId) {
       sendError(res, 400, 'warehouseId query param is required');
       return;
@@ -41,7 +61,9 @@ router.get('/opportunities', authenticate, async (req: Request, res: Response, n
 // ── GET /stats — Cross-dock statistics ──────────────────────────────────
 router.get('/stats', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const warehouseId = req.query.warehouseId as string | undefined;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const data = await getStats(warehouseId);
     sendSuccess(res, data);
   } catch (err) {
@@ -52,7 +74,10 @@ router.get('/stats', authenticate, async (req: Request, res: Response, next: Nex
 // ── GET / — Paginated list ──────────────────────────────────────────────
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { warehouseId, status, page, pageSize } = req.query as Record<string, string | undefined>;
+    const { status, page, pageSize } = req.query as Record<string, string | undefined>;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     const result = await getCrossDocks({
       warehouseId,
       status,

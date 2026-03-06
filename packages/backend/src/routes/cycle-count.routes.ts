@@ -16,6 +16,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import * as cycleCountService from '../services/cycle-count.service.js';
 
 const router = Router();
@@ -45,7 +46,17 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const warehouseId = req.query.warehouseId as string | undefined;
     const search = req.query.search as string | undefined;
 
-    const { data, total } = await cycleCountService.list({ page, pageSize, status, warehouseId, search });
+    // Row-level security: inject warehouse scope for restricted roles
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+
+    const { data, total } = await cycleCountService.list({
+      page,
+      pageSize,
+      status,
+      warehouseId,
+      search,
+      ...scopeFilter,
+    });
     sendSuccess(res, data, { page, pageSize, total });
   } catch (err) {
     next(err);

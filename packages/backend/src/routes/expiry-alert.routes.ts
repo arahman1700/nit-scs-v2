@@ -7,6 +7,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { prisma } from '../utils/prisma.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 
 const router = Router();
 
@@ -29,6 +30,9 @@ router.get('/expiring', async (req: Request, res: Response, next: NextFunction) 
     const cutoff = new Date(now);
     cutoff.setDate(cutoff.getDate() + daysAhead);
 
+    // Row-level security: restrict to assigned warehouse for scoped roles
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+
     const lots = await prisma.inventoryLot.findMany({
       where: {
         status: 'active',
@@ -36,6 +40,7 @@ router.get('/expiring', async (req: Request, res: Response, next: NextFunction) 
           gte: now,
           lte: cutoff,
         },
+        ...scopeFilter,
       },
       include: {
         item: {

@@ -13,6 +13,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import * as stagingService from '../services/staging.service.js';
 
 const router = Router();
@@ -30,6 +31,22 @@ function checkRole(req: Request, res: Response): boolean {
   return true;
 }
 
+/**
+ * If the user is warehouse-scoped, return their assigned warehouseId,
+ * overriding any explicit warehouseId query param. Returns `null` on
+ * scope violation (user requests a different warehouse than assigned).
+ */
+function resolveWarehouseScope(req: Request, warehouseId: string | undefined): string | undefined | null {
+  const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+  if (scopedWarehouseId) {
+    // Scoped user — override or verify
+    if (warehouseId && warehouseId !== scopedWarehouseId) return null; // violation
+    return scopedWarehouseId;
+  }
+  return warehouseId;
+}
+
 // ############################################################################
 // STAGING ZONES
 // ############################################################################
@@ -39,7 +56,9 @@ router.get('/zones', async (req: Request, res: Response, next: NextFunction) => 
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
 
     const data = await stagingService.listStagingZones(warehouseId);
@@ -58,7 +77,9 @@ router.get('/alerts', async (req: Request, res: Response, next: NextFunction) =>
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
 
     const data = await stagingService.getOverstayAlerts(warehouseId);
@@ -73,7 +94,9 @@ router.get('/occupancy', async (req: Request, res: Response, next: NextFunction)
   try {
     if (!checkRole(req, res)) return;
 
-    const warehouseId = req.query.warehouseId as string;
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
     if (!warehouseId) return sendError(res, 400, 'warehouseId is required');
 
     const data = await stagingService.getStagingOccupancy(warehouseId);
@@ -94,10 +117,14 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
-    const warehouseId = req.query.warehouseId as string | undefined;
     const zoneId = req.query.zoneId as string | undefined;
     const status = req.query.status as string | undefined;
     const direction = req.query.direction as string | undefined;
+
+    // Row-level security: enforce warehouse scope
+    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+    const warehouseId = resolved;
 
     const { data, total } = await stagingService.listAssignments({
       page,

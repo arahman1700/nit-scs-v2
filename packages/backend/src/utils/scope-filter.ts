@@ -1,4 +1,24 @@
+import type { Request, Response, NextFunction } from 'express';
 import type { JwtPayload } from './jwt.js';
+
+// ---------------------------------------------------------------------------
+// Express type augmentation — `req.scopeFilter`
+// ---------------------------------------------------------------------------
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Express {
+    interface Request {
+      /**
+       * Prisma `where` clause derived from the authenticated user's role and
+       * assigned warehouse/project. Populated by the `applyScopeFilter` middleware.
+       *
+       * For unrestricted roles this is `{}`. For warehouse-scoped roles it will
+       * contain `{ warehouseId: <assignedId> }`, etc.
+       */
+      scopeFilter?: Record<string, unknown>;
+    }
+  }
+}
 
 /**
  * Row-level security: build Prisma `where` conditions based on user role
@@ -155,4 +175,33 @@ export function canAccessRecord(
   // Unknown role — check creator only
   if (mapping.createdByField && record[mapping.createdByField] === user.userId) return true;
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// Express Middleware
+// ---------------------------------------------------------------------------
+
+/**
+ * Express middleware that reads `req.user` (set by the `authenticate` middleware)
+ * and attaches a Prisma-compatible `where` filter to `req.scopeFilter`.
+ *
+ * Usage (per-route or router-level):
+ * ```ts
+ *   router.get('/', authenticate, applyScopeFilter(), async (req, res) => {
+ *     const where = { ...myFilters, ...req.scopeFilter };
+ *   });
+ * ```
+ *
+ * @param mapping  Optional field mapping override (defaults to warehouseId / projectId).
+ */
+export function applyScopeFilter(mapping: ScopeFieldMapping = DEFAULT_MAPPING) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (req.user) {
+      req.scopeFilter = buildScopeFilter(req.user, mapping);
+    } else {
+      // No user — safety net: impossible filter
+      req.scopeFilter = { id: '__no_access__' };
+    }
+    next();
+  };
 }

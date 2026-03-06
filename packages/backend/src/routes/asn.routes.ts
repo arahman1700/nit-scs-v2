@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendCreated, sendError } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import * as asnService from '../services/asn.service.js';
 
 const router = Router();
@@ -27,9 +28,13 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const status = req.query.status as string | undefined;
-    const warehouseId = req.query.warehouseId as string | undefined;
     const supplierId = req.query.supplierId as string | undefined;
     const search = req.query.search as string | undefined;
+
+    // Row-level security: enforce warehouse scope for restricted roles
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+    const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+    const warehouseId = scopedWarehouseId ?? (req.query.warehouseId as string | undefined);
 
     const { data, total } = await asnService.getAsns({ page, pageSize, status, warehouseId, supplierId, search });
     sendSuccess(res, data, { page, pageSize, total });

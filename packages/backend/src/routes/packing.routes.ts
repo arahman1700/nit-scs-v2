@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { sendSuccess, sendError, sendCreated } from '../utils/response.js';
+import { buildScopeFilter } from '../utils/scope-filter.js';
 import * as packingService from '../services/packing.service.js';
 
 const router = Router();
@@ -9,9 +10,16 @@ const router = Router();
 // ── GET / — Packing queue (approved MIs awaiting packing) ───────────────
 router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const warehouseId = req.query.warehouseId as string;
+    // Row-level security: enforce warehouse scope for restricted roles
+    const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
+    const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+    const warehouseId = scopedWarehouseId ?? (req.query.warehouseId as string);
     if (!warehouseId) {
       sendError(res, 400, 'warehouseId is required');
+      return;
+    }
+    if (scopedWarehouseId && req.query.warehouseId && req.query.warehouseId !== scopedWarehouseId) {
+      sendError(res, 403, 'You do not have access to this warehouse');
       return;
     }
     const queue = await packingService.getPackingQueue(warehouseId);

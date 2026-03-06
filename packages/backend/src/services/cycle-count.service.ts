@@ -20,24 +20,28 @@ export interface ListParams {
   status?: string;
   warehouseId?: string;
   search?: string;
+  /** Extra Prisma `where` fields (e.g. scope filter from middleware). */
+  [key: string]: unknown;
 }
 
 // ── List ────────────────────────────────────────────────────────────────
 
 export async function list(params: ListParams) {
-  const where: Record<string, unknown> = {};
-  if (params.status) where.status = params.status;
-  if (params.warehouseId) where.warehouseId = params.warehouseId;
-  if (params.search) {
-    where.countNumber = { contains: params.search, mode: 'insensitive' };
+  // Extract known params; remaining keys are treated as Prisma where clauses
+  const { page, pageSize, status, warehouseId, search, ...extraWhere } = params;
+  const where: Record<string, unknown> = { ...extraWhere };
+  if (status) where.status = status;
+  if (warehouseId) where.warehouseId = warehouseId;
+  if (search) {
+    where.countNumber = { contains: search, mode: 'insensitive' };
   }
 
   const [data, total] = await Promise.all([
     prisma.cycleCount.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      skip: (params.page - 1) * params.pageSize,
-      take: params.pageSize,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
       include: {
         warehouse: { select: { id: true, warehouseName: true, warehouseCode: true } },
         zone: { select: { id: true, zoneName: true, zoneCode: true } },

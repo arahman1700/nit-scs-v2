@@ -5,6 +5,7 @@ import { gatePassCreateSchema, gatePassUpdateSchema } from '../schemas/logistics
 import { authenticate } from '../middleware/auth.js';
 import { requireRole } from '../middleware/rbac.js';
 import { prisma } from '../utils/prisma.js';
+import { applyScopeFilter } from '../utils/scope-filter.js';
 import * as gatePassService from '../services/gate-pass.service.js';
 import type { GatePassCreateDto, GatePassUpdateDto } from '../types/dto.js';
 
@@ -23,14 +24,15 @@ router.get(
   '/expected-deliveries',
   authenticate,
   requireRole('gate_officer', 'warehouse_supervisor', 'warehouse_staff', 'admin'),
+  applyScopeFilter({ warehouseField: 'warehouseId' }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { supplierId, warehouseId } = req.query;
-      const asnWhere: Record<string, unknown> = { status: 'pending' };
+      const asnWhere: Record<string, unknown> = { status: 'pending', ...req.scopeFilter };
       if (supplierId) asnWhere.supplierId = supplierId as string;
       if (warehouseId) asnWhere.warehouseId = warehouseId as string;
 
-      const grnWhere: Record<string, unknown> = { status: 'draft' };
+      const grnWhere: Record<string, unknown> = { status: 'draft', ...req.scopeFilter };
       if (supplierId) grnWhere.supplierId = supplierId as string;
       if (warehouseId) grnWhere.warehouseId = warehouseId as string;
 
