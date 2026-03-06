@@ -4,7 +4,7 @@
  */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../../../utils/document-factory.js';
-import { stockTransferCreateSchema, stockTransferUpdateSchema } from '../../../schemas/logistics.schema.js';
+import { stockTransferCreateSchema, stockTransferUpdateSchema } from '../../logistics/schemas/logistics.schema.js';
 import { emitToAll } from '../../../socket/setup.js';
 import * as stService from '../services/stock-transfer.service.js';
 import type { StockTransferCreateDto, StockTransferUpdateDto } from '../../../types/dto.js';

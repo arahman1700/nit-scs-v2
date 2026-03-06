@@ -28,7 +28,7 @@ import {
   cancel,
 } from './stock-transfer.service.js';
 import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { addStockBatch, deductStockBatch } from '../../../services/inventory.service.js';
+import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
 
 const _mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;

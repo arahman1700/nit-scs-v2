@@ -206,7 +206,7 @@ export const imsfUpdateSchema = z.object({
 export {
   stockTransferCreateSchema as wtCreateSchema,
   stockTransferUpdateSchema as wtUpdateSchema,
-} from './logistics.schema.js';
+} from '../domains/logistics/schemas/logistics.schema.js';
 
 // ── Surplus ────────────────────────────────────────────────────────────────
 

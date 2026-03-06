@@ -5,7 +5,7 @@ import { authenticate } from '../middleware/auth.js';
 import { sendSuccess } from '../utils/response.js';
 import { cached, CacheTTL } from '../utils/cache.js';
 import { getProductivitySummary } from '../domains/job-orders/services/labor-productivity.service.js';
-import { getCrossDepartmentInventorySummary } from '../services/inventory.service.js';
+import { getCrossDepartmentInventorySummary } from '../domains/inventory/services/inventory.service.js';
 
 const router = Router();
 

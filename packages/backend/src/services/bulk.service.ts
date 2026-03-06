@@ -1,15 +1,15 @@
 import type { Server as SocketIOServer } from 'socket.io';
 
-import * as mrrvService from './mrrv.service.js';
-import * as mirvService from './mirv.service.js';
-import * as mrvService from './mrv.service.js';
-import * as rfimService from './rfim.service.js';
-import * as osdService from './osd.service.js';
+import * as mrrvService from '../domains/inbound/services/mrrv.service.js';
+import * as mirvService from '../domains/outbound/services/mirv.service.js';
+import * as mrvService from '../domains/outbound/services/mrv.service.js';
+import * as rfimService from '../domains/inbound/services/rfim.service.js';
+import * as osdService from '../domains/inbound/services/osd.service.js';
 import * as joService from '../domains/job-orders/services/job-order.service.js';
-import * as gatePassService from './gate-pass.service.js';
+import * as gatePassService from '../domains/logistics/services/gate-pass.service.js';
 import * as stService from '../domains/transfers/services/stock-transfer.service.js';
-import * as mrfService from './mrf.service.js';
-import * as shipmentService from './shipment.service.js';
+import * as mrfService from '../domains/outbound/services/mrf.service.js';
+import * as shipmentService from '../domains/logistics/services/shipment.service.js';
 
 export interface BulkResult {
   id: string;

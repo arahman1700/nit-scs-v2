@@ -3,7 +3,7 @@ import { prisma } from '../utils/prisma.js';
 import { canTransition } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
 import { sendTemplatedEmail } from '../services/email.service.js';
-import { reserveStock } from '../services/inventory.service.js';
+import { reserveStock } from '../domains/inventory/services/inventory.service.js';
 import { generateDocumentNumber } from '../services/document-number.service.js';
 import type { SystemEvent } from './event-bus.js';
 

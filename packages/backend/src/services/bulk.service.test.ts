@@ -2,30 +2,30 @@ import { type PrismaMock as _PrismaMock } from '../test-utils/prisma-mock.js';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
-vi.mock('./mrrv.service.js', () => ({
+vi.mock('../domains/inbound/services/mrrv.service.js', () => ({
   submit: vi.fn(),
   approveQc: vi.fn(),
   receive: vi.fn(),
   store: vi.fn(),
 }));
-vi.mock('./mirv.service.js', () => ({
+vi.mock('../domains/outbound/services/mirv.service.js', () => ({
   submit: vi.fn(),
   issue: vi.fn(),
   cancel: vi.fn(),
 }));
-vi.mock('./mrv.service.js', () => ({
+vi.mock('../domains/outbound/services/mrv.service.js', () => ({
   submit: vi.fn(),
   receive: vi.fn(),
   complete: vi.fn(),
 }));
-vi.mock('./rfim.service.js', () => ({ start: vi.fn() }));
-vi.mock('./osd.service.js', () => ({ sendClaim: vi.fn() }));
+vi.mock('../domains/inbound/services/rfim.service.js', () => ({ start: vi.fn() }));
+vi.mock('../domains/inbound/services/osd.service.js', () => ({ sendClaim: vi.fn() }));
 vi.mock('../domains/job-orders/services/job-order.service.js', () => ({
   submit: vi.fn(),
   start: vi.fn(),
   cancel: vi.fn(),
 }));
-vi.mock('./gate-pass.service.js', () => ({
+vi.mock('../domains/logistics/services/gate-pass.service.js', () => ({
   submit: vi.fn(),
   approve: vi.fn(),
   cancel: vi.fn(),
@@ -35,19 +35,19 @@ vi.mock('../domains/transfers/services/stock-transfer.service.js', () => ({
   approve: vi.fn(),
   cancel: vi.fn(),
 }));
-vi.mock('./mrf.service.js', () => ({ submit: vi.fn(), cancel: vi.fn() }));
-vi.mock('./shipment.service.js', () => ({ deliver: vi.fn(), cancel: vi.fn() }));
+vi.mock('../domains/outbound/services/mrf.service.js', () => ({ submit: vi.fn(), cancel: vi.fn() }));
+vi.mock('../domains/logistics/services/shipment.service.js', () => ({ deliver: vi.fn(), cancel: vi.fn() }));
 
-import * as mrrvService from './mrrv.service.js';
-import * as mirvService from './mirv.service.js';
-import * as mrvService from './mrv.service.js';
-import * as rfimService from './rfim.service.js';
-import * as osdService from './osd.service.js';
+import * as mrrvService from '../domains/inbound/services/mrrv.service.js';
+import * as mirvService from '../domains/outbound/services/mirv.service.js';
+import * as mrvService from '../domains/outbound/services/mrv.service.js';
+import * as rfimService from '../domains/inbound/services/rfim.service.js';
+import * as osdService from '../domains/inbound/services/osd.service.js';
 import * as joService from '../domains/job-orders/services/job-order.service.js';
-import * as gatePassService from './gate-pass.service.js';
+import * as gatePassService from '../domains/logistics/services/gate-pass.service.js';
 import * as stService from '../domains/transfers/services/stock-transfer.service.js';
-import * as mrfService from './mrf.service.js';
-import * as shipmentService from './shipment.service.js';
+import * as mrfService from '../domains/outbound/services/mrf.service.js';
+import * as shipmentService from '../domains/logistics/services/shipment.service.js';
 
 import { executeBulkAction, getAvailableBulkActions } from './bulk.service.js';
 

@@ -1,12 +1,13 @@
 import type { Router } from 'express';
-import grnRoutes from '../../routes/grn.routes.js';
-import qciRoutes from '../../routes/qci.routes.js';
-import drRoutes from '../../routes/dr.routes.js';
-import inspectionRoutes from '../../routes/inspection.routes.js';
+import grnRoutes from './routes/grn.routes.js';
+import qciRoutes from './routes/qci.routes.js';
+import drRoutes from './routes/dr.routes.js';
+import inspectionRoutes from './routes/inspection.routes.js';
+import asnRoutes from './routes/asn.routes.js';
 // V1 backward-compatible aliases
-import mrrvRoutes from '../../routes/mrrv.routes.js';
-import rfimRoutes from '../../routes/rfim.routes.js';
-import osdRoutes from '../../routes/osd.routes.js';
+import mrrvRoutes from './routes/mrrv.routes.js';
+import rfimRoutes from './routes/rfim.routes.js';
+import osdRoutes from './routes/osd.routes.js';
 
 export function registerInboundRoutes(router: Router) {
   // V2 primary routes
@@ -14,6 +15,7 @@ export function registerInboundRoutes(router: Router) {
   router.use('/qci', qciRoutes);
   router.use('/dr', drRoutes);
   router.use('/inspections', inspectionRoutes);
+  router.use('/asn', asnRoutes);
   // V1 aliases
   router.use('/mrrv', mrrvRoutes);
   router.use('/rfim', rfimRoutes);

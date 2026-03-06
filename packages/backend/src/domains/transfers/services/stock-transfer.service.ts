@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { addStockBatch, deductStockBatch } from '../../../services/inventory.service.js';
+import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../../../events/event-bus.js';

@@ -8,7 +8,7 @@
 
 import { registerJob } from '../../../utils/job-registry.js';
 import type { JobContext } from '../../../utils/job-registry.js';
-import { checkExpiringLots, autoQuarantineExpired } from '../../../services/expiry-alert.service.js';
+import { checkExpiringLots, autoQuarantineExpired } from '../services/expiry-alert.service.js';
 
 // L2: Expiry date alerts — daily (lock: 2 hours)
 registerJob({

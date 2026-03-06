@@ -75,7 +75,7 @@ import type {
   customsStageSchema,
   transportOrderCreateSchema,
   transportOrderUpdateSchema,
-} from '../schemas/logistics.schema.js';
+} from '../domains/logistics/schemas/logistics.schema.js';
 
 // ── Job order schemas ───────────────────────────────────────────────────
 import type {
