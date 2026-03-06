@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import type { FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
+import type { FieldDefinition } from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
 import { Plus, Trash2 } from 'lucide-react';
 

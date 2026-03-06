@@ -13,10 +13,16 @@ import {
   Loader2,
   X,
 } from 'lucide-react';
-import { useWaveList, useWave, useCreateWave, useStartWave, useCompleteWave } from '@/api/hooks/usePickOptimizer';
-import { useMiList } from '@/api/hooks/useMi';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { Wave, PickStop } from '@/api/hooks/usePickOptimizer';
+import {
+  useWaveList,
+  useWave,
+  useCreateWave,
+  useStartWave,
+  useCompleteWave,
+} from '@/domains/outbound/hooks/usePickOptimizer';
+import { useMiList } from '@/domains/outbound/hooks/useMi';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import type { Wave, PickStop } from '@/domains/outbound/hooks/usePickOptimizer';
 
 // ── Status config ───────────────────────────────────────────────────────
 

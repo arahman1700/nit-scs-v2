@@ -5,8 +5,8 @@ import {
   useUpdateCustomDataSource,
   useDeleteCustomDataSource,
   usePreviewCustomDataSource,
-} from '@/api/hooks/useCustomDataSources';
-import type { CustomDataSource, CreateDataSourceInput } from '@/api/hooks/useCustomDataSources';
+} from '@/domains/reporting/hooks/useCustomDataSources';
+import type { CustomDataSource, CreateDataSourceInput } from '@/domains/reporting/hooks/useCustomDataSources';
 import { Database, Plus, Trash2, Play, Edit2, X, Save, Filter } from 'lucide-react';
 
 const ENTITY_TYPES = [

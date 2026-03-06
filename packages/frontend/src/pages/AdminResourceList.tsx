@@ -31,8 +31,8 @@ import { ImportDialog } from '@/components/ImportDialog';
 import { SmartGrid, ViewSwitcher } from '@/components/smart-grid';
 import type { ViewMode } from '@/components/smart-grid';
 import type { ColumnState } from 'ag-grid-community';
-import { useUserViews, useSaveView, useUpdateView } from '@/api/hooks/useUserViews';
-import type { UserViewConfig } from '@/api/hooks/useUserViews';
+import { useUserViews, useSaveView, useUpdateView } from '@/domains/system/hooks/useUserViews';
+import type { UserViewConfig } from '@/domains/system/hooks/useUserViews';
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 import { toast } from '@/components/Toaster';
 

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, FileCheck, CheckCircle } from 'lucide-react';
-import { useShipmentList, useAddCustomsStage } from '@/api/hooks/useShipments';
+import { useShipmentList, useAddCustomsStage } from '@/domains/logistics/hooks/useShipments';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 

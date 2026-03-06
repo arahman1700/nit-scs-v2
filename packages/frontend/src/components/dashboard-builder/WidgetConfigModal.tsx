@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, BarChart3, Database } from 'lucide-react';
-import type { DashboardWidget } from '@/api/hooks/useDashboards';
+import type { DashboardWidget } from '@/domains/reporting/hooks/useDashboards';
 import { SemanticQueryBuilder } from '@/components/SemanticQueryBuilder';
 
 const DATA_SOURCES = [

@@ -8,8 +8,8 @@ import {
   useTransferAsset,
   useRetireAsset,
   useDisposeAsset,
-} from '@/api/hooks/useAssets';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+} from '@/domains/equipment/hooks/useAssets';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { toast } from '@/components/Toaster';
 import {
   Archive,

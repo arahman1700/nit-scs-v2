@@ -13,9 +13,9 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { Download, Filter, CheckCircle, Clock, AlertOctagon, TrendingUp, AlertTriangle } from 'lucide-react';
-import { useSLACompliance, useExceptions } from '@/api/hooks/useDashboard';
-import { useProjects } from '@/api/hooks/useMasterData';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
+import { useSLACompliance, useExceptions } from '@/domains/reporting/hooks/useDashboard';
+import { useProjects } from '@/domains/master-data/hooks/useMasterData';
+import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
 import { SLA_HOURS } from '@nit-scs-v2/shared';

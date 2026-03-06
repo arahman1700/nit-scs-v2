@@ -1,7 +1,7 @@
 import React, { Suspense, useState, useMemo } from 'react';
 import { Plus, Trash2, Search, AlertTriangle, ScanLine } from 'lucide-react';
 import type { VoucherLineItem, MaterialCatalogItem } from '@nit-scs-v2/shared/types';
-import { useItems, useUoms, useInventory } from '@/api/hooks/useMasterData';
+import { useItems, useUoms, useInventory } from '@/domains/master-data/hooks/useMasterData';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 

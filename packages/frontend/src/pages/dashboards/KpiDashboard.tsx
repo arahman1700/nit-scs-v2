@@ -13,8 +13,8 @@ import {
   Target,
   LayoutDashboard,
 } from 'lucide-react';
-import { useKpis } from '@/api/hooks/useKpis';
-import type { KpiResult, KpiCategory, ComprehensiveKpis } from '@/api/hooks/useKpis';
+import { useKpis } from '@/domains/reporting/hooks/useKpis';
+import type { KpiResult, KpiCategory, ComprehensiveKpis } from '@/domains/reporting/hooks/useKpis';
 import type { ApiResponse } from '@/api/types';
 
 // ── Category Metadata ────────────────────────────────────────────────────────

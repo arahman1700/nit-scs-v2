@@ -3,8 +3,8 @@ import { Search, Package, MapPin, Layers, BarChart3, X, Eye, AlertCircle, Refres
 import { ExportButton } from '@/components/ExportButton';
 
 import { exportToExcel } from '@/lib/excelExport';
-import { useInventory, useWarehouses } from '@/api/hooks/useMasterData';
-import { useInventorySummary } from '@/api/hooks/useDashboard';
+import { useInventory, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { useInventorySummary } from '@/domains/reporting/hooks/useDashboard';
 import { displayStr } from '@/utils/displayStr';
 
 // ── Types for the API response shape ──────────────────────────────────────

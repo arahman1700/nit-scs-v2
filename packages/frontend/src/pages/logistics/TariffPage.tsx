@@ -5,8 +5,8 @@ import {
   useUpdateTariffRate,
   useCalculateDuties,
   useApplyDuties,
-} from '@/api/hooks/useTariffs';
-import type { TariffRate, LineBreakdown, DutyCalculationResult } from '@/api/hooks/useTariffs';
+} from '@/domains/logistics/hooks/useTariffs';
+import type { TariffRate, LineBreakdown, DutyCalculationResult } from '@/domains/logistics/hooks/useTariffs';
 import { toast } from '@/components/Toaster';
 import {
   Calculator,

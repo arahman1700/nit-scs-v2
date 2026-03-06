@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BarChart3, Table, PieChart, LineChart, Copy, Loader2 } from 'lucide-react';
-import { useReportTemplates, useTemplateToReport } from '@/api/hooks/useSavedReports';
-import type { SavedReport } from '@/api/hooks/useSavedReports';
+import { useReportTemplates, useTemplateToReport } from '@/domains/reporting/hooks/useSavedReports';
+import type { SavedReport } from '@/domains/reporting/hooks/useSavedReports';
 
 const CATEGORIES = [
   { key: 'all', label: 'All' },

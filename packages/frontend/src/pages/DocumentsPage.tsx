@@ -13,7 +13,12 @@ import {
   Loader2,
   FolderOpen,
 } from 'lucide-react';
-import { useDocumentList, useDocumentCategories, useUploadDocument, useDeleteDocument } from '@/api/hooks/useDocuments';
+import {
+  useDocumentList,
+  useDocumentCategories,
+  useUploadDocument,
+  useDeleteDocument,
+} from '@/domains/system/hooks/useDocuments';
 import { useAppStore } from '@/store/useAppStore';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { toast } from '@/components/Toaster';
@@ -92,7 +97,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
         resetForm();
         onClose();
       },
-      onError: (err) => {
+      onError: err => {
         toast.error('Upload failed', err instanceof Error ? err.message : 'Unknown error');
       },
     });
@@ -100,16 +105,29 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const inputClass = 'w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50';
+  const inputClass =
+    'w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50';
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={() => { if (!uploadDocument.isPending) onClose(); }} />
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+        onClick={() => {
+          if (!uploadDocument.isPending) onClose();
+        }}
+      />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="glass-card rounded-2xl p-6 border border-white/10 max-w-lg w-full animate-fade-in" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="glass-card rounded-2xl p-6 border border-white/10 max-w-lg w-full animate-fade-in"
+          onClick={e => e.stopPropagation()}
+        >
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white">Upload Document</h2>
-            <button onClick={onClose} disabled={uploadDocument.isPending} className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white">
+            <button
+              onClick={onClose}
+              disabled={uploadDocument.isPending}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+            >
               <X size={18} />
             </button>
           </div>
@@ -117,27 +135,55 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-300">File</label>
-              <input ref={fileRef} type="file" onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-                className={`${inputClass} file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-nesma-primary file:text-white file:cursor-pointer`} />
-              {selectedFile && <p className="text-xs text-gray-500">{selectedFile.name} - {formatFileSize(selectedFile.size)}</p>}
+              <input
+                ref={fileRef}
+                type="file"
+                onChange={e => setSelectedFile(e.target.files?.[0] ?? null)}
+                className={`${inputClass} file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-nesma-primary file:text-white file:cursor-pointer`}
+              />
+              {selectedFile && (
+                <p className="text-xs text-gray-500">
+                  {selectedFile.name} - {formatFileSize(selectedFile.size)}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-300">Title</label>
-              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Document title" className={inputClass} />
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Document title"
+                className={inputClass}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-300">Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value as Category)} className={inputClass}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+              <select value={category} onChange={e => setCategory(e.target.value as Category)} className={inputClass}>
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>
+                    {c.charAt(0).toUpperCase() + c.slice(1)}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-300">Description</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional description" rows={3} className={inputClass} />
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Optional description"
+                rows={3}
+                className={inputClass}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-gray-300">Visibility</label>
-              <select value={visibility} onChange={(e) => setVisibility(e.target.value as 'all' | 'admin_only' | 'management')} className={inputClass}>
+              <select
+                value={visibility}
+                onChange={e => setVisibility(e.target.value as 'all' | 'admin_only' | 'management')}
+                className={inputClass}
+              >
                 <option value="all">All Users</option>
                 <option value="admin_only">Admin Only</option>
                 <option value="management">Management</option>
@@ -146,10 +192,18 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
           </div>
 
           <div className="flex items-center gap-3 mt-6">
-            <button onClick={onClose} disabled={uploadDocument.isPending} className="flex-1 px-5 py-3 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all disabled:opacity-50">
+            <button
+              onClick={onClose}
+              disabled={uploadDocument.isPending}
+              className="flex-1 px-5 py-3 text-sm font-medium text-gray-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:text-white transition-all disabled:opacity-50"
+            >
               Cancel
             </button>
-            <button onClick={handleSubmit} disabled={uploadDocument.isPending} className="flex-1 px-5 py-3 text-sm font-bold text-white bg-nesma-primary rounded-xl hover:bg-nesma-primary/80 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+            <button
+              onClick={handleSubmit}
+              disabled={uploadDocument.isPending}
+              className="flex-1 px-5 py-3 text-sm font-bold text-white bg-nesma-primary rounded-xl hover:bg-nesma-primary/80 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
               {uploadDocument.isPending ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
               {uploadDocument.isPending ? 'Uploading...' : 'Upload'}
             </button>
@@ -161,7 +215,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
 };
 
 export const DocumentsPage: React.FC = () => {
-  const user = useAppStore((s) => s.user);
+  const user = useAppStore(s => s.user);
   const canUpload = user && ['admin', 'manager', 'warehouse_supervisor', 'logistics_coordinator'].includes(user.role);
 
   const [search, setSearch] = useState('');
@@ -172,7 +226,10 @@ export const DocumentsPage: React.FC = () => {
   const [showUpload, setShowUpload] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
 
-  const { data: docsResponse, isLoading } = useDocumentList({ category: activeCategory === 'all' ? undefined : activeCategory, search: search || undefined });
+  const { data: docsResponse, isLoading } = useDocumentList({
+    category: activeCategory === 'all' ? undefined : activeCategory,
+    search: search || undefined,
+  });
   const { data: categoriesResponse } = useDocumentCategories();
   const deleteDocument = useDeleteDocument();
 
@@ -185,11 +242,17 @@ export const DocumentsPage: React.FC = () => {
     if (!search.trim()) return documents;
     const q = search.toLowerCase();
     return documents.filter(
-      (d) => d.title.toLowerCase().includes(q) || d.category.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)
+      d =>
+        d.title.toLowerCase().includes(q) ||
+        d.category.toLowerCase().includes(q) ||
+        d.description?.toLowerCase().includes(q),
     );
   }, [documents, search]);
 
-  const toggleView = (mode: 'grid' | 'list') => { setViewMode(mode); localStorage.setItem('nit_docs_view', mode); };
+  const toggleView = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('nit_docs_view', mode);
+  };
   const handleDownload = (id: string) => window.open(`/api/documents/${id}/download`, '_blank');
 
   const handleDelete = () => {
@@ -199,7 +262,7 @@ export const DocumentsPage: React.FC = () => {
         toast.success('Document deleted', `"${deleteTarget.title}" has been removed.`);
         setDeleteTarget(null);
       },
-      onError: (err) => {
+      onError: err => {
         toast.error('Delete failed', err instanceof Error ? err.message : 'Unknown error');
       },
     });
@@ -222,7 +285,10 @@ export const DocumentsPage: React.FC = () => {
           <p className="text-sm text-gray-400 mt-1">Manage policies, procedures, and company files</p>
         </div>
         {canUpload && (
-          <button onClick={() => setShowUpload(true)} className="px-5 py-3 bg-nesma-primary text-white rounded-lg text-sm font-bold hover:bg-nesma-primary/80 transition-all flex items-center gap-2 shadow-lg">
+          <button
+            onClick={() => setShowUpload(true)}
+            className="px-5 py-3 bg-nesma-primary text-white rounded-lg text-sm font-bold hover:bg-nesma-primary/80 transition-all flex items-center gap-2 shadow-lg"
+          >
             <Upload size={16} />
             Upload Document
           </button>
@@ -241,8 +307,8 @@ export const DocumentsPage: React.FC = () => {
           >
             All ({totalCount})
           </button>
-          {CATEGORIES.map((cat) => {
-            const count = categoryStats.find((c) => c.category === cat)?.count ?? 0;
+          {CATEGORIES.map(cat => {
+            const count = categoryStats.find(c => c.category === cat)?.count ?? 0;
             return (
               <button
                 key={cat}
@@ -265,7 +331,7 @@ export const DocumentsPage: React.FC = () => {
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={e => setSearch(e.target.value)}
               placeholder="Search documents..."
               className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50"
             />
@@ -301,7 +367,7 @@ export const DocumentsPage: React.FC = () => {
 
       {filtered.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((doc) => {
+          {filtered.map(doc => {
             const Icon = getFileIcon(doc.mimeType);
             return (
               <div
@@ -315,16 +381,23 @@ export const DocumentsPage: React.FC = () => {
                   </div>
                   {canUpload && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteTarget({ id: doc.id, title: doc.title }); }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        setDeleteTarget({ id: doc.id, title: doc.title });
+                      }}
                       className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                     >
                       <Trash2 size={14} />
                     </button>
                   )}
                 </div>
-                <h3 className="text-sm font-bold text-white mb-2 line-clamp-2 group-hover:text-nesma-secondary transition-colors">{doc.title}</h3>
+                <h3 className="text-sm font-bold text-white mb-2 line-clamp-2 group-hover:text-nesma-secondary transition-colors">
+                  {doc.title}
+                </h3>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border capitalize ${CATEGORY_COLORS[doc.category] ?? CATEGORY_COLORS.other}`}>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border capitalize ${CATEGORY_COLORS[doc.category] ?? CATEGORY_COLORS.other}`}
+                  >
                     {doc.category}
                   </span>
                 </div>
@@ -353,7 +426,7 @@ export const DocumentsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filtered.map((doc) => {
+                {filtered.map(doc => {
                   const Icon = getFileIcon(doc.mimeType);
                   return (
                     <tr key={doc.id} className="hover:bg-white/5 transition-colors group">
@@ -364,13 +437,17 @@ export const DocumentsPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border capitalize ${CATEGORY_COLORS[doc.category] ?? CATEGORY_COLORS.other}`}>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border capitalize ${CATEGORY_COLORS[doc.category] ?? CATEGORY_COLORS.other}`}
+                        >
                           {doc.category}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-gray-400">{formatFileSize(doc.fileSize)}</td>
                       <td className="px-5 py-4 text-sm text-gray-400">{doc.uploadedBy?.fullName ?? 'System'}</td>
-                      <td className="px-5 py-4 text-sm text-gray-400">{new Date(doc.createdAt).toLocaleDateString()}</td>
+                      <td className="px-5 py-4 text-sm text-gray-400">
+                        {new Date(doc.createdAt).toLocaleDateString()}
+                      </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center justify-end gap-2">
                           <button

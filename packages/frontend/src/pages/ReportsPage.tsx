@@ -33,8 +33,8 @@ import {
   useMaterialMovementReport,
   useSupplierPerformanceReport,
   useFinancialReport,
-} from '@/api/hooks/useReports';
-import { useProjects, useWarehouses } from '@/api/hooks/useMasterData';
+} from '@/domains/reporting/hooks/useReports';
+import { useProjects, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { generateReportPdf } from '@/utils/pdfExport';
 import type { ReportPdfOptions } from '@/utils/pdfExport';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';

@@ -2,8 +2,8 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { DndContext, DragOverlay, useDraggable, useDroppable, closestCenter } from '@dnd-kit/core';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { useTaskList, useCreateTask, useChangeTaskStatus } from '@/api/hooks/useTasks';
-import { useEmployees } from '@/api/hooks/useMasterData';
+import { useTaskList, useCreateTask, useChangeTaskStatus } from '@/domains/system/hooks/useTasks';
+import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { toast } from '@/components/Toaster';
 import {
   Plus,

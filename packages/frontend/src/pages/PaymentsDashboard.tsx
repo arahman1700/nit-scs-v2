@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Search, Loader2 } from 'lucide-react';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
+import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
 
 interface JO {
   id: string;

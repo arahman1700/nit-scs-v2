@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, rectSortingStrategy } from '@dnd-kit/sortable';
-import type { DashboardWidget } from '@/api/hooks/useDashboards';
+import type { DashboardWidget } from '@/domains/reporting/hooks/useDashboards';
 import { WidgetWrapper } from './WidgetWrapper';
 
 interface DashboardGridProps {

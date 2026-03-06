@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { ClipboardCheck, AlertTriangle, CheckCircle, Eye, Package, Search } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useRfimList } from '@/api/hooks/useRfim';
-import { useOsdList } from '@/api/hooks/useOsd';
-import { useMrrvList } from '@/api/hooks/useMrrv';
+import { useRfimList } from '@/domains/inbound/hooks/useRfim';
+import { useOsdList } from '@/domains/inbound/hooks/useOsd';
+import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
 import { useParams, useNavigate } from 'react-router-dom';
 import { displayStr } from '@/utils/displayStr';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';

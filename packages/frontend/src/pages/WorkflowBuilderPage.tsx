@@ -9,7 +9,7 @@ import {
   useDeleteRule,
   useTestRule,
   useRuleLogs,
-} from '@/api/hooks/useWorkflows';
+} from '@/domains/workflow/hooks/useWorkflows';
 import { WorkflowCanvas } from '@/components/workflow-builder/WorkflowCanvas';
 import { RuleCard } from '@/components/workflow-builder/RuleCard';
 import { ExecutionLogTable } from '@/components/workflow-builder/ExecutionLogTable';

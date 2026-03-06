@@ -9,8 +9,8 @@ import {
   useUpdateWidget,
   useDeleteWidget,
   useUpdateLayout,
-} from '@/api/hooks/useDashboards';
-import type { DashboardWidget } from '@/api/hooks/useDashboards';
+} from '@/domains/reporting/hooks/useDashboards';
+import type { DashboardWidget } from '@/domains/reporting/hooks/useDashboards';
 import { DashboardGrid } from '@/components/dashboard-builder/DashboardGrid';
 import { WidgetPalette } from '@/components/dashboard-builder/WidgetPalette';
 import type { WidgetTypeDefinition } from '@/components/dashboard-builder/WidgetPalette';

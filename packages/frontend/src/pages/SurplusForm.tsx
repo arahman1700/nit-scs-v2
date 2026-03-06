@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, TrendingDown, CheckCircle } from 'lucide-react';
 import type { Project, Warehouse } from '@nit-scs-v2/shared/types';
 import { useCreateSurplus } from '@/api/hooks';
-import { useProjects, useWarehouses, useItems } from '@/api/hooks/useMasterData';
+import { useProjects, useWarehouses, useItems } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 

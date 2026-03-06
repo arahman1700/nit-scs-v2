@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Mail, BarChart3 } from 'lucide-react';
-import { useEmailLogs, useEmailLogStats } from '@/api/hooks/useEmailTemplates';
+import { useEmailLogs, useEmailLogStats } from '@/domains/system/hooks/useEmailTemplates';
 import { EmailLogTable } from '@/components/email/EmailLogTable';
 
 interface LogStats {

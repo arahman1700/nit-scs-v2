@@ -8,8 +8,12 @@ import {
   useUpdateField,
   useDeleteField,
   useReorderFields,
-} from '@/api/hooks/useDynamicDocumentTypes';
-import type { DynamicDocumentType, FieldDefinition, StatusFlowConfig } from '@/api/hooks/useDynamicDocumentTypes';
+} from '@/domains/system/hooks/useDynamicDocumentTypes';
+import type {
+  DynamicDocumentType,
+  FieldDefinition,
+  StatusFlowConfig,
+} from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { ArrowLeft, Save, Plus, Trash2, ChevronUp, ChevronDown, Eye, ChevronRight, Check, X } from 'lucide-react';
 
 const COL_SPAN_MAP: Record<number, string> = {

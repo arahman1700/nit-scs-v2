@@ -25,10 +25,10 @@ import {
 } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { useLaborProductivity } from '@/api/hooks/useLaborProductivity';
-import { useLaborStandards, useUpsertLaborStandard, useLaborPerformance } from '@/api/hooks/useLabor';
-import type { WorkerProductivity, ProductivitySummary } from '@/api/hooks/useLaborProductivity';
-import type { LaborStandard, PerformanceWorker } from '@/api/hooks/useLabor';
+import { useLaborProductivity } from '@/domains/job-orders/hooks/useLaborProductivity';
+import { useLaborStandards, useUpsertLaborStandard, useLaborPerformance } from '@/domains/job-orders/hooks/useLabor';
+import type { WorkerProductivity, ProductivitySummary } from '@/domains/job-orders/hooks/useLaborProductivity';
+import type { LaborStandard, PerformanceWorker } from '@/domains/job-orders/hooks/useLabor';
 
 type TabKey = 'productivity' | 'standards' | 'performance';
 

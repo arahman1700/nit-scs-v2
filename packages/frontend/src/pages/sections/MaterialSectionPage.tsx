@@ -30,7 +30,7 @@ import {
   useImsfList,
   useWtList,
 } from '@/api/hooks';
-import { useInventory } from '@/api/hooks/useMasterData';
+import { useInventory } from '@/domains/master-data/hooks/useMasterData';
 
 // Backward-compatible alias
 export { MaterialSectionPage as WarehouseSectionPage };

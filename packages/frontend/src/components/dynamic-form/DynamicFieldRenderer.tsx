@@ -1,6 +1,12 @@
 import React from 'react';
-import type { FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
-import { useProjects, useWarehouses, useSuppliers, useEmployees, useItems } from '@/api/hooks/useMasterData';
+import type { FieldDefinition } from '@/domains/system/hooks/useDynamicDocumentTypes';
+import {
+  useProjects,
+  useWarehouses,
+  useSuppliers,
+  useEmployees,
+  useItems,
+} from '@/domains/master-data/hooks/useMasterData';
 
 const COL_SPAN_MAP: Record<number, string> = {
   1: 'md:col-span-1',

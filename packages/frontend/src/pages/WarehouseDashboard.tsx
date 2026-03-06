@@ -15,10 +15,10 @@ import {
   ScanLine,
   Undo2,
 } from 'lucide-react';
-import { useInventory } from '@/api/hooks/useMasterData';
-import { useMrrvList } from '@/api/hooks/useMrrv';
-import { useMirvList } from '@/api/hooks/useMirv';
-import { useMrvList } from '@/api/hooks/useMrv';
+import { useInventory } from '@/domains/master-data/hooks/useMasterData';
+import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useMrvList } from '@/domains/outbound/hooks/useMrv';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { displayStr } from '@/utils/displayStr';

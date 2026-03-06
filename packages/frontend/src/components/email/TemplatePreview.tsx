@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Eye, Send } from 'lucide-react';
-import { usePreviewEmailTemplate } from '@/api/hooks/useEmailTemplates';
+import { usePreviewEmailTemplate } from '@/domains/system/hooks/useEmailTemplates';
 
 interface TemplatePreviewProps {
   templateId: string | undefined;

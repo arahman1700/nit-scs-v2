@@ -5,7 +5,7 @@ import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import { useEmployees } from '@/api/hooks/useMasterData';
+import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { displayStr } from '@/utils/displayStr';
 
 const DelegationsPage = React.lazy(() => import('@/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })));

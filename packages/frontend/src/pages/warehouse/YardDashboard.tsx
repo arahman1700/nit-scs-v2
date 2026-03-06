@@ -24,10 +24,10 @@ import {
   useAssignDock,
   useCheckOutTruck,
   useDockUtilization,
-} from '@/api/hooks/useYard';
+} from '@/domains/warehouse-ops/hooks/useYard';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { YardStatus, DockDoor, DockUtilization } from '@/api/hooks/useYard';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import type { YardStatus, DockDoor, DockUtilization } from '@/domains/warehouse-ops/hooks/useYard';
 
 // ── Status colors ─────────────────────────────────────────────────────
 

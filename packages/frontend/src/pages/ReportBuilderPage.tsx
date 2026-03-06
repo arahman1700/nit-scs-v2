@@ -22,8 +22,8 @@ import {
   useUpdateReport,
   useDeleteReport,
   useRunReport,
-} from '@/api/hooks/useSavedReports';
-import type { ReportFilter, ReportResult } from '@/api/hooks/useSavedReports';
+} from '@/domains/reporting/hooks/useSavedReports';
+import type { ReportFilter, ReportResult } from '@/domains/reporting/hooks/useSavedReports';
 import { ReportDataSourceSelector } from '@/components/report-builder/ReportDataSourceSelector';
 import { ColumnSelector } from '@/components/report-builder/ColumnSelector';
 import { FilterBuilder } from '@/components/report-builder/FilterBuilder';

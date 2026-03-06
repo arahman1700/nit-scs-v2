@@ -15,10 +15,10 @@ import {
   useCreateDelegation,
   useToggleDelegation,
   useDeleteDelegation,
-} from '@/api/hooks/useDelegations';
-import { useEmployees } from '@/api/hooks/useMasterData';
+} from '@/domains/workflow/hooks/useDelegations';
+import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { toast } from '@/components/Toaster';
-import type { DelegationRule } from '@/api/hooks/useDelegations';
+import type { DelegationRule } from '@/domains/workflow/hooks/useDelegations';
 
 const SCOPE_OPTIONS = [
   { value: 'all', label: 'All Documents' },

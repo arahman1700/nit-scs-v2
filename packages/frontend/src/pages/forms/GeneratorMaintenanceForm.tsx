@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Wrench, CheckCircle, Loader2 } from 'lucide-react';
 import type { Generator } from '@nit-scs-v2/shared/types';
 import { useCreateGeneratorMaintenance, useGeneratorMaintenance, useUpdateGeneratorMaintenance } from '@/api/hooks';
-import { useGenerators } from '@/api/hooks/useMasterData';
+import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
 
 interface MaintenanceDoc {
   id?: string;

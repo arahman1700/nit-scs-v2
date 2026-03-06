@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSemanticCatalog, useCompatibleDimensions, useSemanticQuery } from '@/api/hooks/useSemantic';
-import type { SemanticMeasure, SemanticQueryParams } from '@/api/hooks/useSemantic';
+import { useSemanticCatalog, useCompatibleDimensions, useSemanticQuery } from '@/domains/reporting/hooks/useSemantic';
+import type { SemanticMeasure, SemanticQueryParams } from '@/domains/reporting/hooks/useSemantic';
 import { BarChart3, Calendar } from 'lucide-react';
 
 interface SemanticQueryBuilderProps {

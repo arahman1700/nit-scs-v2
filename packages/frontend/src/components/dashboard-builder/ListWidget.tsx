@@ -1,6 +1,6 @@
 import React from 'react';
-import { useWidgetData } from '@/api/hooks/useWidgetData';
-import type { DashboardWidget } from '@/api/hooks/useDashboards';
+import { useWidgetData } from '@/domains/reporting/hooks/useWidgetData';
+import type { DashboardWidget } from '@/domains/reporting/hooks/useDashboards';
 
 interface ListWidgetProps {
   widget: DashboardWidget;

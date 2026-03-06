@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from 'react';
 
-import { useCostAllocation, useCostAllocationSummary } from '@/api/hooks/useCostAllocation';
-import type { ProjectCostSummaryItem, CostCategory, MonthlyBreakdown } from '@/api/hooks/useCostAllocation';
+import { useCostAllocation, useCostAllocationSummary } from '@/domains/reporting/hooks/useCostAllocation';
+import type {
+  ProjectCostSummaryItem,
+  CostCategory,
+  MonthlyBreakdown,
+} from '@/domains/reporting/hooks/useCostAllocation';
 
 import {
   DollarSign,

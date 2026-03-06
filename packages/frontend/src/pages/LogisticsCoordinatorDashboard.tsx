@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { Truck, Ship, Shield, Clock, Search, Package } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
-import { useShipmentList } from '@/api/hooks/useShipments';
-import { useGatePassList } from '@/api/hooks/useGatePasses';
-import { useMrrvList } from '@/api/hooks/useMrrv';
-import { useSLACompliance, flattenSLA } from '@/api/hooks/useDashboard';
+import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
+import { useShipmentList } from '@/domains/logistics/hooks/useShipments';
+import { useGatePassList } from '@/domains/logistics/hooks/useGatePasses';
+import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useSLACompliance, flattenSLA } from '@/domains/reporting/hooks/useDashboard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { JobOrder } from '@nit-scs-v2/shared/types';

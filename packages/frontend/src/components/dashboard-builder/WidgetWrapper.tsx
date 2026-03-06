@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Settings, X } from 'lucide-react';
-import type { DashboardWidget } from '@/api/hooks/useDashboards';
+import type { DashboardWidget } from '@/domains/reporting/hooks/useDashboards';
 import { KpiWidget } from './KpiWidget';
 import { ChartWidget } from './ChartWidget';
 import { TableWidget } from './TableWidget';

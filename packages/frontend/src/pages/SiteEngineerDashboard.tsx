@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { FileText, Truck, Package, Briefcase, PlusCircle, Clock, CheckCircle, Search, ArrowRight } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useMirvList } from '@/api/hooks/useMirv';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
-import { useMrfList } from '@/api/hooks/useMrf';
-import { useProjects, useInventory } from '@/api/hooks/useMasterData';
+import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
+import { useMrfList } from '@/domains/outbound/hooks/useMrf';
+import { useProjects, useInventory } from '@/domains/master-data/hooks/useMasterData';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import { JobStatus } from '@nit-scs-v2/shared/types';

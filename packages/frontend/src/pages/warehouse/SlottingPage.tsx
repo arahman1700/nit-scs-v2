@@ -23,9 +23,9 @@ import {
   useCoLocation,
   useSeasonalTrends,
   useAiSlottingSummary,
-} from '@/api/hooks/useSlotting';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { SlottingSuggestion } from '@/api/hooks/useSlotting';
+} from '@/domains/warehouse-ops/hooks/useSlotting';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import type { SlottingSuggestion } from '@/domains/warehouse-ops/hooks/useSlotting';
 
 // ── Constants ───────────────────────────────────────────────────────────
 
@@ -182,11 +182,14 @@ export const SlottingPage: React.FC = () => {
       ?.data ?? [];
 
   const { data: analysisRes, isLoading: analysisLoading } = useSlottingAnalysis(selectedWarehouse || undefined);
-  const analysis = (analysisRes as unknown as { data?: import('@/api/hooks/useSlotting').SlottingAnalysis })?.data;
+  const analysis = (
+    analysisRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useSlotting').SlottingAnalysis }
+  )?.data;
 
   const { data: frequenciesRes, isLoading: freqLoading } = usePickFrequencies(selectedWarehouse || undefined);
   const frequencies =
-    (frequenciesRes as unknown as { data?: import('@/api/hooks/useSlotting').ItemPickFrequency[] })?.data ?? [];
+    (frequenciesRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useSlotting').ItemPickFrequency[] })
+      ?.data ?? [];
 
   const applyMutation = useApplySlotting();
 
@@ -194,18 +197,23 @@ export const SlottingPage: React.FC = () => {
   const { data: coLocationRes, isLoading: coLocationLoading } = useCoLocation(
     activeTab === 'co-location' || activeTab === 'ai-enhanced' ? selectedWarehouse || undefined : undefined,
   );
-  const coLocation = (coLocationRes as unknown as { data?: import('@/api/hooks/useSlotting').CoLocationAnalysis })
-    ?.data;
+  const coLocation = (
+    coLocationRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useSlotting').CoLocationAnalysis }
+  )?.data;
 
   const { data: seasonalRes, isLoading: seasonalLoading } = useSeasonalTrends(
     activeTab === 'seasonal' || activeTab === 'ai-enhanced' ? selectedWarehouse || undefined : undefined,
   );
-  const seasonal = (seasonalRes as unknown as { data?: import('@/api/hooks/useSlotting').SeasonalAnalysis })?.data;
+  const seasonal = (
+    seasonalRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useSlotting').SeasonalAnalysis }
+  )?.data;
 
   const { data: aiSummaryRes, isLoading: aiSummaryLoading } = useAiSlottingSummary(
     activeTab === 'ai-enhanced' ? selectedWarehouse || undefined : undefined,
   );
-  const aiSummary = (aiSummaryRes as unknown as { data?: import('@/api/hooks/useSlotting').AiSlottingSummary })?.data;
+  const aiSummary = (
+    aiSummaryRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useSlotting').AiSlottingSummary }
+  )?.data;
 
   // Top 20 items by pick frequency for the bar chart
   const top20Frequencies = useMemo(() => {

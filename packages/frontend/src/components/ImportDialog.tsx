@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Upload, ArrowRight, Check, AlertCircle, Loader2, X, FileSpreadsheet } from 'lucide-react';
-import { useImportPreview, useImportExecute } from '@/api/hooks/useImport';
-import type { ImportPreview, ImportField } from '@/api/hooks/useImport';
+import { useImportPreview, useImportExecute } from '@/domains/system/hooks/useImport';
+import type { ImportPreview, ImportField } from '@/domains/system/hooks/useImport';
 
 interface ImportDialogProps {
   isOpen: boolean;

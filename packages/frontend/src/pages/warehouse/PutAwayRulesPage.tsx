@@ -5,10 +5,10 @@ import {
   useUpdatePutAwayRule,
   useDeletePutAwayRule,
   usePutAwaySuggestion,
-} from '@/api/hooks/usePutAwayRules';
-import { useWarehouseZoneList } from '@/api/hooks/useWarehouseZones';
-import { useWarehouses, useItems } from '@/api/hooks/useMasterData';
-import type { PutAwayRule } from '@/api/hooks/usePutAwayRules';
+} from '@/domains/warehouse-ops/hooks/usePutAwayRules';
+import { useWarehouseZoneList } from '@/domains/warehouse-ops/hooks/useWarehouseZones';
+import { useWarehouses, useItems } from '@/domains/master-data/hooks/useMasterData';
+import type { PutAwayRule } from '@/domains/warehouse-ops/hooks/usePutAwayRules';
 
 // ── Item categories matching the Prisma CHECK constraint ─────────────────
 const ITEM_CATEGORIES = ['construction', 'electrical', 'mechanical', 'safety', 'tools', 'consumables', 'spare_parts'];

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 
-import { useExpiringLots } from '@/api/hooks/useExpiryAlerts';
-import type { ExpiringItemGroup, ExpiringLot } from '@/api/hooks/useExpiryAlerts';
+import { useExpiringLots } from '@/domains/inventory/hooks/useExpiryAlerts';
+import type { ExpiringItemGroup, ExpiringLot } from '@/domains/inventory/hooks/useExpiryAlerts';
 
 import { AlertTriangle, Package, ChevronDown, ChevronRight, MapPin, Calendar, Layers } from 'lucide-react';
 

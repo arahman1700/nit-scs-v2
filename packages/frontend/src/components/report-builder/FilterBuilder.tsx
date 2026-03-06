@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { ReportFilter } from '@/api/hooks/useSavedReports';
+import type { ReportFilter } from '@/domains/reporting/hooks/useSavedReports';
 
 const OPERATORS = [
   { value: 'eq', label: 'equals' },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSaveView, useUpdateView } from '@/api/hooks/useUserViews';
-import type { UserView, UserViewConfig } from '@/api/hooks/useUserViews';
+import { useSaveView, useUpdateView } from '@/domains/system/hooks/useUserViews';
+import type { UserView, UserViewConfig } from '@/domains/system/hooks/useUserViews';
 import { Save, X } from 'lucide-react';
 
 interface SaveViewDialogProps {

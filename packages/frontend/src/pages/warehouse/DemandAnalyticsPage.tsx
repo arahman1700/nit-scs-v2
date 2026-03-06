@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTopConsumptionItems, useReorderSuggestions, useItemConsumptionTrend, useItemForecast } from '@/api/hooks';
 import type { TopConsumptionItem, ReorderSuggestion } from '@/api/hooks';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import {
   TrendingUp,
   TrendingDown,

@@ -34,7 +34,7 @@ import {
   useToolList,
   useToolIssueList,
 } from '@/api/hooks';
-import { useGenerators } from '@/api/hooks/useMasterData';
+import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
 import { CHART_PALETTE } from '@/config/chartTheme';
 
 const LazyKanban = React.lazy(() =>

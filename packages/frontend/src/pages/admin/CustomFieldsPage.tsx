@@ -4,8 +4,8 @@ import {
   useCreateCustomFieldDefinition,
   useUpdateCustomFieldDefinition,
   useDeleteCustomFieldDefinition,
-} from '@/api/hooks/useCustomFields';
-import type { CustomFieldDefinition, CreateFieldDefinitionInput } from '@/api/hooks/useCustomFields';
+} from '@/domains/system/hooks/useCustomFields';
+import type { CustomFieldDefinition, CreateFieldDefinitionInput } from '@/domains/system/hooks/useCustomFields';
 import { Settings2, Plus, Trash2, Edit2, X, Save } from 'lucide-react';
 
 const ENTITY_TYPES = [

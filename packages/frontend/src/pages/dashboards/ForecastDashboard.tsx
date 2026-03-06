@@ -29,8 +29,8 @@ import {
   useTopDemandItems,
   useReorderAlerts,
   useSeasonalPatterns,
-} from '@/api/hooks/useDemandForecast';
-import type { ItemForecast, SeasonalPattern } from '@/api/hooks/useDemandForecast';
+} from '@/domains/reporting/hooks/useDemandForecast';
+import type { ItemForecast, SeasonalPattern } from '@/domains/reporting/hooks/useDemandForecast';
 import { useWarehouses } from '@/api/hooks';
 import { displayStr } from '@/utils/displayStr';
 

@@ -15,8 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { Activity, Package, AlertTriangle, Warehouse, FileText, Clock, TrendingUp, Shield } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { useCrossDepartment } from '@/api/hooks/useDashboard';
-import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
+import { useCrossDepartment } from '@/domains/reporting/hooks/useDashboard';
+import type { CrossDepartmentData } from '@/domains/reporting/hooks/useDashboard';
 import { CHART_PALETTE } from '@/config/chartTheme';
 
 export function OperationsDashboard() {

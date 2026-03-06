@@ -4,7 +4,7 @@ import { Save, Wrench, CheckCircle, Loader2 } from 'lucide-react';
 import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';
 import { useCreateTool, useTool, useUpdateTool } from '@/api/hooks';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 
 interface ToolDoc {
   id?: string;

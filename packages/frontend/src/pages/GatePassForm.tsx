@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Save, LogOut, CheckCircle } from 'lucide-react';
-import { useMirvList } from '@/api/hooks/useMirv';
-import { useMrrvList } from '@/api/hooks/useMrrv';
-import { useCreateGatePass } from '@/api/hooks/useGatePasses';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useCreateGatePass } from '@/domains/logistics/hooks/useGatePasses';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 

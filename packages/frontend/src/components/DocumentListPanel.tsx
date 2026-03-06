@@ -7,8 +7,8 @@ import { SmartGrid } from '@/components/smart-grid';
 import { ViewSelector } from '@/components/ViewSelector';
 import { SaveViewDialog } from '@/components/SaveViewDialog';
 import { BulkActionBar } from '@/components/BulkActionBar';
-import { useUserViews } from '@/api/hooks/useUserViews';
-import type { UserView, UserViewConfig } from '@/api/hooks/useUserViews';
+import { useUserViews } from '@/domains/system/hooks/useUserViews';
+import type { UserView, UserViewConfig } from '@/domains/system/hooks/useUserViews';
 import type { ColumnDef } from '@/config/resourceColumns';
 
 interface DocumentListPanelProps {

@@ -5,9 +5,9 @@ import {
   useCreateDynamicDocument,
   useUpdateDynamicDocument,
   useTransitionDynamicDocument,
-} from '@/api/hooks/useDynamicDocuments';
-import { useDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
-import type { StatusFlowConfig, FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
+} from '@/domains/system/hooks/useDynamicDocuments';
+import { useDynamicType } from '@/domains/system/hooks/useDynamicDocumentTypes';
+import type { StatusFlowConfig, FieldDefinition } from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { DynamicFormRenderer } from '@/components/dynamic-form/DynamicFormRenderer';
 import { DynamicLineItemsTable } from '@/components/dynamic-form/DynamicLineItemsTable';
 import { CustomFieldsSection } from '@/components/forms/CustomFieldsSection';

@@ -1,6 +1,10 @@
 import React, { useEffect, useCallback } from 'react';
-import { useCustomFieldDefinitions, useCustomFieldValues, useSaveCustomFieldValues } from '@/api/hooks/useCustomFields';
-import type { CustomFieldDefinition } from '@/api/hooks/useCustomFields';
+import {
+  useCustomFieldDefinitions,
+  useCustomFieldValues,
+  useSaveCustomFieldValues,
+} from '@/domains/system/hooks/useCustomFields';
+import type { CustomFieldDefinition } from '@/domains/system/hooks/useCustomFields';
 import { Settings2 } from 'lucide-react';
 
 interface CustomFieldsSectionProps {

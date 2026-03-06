@@ -13,8 +13,8 @@ import {
   X,
   Eye,
 } from 'lucide-react';
-import { useAttachments, useUploadAttachment, useDeleteAttachment } from '@/api/hooks/useAttachments';
-import type { Attachment } from '@/api/hooks/useAttachments';
+import { useAttachments, useUploadAttachment, useDeleteAttachment } from '@/domains/system/hooks/useAttachments';
+import type { Attachment } from '@/domains/system/hooks/useAttachments';
 
 interface DocumentAttachmentsProps {
   entityType: string;

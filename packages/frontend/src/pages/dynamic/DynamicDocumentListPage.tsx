@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDynamicDocumentList } from '@/api/hooks/useDynamicDocuments';
-import { useDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
-import type { StatusFlowConfig } from '@/api/hooks/useDynamicDocumentTypes';
+import { useDynamicDocumentList } from '@/domains/system/hooks/useDynamicDocuments';
+import { useDynamicType } from '@/domains/system/hooks/useDynamicDocumentTypes';
+import type { StatusFlowConfig } from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { Plus, Search, FileText } from 'lucide-react';
 
 const STATUS_COLOR_MAP: Record<string, string> = {

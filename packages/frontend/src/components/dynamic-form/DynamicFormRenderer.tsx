@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { FieldDefinition } from '@/api/hooks/useDynamicDocumentTypes';
+import type { FieldDefinition } from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { DynamicFieldRenderer } from './DynamicFieldRenderer';
 
 const COL_SPAN_MAP: Record<number, string> = {

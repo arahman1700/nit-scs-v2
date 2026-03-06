@@ -5,7 +5,7 @@ import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 import { GlobalSearchDropdown } from '@/components/GlobalSearchDropdown';
-import { useGlobalSearch } from '@/api/hooks/useSearch';
+import { useGlobalSearch } from '@/domains/system/hooks/useSearch';
 import { useClickOutside } from '@/hooks/useClickOutside';
 
 interface HeaderProps {

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useWorkflowTemplateList, useInstallWorkflowTemplate } from '@/api/hooks/useWorkflowTemplates';
-import type { WorkflowTemplate } from '@/api/hooks/useWorkflowTemplates';
+import { useWorkflowTemplateList, useInstallWorkflowTemplate } from '@/domains/workflow/hooks/useWorkflowTemplates';
+import type { WorkflowTemplate } from '@/domains/workflow/hooks/useWorkflowTemplates';
 import { Zap, Download, ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {

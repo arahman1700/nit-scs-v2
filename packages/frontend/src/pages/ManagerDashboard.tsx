@@ -13,16 +13,16 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useMirvList } from '@/api/hooks/useMirv';
-import { useJobOrderList } from '@/api/hooks/useJobOrders';
-import { useMrfList } from '@/api/hooks/useMrf';
-import { useStockTransferList } from '@/api/hooks/useStockTransfers';
-import { useGrnList } from '@/api/hooks/useGrn';
-import { useScrapList } from '@/api/hooks/useScrap';
-import { useDrList } from '@/api/hooks/useDr';
-import { useProjects } from '@/api/hooks/useMasterData';
-import { useCrossDepartment } from '@/api/hooks/useDashboard';
-import type { CrossDepartmentData } from '@/api/hooks/useDashboard';
+import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
+import { useMrfList } from '@/domains/outbound/hooks/useMrf';
+import { useStockTransferList } from '@/domains/transfers/hooks/useStockTransfers';
+import { useGrnList } from '@/domains/inbound/hooks/useGrn';
+import { useScrapList } from '@/domains/inventory/hooks/useScrap';
+import { useDrList } from '@/domains/inbound/hooks/useDr';
+import { useProjects } from '@/domains/master-data/hooks/useMasterData';
+import { useCrossDepartment } from '@/domains/reporting/hooks/useDashboard';
+import type { CrossDepartmentData } from '@/domains/reporting/hooks/useDashboard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';

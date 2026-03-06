@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Droplets, CheckCircle, Loader2 } from 'lucide-react';
 import type { Generator } from '@nit-scs-v2/shared/types';
 import { useCreateGeneratorFuel, useGeneratorFuel, useUpdateGeneratorFuel } from '@/api/hooks';
-import { useGenerators } from '@/api/hooks/useMasterData';
+import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
 
 interface FuelDoc {
   id?: string;

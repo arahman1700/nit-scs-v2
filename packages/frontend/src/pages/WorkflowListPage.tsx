@@ -7,7 +7,7 @@ import {
   useDeleteWorkflow,
   useActivateWorkflow,
   useDeactivateWorkflow,
-} from '@/api/hooks/useWorkflows';
+} from '@/domains/workflow/hooks/useWorkflows';
 
 interface Workflow {
   id: string;

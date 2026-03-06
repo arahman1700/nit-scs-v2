@@ -3,7 +3,7 @@ import { Shield, Check, X, Eye, Edit, Lock, Save, RotateCcw } from 'lucide-react
 import { UserRole } from '@nit-scs-v2/shared/types';
 import { ROLE_PERMISSIONS } from '@nit-scs-v2/shared/permissions';
 import type { Permission } from '@nit-scs-v2/shared/permissions';
-import { usePermissions, useUpdateRolePermissions, useResetPermissions } from '@/api/hooks/usePermissions';
+import { usePermissions, useUpdateRolePermissions, useResetPermissions } from '@/domains/auth/hooks/usePermissions';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 

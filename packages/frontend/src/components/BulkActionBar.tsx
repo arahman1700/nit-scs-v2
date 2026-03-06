@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { CheckSquare, X, Download, AlertTriangle, Loader2 } from 'lucide-react';
-import { useBulkActions, useExecuteBulkAction } from '@/api/hooks/useBulkActions';
-import type { BulkActionResponse } from '@/api/hooks/useBulkActions';
+import { useBulkActions, useExecuteBulkAction } from '@/domains/system/hooks/useBulkActions';
+import type { BulkActionResponse } from '@/domains/system/hooks/useBulkActions';
 
 interface BulkActionBarProps {
   selectedIds: Set<string>;

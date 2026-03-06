@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useAnomalies, useInventoryHealth, useReorderPredictions, useAutoUpdateReorderPoints } from '@/api/hooks';
-import type { Anomaly, ReorderPrediction, InventoryHealthSummary } from '@/api/hooks/useIntelligence';
+import type { Anomaly, ReorderPrediction, InventoryHealthSummary } from '@/domains/reporting/hooks/useIntelligence';
 import {
   Brain,
   ShieldAlert,

@@ -5,7 +5,7 @@ import {
   useCreateEmailTemplate,
   useUpdateEmailTemplate,
   useDeleteEmailTemplate,
-} from '@/api/hooks/useEmailTemplates';
+} from '@/domains/system/hooks/useEmailTemplates';
 import { TemplateEditor } from '@/components/email/TemplateEditor';
 import { TemplatePreview } from '@/components/email/TemplatePreview';
 

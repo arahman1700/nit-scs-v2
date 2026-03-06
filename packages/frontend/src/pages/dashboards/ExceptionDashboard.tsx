@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
-import { useExceptions } from '@/api/hooks/useDashboard';
-import type { ExceptionData } from '@/api/hooks/useDashboard';
+import { useExceptions } from '@/domains/reporting/hooks/useDashboard';
+import type { ExceptionData } from '@/domains/reporting/hooks/useDashboard';
 import {
   AlertTriangle,
   Clock,

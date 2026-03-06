@@ -15,7 +15,7 @@ import {
   useRejectBid,
   useUpload,
 } from '@/api/hooks';
-import { useProjects, useWarehouses } from '@/api/hooks/useMasterData';
+import { useProjects, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 interface ScrapDoc {

@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Save, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
-import { useProjects } from '@/api/hooks/useMasterData';
-import { useCreateImsf } from '@/api/hooks/useImsf';
+import { useProjects } from '@/domains/master-data/hooks/useMasterData';
+import { useCreateImsf } from '@/domains/transfers/hooks/useImsf';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
 

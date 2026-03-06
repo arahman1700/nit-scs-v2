@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, Trash2, Pencil, X, Check, Loader2, ChevronDown, ChevronUp, User } from 'lucide-react';
-import { useDocumentComments, useCreateComment, useUpdateComment, useDeleteComment } from '@/api/hooks/useComments';
-import { useCurrentUser } from '@/api/hooks/useAuth';
-import type { DocumentComment } from '@/api/hooks/useComments';
+import {
+  useDocumentComments,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+} from '@/domains/workflow/hooks/useComments';
+import { useCurrentUser } from '@/domains/auth/hooks/useAuth';
+import type { DocumentComment } from '@/domains/workflow/hooks/useComments';
 
 interface DocumentCommentsProps {
   documentType: string;

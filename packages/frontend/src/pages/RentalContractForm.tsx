@@ -4,7 +4,7 @@ import { Save, FileSignature, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem, Supplier } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { useCreateRentalContract } from '@/api/hooks';
-import { useSuppliers } from '@/api/hooks/useMasterData';
+import { useSuppliers } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 export const RentalContractForm: React.FC = () => {

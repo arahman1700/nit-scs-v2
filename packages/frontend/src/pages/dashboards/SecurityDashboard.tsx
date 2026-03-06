@@ -1,8 +1,8 @@
 import React from 'react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { KpiCard } from '@/components/KpiCard';
-import { useSecurityDashboard } from '@/api/hooks/useSecurity';
-import type { SecurityDashboard as SecurityDashboardData } from '@/api/hooks/useSecurity';
+import { useSecurityDashboard } from '@/domains/auth/hooks/useSecurity';
+import type { SecurityDashboard as SecurityDashboardData } from '@/domains/auth/hooks/useSecurity';
 import { Shield, Users, ShieldAlert, Lock, CheckCircle, Loader2, Globe } from 'lucide-react';
 
 // ── Loading Skeleton ──────────────────────────────────────────────────────────

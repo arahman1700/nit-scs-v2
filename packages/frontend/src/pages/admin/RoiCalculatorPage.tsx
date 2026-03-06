@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Calculator, DollarSign, Clock, Target, TrendingDown, Loader2, BarChart3, ArrowRight } from 'lucide-react';
-import { useCalculateRoi, type RoiInput, type RoiResult } from '@/api/hooks/useRoiCalculator';
+import { useCalculateRoi, type RoiInput, type RoiResult } from '@/domains/reporting/hooks/useRoiCalculator';
 
 // ── Default values ─────────────────────────────────────────────────────
 

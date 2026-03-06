@@ -7,7 +7,7 @@ import {
   useDeleteApprovalWorkflow,
   useApprovalChainPreview,
 } from '@/api/hooks';
-import type { ApprovalWorkflow } from '@/api/hooks/useApprovalWorkflows';
+import type { ApprovalWorkflow } from '@/domains/workflow/hooks/useApprovalWorkflows';
 
 // ── Constants ───────────────────────────────────────────────────────────
 

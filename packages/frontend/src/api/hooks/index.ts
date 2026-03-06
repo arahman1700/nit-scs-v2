@@ -1,26 +1,338 @@
 // ============================================================================
-// React Query Hooks - Barrel Export
+// React Query Hooks - Barrel Re-Export (Domain-Driven)
+// ============================================================================
+// All hooks now live in src/domains/{domain}/hooks/. This barrel re-exports
+// them for backward compatibility with consumers importing from '@/api/hooks'.
 // ============================================================================
 
-export * from './useAuth';
-export * from './useBulkActions';
-export * from './useComments';
-export * from './useDelegations';
-export * from './useImport';
-export * from './useMasterData';
-export * from './useDashboard';
-export * from './useNotifications';
-export * from './useAuditLog';
-export * from './useSettings';
-export * from './useUpload';
-export * from './usePermissions';
-export * from './useApprovalWorkflows';
-export * from './useTasks';
-export * from './useDocuments';
-export * from './useReports';
+// ── Auth ────────────────────────────────────────────────────────────────
+export * from '../../domains/auth/hooks/useAuth';
+export * from '../../domains/auth/hooks/usePermissions';
+export { useSecurityDashboard, useLoginHistory } from '../../domains/auth/hooks/useSecurity';
+export type { SecurityDashboard, LoginHistoryEntry, LoginHistoryParams } from '../../domains/auth/hooks/useSecurity';
 
-// Document-specific hooks: only re-export status-transition hooks
-// (basic CRUD is already exported from useMasterData via factory)
+// ── Master Data ─────────────────────────────────────────────────────────
+export * from '../../domains/master-data/hooks/useMasterData';
+
+// ── Inbound ─────────────────────────────────────────────────────────────
+export {
+  useGrnList,
+  useGrn,
+  useCreateGrn,
+  useUpdateGrn,
+  useSubmitGrn,
+  useApproveQcGrn,
+  useReceiveGrn,
+  useStoreGrn,
+} from '../../domains/inbound/hooks/useGrn';
+export { useQciList, useQci, useUpdateQci, useStartQci, useCompleteQci } from '../../domains/inbound/hooks/useQci';
+export {
+  useDrList,
+  useDr,
+  useCreateDr,
+  useUpdateDr,
+  useSendClaimDr,
+  useResolveDr,
+} from '../../domains/inbound/hooks/useDr';
+export { useSubmitMrrv, useApproveQcMrrv, useReceiveMrrv, useStoreMrrv } from '../../domains/inbound/hooks/useMrrv';
+export { useStartRfim, useCompleteRfim } from '../../domains/inbound/hooks/useRfim';
+export { useSendClaimOsd, useResolveOsd } from '../../domains/inbound/hooks/useOsd';
+export {
+  useAqlCalculation,
+  useAqlTable,
+  useChecklistList,
+  useChecklist,
+  useCreateChecklist,
+  useUpdateChecklist,
+  useDeleteChecklist,
+  useAddChecklistItem,
+  useUpdateChecklistItem,
+  useDeleteChecklistItem,
+  useReorderChecklistItems,
+} from '../../domains/inbound/hooks/useInspection';
+export type {
+  InspectionLevel,
+  AqlSample,
+  AqlTableRow,
+  AqlTable,
+  ChecklistItem,
+  Checklist,
+} from '../../domains/inbound/hooks/useInspection';
+
+// ── Outbound ────────────────────────────────────────────────────────────
+export {
+  useMiList,
+  useMi,
+  useCreateMi,
+  useUpdateMi,
+  useSubmitMi,
+  useApproveMi,
+  useIssueMi,
+  useCancelMi,
+} from '../../domains/outbound/hooks/useMi';
+export {
+  useMrnList,
+  useMrn,
+  useCreateMrn,
+  useUpdateMrn,
+  useSubmitMrn,
+  useReceiveMrn,
+  useCompleteMrn,
+} from '../../domains/outbound/hooks/useMrn';
+export {
+  useMrList,
+  useMr,
+  useCreateMr,
+  useUpdateMr,
+  useSubmitMr,
+  useReviewMr,
+  useApproveMr,
+  useCheckStockMr,
+  useConvertMiMr,
+  useConvertMrToImsf,
+  useFulfillMr,
+  useRejectMr,
+  useCancelMr,
+} from '../../domains/outbound/hooks/useMr';
+export { useSubmitMirv, useApproveMirv, useIssueMirv, useCancelMirv } from '../../domains/outbound/hooks/useMirv';
+export { useSubmitMrv, useReceiveMrv, useCompleteMrv } from '../../domains/outbound/hooks/useMrv';
+export {
+  useSubmitMrf,
+  useReviewMrf,
+  useApproveMrf,
+  useCheckStockMrf,
+  useConvertMirvMrf,
+  useFulfillMrf,
+  useRejectMrf,
+  useCancelMrf,
+} from '../../domains/outbound/hooks/useMrf';
+
+// ── Inventory ───────────────────────────────────────────────────────────
+export {
+  useBinCardList,
+  useComputedBinCards,
+  useBinCards,
+  useBinCard,
+  useCreateBinCard,
+  useUpdateBinCard,
+  useBinCardTransactionList,
+  useCreateBinCardTransaction,
+} from '../../domains/inventory/hooks/useBinCards';
+export {
+  useSurplusList,
+  useSurplus,
+  useCreateSurplus,
+  useUpdateSurplus,
+  useEvaluateSurplus,
+  useApproveSurplus,
+  useActionSurplus,
+  useCloseSurplus,
+} from '../../domains/inventory/hooks/useSurplus';
+export {
+  useScrapList,
+  useScrap,
+  useCreateScrap,
+  useUpdateScrap,
+  useReportScrap,
+  useApproveScrap,
+  useSendToSscScrap,
+  useMarkSoldScrap,
+  useDisposeScrap,
+  useCloseScrap,
+  useApproveBySiteManager,
+  useApproveByQc,
+  useApproveByStorekeeper,
+} from '../../domains/inventory/hooks/useScrap';
+export {
+  useSscList,
+  useSsc,
+  useCreateSsc,
+  useUpdateSsc,
+  useDeleteSsc,
+  useAcceptBid,
+  useRejectBid,
+  useSignMemo,
+  useNotifyFinance,
+} from '../../domains/inventory/hooks/useSsc';
+export { useExpiringLots } from '../../domains/inventory/hooks/useExpiryAlerts';
+export type {
+  ExpiringLot,
+  ExpiringItemGroup,
+  ExpiringLotsResponse,
+} from '../../domains/inventory/hooks/useExpiryAlerts';
+
+// ── Transfers ───────────────────────────────────────────────────────────
+export {
+  useStockTransferList,
+  useSubmitStockTransfer,
+  useApproveStockTransfer,
+  useShipStockTransfer,
+  useReceiveStockTransfer,
+  useCompleteStockTransfer,
+  useCancelStockTransfer,
+} from '../../domains/transfers/hooks/useStockTransfers';
+export {
+  useWtList,
+  useWt,
+  useCreateWt,
+  useUpdateWt,
+  useSubmitWt,
+  useApproveWt,
+  useShipWt,
+  useReceiveWt,
+  useCompleteWt,
+  useCancelWt,
+} from '../../domains/transfers/hooks/useWt';
+export {
+  useHandoverList,
+  useHandover,
+  useCreateHandover,
+  useUpdateHandover,
+  useStartHandoverVerification,
+  useCompleteHandover,
+} from '../../domains/transfers/hooks/useHandovers';
+export {
+  useImsfList,
+  useImsf,
+  useCreateImsf,
+  useUpdateImsf,
+  useSendImsf,
+  useConfirmImsf,
+  useShipImsf,
+  useDeliverImsf,
+  useCompleteImsf,
+} from '../../domains/transfers/hooks/useImsf';
+
+// ── Logistics ───────────────────────────────────────────────────────────
+export {
+  useShipmentList,
+  useUpdateShipmentStatus,
+  useAddCustomsStage,
+  useUpdateCustomsStage,
+  useDeliverShipment,
+  useCancelShipment,
+} from '../../domains/logistics/hooks/useShipments';
+export {
+  useGatePassList,
+  useSubmitGatePass,
+  useApproveGatePass,
+  useReleaseGatePass,
+  useReturnGatePass,
+  useCancelGatePass,
+} from '../../domains/logistics/hooks/useGatePasses';
+export { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from '../../domains/logistics/hooks/useRouteOptimizer';
+export type {
+  RouteStop,
+  OptimizedRouteStop,
+  OptimizedRoute,
+  UndeliveredJO,
+  FuelEstimate,
+} from '../../domains/logistics/hooks/useRouteOptimizer';
+export {
+  useTariffRateList,
+  useTariffRate,
+  useCreateTariffRate,
+  useUpdateTariffRate,
+  useCalculateDuties,
+  useApplyDuties,
+} from '../../domains/logistics/hooks/useTariffs';
+export type { TariffRate, LineBreakdown, DutyCalculationResult } from '../../domains/logistics/hooks/useTariffs';
+export {
+  useCustomsDocumentList,
+  useCustomsDocument,
+  useCreateCustomsDocument,
+  useUpdateCustomsDocument,
+  useVerifyCustomsDocument,
+  useRejectCustomsDocument,
+  useDocumentCompleteness,
+} from '../../domains/logistics/hooks/useCustomsDocuments';
+
+// ── Equipment ───────────────────────────────────────────────────────────
+export {
+  useToolList,
+  useTool,
+  useCreateTool,
+  useUpdateTool,
+  useDeleteTool,
+  useDecommissionTool,
+} from '../../domains/equipment/hooks/useTools';
+export {
+  useToolIssueList,
+  useToolIssue,
+  useCreateToolIssue,
+  useUpdateToolIssue,
+  useReturnToolIssue,
+} from '../../domains/equipment/hooks/useToolIssues';
+export {
+  useGeneratorFuelList,
+  useGeneratorFuel,
+  useCreateGeneratorFuel,
+  useUpdateGeneratorFuel,
+} from '../../domains/equipment/hooks/useGeneratorFuel';
+export {
+  useGeneratorMaintenanceList,
+  useGeneratorMaintenance,
+  useCreateGeneratorMaintenance,
+  useUpdateGeneratorMaintenance,
+  useStartGeneratorMaintenance,
+  useCompleteGeneratorMaintenance,
+  useMarkOverdueGeneratorMaintenance,
+} from '../../domains/equipment/hooks/useGeneratorMaintenance';
+export {
+  useVehicleMaintenanceList,
+  useVehicleMaintenance,
+  useCreateVehicleMaintenance,
+  useUpdateVehicleMaintenance,
+  useCompleteVehicleMaintenance,
+  useCancelVehicleMaintenance,
+} from '../../domains/equipment/hooks/useVehicleMaintenance';
+export {
+  useRentalContractList,
+  useRentalContract,
+  useCreateRentalContract,
+  useUpdateRentalContract,
+  useSubmitRentalContract,
+  useApproveRentalContract,
+  useActivateRentalContract,
+  useExtendRentalContract,
+  useTerminateRentalContract,
+} from '../../domains/equipment/hooks/useRentalContracts';
+export {
+  useAmcList,
+  useAmc,
+  useCreateAmc,
+  useUpdateAmc,
+  useActivateAmc,
+  useTerminateAmc,
+} from '../../domains/equipment/hooks/useAmc';
+export type { Amc } from '../../domains/equipment/hooks/useAmc';
+export {
+  useAssetList,
+  useAsset,
+  useAssetSummary,
+  useCreateAsset,
+  useUpdateAsset,
+  useTransferAsset,
+  useRetireAsset,
+  useDisposeAsset,
+} from '../../domains/equipment/hooks/useAssets';
+export {
+  useEquipmentDeliveryNoteList,
+  useEquipmentDeliveryNote,
+  useCreateEquipmentDeliveryNote,
+  useUpdateEquipmentDeliveryNote,
+  useConfirmEquipmentDeliveryNote,
+  useCancelEquipmentDeliveryNote,
+  useEquipmentReturnNoteList,
+  useEquipmentReturnNote,
+  useCreateEquipmentReturnNote,
+  useUpdateEquipmentReturnNote,
+  useInspectEquipmentReturnNote,
+  useConfirmEquipmentReturnNote,
+  useDisputeEquipmentReturnNote,
+} from '../../domains/equipment/hooks/useEquipmentNotes';
+
+// ── Job Orders ──────────────────────────────────────────────────────────
 export {
   useJobOrderList,
   useSubmitJobOrder,
@@ -33,52 +345,22 @@ export {
   useCompleteJobOrder,
   useInvoiceJobOrder,
   useCancelJobOrder,
-} from './useJobOrders';
+} from '../../domains/job-orders/hooks/useJobOrders';
+export { useLaborProductivity } from '../../domains/job-orders/hooks/useLaborProductivity';
 
-export { useSubmitMrrv, useApproveQcMrrv, useReceiveMrrv, useStoreMrrv } from './useMrrv';
-export { useSubmitMirv, useApproveMirv, useIssueMirv, useCancelMirv } from './useMirv';
-export { useSubmitMrv, useReceiveMrv, useCompleteMrv } from './useMrv';
-export { useStartRfim, useCompleteRfim } from './useRfim';
-export { useSendClaimOsd, useResolveOsd } from './useOsd';
+// ── Warehouse Ops ───────────────────────────────────────────────────────
 export {
-  useSubmitMrf,
-  useReviewMrf,
-  useApproveMrf,
-  useCheckStockMrf,
-  useConvertMirvMrf,
-  useFulfillMrf,
-  useRejectMrf,
-  useCancelMrf,
-} from './useMrf';
-export {
-  useShipmentList,
-  useUpdateShipmentStatus,
-  useAddCustomsStage,
-  useUpdateCustomsStage,
-  useDeliverShipment,
-  useCancelShipment,
-} from './useShipments';
-export {
-  useGatePassList,
-  useSubmitGatePass,
-  useApproveGatePass,
-  useReleaseGatePass,
-  useReturnGatePass,
-  useCancelGatePass,
-} from './useGatePasses';
-export {
-  useStockTransferList,
-  useSubmitStockTransfer,
-  useApproveStockTransfer,
-  useShipStockTransfer,
-  useReceiveStockTransfer,
-  useCompleteStockTransfer,
-  useCancelStockTransfer,
-} from './useStockTransfers';
-export { useBarcodeLookup, usePrintLabels } from './useBarcodes';
-export * from './useDashboards';
-export * from './useSavedReports';
-export * from './useWidgetData';
+  useWarehouseZoneList,
+  useWarehouseZone,
+  useCreateWarehouseZone,
+  useUpdateWarehouseZone,
+  useDeleteWarehouseZone,
+} from '../../domains/warehouse-ops/hooks/useWarehouseZones';
+
+// ── Workflow ────────────────────────────────────────────────────────────
+export * from '../../domains/workflow/hooks/useApprovalWorkflows';
+export * from '../../domains/workflow/hooks/useComments';
+export * from '../../domains/workflow/hooks/useDelegations';
 export {
   useWorkflows,
   useWorkflow,
@@ -94,337 +376,21 @@ export {
   useDeleteRule,
   useTestRule,
   useRuleLogs,
-} from './useWorkflows';
-export {
-  useEmailTemplates,
-  useEmailTemplate,
-  useCreateEmailTemplate,
-  useUpdateEmailTemplate,
-  useDeleteEmailTemplate,
-  usePreviewEmailTemplate,
-  useEmailLogs,
-  useEmailLogStats,
-} from './useEmailTemplates';
-
-// ============================================================================
-// V2 API Hooks — new endpoint names, coexist with V1 hooks above
-// ============================================================================
-
-// GRN (was MRRV)
-export {
-  useGrnList,
-  useGrn,
-  useCreateGrn,
-  useUpdateGrn,
-  useSubmitGrn,
-  useApproveQcGrn,
-  useReceiveGrn,
-  useStoreGrn,
-} from './useGrn';
-
-// QCI (was RFIM)
-export { useQciList, useQci, useUpdateQci, useStartQci, useCompleteQci } from './useQci';
-
-// DR (was OSD)
-export { useDrList, useDr, useCreateDr, useUpdateDr, useSendClaimDr, useResolveDr } from './useDr';
-
-// MI (was MIRV)
-export {
-  useMiList,
-  useMi,
-  useCreateMi,
-  useUpdateMi,
-  useSubmitMi,
-  useApproveMi,
-  useIssueMi,
-  useCancelMi,
-} from './useMi';
-
-// MRN (was MRV)
-export { useMrnList, useMrn, useCreateMrn, useUpdateMrn, useSubmitMrn, useReceiveMrn, useCompleteMrn } from './useMrn';
-
-// MR (was MRF)
-export {
-  useMrList,
-  useMr,
-  useCreateMr,
-  useUpdateMr,
-  useSubmitMr,
-  useReviewMr,
-  useApproveMr,
-  useCheckStockMr,
-  useConvertMiMr,
-  useConvertMrToImsf,
-  useFulfillMr,
-  useRejectMr,
-  useCancelMr,
-} from './useMr';
-
-// WT (was StockTransfer)
-export {
-  useWtList,
-  useWt,
-  useCreateWt,
-  useUpdateWt,
-  useSubmitWt,
-  useApproveWt,
-  useShipWt,
-  useReceiveWt,
-  useCompleteWt,
-  useCancelWt,
-} from './useWt';
-
-// IMSF — new module
-export {
-  useImsfList,
-  useImsf,
-  useCreateImsf,
-  useUpdateImsf,
-  useSendImsf,
-  useConfirmImsf,
-  useShipImsf,
-  useDeliverImsf,
-  useCompleteImsf,
-} from './useImsf';
-
-// Surplus — new module
-export {
-  useSurplusList,
-  useSurplus,
-  useCreateSurplus,
-  useUpdateSurplus,
-  useEvaluateSurplus,
-  useApproveSurplus,
-  useActionSurplus,
-  useCloseSurplus,
-} from './useSurplus';
-
-// Scrap — new module
-export {
-  useScrapList,
-  useScrap,
-  useCreateScrap,
-  useUpdateScrap,
-  useReportScrap,
-  useApproveScrap,
-  useSendToSscScrap,
-  useMarkSoldScrap,
-  useDisposeScrap,
-  useCloseScrap,
-  useApproveBySiteManager,
-  useApproveByQc,
-  useApproveByStorekeeper,
-} from './useScrap';
-
-// SSC — new module
-export {
-  useSscList,
-  useSsc,
-  useCreateSsc,
-  useUpdateSsc,
-  useDeleteSsc,
-  useAcceptBid,
-  useRejectBid,
-  useSignMemo,
-  useNotifyFinance,
-} from './useSsc';
-
-// Rental Contracts — new module
-export {
-  useRentalContractList,
-  useRentalContract,
-  useCreateRentalContract,
-  useUpdateRentalContract,
-  useSubmitRentalContract,
-  useApproveRentalContract,
-  useActivateRentalContract,
-  useExtendRentalContract,
-  useTerminateRentalContract,
-} from './useRentalContracts';
-
-// Tool Issues — new module
-export {
-  useToolIssueList,
-  useToolIssue,
-  useCreateToolIssue,
-  useUpdateToolIssue,
-  useReturnToolIssue,
-} from './useToolIssues';
-
-// Tools — new module
-export { useToolList, useTool, useCreateTool, useUpdateTool, useDeleteTool, useDecommissionTool } from './useTools';
-
-// Generator Fuel — new module (CRUD only)
-export {
-  useGeneratorFuelList,
-  useGeneratorFuel,
-  useCreateGeneratorFuel,
-  useUpdateGeneratorFuel,
-} from './useGeneratorFuel';
-
-// Generator Maintenance — new module
-export {
-  useGeneratorMaintenanceList,
-  useGeneratorMaintenance,
-  useCreateGeneratorMaintenance,
-  useUpdateGeneratorMaintenance,
-  useStartGeneratorMaintenance,
-  useCompleteGeneratorMaintenance,
-  useMarkOverdueGeneratorMaintenance,
-} from './useGeneratorMaintenance';
-
-// Vehicle Maintenance — M8 module
-export {
-  useVehicleMaintenanceList,
-  useVehicleMaintenance,
-  useCreateVehicleMaintenance,
-  useUpdateVehicleMaintenance,
-  useCompleteVehicleMaintenance,
-  useCancelVehicleMaintenance,
-} from './useVehicleMaintenance';
-
-// Warehouse Zones — new module (CRUD only)
-export {
-  useWarehouseZoneList,
-  useWarehouseZone,
-  useCreateWarehouseZone,
-  useUpdateWarehouseZone,
-  useDeleteWarehouseZone,
-} from './useWarehouseZones';
-
-// Bin Cards — new module
-export {
-  useBinCardList,
-  useComputedBinCards,
-  useBinCards,
-  useBinCard,
-  useCreateBinCard,
-  useUpdateBinCard,
-  useBinCardTransactionList,
-  useCreateBinCardTransaction,
-} from './useBinCards';
-
-// Handovers — new module
-export {
-  useHandoverList,
-  useHandover,
-  useCreateHandover,
-  useUpdateHandover,
-  useStartHandoverVerification,
-  useCompleteHandover,
-} from './useHandovers';
-
-// Rate Cards — SOW M2-F06
-export { useRateCardList, useRateCard, useCreateRateCard, useUpdateRateCard, useRateCardLookup } from './useRateCards';
-
-// Labor Productivity
-export { useLaborProductivity } from './useLaborProductivity';
-
-// MVP DEFERRED: ABC Analysis, Put-Away Rules, Cycle Counts, Pick Optimizer
-
-// Route Optimization (JO Transport)
-export { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from './useRouteOptimizer';
-export type { RouteStop, OptimizedRouteStop, OptimizedRoute, UndeliveredJO, FuelEstimate } from './useRouteOptimizer';
-
-// MVP DEFERRED: ASN, Slotting, Demand Forecast, Cross-Docking
-
-// Inspection Tools (AQL Calculator & Checklists)
-export {
-  useAqlCalculation,
-  useAqlTable,
-  useChecklistList,
-  useChecklist,
-  useCreateChecklist,
-  useUpdateChecklist,
-  useDeleteChecklist,
-  useAddChecklistItem,
-  useUpdateChecklistItem,
-  useDeleteChecklistItem,
-  useReorderChecklistItems,
-} from './useInspection';
-export type { InspectionLevel, AqlSample, AqlTableRow, AqlTable, ChecklistItem, Checklist } from './useInspection';
-
-// Parallel Approvals — multi-approver groups
+} from '../../domains/workflow/hooks/useWorkflows';
 export {
   useDocumentApprovalGroups,
   usePendingApprovals,
   useCreateParallelApproval,
   useRespondToApproval,
-} from './useParallelApprovals';
-export type { ParallelApprovalGroup, ParallelApprovalResponse } from './useParallelApprovals';
-
-// Visitor Management — SOW M5-F03
-export {
-  useVisitorList,
-  useVisitor,
-  useRegisterVisitor,
-  useUpdateVisitor,
-  useCheckInVisitor,
-  useCheckOutVisitor,
-  useCancelVisitor,
-} from './useVisitors';
-
-// Equipment Delivery & Return Notes — SOW M2-F02
-export {
-  useEquipmentDeliveryNoteList,
-  useEquipmentDeliveryNote,
-  useCreateEquipmentDeliveryNote,
-  useUpdateEquipmentDeliveryNote,
-  useConfirmEquipmentDeliveryNote,
-  useCancelEquipmentDeliveryNote,
-  useEquipmentReturnNoteList,
-  useEquipmentReturnNote,
-  useCreateEquipmentReturnNote,
-  useUpdateEquipmentReturnNote,
-  useInspectEquipmentReturnNote,
-  useConfirmEquipmentReturnNote,
-  useDisputeEquipmentReturnNote,
-} from './useEquipmentNotes';
-
-// Tariff & Duties — SOW M3
-export {
-  useTariffRateList,
-  useTariffRate,
-  useCreateTariffRate,
-  useUpdateTariffRate,
-  useCalculateDuties,
-  useApplyDuties,
-} from './useTariffs';
-export type { TariffRate, LineBreakdown, DutyCalculationResult } from './useTariffs';
-
-// Comprehensive KPI Dashboard (M7)
-export { useKpis, useKpisByCategory } from './useKpis';
+} from '../../domains/workflow/hooks/useParallelApprovals';
 export type {
-  KpiResult,
-  ComprehensiveKpis,
-  InventoryKpis,
-  ProcurementKpis,
-  LogisticsKpis,
-  QualityKpis,
-  FinancialKpis,
-  KpiCategory,
-} from './useKpis';
+  ParallelApprovalGroup,
+  ParallelApprovalResponse,
+} from '../../domains/workflow/hooks/useParallelApprovals';
+export { useDocumentSignatures, useCreateSignature } from '../../domains/workflow/hooks/useDigitalSignatures';
+export type { DigitalSignature } from '../../domains/workflow/hooks/useDigitalSignatures';
 
-// Security (M6: Access Control & Security)
-export { useSecurityDashboard, useLoginHistory } from './useSecurity';
-export type { SecurityDashboard, LoginHistoryEntry, LoginHistoryParams } from './useSecurity';
-
-// AMC — Annual Maintenance Contracts (SOW M1)
-export { useAmcList, useAmc, useCreateAmc, useUpdateAmc, useActivateAmc, useTerminateAmc } from './useAmc';
-export type { Amc } from './useAmc';
-
-// Customs Documents — SOW M9
-export {
-  useCustomsDocumentList,
-  useCustomsDocument,
-  useCreateCustomsDocument,
-  useUpdateCustomsDocument,
-  useVerifyCustomsDocument,
-  useRejectCustomsDocument,
-  useDocumentCompleteness,
-} from './useCustomsDocuments';
-
-// Compliance Audit Checklists (ISO 9001) — SOW M2
+// ── Compliance ──────────────────────────────────────────────────────────
 export {
   useChecklistList as useComplianceChecklistList,
   useChecklist as useComplianceChecklist,
@@ -435,52 +401,86 @@ export {
   useCreateAudit as useCreateComplianceAudit,
   useSubmitAuditResponses,
   useCompleteAudit as useCompleteComplianceAudit,
-} from './useCompliance';
-
-// Asset Register (M10)
-export {
-  useAssetList,
-  useAsset,
-  useAssetSummary,
-  useCreateAsset,
-  useUpdateAsset,
-  useTransferAsset,
-  useRetireAsset,
-  useDisposeAsset,
-} from './useAssets';
+} from '../../domains/compliance/hooks/useCompliance';
 export type {
   ComplianceChecklist,
   ComplianceChecklistItem,
   ComplianceAudit,
   ComplianceAuditResponse,
-} from './useCompliance';
+} from '../../domains/compliance/hooks/useCompliance';
+export {
+  useVisitorList,
+  useVisitor,
+  useRegisterVisitor,
+  useUpdateVisitor,
+  useCheckInVisitor,
+  useCheckOutVisitor,
+  useCancelVisitor,
+} from '../../domains/compliance/hooks/useVisitors';
 
-// Expiry Alerts (L2)
-export { useExpiringLots } from './useExpiryAlerts';
-export type { ExpiringLot, ExpiringItemGroup, ExpiringLotsResponse } from './useExpiryAlerts';
-
-// Digital Signatures (L6)
-export { useDocumentSignatures, useCreateSignature } from './useDigitalSignatures';
-export type { DigitalSignature } from './useDigitalSignatures';
-
-// Cost Allocation Reports (L7)
-export { useCostAllocation, useCostAllocationSummary } from './useCostAllocation';
+// ── Reporting ───────────────────────────────────────────────────────────
+export * from '../../domains/reporting/hooks/useDashboard';
+export * from '../../domains/reporting/hooks/useDashboards';
+export * from '../../domains/reporting/hooks/useSavedReports';
+export * from '../../domains/reporting/hooks/useReports';
+export * from '../../domains/reporting/hooks/useWidgetData';
+export { useKpis, useKpisByCategory } from '../../domains/reporting/hooks/useKpis';
+export type {
+  KpiResult,
+  ComprehensiveKpis,
+  InventoryKpis,
+  ProcurementKpis,
+  LogisticsKpis,
+  QualityKpis,
+  FinancialKpis,
+  KpiCategory,
+} from '../../domains/reporting/hooks/useKpis';
+export { useCostAllocation, useCostAllocationSummary } from '../../domains/reporting/hooks/useCostAllocation';
 export type {
   CostCategory,
   MonthlyBreakdown,
   CostAllocationData,
   ProjectCostSummaryItem,
   CostAllocationSummaryData,
-} from './useCostAllocation';
-
-// Demand Analysis — L8 (Consumption Trends) + L9 (Demand Forecasting)
-export { useItemConsumptionTrend, useTopConsumptionItems, useReorderSuggestions, useItemForecast } from './useDemand';
+} from '../../domains/reporting/hooks/useCostAllocation';
+export {
+  useItemConsumptionTrend,
+  useTopConsumptionItems,
+  useReorderSuggestions,
+  useItemForecast,
+} from '../../domains/reporting/hooks/useDemand';
 export type {
   MonthlyConsumption,
   ItemConsumptionTrend,
   TopConsumptionItem,
   ReorderSuggestion,
   ItemForecastProjection,
-} from './useDemand';
+} from '../../domains/reporting/hooks/useDemand';
 
-// MVP DEFERRED: Sensors, Intelligence, Yard Management
+// ── System ──────────────────────────────────────────────────────────────
+export * from '../../domains/system/hooks/useNotifications';
+export * from '../../domains/system/hooks/useAuditLog';
+export * from '../../domains/system/hooks/useSettings';
+export * from '../../domains/system/hooks/useUpload';
+export * from '../../domains/system/hooks/useImport';
+export * from '../../domains/system/hooks/useBulkActions';
+export * from '../../domains/system/hooks/useTasks';
+export * from '../../domains/system/hooks/useDocuments';
+export { useBarcodeLookup, usePrintLabels } from '../../domains/system/hooks/useBarcodes';
+export {
+  useEmailTemplates,
+  useEmailTemplate,
+  useCreateEmailTemplate,
+  useUpdateEmailTemplate,
+  useDeleteEmailTemplate,
+  usePreviewEmailTemplate,
+  useEmailLogs,
+  useEmailLogStats,
+} from '../../domains/system/hooks/useEmailTemplates';
+export {
+  useRateCardList,
+  useRateCard,
+  useCreateRateCard,
+  useUpdateRateCard,
+  useRateCardLookup,
+} from '../../domains/system/hooks/useRateCards';

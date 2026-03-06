@@ -4,8 +4,8 @@ import {
   useCreateApprovalWorkflow,
   useUpdateApprovalWorkflow,
   useDeleteApprovalWorkflow,
-} from '@/api/hooks/useApprovalWorkflows';
-import type { ApprovalWorkflow } from '@/api/hooks/useApprovalWorkflows';
+} from '@/domains/workflow/hooks/useApprovalWorkflows';
+import type { ApprovalWorkflow } from '@/domains/workflow/hooks/useApprovalWorkflows';
 import { Shield, Plus, Trash2, Edit2, X, Save } from 'lucide-react';
 
 // ── Constants ───────────────────────────────────────────────────────────

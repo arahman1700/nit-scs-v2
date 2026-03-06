@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import type { SearchResult } from '@/api/hooks/useSearch';
+import type { SearchResult } from '@/domains/system/hooks/useSearch';
 import {
   Package,
   ArrowUpCircle,

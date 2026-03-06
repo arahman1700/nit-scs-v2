@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDynamicTypeList, useDeleteDynamicType } from '@/api/hooks/useDynamicDocumentTypes';
-import type { DynamicDocumentType } from '@/api/hooks/useDynamicDocumentTypes';
+import { useDynamicTypeList, useDeleteDynamicType } from '@/domains/system/hooks/useDynamicDocumentTypes';
+import type { DynamicDocumentType } from '@/domains/system/hooks/useDynamicDocumentTypes';
 import { Plus, Search, FileType2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export const DynamicTypeListPage: React.FC = () => {

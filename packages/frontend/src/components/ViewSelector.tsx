@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useUserViews, useUpdateView, useDeleteView } from '@/api/hooks/useUserViews';
-import type { UserView } from '@/api/hooks/useUserViews';
+import { useUserViews, useUpdateView, useDeleteView } from '@/domains/system/hooks/useUserViews';
+import type { UserView } from '@/domains/system/hooks/useUserViews';
 import { Bookmark, ChevronDown, Check, Star, Trash2, Plus, Loader2 } from 'lucide-react';
 
 interface ViewSelectorProps {

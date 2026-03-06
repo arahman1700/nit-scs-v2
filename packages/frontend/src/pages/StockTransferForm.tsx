@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Save, CheckCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
-import { useCreateWt } from '@/api/hooks/useWt';
-import { useWarehouses, useProjects } from '@/api/hooks/useMasterData';
+import { useCreateWt } from '@/domains/transfers/hooks/useWt';
+import { useWarehouses, useProjects } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
 

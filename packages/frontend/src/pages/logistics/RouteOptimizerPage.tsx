@@ -12,9 +12,9 @@ import {
   Flag,
   DollarSign,
 } from 'lucide-react';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from '@/api/hooks/useRouteOptimizer';
-import type { OptimizedRoute, UndeliveredJO } from '@/api/hooks/useRouteOptimizer';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from '@/domains/logistics/hooks/useRouteOptimizer';
+import type { OptimizedRoute, UndeliveredJO } from '@/domains/logistics/hooks/useRouteOptimizer';
 
 // ── Component ───────────────────────────────────────────────────────────
 

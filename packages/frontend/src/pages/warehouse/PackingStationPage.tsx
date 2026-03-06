@@ -19,9 +19,9 @@ import {
   useAddPackingLine,
   useCompletePackingSession,
   useCancelPackingSession,
-} from '@/api/hooks/usePacking';
-import type { PackingQueueItem, PackingLine } from '@/api/hooks/usePacking';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+} from '@/domains/warehouse-ops/hooks/usePacking';
+import type { PackingQueueItem, PackingLine } from '@/domains/warehouse-ops/hooks/usePacking';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 

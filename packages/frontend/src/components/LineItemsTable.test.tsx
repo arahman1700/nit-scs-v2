@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { render } from '@/test-utils/render';
 
 // Mock the master data hooks to avoid real API calls
-vi.mock('@/api/hooks/useMasterData', () => ({
+vi.mock('@/domains/master-data/hooks/useMasterData', () => ({
   useItems: () => ({
     data: {
       data: [

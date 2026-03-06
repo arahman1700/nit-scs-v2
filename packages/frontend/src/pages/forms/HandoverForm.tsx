@@ -10,7 +10,7 @@ import {
   useStartHandoverVerification,
   useCompleteHandover,
 } from '@/api/hooks';
-import { useWarehouses, useEmployees } from '@/api/hooks/useMasterData';
+import { useWarehouses, useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 
 interface HandoverDoc {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Search, Package, Warehouse, Loader2, AlertCircle, ScanLine, Keyboard, Camera, X } from 'lucide-react';
-import { useBarcodeLookup } from '@/api/hooks/useBarcodes';
+import { useBarcodeLookup } from '@/domains/system/hooks/useBarcodes';
 import { displayStr } from '@/utils/displayStr';
 
 interface BarcodeScannerProps {

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { useCreateWarehouseZone, useWarehouseZone, useUpdateWarehouseZone } from '@/api/hooks';
-import { useWarehouses } from '@/api/hooks/useMasterData';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 
 interface ZoneDoc {
   id?: string;

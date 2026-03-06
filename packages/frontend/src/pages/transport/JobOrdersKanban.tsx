@@ -19,7 +19,7 @@ import {
   useCompleteJobOrder,
   useCancelJobOrder,
   useResumeJobOrder,
-} from '@/api/hooks/useJobOrders';
+} from '@/domains/job-orders/hooks/useJobOrders';
 import { JobStatus } from '@nit-scs-v2/shared/types';
 import type { JobOrder } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';

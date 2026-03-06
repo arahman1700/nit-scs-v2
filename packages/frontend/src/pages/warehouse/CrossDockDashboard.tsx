@@ -23,9 +23,9 @@ import {
   useExecuteCrossDock,
   useCompleteCrossDock,
   useCancelCrossDock,
-} from '@/api/hooks/useCrossDock';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { CrossDock, CrossDockOpportunity } from '@/api/hooks/useCrossDock';
+} from '@/domains/warehouse-ops/hooks/useCrossDock';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import type { CrossDock, CrossDockOpportunity } from '@/domains/warehouse-ops/hooks/useCrossDock';
 
 // ── Status config ───────────────────────────────────────────────────────
 
@@ -89,7 +89,9 @@ export const CrossDockDashboard: React.FC = () => {
       ?.data ?? [];
 
   const { data: statsRes, isLoading: statsLoading } = useCrossDockStats(selectedWarehouse || undefined);
-  const stats = (statsRes as unknown as { data?: import('@/api/hooks/useCrossDock').CrossDockStats })?.data ?? null;
+  const stats =
+    (statsRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useCrossDock').CrossDockStats })?.data ??
+    null;
 
   const { data: opportunitiesRes, isLoading: oppsLoading } = useCrossDockOpportunities(
     activeTab === 'opportunities' ? selectedWarehouse || undefined : undefined,

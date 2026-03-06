@@ -19,9 +19,9 @@ import {
   useMoveFromStaging,
   useStagingAlerts,
   useStagingOccupancy,
-} from '@/api/hooks/useStaging';
-import { useWarehouses } from '@/api/hooks/useMasterData';
-import type { StagingAssignment, StagingOccupancy } from '@/api/hooks/useStaging';
+} from '@/domains/warehouse-ops/hooks/useStaging';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import type { StagingAssignment, StagingOccupancy } from '@/domains/warehouse-ops/hooks/useStaging';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
