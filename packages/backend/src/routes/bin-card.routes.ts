@@ -65,10 +65,15 @@ const txnCrud = createCrudRouter({
 const router = Router();
 
 /**
- * SOW C1: Computed bin card view.
- * Aggregates InventoryLevel + recent LotConsumption to produce a live
- * running-balance view per item per warehouse. This is the authoritative
- * view — the BinCard CRUD records track physical bin locations only.
+ * SOW M1-F05 — Authoritative computed bin card endpoint.
+ *
+ * This is the PRIMARY endpoint for bin card data per the SOW. It aggregates
+ * InventoryLevel + recent LotConsumption to produce a live running-balance
+ * view per item per warehouse. Frontend consumers should prefer this over
+ * the CRUD list endpoint.
+ *
+ * The BinCard CRUD records (GET /bin-cards) track physical bin location
+ * assignments only and are NOT the authoritative source for balances.
  *
  * GET /bin-cards/computed?warehouseId=...&itemId=...&page=1&pageSize=50
  */

@@ -14,7 +14,11 @@ export function useBinCardList(params?: ListParams) {
 }
 
 // ── Computed View (SOW C1) ─────────────────────────────────────────────────
-/** Fetches bin cards as computed views — authoritative running balances from inventory transactions */
+/**
+ * SOW M1-F05: Primary bin card hook — computed running balances.
+ * This is the authoritative source for inventory balances.
+ * The stored BinCard model tracks physical bin assignments only.
+ */
 export function useComputedBinCards(params?: ListParams) {
   return useQuery({
     queryKey: ['bin-cards', 'computed', params],
@@ -24,6 +28,9 @@ export function useComputedBinCards(params?: ListParams) {
     },
   });
 }
+
+/** @alias useComputedBinCards — convenience export */
+export const useBinCards = useComputedBinCards;
 
 // ── Detail ──────────────────────────────────────────────────────────────────
 export function useBinCard(id: string | undefined) {

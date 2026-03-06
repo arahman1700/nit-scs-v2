@@ -26,7 +26,7 @@ import {
   useMiList,
   useMrnList,
   useMrList,
-  useBinCardList,
+  useComputedBinCards,
   useImsfList,
   useWtList,
 } from '@/api/hooks';
@@ -49,7 +49,7 @@ export const MaterialSectionPage: React.FC = () => {
   const mrQuery = useMrList({ pageSize: 50 });
 
   const inventoryQuery = useInventory({ pageSize: 100 });
-  const binCardQuery = useBinCardList({ pageSize: 100 });
+  const binCardQuery = useComputedBinCards({ pageSize: 100 });
   const imsfQuery = useImsfList({ pageSize: 50 });
   const wtQuery = useWtList({ pageSize: 50 });
 

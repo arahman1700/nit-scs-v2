@@ -295,6 +295,8 @@ export {
 // Bin Cards — new module
 export {
   useBinCardList,
+  useComputedBinCards,
+  useBinCards,
   useBinCard,
   useCreateBinCard,
   useUpdateBinCard,
