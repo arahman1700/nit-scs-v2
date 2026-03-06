@@ -6,7 +6,7 @@
 import { eventBus, type SystemEvent } from './event-bus.js';
 import { prisma } from '../utils/prisma.js';
 import { log } from '../config/logger.js';
-import { sendTemplatedEmail } from '../services/email.service.js';
+import { sendTemplatedEmail } from '../domains/system/services/email.service.js';
 
 // ── Notification Rule Definitions ──────────────────────────────────────
 

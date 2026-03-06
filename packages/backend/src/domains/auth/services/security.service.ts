@@ -7,7 +7,7 @@
  */
 
 import { prisma } from '../../../utils/prisma.js';
-import { createNotification } from '../../../services/notification.service.js';
+import { createNotification } from '../../system/services/notification.service.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import { log } from '../../../config/logger.js';
 

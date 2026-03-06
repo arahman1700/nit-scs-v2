@@ -40,7 +40,7 @@ vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
-vi.mock('../../../services/audit.service.js', () => ({
+vi.mock('../../system/services/audit.service.js', () => ({
   getAuditLogs: vi.fn(),
   createAuditLog: vi.fn().mockResolvedValue({}),
 }));

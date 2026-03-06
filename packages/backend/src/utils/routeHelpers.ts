@@ -1,7 +1,7 @@
 import type { Request } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { emitToDocument, emitToAll } from '../socket/setup.js';
-import { createAuditLog, type AuditEntry } from '../services/audit.service.js';
+import { createAuditLog, type AuditEntry } from '../domains/system/services/audit.service.js';
 import { clientIp } from './helpers.js';
 import { eventBus } from '../events/event-bus.js';
 

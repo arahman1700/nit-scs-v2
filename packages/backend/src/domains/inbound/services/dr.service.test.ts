@@ -7,12 +7,12 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, sendClaim, resolve } from './osd.service.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 
 const mockedGenerateDocNumber = generateDocumentNumber as ReturnType<typeof vi.fn>;
 

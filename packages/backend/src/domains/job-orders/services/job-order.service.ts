@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { submitForApproval } from '../../../services/approval.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
+import { submitForApproval } from '../../workflow/services/approval.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../../../events/event-bus.js';
@@ -9,7 +9,7 @@ import type { Server as SocketIOServer } from 'socket.io';
 import type { JoCreateDto, JoUpdateDto, ListParams } from '../../../types/dto.js';
 import type { z } from 'zod';
 import type { equipmentLineSchema } from '../schemas/job-order.schema.js';
-import { getActiveRateForEquipment } from '../../../services/rate-card.service.js';
+import { getActiveRateForEquipment } from '../../system/services/rate-card.service.js';
 
 type EquipmentLine = z.infer<typeof equipmentLineSchema>;
 

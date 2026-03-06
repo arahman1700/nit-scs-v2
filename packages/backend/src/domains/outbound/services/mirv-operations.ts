@@ -5,7 +5,7 @@
  * All functions accept a Prisma transaction client so they compose inside transactions.
  */
 import type { Prisma, PrismaClient } from '@prisma/client';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { consumeReservationBatch, releaseReservation } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 

@@ -8,7 +8,7 @@ import { authenticate } from '../middleware/auth.js';
 import { requireRole, requirePermission } from '../middleware/rbac.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validate.js';
-import { createAuditLog } from '../services/audit.service.js';
+import { createAuditLog } from '../domains/system/services/audit.service.js';
 import { emitEntityEvent } from '../socket/setup.js';
 import { clientIp } from './helpers.js';
 import { buildScopeFilter, canAccessRecord, type ScopeFieldMapping } from './scope-filter.js';

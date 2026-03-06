@@ -5,12 +5,12 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn(), subscribe: vi.fn() } }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import {
   list,

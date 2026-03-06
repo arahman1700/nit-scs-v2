@@ -69,7 +69,7 @@ vi.mock('../../../domains/auth/services/auth.service.js', () => ({
 vi.mock('../../../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
-vi.mock('../../../services/audit.service.js', () => ({
+vi.mock('../../system/services/audit.service.js', () => ({
   createAuditLog: vi.fn().mockResolvedValue({}),
 }));
 

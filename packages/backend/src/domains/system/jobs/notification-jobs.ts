@@ -23,7 +23,7 @@ import {
   checkNcrDeadlines,
   checkContractRenewals,
   checkOverdueToolReturns,
-} from '../../../services/notification-dispatcher.service.js';
+} from '../services/notification-dispatcher.service.js';
 
 // ── Register Jobs ────────────────────────────────────────────────────────
 

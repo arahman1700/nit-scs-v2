@@ -28,10 +28,13 @@ import { setupSocketIO } from './socket/setup.js';
 import { rateLimiter } from './middleware/rate-limiter.js';
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
-import { startNotificationDispatcher } from './services/notification-dispatcher.service.js';
+import { startNotificationDispatcher } from './domains/system/services/notification-dispatcher.service.js';
 import { startScheduler, stopScheduler } from './services/scheduler.service.js';
-import { registerDynamicDataSources, register as registerDataSource } from './services/widget-data.service.js';
-import { loadCustomDataSources } from './services/custom-data-source.service.js';
+import {
+  registerDynamicDataSources,
+  register as registerDataSource,
+} from './domains/reporting/services/widget-data.service.js';
+import { loadCustomDataSources } from './domains/reporting/services/custom-data-source.service.js';
 import apiRoutes from './routes/index.js';
 import { healthCheck } from './routes/health.routes.js';
 

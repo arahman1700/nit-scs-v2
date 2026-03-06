@@ -60,7 +60,7 @@ vi.mock('../services/scrap.service.js', () => ({
 }));
 
 import * as scrapService from '../services/scrap.service.js';
-import { hasPermissionDB } from '../domains/auth/services/permission.service.js';
+import { hasPermissionDB } from '../../auth/services/permission.service.js';
 import { createTestApp, signTestToken } from '../../../test-utils/test-app.js';
 
 const app = createTestApp();

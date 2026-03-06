@@ -7,8 +7,8 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
-vi.mock('./inventory.service.js', () => ({ addStockBatch: vi.fn() }));
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../inventory/services/inventory.service.js', () => ({ addStockBatch: vi.fn() }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -16,7 +16,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, submit, approveQc, receive, store } from './grn.service.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
 import { assertTransition } from '@nit-scs-v2/shared';
 

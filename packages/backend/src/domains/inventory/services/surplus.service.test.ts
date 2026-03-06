@@ -7,7 +7,7 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -15,7 +15,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, evaluate, approve, scmApprove, action, close } from './surplus.service.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { assertTransition } from '@nit-scs-v2/shared';
 
 const mockedGenerateDocNumber = generateDocumentNumber as ReturnType<typeof vi.fn>;

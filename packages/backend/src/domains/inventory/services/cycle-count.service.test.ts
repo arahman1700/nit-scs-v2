@@ -5,10 +5,10 @@ import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-moc
 const { mockPrisma } = vi.hoisted(() => ({ mockPrisma: {} as PrismaMock }));
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
-vi.mock('./document-number.service.js', () => ({
+vi.mock('../../system/services/document-number.service.js', () => ({
   generateDocumentNumber: vi.fn().mockResolvedValue('CC-2026-0001'),
 }));
-vi.mock('./audit.service.js', () => ({ createAuditLog: vi.fn().mockResolvedValue({}) }));
+vi.mock('../../system/services/audit.service.js', () => ({ createAuditLog: vi.fn().mockResolvedValue({}) }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import {
@@ -23,7 +23,7 @@ import {
   applyAdjustments,
   autoCreateCycleCounts,
 } from './cycle-count.service.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { createAuditLog } from './audit.service.js';
 
 // ── Helper: create model mock with findUniqueOrThrow ────────────────────

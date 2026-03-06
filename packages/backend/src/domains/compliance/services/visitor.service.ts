@@ -9,8 +9,8 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { eventBus } from '../../../events/event-bus.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { createNotification } from '../../../services/notification.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
+import { createNotification } from '../../system/services/notification.service.js';
 import type { VisitorPassCreateDto, VisitorPassUpdateDto, VisitorCheckInDto } from '../../../types/dto.js';
 
 const LIST_INCLUDE = {

@@ -10,8 +10,8 @@ const { mockPrisma, mockGenerateDocNumber, mockConsumeReservationBatch, mockRele
 }));
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: mockGenerateDocNumber }));
-vi.mock('./inventory.service.js', () => ({
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: mockGenerateDocNumber }));
+vi.mock('../../inventory/services/inventory.service.js', () => ({
   consumeReservationBatch: mockConsumeReservationBatch,
   releaseReservation: mockReleaseReservation,
 }));

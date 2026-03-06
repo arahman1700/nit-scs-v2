@@ -16,14 +16,14 @@
  */
 
 import { prisma } from '../utils/prisma.js';
-import { createNotification } from './notification.service.js';
+import { createNotification } from '../domains/system/services/notification.service.js';
 import { initializeScheduledRules } from '../events/scheduled-rule-runner.js';
 import { log } from '../config/logger.js';
 import { getRedis } from '../config/redis.js';
 import { emitToRole, emitToUser } from '../socket/setup.js';
-import { sendPushToUser } from './push-notification.service.js';
+import { sendPushToUser } from '../domains/system/services/push-notification.service.js';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
-import { getAllSlaHours } from './system-config.service.js';
+import { getAllSlaHours } from '../domains/system/services/system-config.service.js';
 import { getAllJobs, clearJobs } from '../utils/job-registry.js';
 import type { PrismaDelegate, JobContext } from '../utils/job-registry.js';
 import type { Server as SocketIOServer } from 'socket.io';

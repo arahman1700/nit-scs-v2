@@ -9,7 +9,7 @@ import {
   type JwtPayload,
 } from '../../../utils/jwt.js';
 import { AuthenticationError, NotFoundError, RateLimitError, BusinessRuleError } from '@nit-scs-v2/shared';
-import { sendTemplatedEmail } from '../../../services/email.service.js';
+import { sendTemplatedEmail } from '../../system/services/email.service.js';
 import { recordLoginAttempt, checkAccountLockout } from './security.service.js';
 import { log } from '../../../config/logger.js';
 import { getRedis } from '../../../config/redis.js';

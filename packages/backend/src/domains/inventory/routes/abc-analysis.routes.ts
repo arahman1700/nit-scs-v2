@@ -10,7 +10,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
-import { createAuditLog } from '../../../services/audit.service.js';
+import { createAuditLog } from '../../system/services/audit.service.js';
 import {
   calculateABCClassification,
   applyABCClassification,

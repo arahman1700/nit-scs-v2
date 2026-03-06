@@ -1,6 +1,6 @@
 import { prisma } from '../../../utils/prisma.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { createAuditLog } from '../../../services/audit.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
+import { createAuditLog } from '../../system/services/audit.service.js';
 import { log } from '../../../config/logger.js';
 import { invalidateCachePattern } from '../../../utils/cache.js';
 import { eventBus } from '../../../events/event-bus.js';

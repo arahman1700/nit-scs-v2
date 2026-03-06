@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
-import { submitForApproval, processApproval } from '../../../services/approval.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
+import { submitForApproval, processApproval } from '../../workflow/services/approval.service.js';
 import { reserveStockBatch } from '../../inventory/services/inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';

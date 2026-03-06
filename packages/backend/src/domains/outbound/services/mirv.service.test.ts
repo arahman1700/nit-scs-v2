@@ -7,9 +7,12 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
-vi.mock('./approval.service.js', () => ({ submitForApproval: vi.fn(), processApproval: vi.fn() }));
-vi.mock('./inventory.service.js', () => ({
+vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../workflow/services/approval.service.js', () => ({
+  submitForApproval: vi.fn(),
+  processApproval: vi.fn(),
+}));
+vi.mock('../../inventory/services/inventory.service.js', () => ({
   reserveStockBatch: vi.fn(),
   consumeReservationBatch: vi.fn(),
   releaseReservation: vi.fn(),
@@ -23,7 +26,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, submit, approve, issue, cancel } from './mirv.service.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { submitForApproval, processApproval } from './approval.service.js';
 import {
   reserveStockBatch,

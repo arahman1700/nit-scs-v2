@@ -5,12 +5,12 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('./document-number.service.js', () => ({
+vi.mock('../../system/services/document-number.service.js', () => ({
   generateDocumentNumber: vi.fn().mockResolvedValue('ASN-2026-001'),
 }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import {
   getAsns,

@@ -9,17 +9,17 @@
 
 import { registerJob } from '../../../utils/job-registry.js';
 import type { JobContext } from '../../../utils/job-registry.js';
-import { processQueuedEmails } from '../../../services/email.service.js';
+import { processQueuedEmails } from '../services/email.service.js';
 import { cleanupExpiredTokens } from '../../auth/services/auth.service.js';
 import { calculateABCClassification, applyABCClassification } from '../../inventory/services/abc-analysis.service.js';
 import { autoCreateCycleCounts } from '../../inventory/services/cycle-count.service.js';
-import { detectAnomalies } from '../../../services/anomaly-detection.service.js';
-import { autoUpdateReorderPoints } from '../../../services/reorder-prediction.service.js';
-import { calculateDepreciation } from '../../../services/asset.service.js';
+import { detectAnomalies } from '../../reporting/services/anomaly-detection.service.js';
+import { autoUpdateReorderPoints } from '../../reporting/services/reorder-prediction.service.js';
+import { calculateDepreciation } from '../../equipment/services/asset.service.js';
 import { processScheduledRules } from '../../../events/scheduled-rule-runner.js';
 import { detectSuspiciousActivity } from '../../auth/services/security.service.js';
-import { checkExpiringContracts as checkAmcExpiry } from '../../../services/amc.service.js';
-import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from '../../../services/vehicle-maintenance.service.js';
+import { checkExpiringContracts as checkAmcExpiry } from '../../equipment/services/amc.service.js';
+import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from '../../equipment/services/vehicle-maintenance.service.js';
 
 // ── Email Retry ──────────────────────────────────────────────────────────
 

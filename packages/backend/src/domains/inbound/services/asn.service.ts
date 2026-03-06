@@ -1,5 +1,5 @@
 import { prisma } from '../../../utils/prisma.js';
-import { generateDocumentNumber } from '../../../services/document-number.service.js';
+import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 
 type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
