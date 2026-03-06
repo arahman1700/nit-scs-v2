@@ -158,6 +158,8 @@ model GatePass {
   mirvId          String?   @map("mirv_id") @db.Uuid
   imsfId          String?   @map("imsf_id") @db.Uuid
   jobOrderId      String?   @map("job_order_id") @db.Uuid
+  asnId           String?   @map("asn_id") @db.Uuid
+  expectedMrrvId  String?   @map("expected_mrrv_id") @db.Uuid
   projectId       String?   @map("project_id") @db.Uuid
   warehouseId     String    @map("warehouse_id") @db.Uuid
   vehicleNumber   String    @map("vehicle_number") @db.VarChar(30)
@@ -185,8 +187,10 @@ model GatePass {
   // Relations
   mirv      Mirv?     @relation(fields: [mirvId], references: [id], onDelete: SetNull)
   imsf      Imsf?     @relation(fields: [imsfId], references: [id], onDelete: SetNull)
-  jobOrder  JobOrder? @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
-  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  jobOrder     JobOrder?              @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
+  asn          AdvanceShippingNotice? @relation(fields: [asnId], references: [id], onDelete: SetNull)
+  expectedMrrv Mrrv?                 @relation("GatePassExpectedMrrv", fields: [expectedMrrvId], references: [id], onDelete: SetNull)
+  project      Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   issuedBy  Employee? @relation("GatePassIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
 
@@ -200,6 +204,8 @@ model GatePass {
   @@index([mirvId], map: "idx_gate_passes_mirv")
   @@index([imsfId], map: "idx_gate_passes_imsf")
   @@index([jobOrderId], map: "idx_gate_passes_jo")
+  @@index([asnId], map: "idx_gate_passes_asn")
+  @@index([expectedMrrvId], map: "idx_gate_passes_expected_mrrv")
   @@index([projectId], map: "idx_gate_passes_project")
   @@index([createdAt], map: "idx_gate_passes_created")
   @@index([warehouseId, status], map: "idx_gate_passes_warehouse_status")

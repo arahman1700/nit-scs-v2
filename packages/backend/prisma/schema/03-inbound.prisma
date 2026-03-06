@@ -34,10 +34,11 @@ model Mrrv {
   qcInspector Employee? @relation("MrrvQcInspector", fields: [qcInspectorId], references: [id], onDelete: SetNull)
 
   // Reverse relations
-  mrrvLines  MrrvLine[]
-  rfims      Rfim[]
-  osdReports OsdReport[]
-  shipments  Shipment[]
+  mrrvLines           MrrvLine[]
+  rfims               Rfim[]
+  osdReports          OsdReport[]
+  shipments           Shipment[]
+  gatePassesExpected  GatePass[] @relation("GatePassExpectedMrrv")
 
   @@index([status], map: "idx_mrrv_status")
   @@index([supplierId], map: "idx_mrrv_supplier")

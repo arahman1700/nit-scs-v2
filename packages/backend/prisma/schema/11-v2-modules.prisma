@@ -523,9 +523,10 @@ model AdvanceShippingNotice {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  supplier  Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  lines     AsnLine[]
+  supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  lines      AsnLine[]
+  gatePasses GatePass[]
 
   @@index([supplierId], map: "idx_asn_supplier")
   @@index([warehouseId], map: "idx_asn_warehouse")
