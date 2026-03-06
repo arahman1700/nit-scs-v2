@@ -21,6 +21,7 @@ interface MirvWithLines {
   reservationStatus: string | null;
   qcSignatureId: string | null;
   gatePassAutoCreated: boolean;
+  pickWaveId: string | null;
   mirvLines: Array<{
     id: string;
     itemId: string;
@@ -114,6 +115,21 @@ export async function issueMirv(
 
   if (consumeItems.length === 0) {
     throw new BusinessRuleError('No items remaining to issue');
+  }
+
+  // SOW Gap 3: Auto-generate pick wave for warehouse officer
+  if (!mirv.pickWaveId) {
+    try {
+      const { createWave } = await import('./wave-picking.service.js');
+      const wave = await createWave(mirv.warehouseId, [mirv.id]);
+      await tx.mirv.update({
+        where: { id: mirv.id },
+        data: { pickWaveId: wave.id },
+      });
+    } catch (err) {
+      // Non-blocking — pick list is a convenience, not a blocker for issuance
+      console.warn('[issueMirv] Auto-wave creation failed:', (err as Error).message);
+    }
   }
 
   const { totalCost, lineCosts } = await consumeReservationBatch(consumeItems);

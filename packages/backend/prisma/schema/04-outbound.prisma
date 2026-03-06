@@ -25,6 +25,7 @@ model Mirv {
   notes               String?
   qcSignatureId       String?   @map("qc_signature_id") @db.Uuid
   gatePassAutoCreated Boolean   @default(false) @map("gate_pass_auto_created")
+  pickWaveId          String?   @map("pick_wave_id") @db.VarChar(50)
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
