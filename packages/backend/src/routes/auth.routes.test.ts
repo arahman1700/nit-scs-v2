@@ -51,7 +51,7 @@ vi.mock('../utils/prisma.js', () => ({
 
 // ── Service mock ────────────────────────────────────────────────────────
 
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   login: vi.fn(),
   refreshTokens: vi.fn(),
   getMe: vi.fn(),
@@ -64,7 +64,7 @@ vi.mock('../services/auth.service.js', () => ({
 
 // ── Imports ─────────────────────────────────────────────────────────────
 
-import * as authService from '../services/auth.service.js';
+import * as authService from '../domains/auth/services/auth.service.js';
 import { createTestApp, signTestToken } from '../test-utils/test-app.js';
 import supertest from 'supertest';
 

@@ -86,7 +86,7 @@ import type {
   changePasswordSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
-} from '../schemas/auth.schema.js';
+} from '../domains/auth/schemas/auth.schema.js';
 
 // ═══════════════════════════════════════════════════════════════════════
 // Document DTOs — V2 Names

@@ -7,9 +7,9 @@
 
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
-import { sendSuccess, sendError } from '../utils/response.js';
+import { authenticate } from '../../../middleware/auth.js';
+import { requireRole } from '../../../middleware/rbac.js';
+import { sendSuccess, sendError } from '../../../utils/response.js';
 import { getSecurityDashboard, getLoginHistory } from '../services/security.service.js';
 
 const router = Router();

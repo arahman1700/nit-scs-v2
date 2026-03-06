@@ -9,7 +9,7 @@ vi.hoisted(() => {
 });
 
 // ── Common mocks ──────────────────────────────────────────────────────────
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 vi.mock('../config/redis.js', () => ({ getRedis: vi.fn().mockReturnValue(null) }));

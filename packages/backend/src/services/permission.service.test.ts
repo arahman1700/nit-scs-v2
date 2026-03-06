@@ -38,7 +38,7 @@ import {
   updateRolePermissions,
   resetToDefaults,
   invalidatePermissionCache,
-} from './permission.service.js';
+} from '../domains/auth/services/permission.service.js';
 
 // ── Test Suite ──────────────────────────────────────────────────────────
 

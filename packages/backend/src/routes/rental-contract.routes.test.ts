@@ -34,12 +34,12 @@ vi.mock('../utils/prisma.js', () => ({
     },
   ),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
 // rental-contract has resource: 'rental_contract' so uses requirePermission
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 
@@ -56,7 +56,7 @@ vi.mock('../services/rental-contract.service.js', () => ({
 }));
 
 import * as rcService from '../services/rental-contract.service.js';
-import { hasPermissionDB } from '../services/permission.service.js';
+import { hasPermissionDB } from '../domains/auth/services/permission.service.js';
 import { createTestApp, signTestToken } from '../test-utils/test-app.js';
 
 const app = createTestApp();

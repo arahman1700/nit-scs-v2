@@ -1,6 +1,6 @@
-import { prisma } from '../utils/prisma.js';
+import { prisma } from '../../../utils/prisma.js';
 import { ROLE_PERMISSIONS, type Permission } from '@nit-scs-v2/shared';
-import { log } from '../config/logger.js';
+import { log } from '../../../config/logger.js';
 
 // ── Types ───────────────────────────────────────────────────────────────
 

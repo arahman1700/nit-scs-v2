@@ -6,10 +6,10 @@
  * suspicious activity detection.
  */
 
-import { prisma } from '../utils/prisma.js';
-import { createNotification } from './notification.service.js';
+import { prisma } from '../../../utils/prisma.js';
+import { createNotification } from '../../../services/notification.service.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
-import { log } from '../config/logger.js';
+import { log } from '../../../config/logger.js';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 

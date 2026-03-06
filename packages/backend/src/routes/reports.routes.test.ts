@@ -23,12 +23,12 @@ vi.mock('../utils/routeHelpers.js', () => ({
   emitDocumentEvent: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
 // Reports uses requirePermission for supplier-performance & financial-summary
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 
@@ -105,7 +105,7 @@ describe('Reports Routes', () => {
     vi.clearAllMocks();
     token = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
     // Re-mock after clearAllMocks
-    const { hasPermissionDB } = await import('../services/permission.service.js');
+    const { hasPermissionDB } = await import('../domains/auth/services/permission.service.js');
     vi.mocked(hasPermissionDB).mockResolvedValue(true);
     // Re-set prisma aggregate mocks
     vi.mocked(prisma.jobOrder.aggregate).mockResolvedValue({ _sum: { totalAmount: 0 }, _count: { id: 0 } } as any);

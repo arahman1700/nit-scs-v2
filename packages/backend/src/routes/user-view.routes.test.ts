@@ -25,10 +25,10 @@ vi.mock('../utils/routeHelpers.js', () => ({
   emitDocumentEvent: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 
@@ -37,16 +37,14 @@ vi.mock('../utils/prisma.js', () => ({
     userView: {
       findMany: vi.fn().mockResolvedValue([]),
       findFirst: vi.fn().mockResolvedValue(null),
-      create: vi
-        .fn()
-        .mockResolvedValue({
-          id: 'uv1',
-          name: 'My View',
-          entityType: 'grn',
-          viewType: 'grid',
-          config: {},
-          isDefault: false,
-        }),
+      create: vi.fn().mockResolvedValue({
+        id: 'uv1',
+        name: 'My View',
+        entityType: 'grn',
+        viewType: 'grid',
+        config: {},
+        isDefault: false,
+      }),
       update: vi.fn().mockResolvedValue({ id: 'uv1', name: 'Updated' }),
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       delete: vi.fn().mockResolvedValue({ id: 'uv1' }),

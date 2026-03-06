@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
-import { validate } from '../middleware/validate.js';
-import { authenticate } from '../middleware/auth.js';
-import { authRateLimiter } from '../middleware/rate-limiter.js';
+import { validate } from '../../../middleware/validate.js';
+import { authenticate } from '../../../middleware/auth.js';
+import { authRateLimiter } from '../../../middleware/rate-limiter.js';
 import {
   loginSchema,
   refreshSchema,
@@ -11,7 +11,7 @@ import {
   resetPasswordSchema,
 } from '../schemas/auth.schema.js';
 import * as authService from '../services/auth.service.js';
-import { sendSuccess, sendError } from '../utils/response.js';
+import { sendSuccess, sendError } from '../../../utils/response.js';
 
 const router = Router();
 

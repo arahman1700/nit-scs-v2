@@ -34,12 +34,12 @@ vi.mock('../utils/prisma.js', () => ({
     },
   ),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
 // MRN has resource: 'mrn' so it uses requirePermission -> hasPermissionDB
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 
@@ -71,7 +71,7 @@ describe('MRN Routes', () => {
     vi.mocked(mrnService.list).mockResolvedValue({ data: [], total: 0 });
     vi.mocked(mrnService.getById).mockResolvedValue({ id: 'mrn-1', status: 'draft' });
     // Re-mock permission after clearAllMocks
-    const { hasPermissionDB } = await import('../services/permission.service.js');
+    const { hasPermissionDB } = await import('../domains/auth/services/permission.service.js');
     vi.mocked(hasPermissionDB).mockResolvedValue(true);
   });
 

@@ -34,12 +34,12 @@ vi.mock('../utils/prisma.js', () => ({
     },
   ),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
 // QCI has resource: 'qci' so it uses requirePermission -> hasPermissionDB
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 
@@ -54,7 +54,7 @@ vi.mock('../services/qci.service.js', () => ({
 }));
 
 import * as qciService from '../services/qci.service.js';
-import { hasPermissionDB } from '../services/permission.service.js';
+import { hasPermissionDB } from '../domains/auth/services/permission.service.js';
 import { createTestApp, signTestToken } from '../test-utils/test-app.js';
 
 const app = createTestApp();

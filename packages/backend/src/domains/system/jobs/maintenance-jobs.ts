@@ -10,14 +10,14 @@
 import { registerJob } from '../../../utils/job-registry.js';
 import type { JobContext } from '../../../utils/job-registry.js';
 import { processQueuedEmails } from '../../../services/email.service.js';
-import { cleanupExpiredTokens } from '../../../services/auth.service.js';
+import { cleanupExpiredTokens } from '../../auth/services/auth.service.js';
 import { calculateABCClassification, applyABCClassification } from '../../../services/abc-analysis.service.js';
 import { autoCreateCycleCounts } from '../../../services/cycle-count.service.js';
 import { detectAnomalies } from '../../../services/anomaly-detection.service.js';
 import { autoUpdateReorderPoints } from '../../../services/reorder-prediction.service.js';
 import { calculateDepreciation } from '../../../services/asset.service.js';
 import { processScheduledRules } from '../../../events/scheduled-rule-runner.js';
-import { detectSuspiciousActivity } from '../../../services/security.service.js';
+import { detectSuspiciousActivity } from '../../auth/services/security.service.js';
 import { checkExpiringContracts as checkAmcExpiry } from '../../../services/amc.service.js';
 import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from '../../../services/vehicle-maintenance.service.js';
 

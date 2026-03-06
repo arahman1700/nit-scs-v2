@@ -9,7 +9,7 @@ vi.hoisted(() => {
 });
 
 // ── Common mocks ──────────────────────────────────────────────────────────
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 vi.mock('../config/redis.js', () => ({ getRedis: vi.fn().mockReturnValue(null) }));
@@ -27,7 +27,7 @@ vi.mock('../socket/setup.js', () => ({
 vi.mock('../utils/routeHelpers.js', () => ({ auditAndEmit: vi.fn() }));
 
 // ── Permission mock (requirePermission calls hasPermissionDB) ─────────────
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockImplementation(async (role: string, _resource: string, _action: string) => {
     // admin and manager can read audit-log; others cannot
     return role === 'admin' || role === 'manager';

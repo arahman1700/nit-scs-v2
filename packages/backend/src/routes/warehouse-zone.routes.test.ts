@@ -46,10 +46,10 @@ vi.mock('../utils/prisma.js', () => ({
     },
   ),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 vi.mock('../services/audit.service.js', () => ({
@@ -94,15 +94,12 @@ describe('Warehouse Zone Routes (CRUD Factory)', () => {
   // POST /warehouse-zones
   describe('POST /warehouse-zones', () => {
     it('returns 201 for admin', async () => {
-      const res = await request
-        .post(BASE)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          zoneName: 'Zone B',
-          zoneCode: 'ZB',
-          warehouseId: '00000000-0000-0000-0000-000000000001',
-          zoneType: 'civil',
-        });
+      const res = await request.post(BASE).set('Authorization', `Bearer ${adminToken}`).send({
+        zoneName: 'Zone B',
+        zoneCode: 'ZB',
+        warehouseId: '00000000-0000-0000-0000-000000000001',
+        zoneType: 'civil',
+      });
       expect(res.status).toBe(201);
     });
 

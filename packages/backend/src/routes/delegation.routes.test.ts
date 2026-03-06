@@ -51,7 +51,7 @@ vi.mock('../utils/prisma.js', () => ({
 
 // ── Service mocks ───────────────────────────────────────────────────────
 
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 

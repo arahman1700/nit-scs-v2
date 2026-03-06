@@ -39,10 +39,10 @@ vi.mock('../utils/routeHelpers.js', () => ({
   emitDocumentEvent: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
 }));
 vi.mock('../services/audit.service.js', () => ({

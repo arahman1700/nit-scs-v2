@@ -28,7 +28,7 @@ vi.mock('../utils/routeHelpers.js', () => ({
   emitDocumentEvent: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 

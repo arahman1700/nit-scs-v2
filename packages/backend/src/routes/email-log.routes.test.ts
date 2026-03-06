@@ -50,12 +50,12 @@ vi.mock('../utils/prisma.js', () => ({
     },
   ),
 }));
-vi.mock('../services/auth.service.js', () => ({
+vi.mock('../domains/auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 
 // Mock permission service — email-log uses requirePermission('email_log', 'read')
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn().mockResolvedValue(true),
   getAllPermissions: vi.fn().mockResolvedValue({}),
   getPermissionsForRole: vi.fn().mockResolvedValue({}),
@@ -74,7 +74,7 @@ beforeEach(async () => {
   vi.clearAllMocks();
   if (!modelCache['emailLog']) modelCache['emailLog'] = {};
   // Re-mock permission after clearAllMocks
-  const { hasPermissionDB } = await import('../services/permission.service.js');
+  const { hasPermissionDB } = await import('../domains/auth/services/permission.service.js');
   vi.mocked(hasPermissionDB).mockResolvedValue(true);
 });
 

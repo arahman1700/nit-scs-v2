@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Permission } from '@nit-scs-v2/shared';
 import { sendError } from '../utils/response.js';
-import { hasPermissionDB } from '../services/permission.service.js';
+import { hasPermissionDB } from '../domains/auth/services/permission.service.js';
 
 /**
  * Require user to have one of the listed roles (admin always passes).

@@ -39,7 +39,7 @@ import {
   getMe,
   cleanupExpiredTokens,
   isTokenBlacklisted,
-} from './auth.service.js';
+} from '../domains/auth/services/auth.service.js';
 import { comparePassword, hashPassword } from '../utils/password.js';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, decodeToken } from '../utils/jwt.js';
 import { sendTemplatedEmail } from './email.service.js';

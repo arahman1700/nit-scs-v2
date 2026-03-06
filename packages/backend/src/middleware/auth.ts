@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken, type JwtPayload } from '../utils/jwt.js';
-import { isTokenBlacklisted } from '../services/auth.service.js';
+import { isTokenBlacklisted } from '../domains/auth/services/auth.service.js';
 import { sendError } from '../utils/response.js';
 import { Sentry } from '../config/sentry.js';
 import { logger } from '../config/logger.js';

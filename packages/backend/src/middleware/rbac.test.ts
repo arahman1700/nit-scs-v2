@@ -2,11 +2,11 @@ import type { Request, Response, NextFunction } from 'express';
 import { requireRole, requirePermission } from './rbac.js';
 
 // Mock the permission service (DB-backed, async)
-vi.mock('../services/permission.service.js', () => ({
+vi.mock('../domains/auth/services/permission.service.js', () => ({
   hasPermissionDB: vi.fn(),
 }));
 
-import { hasPermissionDB } from '../services/permission.service.js';
+import { hasPermissionDB } from '../domains/auth/services/permission.service.js';
 const mockedHasPermissionDB = vi.mocked(hasPermissionDB);
 
 const mockReq = (overrides = {}) => ({ headers: {}, query: {}, body: {}, ...overrides }) as unknown as Request;

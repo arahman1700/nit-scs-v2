@@ -1,12 +1,18 @@
 import crypto from 'crypto';
-import { prisma } from '../utils/prisma.js';
-import { comparePassword, hashPassword } from '../utils/password.js';
-import { signAccessToken, signRefreshToken, verifyRefreshToken, decodeToken, type JwtPayload } from '../utils/jwt.js';
+import { prisma } from '../../../utils/prisma.js';
+import { comparePassword, hashPassword } from '../../../utils/password.js';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  decodeToken,
+  type JwtPayload,
+} from '../../../utils/jwt.js';
 import { AuthenticationError, NotFoundError, RateLimitError, BusinessRuleError } from '@nit-scs-v2/shared';
-import { sendTemplatedEmail } from './email.service.js';
+import { sendTemplatedEmail } from '../../../services/email.service.js';
 import { recordLoginAttempt, checkAccountLockout } from './security.service.js';
-import { log } from '../config/logger.js';
-import { getRedis } from '../config/redis.js';
+import { log } from '../../../config/logger.js';
+import { getRedis } from '../../../config/redis.js';
 
 // ── Token Blacklist (Redis + in-memory fallback) ────────────────────────
 

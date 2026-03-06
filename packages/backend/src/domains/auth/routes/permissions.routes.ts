@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { authenticate } from '../middleware/auth.js';
-import { requireRole } from '../middleware/rbac.js';
-import { sendSuccess, sendError } from '../utils/response.js';
+import { authenticate } from '../../../middleware/auth.js';
+import { requireRole } from '../../../middleware/rbac.js';
+import { sendSuccess, sendError } from '../../../utils/response.js';
 import {
   getAllPermissions,
   getPermissionsForRole,
