@@ -6,6 +6,7 @@ import { sendTemplatedEmail } from '../domains/system/services/email.service.js'
 import { reserveStock } from '../domains/inventory/services/inventory.service.js';
 import { generateDocumentNumber } from '../domains/system/services/document-number.service.js';
 import type { SystemEvent } from './event-bus.js';
+import { validateWebhookUrl } from '../utils/url-validator.js';
 
 // ── Action Registry ─────────────────────────────────────────────────────
 
@@ -408,6 +409,12 @@ async function handleWebhook(params: Record<string, unknown>, event: SystemEvent
   const url = params.url as string;
   if (!url) {
     throw new Error('webhook requires url');
+  }
+
+  // SSRF protection: validate URL before making the request
+  const urlCheck = validateWebhookUrl(url);
+  if (!urlCheck.valid) {
+    throw new Error(`Webhook URL blocked: ${urlCheck.reason}`);
   }
 
   const headers = (params.headers as Record<string, string>) || {};

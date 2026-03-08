@@ -42,6 +42,7 @@ const actionSchema = z.object({
     'reserve_stock',
     'assign_task',
     'webhook',
+    'conditional_branch',
   ]),
   params: z.record(z.unknown()),
 });

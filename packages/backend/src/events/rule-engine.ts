@@ -3,6 +3,7 @@ import { getActiveRules } from './rule-cache.js';
 import { executeActions } from './action-handlers.js';
 import { prisma } from '../utils/prisma.js';
 import { log } from '../config/logger.js';
+import { createRuleSchema } from '../domains/workflow/schemas/workflow.schema.js';
 
 // ── Condition Types ─────────────────────────────────────────────────────
 
@@ -94,6 +95,16 @@ async function processEvent(event: SystemEvent): Promise<void> {
   log('debug', `[RuleEngine] ${matching.length} rules to evaluate for ${event.type}/${event.entityType}`);
 
   for (const rule of matching) {
+    // Validate rule structure before processing
+    const ruleValidation = createRuleSchema.pick({ conditions: true, actions: true }).safeParse({
+      conditions: rule.conditions,
+      actions: rule.actions,
+    });
+    if (!ruleValidation.success) {
+      log('warn', `[RuleEngine] Rule ${rule.id} has invalid structure, skipping: ${ruleValidation.error.message}`);
+      continue;
+    }
+
     let matched = false;
     let success = false;
     let error: string | undefined;
