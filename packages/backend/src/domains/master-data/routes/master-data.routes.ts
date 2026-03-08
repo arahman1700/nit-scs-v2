@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { createCrudRouter } from '../../../utils/crud-factory.js';
 import { conditionalCache } from '../../../middleware/cache-headers.js';
+import { prisma } from '../../../utils/prisma.js';
+import { BusinessRuleError } from '@nit-scs-v2/shared';
 import * as s from '../../../schemas/master-data.schema.js';
 
 const router = Router();
@@ -165,6 +167,23 @@ router.use(
     includes: { warehouseType: true, region: true, city: true },
     defaultSort: 'createdAt',
     allowedRoles: MASTER_DATA_ROLES,
+    beforeDelete: async (id: string) => {
+      // Guard: prevent deletion of warehouses with operational data
+      const [zones, gatePasses, employees] = await Promise.all([
+        prisma.warehouseZone.count({ where: { warehouseId: id } }),
+        prisma.gatePass.count({ where: { warehouseId: id } }),
+        prisma.employee.count({ where: { assignedWarehouseId: id, isActive: true } }),
+      ]);
+      if (zones > 0 || gatePasses > 0 || employees > 0) {
+        const reasons: string[] = [];
+        if (zones > 0) reasons.push(`${zones} zone(s)`);
+        if (gatePasses > 0) reasons.push(`${gatePasses} gate pass(es)`);
+        if (employees > 0) reasons.push(`${employees} active employee(s)`);
+        throw new BusinessRuleError(
+          `Cannot delete warehouse: it has ${reasons.join(', ')} linked. Remove or reassign them first.`,
+        );
+      }
+    },
   }),
 );
 

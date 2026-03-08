@@ -114,16 +114,13 @@ describe('Task Routes', () => {
   // POST /tasks
   describe('POST /tasks', () => {
     it('returns 201 on success', async () => {
-      const res = await request
-        .post(BASE)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ body: { title: 'New task' } });
+      const res = await request.post(BASE).set('Authorization', `Bearer ${adminToken}`).send({ title: 'New task' });
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
     });
 
     it('returns 401 without auth', async () => {
-      const res = await request.post(BASE).send({ body: { title: 'Test' } });
+      const res = await request.post(BASE).send({ title: 'Test' });
       expect(res.status).toBe(401);
     });
   });
@@ -135,7 +132,7 @@ describe('Task Routes', () => {
       const res = await request
         .put(`${BASE}/t1`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ body: { title: 'Updated' } });
+        .send({ title: 'Updated' });
       expect(res.status).toBe(200);
     });
 
@@ -144,7 +141,7 @@ describe('Task Routes', () => {
       const res = await request
         .put(`${BASE}/t1`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ body: { title: 'Updated' } });
+        .send({ title: 'Updated' });
       expect(res.status).toBe(404);
     });
 
@@ -154,7 +151,7 @@ describe('Task Routes', () => {
       const res = await request
         .put(`${BASE}/t1`)
         .set('Authorization', `Bearer ${userToken}`)
-        .send({ body: { title: 'Hijacked' } });
+        .send({ title: 'Hijacked' });
       expect(res.status).toBe(403);
     });
   });

@@ -228,15 +228,10 @@ describe('GET /api/v1/delegations/:id', () => {
 // POST /api/v1/delegations
 // ---------------------------------------------------------------------------
 describe('POST /api/v1/delegations', () => {
-  // The createDelegationSchema expects { body: { delegateId, startDate, endDate, ... } }
-  // because the schema wraps fields inside a `body` key.
-  // The validate middleware parses req.body against this schema.
   const validBody = {
-    body: {
-      delegateId: '550e8400-e29b-41d4-a716-446655440000',
-      startDate: '2026-03-01T00:00:00Z',
-      endDate: '2026-03-31T00:00:00Z',
-    },
+    delegateId: '550e8400-e29b-41d4-a716-446655440000',
+    startDate: '2026-03-01T00:00:00Z',
+    endDate: '2026-03-31T00:00:00Z',
   };
 
   it('should return 201 on success for admin', async () => {
@@ -275,7 +270,7 @@ describe('POST /api/v1/delegations', () => {
     const res = await request
       .post('/api/v1/delegations')
       .set('Authorization', `Bearer ${ADMIN_TOKEN}`)
-      .send({ body: { delegateId: 'not-a-uuid', startDate: '2026-03-01', endDate: '2026-03-31' } });
+      .send({ delegateId: 'not-a-uuid', startDate: '2026-03-01', endDate: '2026-03-31' });
 
     expect(res.status).toBe(400);
     expect(res.body.success).toBe(false);
@@ -294,8 +289,7 @@ describe('POST /api/v1/delegations', () => {
 // PUT /api/v1/delegations/:id
 // ---------------------------------------------------------------------------
 describe('PUT /api/v1/delegations/:id', () => {
-  // The updateDelegationSchema expects { body: { ... } } wrapper
-  const validUpdate = { body: { notes: 'Updated via test' } };
+  const validUpdate = { notes: 'Updated via test' };
 
   it('should return 200 on success for admin', async () => {
     getMock.mockResolvedValue(fakeDelegation);

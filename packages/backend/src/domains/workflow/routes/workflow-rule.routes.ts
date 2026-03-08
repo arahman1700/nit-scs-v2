@@ -4,6 +4,7 @@ import { requireRole } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
 import { prisma } from '../../../utils/prisma.js';
 import { invalidateRuleCache } from '../../../events/rule-cache.js';
+import { nextCronRun } from '../../../events/scheduled-rule-runner.js';
 import { createRuleSchema, updateRuleSchema, testRuleSchema } from '../schemas/workflow.schema.js';
 import { eventBus } from '../../../events/event-bus.js';
 
@@ -72,14 +73,19 @@ router.post('/', async (req, res, next) => {
       return;
     }
 
-    const rule = await prisma.workflowRule.create({
-      data: {
-        ...parsed.data,
-        conditions: parsed.data.conditions as object,
-        actions: parsed.data.actions as unknown as object,
-        workflowId,
-      },
-    });
+    const data: Record<string, unknown> = {
+      ...parsed.data,
+      conditions: parsed.data.conditions as object,
+      actions: parsed.data.actions as unknown as object,
+      workflowId,
+    };
+
+    // Compute initial nextRunAt for scheduled rules
+    if (parsed.data.cronExpression) {
+      data.nextRunAt = nextCronRun(parsed.data.cronExpression, new Date());
+    }
+
+    const rule = await prisma.workflowRule.create({ data: data as any });
 
     invalidateRuleCache();
     sendCreated(res, rule);
@@ -98,13 +104,21 @@ router.put('/:id', async (req, res, next) => {
       return;
     }
 
-    const data: Record<string, unknown> = { ...parsed.data };
-    if (parsed.data.conditions) data.conditions = parsed.data.conditions as object;
-    if (parsed.data.actions) data.actions = parsed.data.actions as unknown as object;
+    const updateData: Record<string, unknown> = { ...parsed.data };
+    if (parsed.data.conditions) updateData.conditions = parsed.data.conditions as object;
+    if (parsed.data.actions) updateData.actions = parsed.data.actions as unknown as object;
+
+    // Recompute nextRunAt when cronExpression changes
+    if (parsed.data.cronExpression) {
+      updateData.nextRunAt = nextCronRun(parsed.data.cronExpression, new Date());
+    } else if (parsed.data.cronExpression === null) {
+      // If cronExpression is explicitly cleared, clear nextRunAt too
+      updateData.nextRunAt = null;
+    }
 
     const rule = await prisma.workflowRule.update({
       where: { id },
-      data,
+      data: updateData as any,
     });
 
     invalidateRuleCache();

@@ -1,6 +1,43 @@
 import { prisma } from '../../../utils/prisma.js';
+import { NotFoundError } from '@nit-scs-v2/shared';
 
 const AUTHOR_SELECT = { id: true, fullName: true, email: true, department: true } as const;
+
+/**
+ * Maps comment documentType route params to Prisma model delegates.
+ * Used to verify the referenced document actually exists before
+ * allowing comment operations.
+ */
+const DOCUMENT_DELEGATES: Record<
+  string,
+  { findUnique: (args: { where: { id: string }; select: { id: true } }) => Promise<unknown> }
+> = {
+  mrrv: prisma.mrrv,
+  mirv: prisma.mirv,
+  mrv: prisma.mrv,
+  rfim: prisma.rfim,
+  osd: prisma.osdReport,
+  'job-order': prisma.jobOrder,
+  'gate-pass': prisma.gatePass,
+  'stock-transfer': prisma.stockTransfer,
+  mrf: prisma.materialRequisition,
+  shipment: prisma.shipment,
+} as Record<string, any>;
+
+/**
+ * Verify the referenced document exists.
+ * Throws NotFoundError if the document type is unknown or the document doesn't exist.
+ */
+export async function verifyDocumentExists(documentType: string, documentId: string): Promise<void> {
+  const delegate = DOCUMENT_DELEGATES[documentType];
+  if (!delegate) {
+    throw new NotFoundError(`Unknown document type: ${documentType}`);
+  }
+  const doc = await delegate.findUnique({ where: { id: documentId }, select: { id: true } });
+  if (!doc) {
+    throw new NotFoundError(`Document not found: ${documentType}/${documentId}`);
+  }
+}
 
 export interface CreateCommentDto {
   documentType: string;

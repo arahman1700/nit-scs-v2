@@ -8,6 +8,7 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { consumeReservationBatch, releaseReservation } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { logger } from '../../../config/logger.js';
 
 type TxClient = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
@@ -128,7 +129,7 @@ export async function issueMirv(
       });
     } catch (err) {
       // Non-blocking — pick list is a convenience, not a blocker for issuance
-      console.warn('[issueMirv] Auto-wave creation failed:', (err as Error).message);
+      logger.warn('[issueMirv] Auto-wave creation failed: %s', (err as Error).message);
     }
   }
 

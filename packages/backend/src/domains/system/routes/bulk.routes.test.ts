@@ -88,33 +88,27 @@ describe('Bulk Routes', () => {
   // ── POST /bulk/execute ────────────────────────────────────────────────
 
   describe('POST /api/v1/bulk/execute', () => {
-    // Note: bulkActionSchema wraps body in z.object({ body: z.object({...}) })
-    // The validate middleware parses req.body against this schema, so the HTTP body
-    // must include the `body` wrapper to pass validation.
-
-    it('passes validation and reaches handler logic', async () => {
-      // bulkActionSchema wraps in z.object({ body: ... }), so after validation
-      // req.body = { body: { documentType, ids, action } }. The handler destructures
-      // req.body directly, getting undefined values. It then checks if action is in
-      // available actions — since undefined is not found, it returns 400.
+    it('returns 200 and executes bulk action successfully', async () => {
       vi.mocked(getAvailableBulkActions).mockReturnValue(['approve', 'reject']);
+      vi.mocked(executeBulkAction).mockResolvedValue([
+        { id: UUID1, success: true },
+        { id: UUID2, success: true },
+      ] as any);
 
       const res = await request
         .post('/api/v1/bulk/execute')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          body: {
-            documentType: 'mrrv',
-            ids: [UUID1, UUID2],
-            action: 'approve',
-          },
+          documentType: 'mrrv',
+          ids: [UUID1, UUID2],
+          action: 'approve',
         });
 
-      // Validation passes, but handler destructure mismatch triggers action check failure
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toContain('not available');
-      expect(getAvailableBulkActions).toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.succeeded).toBe(2);
+      expect(res.body.data.failed).toBe(0);
+      expect(executeBulkAction).toHaveBeenCalledWith('mrrv', [UUID1, UUID2], 'approve', 'test-user-id', undefined);
     });
 
     it('returns 400 when action is not available for document type', async () => {
@@ -124,15 +118,14 @@ describe('Bulk Routes', () => {
         .post('/api/v1/bulk/execute')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          body: {
-            documentType: 'mrrv',
-            ids: [UUID1],
-            action: 'nonexistent',
-          },
+          documentType: 'mrrv',
+          ids: [UUID1],
+          action: 'nonexistent',
         });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
+      expect(res.body.message).toContain('not available');
       expect(executeBulkAction).not.toHaveBeenCalled();
     });
 
@@ -140,9 +133,7 @@ describe('Bulk Routes', () => {
       const res = await request
         .post('/api/v1/bulk/execute')
         .set('Authorization', `Bearer ${token}`)
-        .send({
-          body: { documentType: 'mrrv', action: 'approve' },
-        });
+        .send({ documentType: 'mrrv', action: 'approve' });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -152,9 +143,7 @@ describe('Bulk Routes', () => {
       const res = await request
         .post('/api/v1/bulk/execute')
         .set('Authorization', `Bearer ${token}`)
-        .send({
-          body: { documentType: 'mrrv', ids: [], action: 'approve' },
-        });
+        .send({ documentType: 'mrrv', ids: [], action: 'approve' });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -165,11 +154,9 @@ describe('Bulk Routes', () => {
         .post('/api/v1/bulk/execute')
         .set('Authorization', `Bearer ${token}`)
         .send({
-          body: {
-            documentType: 'not-a-valid-type',
-            ids: [UUID1],
-            action: 'approve',
-          },
+          documentType: 'not-a-valid-type',
+          ids: [UUID1],
+          action: 'approve',
         });
 
       expect(res.status).toBe(400);
@@ -179,7 +166,7 @@ describe('Bulk Routes', () => {
     it('returns 401 without auth', async () => {
       const res = await request
         .post('/api/v1/bulk/execute')
-        .send({ body: { documentType: 'mrrv', ids: [UUID1], action: 'approve' } });
+        .send({ documentType: 'mrrv', ids: [UUID1], action: 'approve' });
 
       expect(res.status).toBe(401);
     });

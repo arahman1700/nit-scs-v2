@@ -10,8 +10,14 @@ import {
   updateComment,
   deleteComment,
   countComments,
+  verifyDocumentExists,
 } from '../services/comment.service.js';
-import { createCommentSchema, updateCommentSchema } from '../schemas/comment.schema.js';
+import {
+  createCommentSchema,
+  updateCommentSchema,
+  commentParamsSchema,
+  commentIdParamsSchema,
+} from '../schemas/comment.schema.js';
 import type { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { emitToDocument } from '../../../socket/setup.js';
@@ -20,17 +26,64 @@ import { emitToDocument } from '../../../socket/setup.js';
 const router = Router({ mergeParams: true });
 
 /**
+ * Validate and extract document params (documentType + documentId).
+ * Returns parsed params or sends 400 and returns null.
+ */
+function parseDocumentParams(req: Request, res: Response): { documentType: string; documentId: string } | null {
+  const result = commentParamsSchema.safeParse(req.params);
+  if (!result.success) {
+    sendError(
+      res,
+      400,
+      'Invalid document params',
+      result.error.errors.map(e => ({ field: e.path.join('.'), message: e.message })),
+    );
+    return null;
+  }
+  return result.data;
+}
+
+/**
+ * Validate and extract comment params (documentType + documentId + commentId).
+ * Returns parsed params or sends 400 and returns null.
+ */
+function parseCommentIdParams(
+  req: Request,
+  res: Response,
+): { documentType: string; documentId: string; commentId: string } | null {
+  const result = commentIdParamsSchema.safeParse(req.params);
+  if (!result.success) {
+    sendError(
+      res,
+      400,
+      'Invalid params',
+      result.error.errors.map(e => ({ field: e.path.join('.'), message: e.message })),
+    );
+    return null;
+  }
+  return result.data;
+}
+
+/**
  * GET /comments/:documentType/:documentId
  * List comments for a document (paginated).
  */
 router.get('/:documentType/:documentId', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const documentType = req.params.documentType as string;
-    const documentId = req.params.documentId as string;
+    const params = parseDocumentParams(req, res);
+    if (!params) return;
+
+    await verifyDocumentExists(params.documentType, params.documentId);
+
     const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10));
     const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? '25'), 10)));
 
-    const result = await listComments({ documentType, documentId, page, pageSize });
+    const result = await listComments({
+      documentType: params.documentType,
+      documentId: params.documentId,
+      page,
+      pageSize,
+    });
 
     sendSuccess(res, result.comments, {
       page: result.page,
@@ -51,9 +104,12 @@ router.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const documentType = req.params.documentType as string;
-      const documentId = req.params.documentId as string;
-      const count = await countComments(documentType, documentId);
+      const params = parseDocumentParams(req, res);
+      if (!params) return;
+
+      await verifyDocumentExists(params.documentType, params.documentId);
+
+      const count = await countComments(params.documentType, params.documentId);
       sendSuccess(res, { count });
     } catch (err) {
       next(err);
@@ -71,13 +127,16 @@ router.post(
   validate(createCommentSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const documentType = req.params.documentType as string;
-      const documentId = req.params.documentId as string;
+      const params = parseDocumentParams(req, res);
+      if (!params) return;
+
+      await verifyDocumentExists(params.documentType, params.documentId);
+
       const userId = req.user!.userId;
 
       const comment = await createComment({
-        documentType,
-        documentId,
+        documentType: params.documentType,
+        documentId: params.documentId,
         authorId: userId,
         content: req.body.content,
       });
@@ -85,9 +144,9 @@ router.post(
       // Emit real-time event to users viewing this document
       const io = req.app.get('io') as SocketIOServer | undefined;
       if (io) {
-        emitToDocument(io, documentId, 'comment:created', {
-          documentType,
-          documentId,
+        emitToDocument(io, params.documentId, 'comment:created', {
+          documentType: params.documentType,
+          documentId: params.documentId,
           comment,
         });
       }
@@ -96,7 +155,7 @@ router.post(
         action: 'create',
         tableName: 'document_comments',
         recordId: comment.id,
-        newValues: { documentType, documentId, content: req.body.content },
+        newValues: { documentType: params.documentType, documentId: params.documentId, content: req.body.content },
         entityEvent: 'created',
         entityName: 'comments',
       });
@@ -118,12 +177,12 @@ router.put(
   validate(updateCommentSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const documentType = req.params.documentType as string;
-      const documentId = req.params.documentId as string;
-      const commentId = req.params.commentId as string;
+      const params = parseCommentIdParams(req, res);
+      if (!params) return;
+
       const userId = req.user!.userId;
 
-      const existing = await getComment(commentId);
+      const existing = await getComment(params.commentId);
       if (!existing) {
         sendError(res, 404, 'Comment not found');
         return;
@@ -137,14 +196,14 @@ router.put(
         return;
       }
 
-      const updated = await updateComment(commentId, req.body.content);
+      const updated = await updateComment(params.commentId, req.body.content);
 
       // Emit real-time event
       const io = req.app.get('io') as SocketIOServer | undefined;
       if (io) {
-        emitToDocument(io, documentId, 'comment:updated', {
-          documentType,
-          documentId,
+        emitToDocument(io, params.documentId, 'comment:updated', {
+          documentType: params.documentType,
+          documentId: params.documentId,
           comment: updated,
         });
       }
@@ -165,12 +224,12 @@ router.delete(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const documentType = req.params.documentType as string;
-      const documentId = req.params.documentId as string;
-      const commentId = req.params.commentId as string;
+      const params = parseCommentIdParams(req, res);
+      if (!params) return;
+
       const userId = req.user!.userId;
 
-      const existing = await getComment(commentId);
+      const existing = await getComment(params.commentId);
       if (!existing) {
         sendError(res, 404, 'Comment not found');
         return;
@@ -184,23 +243,23 @@ router.delete(
         return;
       }
 
-      await deleteComment(commentId);
+      await deleteComment(params.commentId);
 
       // Emit real-time event
       const io = req.app.get('io') as SocketIOServer | undefined;
       if (io) {
-        emitToDocument(io, documentId, 'comment:deleted', {
-          documentType,
-          documentId,
-          commentId,
+        emitToDocument(io, params.documentId, 'comment:deleted', {
+          documentType: params.documentType,
+          documentId: params.documentId,
+          commentId: params.commentId,
         });
       }
 
       await auditAndEmit(req, {
         action: 'delete',
         tableName: 'document_comments',
-        recordId: commentId,
-        oldValues: { documentType, documentId, content: existing.content },
+        recordId: params.commentId,
+        oldValues: { documentType: params.documentType, documentId: params.documentId, content: existing.content },
         entityEvent: 'deleted',
         entityName: 'comments',
       });

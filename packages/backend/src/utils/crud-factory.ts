@@ -69,6 +69,12 @@ export interface CrudConfig {
    * Applied to both list and detail queries.
    */
   omitFields?: string[];
+  /**
+   * Optional pre-delete guard. Receives the record ID and should throw
+   * a BusinessRuleError (or similar) if the record cannot be deleted.
+   * Called before soft-delete or hard-delete.
+   */
+  beforeDelete?: (id: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -291,6 +297,11 @@ export function createCrudRouter(config: CrudConfig): Router {
             sendError(res, 403, 'You do not have access to this record');
             return;
           }
+        }
+
+        // Run optional pre-delete guard (e.g., check for related operational data)
+        if (config.beforeDelete) {
+          await config.beforeDelete(id);
         }
 
         if (softDelete) {

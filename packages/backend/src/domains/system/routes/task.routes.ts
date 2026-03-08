@@ -92,7 +92,7 @@ router.post('/', authenticate, validate(createTaskSchema), async (req: Request, 
     const userId = req.user!.userId;
     const task = await prisma.task.create({
       data: {
-        ...(req.body.body ?? req.body),
+        ...req.body,
         creatorId: userId,
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
       },

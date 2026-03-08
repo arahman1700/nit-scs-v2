@@ -12,20 +12,15 @@ const IMPORTABLE_ENTITIES = [
 ] as const;
 
 export const importPreviewSchema = z.object({
-  // Validated via multer, body has the entity
-  body: z.object({
-    entity: z.enum(IMPORTABLE_ENTITIES),
-  }),
+  entity: z.enum(IMPORTABLE_ENTITIES),
 });
 
 export const importExecuteSchema = z.object({
-  body: z.object({
-    entity: z.enum(IMPORTABLE_ENTITIES),
-    /** Column mapping: excel header -> database field */
-    mapping: z.record(z.string()),
-    /** Parsed rows from the preview step */
-    rows: z.array(z.record(z.unknown())).min(1).max(5000),
-  }),
+  entity: z.enum(IMPORTABLE_ENTITIES),
+  /** Column mapping: excel header -> database field */
+  mapping: z.record(z.string()),
+  /** Parsed rows from the preview step */
+  rows: z.array(z.record(z.unknown())).min(1).max(5000),
 });
 
 export type ImportableEntity = (typeof IMPORTABLE_ENTITIES)[number];

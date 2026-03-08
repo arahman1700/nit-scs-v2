@@ -77,7 +77,7 @@ function fieldMatches(pattern: string, value: number): boolean {
  * Calculate the next run time from a cron expression.
  * Scans forward minute by minute (max 1440 attempts = 24 hours).
  */
-function nextCronRun(expression: string, after: Date): Date {
+export function nextCronRun(expression: string, after: Date): Date {
   const candidate = new Date(after);
   candidate.setSeconds(0, 0);
   candidate.setMinutes(candidate.getMinutes() + 1); // Start from next minute

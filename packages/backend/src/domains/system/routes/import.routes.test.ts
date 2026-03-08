@@ -100,11 +100,9 @@ describe('Import Routes', () => {
         .post(`${BASE}/execute`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          body: {
-            entity: 'items',
-            mapping: { col1: 'itemCode', col2: 'itemDescription' },
-            rows: [{ col1: 'IT-001', col2: 'Steel Pipe' }],
-          },
+          entity: 'items',
+          mapping: { col1: 'itemCode', col2: 'itemDescription' },
+          rows: [{ col1: 'IT-001', col2: 'Steel Pipe' }],
         });
 
       expect(res.status).toBe(200);

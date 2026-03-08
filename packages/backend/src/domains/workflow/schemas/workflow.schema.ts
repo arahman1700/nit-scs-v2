@@ -49,6 +49,17 @@ const actionSchema = z.object({
 
 // ── Rule Schemas ────────────────────────────────────────────────────────
 
+/**
+ * Validates a standard 5-part cron expression (minute hour day month weekday).
+ * Accepts: *, numbers, ranges (1-5), steps (* /10), lists (1,3,5).
+ */
+const CRON_PART = /^(\*|\d+((-\d+)?(,\d+(-\d+)?)*)?)(\/\d+)?$/;
+function isValidCron(expr: string): boolean {
+  const parts = expr.trim().split(/\s+/);
+  if (parts.length !== 5) return false;
+  return parts.every(p => CRON_PART.test(p));
+}
+
 export const createRuleSchema = z.object({
   name: z.string().min(1).max(200),
   triggerEvent: z.string().min(1).max(100),
@@ -57,9 +68,23 @@ export const createRuleSchema = z.object({
   isActive: z.boolean().optional().default(true),
   stopOnMatch: z.boolean().optional().default(false),
   sortOrder: z.number().int().optional().default(0),
+  cronExpression: z
+    .string()
+    .max(50)
+    .refine(isValidCron, 'Invalid cron expression (expected 5-part: minute hour day month weekday)')
+    .optional(),
 });
 
-export const updateRuleSchema = createRuleSchema.partial();
+export const updateRuleSchema = createRuleSchema
+  .extend({
+    cronExpression: z
+      .string()
+      .max(50)
+      .refine(isValidCron, 'Invalid cron expression (expected 5-part: minute hour day month weekday)')
+      .nullable()
+      .optional(),
+  })
+  .partial();
 
 // ── Test Rule Schema ────────────────────────────────────────────────────
 

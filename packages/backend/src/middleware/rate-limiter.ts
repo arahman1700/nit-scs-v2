@@ -158,12 +158,22 @@ export function aiRateLimiter(maxRequests = 30, windowSec = 3600) {
   };
 }
 
-// Periodic cleanup for in-memory fallback
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of requestCounts.entries()) {
-    if (now > entry.resetAt) {
-      requestCounts.delete(key);
+// Periodic cleanup for in-memory fallback (skip in test to avoid leaked timers)
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of requestCounts.entries()) {
+      if (now > entry.resetAt) {
+        requestCounts.delete(key);
+      }
     }
-  }
-}, 60_000);
+  }, 60_000);
+}
+
+/**
+ * Clear in-memory rate limiter state. Used by test utilities
+ * to prevent cross-test-file state leakage.
+ */
+export function _resetRateLimiterForTesting() {
+  requestCounts.clear();
+}

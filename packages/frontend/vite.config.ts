@@ -97,6 +97,7 @@ export default defineConfig({
   ],
   build: {
     sourcemap: true,
+    chunkSizeWarningLimit: 1200, // ag-grid is ~1.1MB; already code-split via manualChunks
     rollupOptions: {
       output: {
         manualChunks: {

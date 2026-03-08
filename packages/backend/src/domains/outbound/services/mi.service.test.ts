@@ -17,7 +17,10 @@ vi.mock('../../inventory/services/inventory.service.js', () => ({
   consumeReservationBatch: vi.fn(),
   releaseReservation: vi.fn(),
 }));
-vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../config/logger.js', () => ({
+  log: vi.fn(),
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
 vi.mock('../../../utils/cache.js', () => ({ invalidateCachePattern: vi.fn() }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();

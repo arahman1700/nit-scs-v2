@@ -20,6 +20,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import { requestId } from '../middleware/request-id.js';
 import { errorHandler } from '../middleware/error-handler.js';
+import { _resetRateLimiterForTesting } from '../middleware/rate-limiter.js';
 import apiRoutes from '../routes/index.js';
 
 // Dev fallback secret (matches config/env.ts)
@@ -31,6 +32,14 @@ const DEV_JWT_SECRET = 'nit-scs-dev-only-jwt-secret-2026-do-not-use-in-productio
  * Excludes: helmet, cors, morgan, swagger, static files, socket.io, redis.
  */
 export function createTestApp() {
+  // Clear shared rate-limiter state to prevent cross-test pollution
+  // Guard: may be undefined if rate-limiter is mocked in some test files
+  try {
+    _resetRateLimiterForTesting?.();
+  } catch {
+    // Silently ignore — mocked module may not export this function
+  }
+
   const app = express();
 
   app.use(express.json({ limit: '10mb' }));

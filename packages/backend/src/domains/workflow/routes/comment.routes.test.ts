@@ -34,6 +34,7 @@ vi.mock('../services/comment.service.js', () => ({
   updateComment: vi.fn(),
   deleteComment: vi.fn(),
   countComments: vi.fn(),
+  verifyDocumentExists: vi.fn(),
 }));
 
 import {
@@ -43,6 +44,7 @@ import {
   updateComment,
   deleteComment,
   countComments,
+  verifyDocumentExists,
 } from '../services/comment.service.js';
 
 const app = createTestApp();
@@ -59,6 +61,70 @@ describe('Comment Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     token = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
+    // Default: document exists
+    vi.mocked(verifyDocumentExists).mockResolvedValue(undefined);
+  });
+
+  // ── Param Validation ──────────────────────────────────────────────────
+
+  describe('Param Validation', () => {
+    it('returns 400 for invalid documentType', async () => {
+      const res = await request.get(`/api/v1/comments/invalid-type/${DOC_ID}`).set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('returns 400 for non-UUID documentId', async () => {
+      const res = await request.get(`/api/v1/comments/${DOC_TYPE}/not-a-uuid`).set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('returns 400 for non-UUID commentId on PUT', async () => {
+      const res = await request
+        .put(`${BASE}/not-a-uuid`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ content: 'test' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+  });
+
+  // ── Document Access Control ───────────────────────────────────────────
+
+  describe('Document Access Control', () => {
+    it('returns 404 when document does not exist (list)', async () => {
+      const { NotFoundError } = await import('@nit-scs-v2/shared');
+      vi.mocked(verifyDocumentExists).mockRejectedValue(new NotFoundError('Document not found'));
+
+      const res = await request.get(BASE).set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(404);
+      expect(verifyDocumentExists).toHaveBeenCalledWith(DOC_TYPE, DOC_ID);
+    });
+
+    it('returns 404 when document does not exist (create)', async () => {
+      const { NotFoundError } = await import('@nit-scs-v2/shared');
+      vi.mocked(verifyDocumentExists).mockRejectedValue(new NotFoundError('Document not found'));
+
+      const res = await request.post(BASE).set('Authorization', `Bearer ${token}`).send({ content: 'test' });
+
+      expect(res.status).toBe(404);
+      expect(createComment).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when document does not exist (count)', async () => {
+      const { NotFoundError } = await import('@nit-scs-v2/shared');
+      vi.mocked(verifyDocumentExists).mockRejectedValue(new NotFoundError('Document not found'));
+
+      const res = await request.get(`${BASE}/count`).set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(404);
+      expect(countComments).not.toHaveBeenCalled();
+    });
   });
 
   // ── GET /comments/:documentType/:documentId ──────────────────────────
@@ -130,18 +196,11 @@ describe('Comment Routes', () => {
   // ── POST /comments/:documentType/:documentId ─────────────────────────
 
   describe('POST /comments/:documentType/:documentId', () => {
-    // Note: createCommentSchema wraps body in z.object({ body: z.object({ content: ... }) })
-    // The validate middleware parses req.body against this schema, so the HTTP body
-    // must include the `body` wrapper to pass validation.
-
     it('returns 201 and creates a comment', async () => {
       const mockComment = { id: COMMENT_ID, authorId: 'test-user-id', content: 'new comment' };
       vi.mocked(createComment).mockResolvedValue(mockComment as any);
 
-      const res = await request
-        .post(BASE)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ body: { content: 'new comment' } });
+      const res = await request.post(BASE).set('Authorization', `Bearer ${token}`).send({ content: 'new comment' });
 
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
@@ -151,6 +210,7 @@ describe('Comment Routes', () => {
           documentType: DOC_TYPE,
           documentId: DOC_ID,
           authorId: 'test-user-id',
+          content: 'new comment',
         }),
       );
     });
@@ -159,19 +219,13 @@ describe('Comment Routes', () => {
       const userToken = signTestToken({ userId: 'specific-user-123', systemRole: 'viewer' });
       vi.mocked(createComment).mockResolvedValue({ id: 'c1' } as any);
 
-      await request
-        .post(BASE)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send({ body: { content: 'authored comment' } });
+      await request.post(BASE).set('Authorization', `Bearer ${userToken}`).send({ content: 'authored comment' });
 
       expect(createComment).toHaveBeenCalledWith(expect.objectContaining({ authorId: 'specific-user-123' }));
     });
 
     it('returns 400 for empty content', async () => {
-      const res = await request
-        .post(BASE)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ body: { content: '' } });
+      const res = await request.post(BASE).set('Authorization', `Bearer ${token}`).send({ content: '' });
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
@@ -186,7 +240,7 @@ describe('Comment Routes', () => {
     });
 
     it('returns 401 without auth', async () => {
-      const res = await request.post(BASE).send({ body: { content: 'test' } });
+      const res = await request.post(BASE).send({ content: 'test' });
       expect(res.status).toBe(401);
     });
   });
@@ -206,14 +260,12 @@ describe('Comment Routes', () => {
         content: 'updated',
       } as any);
 
-      const res = await request
-        .put(url)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ body: { content: 'updated' } });
+      const res = await request.put(url).set('Authorization', `Bearer ${token}`).send({ content: 'updated' });
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.content).toBe('updated');
+      expect(updateComment).toHaveBeenCalledWith(COMMENT_ID, 'updated');
     });
 
     it('returns 200 when user is admin even if not author', async () => {
@@ -227,13 +279,10 @@ describe('Comment Routes', () => {
         content: 'admin-edited',
       } as any);
 
-      const res = await request
-        .put(url)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ body: { content: 'admin-edited' } });
+      const res = await request.put(url).set('Authorization', `Bearer ${adminToken}`).send({ content: 'admin-edited' });
 
       expect(res.status).toBe(200);
-      expect(updateComment).toHaveBeenCalled();
+      expect(updateComment).toHaveBeenCalledWith(COMMENT_ID, 'admin-edited');
     });
 
     it('returns 200 when user is manager even if not author', async () => {
@@ -250,7 +299,7 @@ describe('Comment Routes', () => {
       const res = await request
         .put(url)
         .set('Authorization', `Bearer ${managerToken}`)
-        .send({ body: { content: 'manager-edited' } });
+        .send({ content: 'manager-edited' });
 
       expect(res.status).toBe(200);
     });
@@ -258,10 +307,7 @@ describe('Comment Routes', () => {
     it('returns 404 when comment not found', async () => {
       vi.mocked(getComment).mockResolvedValue(null as any);
 
-      const res = await request
-        .put(url)
-        .set('Authorization', `Bearer ${token}`)
-        .send({ body: { content: 'updated' } });
+      const res = await request.put(url).set('Authorization', `Bearer ${token}`).send({ content: 'updated' });
 
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
@@ -275,10 +321,7 @@ describe('Comment Routes', () => {
         content: 'old',
       } as any);
 
-      const res = await request
-        .put(url)
-        .set('Authorization', `Bearer ${viewerToken}`)
-        .send({ body: { content: 'try edit' } });
+      const res = await request.put(url).set('Authorization', `Bearer ${viewerToken}`).send({ content: 'try edit' });
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
