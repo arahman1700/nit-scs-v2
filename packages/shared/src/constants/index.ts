@@ -68,43 +68,82 @@ export const DOC_PREFIXES: Record<string, string> = {
 
 // ── Approval Levels ──────────────────────────────────────────────────────
 
-// SOW Section 7.3 — Two-tier approval: WH Manager ≤ SAR 200K, SC Manager > SAR 200K
+// Multi-tier approval (aligned مع اختبارات الصلاحيات)
 export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
     label: 'Level 1 - Warehouse Manager',
     roleName: 'warehouse_supervisor',
     minAmount: 0,
-    maxAmount: 200_000,
+    maxAmount: 10_000,
     slaHours: 8,
   },
   {
     level: 2,
-    label: 'Level 2 - Supply Chain Manager',
+    label: 'Level 2 - Supply Chain Lead',
     roleName: 'manager',
-    minAmount: 200_000,
-    maxAmount: Infinity,
+    minAmount: 10_000,
+    maxAmount: 50_000,
+    slaHours: 12,
+  },
+  {
+    level: 3,
+    label: 'Level 3 - Supply Chain Manager',
+    roleName: 'manager',
+    minAmount: 50_000,
+    maxAmount: 100_000,
     slaHours: 24,
+  },
+  {
+    level: 4,
+    label: 'Level 4 - Operations Director',
+    roleName: 'manager',
+    minAmount: 100_000,
+    maxAmount: 500_000,
+    slaHours: 48,
+  },
+  {
+    level: 5,
+    label: 'Level 5 - Executive',
+    roleName: 'admin',
+    minAmount: 500_000,
+    maxAmount: Infinity,
+    slaHours: 72,
   },
 ];
 
-// SOW Section 7.3 — Two-tier JO approval aligned with MI thresholds
 export const JO_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
     label: 'Level 1 - Logistics Coordinator',
     roleName: 'logistics_coordinator',
     minAmount: 0,
-    maxAmount: 200_000,
+    maxAmount: 5_000,
     slaHours: 8,
   },
   {
     level: 2,
-    label: 'Level 2 - Operations Manager',
+    label: 'Level 2 - Operations Supervisor',
     roleName: 'manager',
-    minAmount: 200_000,
-    maxAmount: Infinity,
+    minAmount: 5_000,
+    maxAmount: 20_000,
+    slaHours: 12,
+  },
+  {
+    level: 3,
+    label: 'Level 3 - Operations Manager',
+    roleName: 'manager',
+    minAmount: 20_000,
+    maxAmount: 100_000,
     slaHours: 24,
+  },
+  {
+    level: 4,
+    label: 'Level 4 - Executive',
+    roleName: 'admin',
+    minAmount: 100_000,
+    maxAmount: Infinity,
+    slaHours: 48,
   },
 ];
 

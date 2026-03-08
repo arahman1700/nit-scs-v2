@@ -1,7 +1,7 @@
 import { UserRole } from './types/enums.js';
 import { MI_APPROVAL_LEVELS, JO_APPROVAL_LEVELS } from './constants/index.js';
 
-export type Permission = 'create' | 'read' | 'update' | 'delete' | 'approve' | 'export';
+export type Permission = 'create' | 'read' | 'update' | 'delete' | 'approve' | 'export' | 'import';
 export type ResourcePermissions = Record<string, Permission[]>;
 
 const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
@@ -264,13 +264,13 @@ export function canExport(role: UserRole | string, resource: string): boolean {
 export function getMaxApprovalLevel(role: UserRole | string): number {
   switch (role) {
     case UserRole.ADMIN:
-      return 2; // SOW: highest approval authority
+      return 5; // SOW: highest approval authority
     case UserRole.MANAGER:
-      return 2; // SOW: SC Manager > SAR 200K
+      return 4; // SOW: SC Manager high ceiling
     case UserRole.TECHNICAL_MANAGER:
-      return 2;
+      return 3;
     case UserRole.LOGISTICS_COORDINATOR:
-      return 1;
+      return 2;
     case UserRole.WAREHOUSE_SUPERVISOR:
       return 1; // SOW: WH Manager ≤ SAR 200K
     case UserRole.WAREHOUSE_STAFF:
