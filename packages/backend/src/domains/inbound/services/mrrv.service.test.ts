@@ -286,14 +286,14 @@ describe('mrrv.service', () => {
     it('calls assertTransition and updates to pending_qc', async () => {
       const mrrv = makeMrrv({ status: 'draft', mrrvLines: [], rfimRequired: false });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await submit('mrrv-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'draft', 'pending_qc');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
+      expect(mockPrisma.mrrv.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'mrrv-1' },
+          where: { id: 'mrrv-1', status: 'draft' },
           data: { status: 'pending_qc' },
         }),
       );
@@ -309,7 +309,7 @@ describe('mrrv.service', () => {
     it('creates RFIM when rfimRequired is true', async () => {
       const mrrv = makeMrrv({ status: 'draft', rfimRequired: true, mrrvLines: [] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.rfim.create.mockResolvedValue({});
       mockedGenDoc.mockResolvedValue('RFIM-2025-0001');
 
@@ -331,7 +331,7 @@ describe('mrrv.service', () => {
     it('does not create RFIM when rfimRequired is false', async () => {
       const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       await submit('mrrv-1');
 
@@ -342,7 +342,7 @@ describe('mrrv.service', () => {
       const damagedLine = makeMrrvLine({ id: 'line-dmg', qtyDamaged: 3 });
       const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [damagedLine] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.osdReport.create.mockResolvedValue({});
       mockedGenDoc.mockResolvedValue('OSD-2025-0001');
 
@@ -377,13 +377,14 @@ describe('mrrv.service', () => {
       const damagedLine = makeMrrvLine({ qtyDamaged: 1 });
       const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [damagedLine] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.mrrv.update.mockResolvedValue({});
       mockPrisma.osdReport.create.mockResolvedValue({});
       mockedGenDoc.mockResolvedValue('OSD-001');
 
       await submit('mrrv-1');
 
-      // Second update call sets hasOsd
+      // The hasOsd update still uses direct .update() (not a status transition)
       const updateCalls = mockPrisma.mrrv.update.mock.calls;
       const hasOsdCall = updateCalls.find(
         (c: unknown[]) =>
@@ -397,7 +398,7 @@ describe('mrrv.service', () => {
       const cleanLine = makeMrrvLine({ qtyDamaged: 0 });
       const mrrv = makeMrrv({ status: 'draft', rfimRequired: false, mrrvLines: [cleanLine] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       await submit('mrrv-1');
 
@@ -410,16 +411,16 @@ describe('mrrv.service', () => {
   describe('approveQc', () => {
     it('transitions to qc_approved and sets qcInspectorId', async () => {
       const mrrv = makeMrrv({ status: 'pending_qc' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
       const updated = { ...mrrv, status: 'qc_approved', qcInspectorId: 'inspector-1' };
-      mockPrisma.mrrv.update.mockResolvedValue(updated);
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(mrrv).mockResolvedValueOnce(updated);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await approveQc('mrrv-1', 'inspector-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'pending_qc', 'qc_approved');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
+      expect(mockPrisma.mrrv.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'mrrv-1' },
+          where: { id: 'mrrv-1', status: 'pending_qc' },
           data: expect.objectContaining({
             status: 'qc_approved',
             qcInspectorId: 'inspector-1',
@@ -437,12 +438,12 @@ describe('mrrv.service', () => {
 
     it('sets qcApprovedDate', async () => {
       const mrrv = makeMrrv({ status: 'pending_qc' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'qc_approved' });
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(mrrv).mockResolvedValueOnce({ ...mrrv, status: 'qc_approved' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       await approveQc('mrrv-1', 'inspector-1');
 
-      const call = mockPrisma.mrrv.update.mock.calls[0][0];
+      const call = mockPrisma.mrrv.updateMany.mock.calls[0][0];
       expect(call.data.qcApprovedDate).toBeInstanceOf(Date);
     });
   });
@@ -452,16 +453,16 @@ describe('mrrv.service', () => {
   describe('receive', () => {
     it('transitions to received', async () => {
       const mrrv = makeMrrv({ status: 'qc_approved' });
-      mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
       const updated = { ...mrrv, status: 'received' };
-      mockPrisma.mrrv.update.mockResolvedValue(updated);
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(mrrv).mockResolvedValueOnce(updated);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await receive('mrrv-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'qc_approved', 'received');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
+      expect(mockPrisma.mrrv.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'mrrv-1' },
+          where: { id: 'mrrv-1', status: 'qc_approved' },
           data: { status: 'received' },
         }),
       );
@@ -481,14 +482,14 @@ describe('mrrv.service', () => {
     it('transitions to stored', async () => {
       const mrrv = makeMrrv({ status: 'received', mrrvLines: [] });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       await store('mrrv-1', 'user-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrrv', 'received', 'stored');
-      expect(mockPrisma.mrrv.update).toHaveBeenCalledWith(
+      expect(mockPrisma.mrrv.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { id: 'mrrv-1' },
+          where: { id: 'mrrv-1', status: 'received' },
           data: { status: 'stored' },
         }),
       );
@@ -521,7 +522,7 @@ describe('mrrv.service', () => {
       ];
       const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       await store('mrrv-1', 'user-1');
@@ -564,7 +565,7 @@ describe('mrrv.service', () => {
       ];
       const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       await store('mrrv-1', 'user-1');
@@ -576,7 +577,7 @@ describe('mrrv.service', () => {
       const lines = [makeMrrvLine(), makeMrrvLine({ id: 'line-2' })];
       const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       const result = await store('mrrv-1', 'user-1');
@@ -592,7 +593,7 @@ describe('mrrv.service', () => {
       const lines = [makeMrrvLine({ unitCost: null, qtyReceived: 10, qtyDamaged: 0 })];
       const mrrv = makeMrrv({ status: 'received', mrrvLines: lines });
       mockPrisma.mrrv.findUnique.mockResolvedValue(mrrv);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...mrrv, status: 'stored' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       await store('mrrv-1', 'user-1');

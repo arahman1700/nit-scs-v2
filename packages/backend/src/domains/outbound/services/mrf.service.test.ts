@@ -338,18 +338,18 @@ describe('mrf.service', () => {
   describe('submit', () => {
     it('calls assertTransition and updates to submitted', async () => {
       const mrf = makeMrf({ status: 'draft' });
-      mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockPrisma.materialRequisition.update.mockResolvedValue({ ...mrf, status: 'submitted' });
+      mockPrisma.materialRequisition.findUnique
+        .mockResolvedValueOnce(mrf)
+        .mockResolvedValueOnce({ ...mrf, status: 'submitted' });
+      mockPrisma.materialRequisition.updateMany.mockResolvedValue({ count: 1 });
 
       await submit('mrf-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'draft', 'submitted');
-      expect(mockPrisma.materialRequisition.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'mrf-1' },
-          data: { status: 'submitted' },
-        }),
-      );
+      expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
+        where: { id: 'mrf-1', status: 'draft' },
+        data: { status: 'submitted' },
+      });
     });
 
     it('throws NotFoundError when MRF not found', async () => {
@@ -364,21 +364,22 @@ describe('mrf.service', () => {
   describe('review', () => {
     it('calls assertTransition and sets reviewedById and reviewDate', async () => {
       const mrf = makeMrf({ status: 'submitted' });
-      mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockPrisma.materialRequisition.update.mockResolvedValue({ ...mrf, status: 'under_review' });
+      mockPrisma.materialRequisition.findUnique
+        .mockResolvedValueOnce(mrf)
+        .mockResolvedValueOnce({ ...mrf, status: 'under_review' });
+      mockPrisma.materialRequisition.updateMany.mockResolvedValue({ count: 1 });
 
       await review('mrf-1', 'reviewer-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'submitted', 'under_review');
-      expect(mockPrisma.materialRequisition.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'under_review',
-            reviewedById: 'reviewer-1',
-            reviewDate: expect.any(Date),
-          }),
+      expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
+        where: { id: 'mrf-1', status: 'submitted' },
+        data: expect.objectContaining({
+          status: 'under_review',
+          reviewedById: 'reviewer-1',
+          reviewDate: expect.any(Date),
         }),
-      );
+      });
     });
 
     it('throws NotFoundError when MRF not found', async () => {
@@ -393,21 +394,22 @@ describe('mrf.service', () => {
   describe('approve', () => {
     it('calls assertTransition and sets approvedById and approvalDate', async () => {
       const mrf = makeMrf({ status: 'under_review' });
-      mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockPrisma.materialRequisition.update.mockResolvedValue({ ...mrf, status: 'approved' });
+      mockPrisma.materialRequisition.findUnique
+        .mockResolvedValueOnce(mrf)
+        .mockResolvedValueOnce({ ...mrf, status: 'approved' });
+      mockPrisma.materialRequisition.updateMany.mockResolvedValue({ count: 1 });
 
       await approve('mrf-1', 'approver-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'under_review', 'approved');
-      expect(mockPrisma.materialRequisition.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'approved',
-            approvedById: 'approver-1',
-            approvalDate: expect.any(Date),
-          }),
+      expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
+        where: { id: 'mrf-1', status: 'under_review' },
+        data: expect.objectContaining({
+          status: 'approved',
+          approvedById: 'approver-1',
+          approvalDate: expect.any(Date),
         }),
-      );
+      });
     });
 
     it('throws NotFoundError when MRF not found', async () => {

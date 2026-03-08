@@ -4,6 +4,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { getStockLevel } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { MrfCreateDto, MrfUpdateDto, MrfLineDto, ListParams } from '../../../types/dto.js';
 
@@ -144,7 +145,8 @@ export async function submit(id: string) {
   const mrf = await prisma.materialRequisition.findUnique({ where: { id } });
   if (!mrf) throw new NotFoundError('Material Requisition', id);
   assertTransition(DOC_TYPE, mrf.status, 'submitted');
-  return prisma.materialRequisition.update({ where: { id: mrf.id }, data: { status: 'submitted' } });
+  await safeStatusUpdate(prisma.materialRequisition, mrf.id, mrf.status, { status: 'submitted' });
+  return prisma.materialRequisition.findUnique({ where: { id: mrf.id } });
 }
 
 export async function review(id: string, userId: string) {
@@ -152,10 +154,12 @@ export async function review(id: string, userId: string) {
   if (!mrf) throw new NotFoundError('Material Requisition', id);
   assertTransition(DOC_TYPE, mrf.status, 'under_review');
 
-  return prisma.materialRequisition.update({
-    where: { id: mrf.id },
-    data: { status: 'under_review', reviewedById: userId, reviewDate: new Date() },
+  await safeStatusUpdate(prisma.materialRequisition, mrf.id, mrf.status, {
+    status: 'under_review',
+    reviewedById: userId,
+    reviewDate: new Date(),
   });
+  return prisma.materialRequisition.findUnique({ where: { id: mrf.id } });
 }
 
 export async function approve(id: string, userId: string) {
@@ -163,15 +167,13 @@ export async function approve(id: string, userId: string) {
   if (!mrf) throw new NotFoundError('Material Requisition', id);
   assertTransition(DOC_TYPE, mrf.status, 'approved');
 
-  return prisma.materialRequisition.update({
-    where: { id: mrf.id },
-    data: {
-      status: 'approved',
-      approvedById: userId,
-      approvalDate: new Date(),
-      stockVerificationSla: new Date(Date.now() + 4 * 60 * 60 * 1000),
-    },
+  await safeStatusUpdate(prisma.materialRequisition, mrf.id, mrf.status, {
+    status: 'approved',
+    approvedById: userId,
+    approvalDate: new Date(),
+    stockVerificationSla: new Date(Date.now() + 4 * 60 * 60 * 1000),
   });
+  return prisma.materialRequisition.findUnique({ where: { id: mrf.id } });
 }
 
 export async function checkStock(id: string) {

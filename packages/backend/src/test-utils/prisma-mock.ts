@@ -49,8 +49,11 @@ export interface PrismaMock {
   employee: PrismaModelMock;
   refreshToken: PrismaModelMock;
   passwordResetCode: PrismaModelMock;
+  loginAttempt: PrismaModelMock;
   notification: PrismaModelMock;
   auditLog: PrismaModelMock;
+  systemSetting: PrismaModelMock;
+  pushSubscription: PrismaModelMock;
   documentComment: PrismaModelMock;
   delegationRule: PrismaModelMock;
   inventoryLevel: PrismaModelMock;
@@ -141,8 +144,11 @@ export function createPrismaMock(): PrismaMock {
     employee: createModelMock(),
     refreshToken: createModelMock(),
     passwordResetCode: createModelMock(),
+    loginAttempt: createModelMock(),
     notification: createModelMock(),
     auditLog: createModelMock(),
+    systemSetting: createModelMock(),
+    pushSubscription: createModelMock(),
     documentComment: createModelMock(),
     delegationRule: createModelMock(),
     inventoryLevel: createModelMock(),

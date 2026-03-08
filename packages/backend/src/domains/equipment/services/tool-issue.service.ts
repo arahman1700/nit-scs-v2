@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { ToolIssueCreateDto, ToolIssueReturnDto, ListParams } from '../../../types/dto.js';
 
@@ -120,15 +121,13 @@ export async function returnTool(id: string, returnData: ToolIssueReturnDto, use
   assertTransition(DOC_TYPE, issue.status, 'returned');
 
   const result = await prisma.$transaction(async tx => {
-    const updated = await tx.toolIssue.update({
-      where: { id: issue.id },
-      data: {
-        status: 'returned',
-        actualReturnDate: new Date(),
-        returnCondition: returnData.returnCondition,
-        returnVerifiedById: userId,
-      },
+    await safeStatusUpdateTx(tx.toolIssue, issue.id, issue.status, {
+      status: 'returned',
+      actualReturnDate: new Date(),
+      returnCondition: returnData.returnCondition,
+      returnVerifiedById: userId,
     });
+    const updated = await tx.toolIssue.findUnique({ where: { id: issue.id } });
 
     // Update tool condition based on return condition
     if (returnData.returnCondition === 'damaged') {

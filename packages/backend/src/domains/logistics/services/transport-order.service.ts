@@ -3,6 +3,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { ListParams } from '../../../types/dto.js';
 
@@ -174,7 +175,8 @@ export async function schedule(id: string) {
   const to = await prisma.transportOrder.findUnique({ where: { id } });
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'scheduled');
-  const updated = await prisma.transportOrder.update({ where: { id: to.id }, data: { status: 'scheduled' } });
+  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, { status: 'scheduled' });
+  const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -193,10 +195,11 @@ export async function dispatch(id: string) {
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'in_transit');
 
-  const updated = await prisma.transportOrder.update({
-    where: { id: to.id },
-    data: { status: 'in_transit', actualPickupDate: new Date() },
+  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, {
+    status: 'in_transit',
+    actualPickupDate: new Date(),
   });
+  const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -215,10 +218,11 @@ export async function deliver(id: string) {
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'delivered');
 
-  const updated = await prisma.transportOrder.update({
-    where: { id: to.id },
-    data: { status: 'delivered', actualDeliveryDate: new Date() },
+  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, {
+    status: 'delivered',
+    actualDeliveryDate: new Date(),
   });
+  const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({
     type: 'document:status_changed',

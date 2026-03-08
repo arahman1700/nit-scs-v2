@@ -8,6 +8,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { ImsfCreateDto, ImsfUpdateDto, ImsfLineDto, ListParams } from '../../../types/dto.js';
 
@@ -125,7 +126,8 @@ export async function send(id: string) {
     throw new BusinessRuleError('Cannot send IMSF with no line items');
   }
 
-  return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'sent' } });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'sent' });
+  return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
 export async function confirm(id: string, userId: string) {
@@ -162,10 +164,8 @@ export async function confirm(id: string, userId: string) {
   }
 
   return prisma.$transaction(async tx => {
-    const updated = await tx.imsf.update({
-      where: { id: imsf.id },
-      data: { status: 'confirmed' },
-    });
+    await safeStatusUpdateTx(tx.imsf, imsf.id, imsf.status, { status: 'confirmed' });
+    const updated = await tx.imsf.findUnique({ where: { id: imsf.id } });
 
     // Auto-create StockTransfer (WT) from confirmed IMSF
     const transferNumber = await generateDocumentNumber('wt');
@@ -259,7 +259,8 @@ export async function ship(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'in_transit');
 
-  return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'in_transit' } });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'in_transit' });
+  return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
 export async function deliver(id: string) {
@@ -267,7 +268,8 @@ export async function deliver(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'delivered');
 
-  return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'delivered' } });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'delivered' });
+  return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
 export async function complete(id: string) {
@@ -275,5 +277,6 @@ export async function complete(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'completed');
 
-  return prisma.imsf.update({ where: { id: imsf.id }, data: { status: 'completed' } });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'completed' });
+  return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }

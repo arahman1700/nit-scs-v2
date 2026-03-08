@@ -3,6 +3,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { ShipmentCreateDto, ShipmentUpdateDto, ListParams } from '../../../types/dto.js';
 import { log } from '../../../config/logger.js';
@@ -145,7 +146,8 @@ export async function updateStatus(
   if (extra.etaPort) updateData.etaPort = new Date(extra.etaPort);
   if (extra.actualArrivalDate) updateData.actualArrivalDate = new Date(extra.actualArrivalDate);
 
-  const updated = await prisma.shipment.update({ where: { id }, data: updateData });
+  await safeStatusUpdate(prisma.shipment, id, existing.status, updateData);
+  const updated = await prisma.shipment.findUnique({ where: { id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -243,10 +245,11 @@ export async function deliver(id: string, userId?: string) {
   assertTransition('shipment', shipment.status, 'delivered');
 
   const result = await prisma.$transaction(async tx => {
-    const updated = await tx.shipment.update({
-      where: { id: shipment.id },
-      data: { status: 'delivered', deliveryDate: new Date() },
+    await safeStatusUpdateTx(tx.shipment, shipment.id, shipment.status, {
+      status: 'delivered',
+      deliveryDate: new Date(),
     });
+    const updated = await tx.shipment.findUnique({ where: { id: shipment.id } });
 
     let grnId: string | null = null;
 
@@ -389,7 +392,8 @@ export async function cancel(id: string) {
 
   assertTransition('shipment', shipment.status, 'cancelled');
 
-  const updated = await prisma.shipment.update({ where: { id: shipment.id }, data: { status: 'cancelled' } });
+  await safeStatusUpdate(prisma.shipment, shipment.id, shipment.status, { status: 'cancelled' });
+  const updated = await prisma.shipment.findUnique({ where: { id: shipment.id } });
 
   eventBus.publish({
     type: 'document:status_changed',

@@ -4,6 +4,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import type { MrvCreateDto, MrvUpdateDto, MrvLineDto, ListParams } from '../../../types/dto.js';
 
 const DOC_TYPE = 'mrv';
@@ -116,7 +117,8 @@ export async function submit(id: string) {
   if (!mrv) throw new NotFoundError('MRV', id);
   assertTransition(DOC_TYPE, mrv.status, 'pending');
 
-  return prisma.mrv.update({ where: { id: mrv.id }, data: { status: 'pending' } });
+  await safeStatusUpdate(prisma.mrv, mrv.id, mrv.status, { status: 'pending' });
+  return prisma.mrv.findUnique({ where: { id: mrv.id } });
 }
 
 export async function receive(id: string, userId: string) {
@@ -124,10 +126,12 @@ export async function receive(id: string, userId: string) {
   if (!mrv) throw new NotFoundError('MRV', id);
   assertTransition(DOC_TYPE, mrv.status, 'received');
 
-  return prisma.mrv.update({
-    where: { id: mrv.id },
-    data: { status: 'received', receivedById: userId, receivedDate: new Date() },
+  await safeStatusUpdate(prisma.mrv, mrv.id, mrv.status, {
+    status: 'received',
+    receivedById: userId,
+    receivedDate: new Date(),
   });
+  return prisma.mrv.findUnique({ where: { id: mrv.id } });
 }
 
 export async function complete(id: string, userId: string) {
@@ -138,7 +142,7 @@ export async function complete(id: string, userId: string) {
   if (!mrv) throw new NotFoundError('MRV', id);
   assertTransition(DOC_TYPE, mrv.status, 'completed');
 
-  await prisma.mrv.update({ where: { id: mrv.id }, data: { status: 'completed' } });
+  await safeStatusUpdate(prisma.mrv, mrv.id, mrv.status, { status: 'completed' });
 
   const goodLines = mrv.mrvLines.filter(l => l.condition === 'good');
   const stockItems = goodLines.map(line => ({

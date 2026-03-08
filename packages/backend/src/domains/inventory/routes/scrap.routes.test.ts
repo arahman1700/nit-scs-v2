@@ -63,15 +63,15 @@ import * as scrapService from '../services/scrap.service.js';
 import { hasPermissionDB } from '../../auth/services/permission.service.js';
 import { createTestApp, signTestToken } from '../../../test-utils/test-app.js';
 
-const app = createTestApp();
-const request = supertest(app);
 const BASE = '/api/v1/scrap';
 
 describe('Scrap Routes', () => {
   let token: string;
+  let request: ReturnType<typeof supertest>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    request = supertest(createTestApp());
     token = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
     vi.mocked(scrapService.list).mockResolvedValue({ data: [], total: 0 });
     vi.mocked(scrapService.getById).mockResolvedValue({ id: 'scrap-1', status: 'draft' });

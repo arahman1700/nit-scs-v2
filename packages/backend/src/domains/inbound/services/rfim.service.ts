@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import type { RfimUpdateDto, ListParams } from '../../../types/dto.js';
 
 const DOC_TYPE = 'rfim';
@@ -72,10 +73,12 @@ export async function start(id: string, userId: string) {
   if (!rfim) throw new NotFoundError('RFIM', id);
   assertTransition(DOC_TYPE, rfim.status, 'in_progress');
 
-  return prisma.rfim.update({
-    where: { id: rfim.id },
-    data: { status: 'in_progress', inspectionDate: new Date(), inspectorId: userId },
+  await safeStatusUpdate(prisma.rfim, rfim.id, rfim.status, {
+    status: 'in_progress',
+    inspectionDate: new Date(),
+    inspectorId: userId,
   });
+  return prisma.rfim.findUnique({ where: { id: rfim.id } });
 }
 
 export async function complete(id: string, result: string, comments?: string) {
@@ -93,10 +96,12 @@ export async function complete(id: string, result: string, comments?: string) {
 
   assertTransition(DOC_TYPE, rfim.status, 'completed');
 
-  const updated = await prisma.rfim.update({
-    where: { id: rfim.id },
-    data: { status: 'completed', result, comments: comments ?? rfim.comments },
+  await safeStatusUpdate(prisma.rfim, rfim.id, rfim.status, {
+    status: 'completed',
+    result,
+    comments: comments ?? rfim.comments,
   });
+  const updated = await prisma.rfim.findUnique({ where: { id: rfim.id } });
   return { updated, mrrvId: rfim.mrrvId };
 }
 
@@ -110,15 +115,13 @@ export async function completeConditional(id: string, comments?: string) {
   if (!rfim) throw new NotFoundError('RFIM', id);
   assertTransition(DOC_TYPE, rfim.status, 'completed_conditional');
 
-  const updated = await prisma.rfim.update({
-    where: { id: rfim.id },
-    data: {
-      status: 'completed_conditional',
-      result: 'conditional',
-      comments: comments ?? rfim.comments,
-      pmApprovalRequired: true,
-    },
+  await safeStatusUpdate(prisma.rfim, rfim.id, rfim.status, {
+    status: 'completed_conditional',
+    result: 'conditional',
+    comments: comments ?? rfim.comments,
+    pmApprovalRequired: true,
   });
+  const updated = await prisma.rfim.findUnique({ where: { id: rfim.id } });
   return { updated, mrrvId: rfim.mrrvId, pmApprovalRequired: true };
 }
 
@@ -135,14 +138,12 @@ export async function pmApprove(id: string, pmUserId: string, comments?: string)
   }
   assertTransition(DOC_TYPE, rfim.status, 'completed');
 
-  const updated = await prisma.rfim.update({
-    where: { id: rfim.id },
-    data: {
-      status: 'completed',
-      comments: comments ? `${rfim.comments ?? ''}\n[PM Approval] ${comments}`.trim() : rfim.comments,
-      pmApprovalById: pmUserId,
-      pmApprovalDate: new Date(),
-    },
+  await safeStatusUpdate(prisma.rfim, rfim.id, rfim.status, {
+    status: 'completed',
+    comments: comments ? `${rfim.comments ?? ''}\n[PM Approval] ${comments}`.trim() : rfim.comments,
+    pmApprovalById: pmUserId,
+    pmApprovalDate: new Date(),
   });
+  const updated = await prisma.rfim.findUnique({ where: { id: rfim.id } });
   return { updated, mrrvId: rfim.mrrvId, pmApprovedBy: pmUserId };
 }

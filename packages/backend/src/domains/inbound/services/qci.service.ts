@@ -7,6 +7,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition, canTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { RfimUpdateDto as QciUpdateDto, ListParams } from '../../../types/dto.js';
 
@@ -78,10 +79,12 @@ export async function start(id: string, userId: string) {
   if (!qci) throw new NotFoundError('QCI', id);
   assertTransition(DOC_TYPE, qci.status, 'in_progress');
 
-  return prisma.rfim.update({
-    where: { id: qci.id },
-    data: { status: 'in_progress', inspectionDate: new Date(), inspectorId: userId },
+  await safeStatusUpdate(prisma.rfim, qci.id, qci.status, {
+    status: 'in_progress',
+    inspectionDate: new Date(),
+    inspectorId: userId,
   });
+  return prisma.rfim.findUnique({ where: { id: qci.id } });
 }
 
 export async function complete(id: string, result: string, comments?: string) {
@@ -100,18 +103,20 @@ export async function complete(id: string, result: string, comments?: string) {
   assertTransition(DOC_TYPE, qci.status, 'completed');
 
   const updated = await prisma.$transaction(async tx => {
-    const completedQci = await tx.rfim.update({
-      where: { id: qci.id },
-      data: { status: 'completed', result, comments: comments ?? qci.comments },
+    await safeStatusUpdateTx(tx.rfim, qci.id, qci.status, {
+      status: 'completed',
+      result,
+      comments: comments ?? qci.comments,
     });
+    const completedQci = await tx.rfim.findUnique({ where: { id: qci.id } });
 
     // Chain: QCI pass → update parent GRN to qc_approved
     if (result === 'pass' && qci.mrrvId) {
       const parentGrn = await tx.mrrv.findUnique({ where: { id: qci.mrrvId } });
       if (parentGrn && canTransition('grn', parentGrn.status, 'qc_approved')) {
-        await tx.mrrv.update({
-          where: { id: parentGrn.id },
-          data: { status: 'qc_approved', qcApprovedDate: new Date() },
+        await safeStatusUpdateTx(tx.mrrv, parentGrn.id, parentGrn.status, {
+          status: 'qc_approved',
+          qcApprovedDate: new Date(),
         });
       }
     }
@@ -172,15 +177,13 @@ export async function completeConditional(id: string, comments?: string) {
   if (!qci) throw new NotFoundError('QCI', id);
   assertTransition(DOC_TYPE, qci.status, 'completed_conditional');
 
-  const updated = await prisma.rfim.update({
-    where: { id: qci.id },
-    data: {
-      status: 'completed_conditional',
-      result: 'conditional',
-      comments: comments ?? qci.comments,
-      pmApprovalRequired: true,
-    },
+  await safeStatusUpdate(prisma.rfim, qci.id, qci.status, {
+    status: 'completed_conditional',
+    result: 'conditional',
+    comments: comments ?? qci.comments,
+    pmApprovalRequired: true,
   });
+  const updated = await prisma.rfim.findUnique({ where: { id: qci.id } });
   return { updated, mrrvId: qci.mrrvId, pmApprovalRequired: true };
 }
 
@@ -197,25 +200,20 @@ export async function pmApprove(id: string, pmUserId: string, comments?: string)
   }
   assertTransition(DOC_TYPE, qci.status, 'completed');
 
-  const updated = await prisma.rfim.update({
-    where: { id: qci.id },
-    data: {
-      status: 'completed',
-      comments: comments ? `${qci.comments ?? ''}\n[PM Approval] ${comments}`.trim() : qci.comments,
-      pmApprovalById: pmUserId,
-      pmApprovalDate: new Date(),
-    },
+  await safeStatusUpdate(prisma.rfim, qci.id, qci.status, {
+    status: 'completed',
+    comments: comments ? `${qci.comments ?? ''}\n[PM Approval] ${comments}`.trim() : qci.comments,
+    pmApprovalById: pmUserId,
+    pmApprovalDate: new Date(),
   });
+  const updated = await prisma.rfim.findUnique({ where: { id: qci.id } });
 
   // Auto-advance parent GRN to qc_approved (mirrors the pass path in complete())
   let grnAdvanced = false;
   if (qci.mrrvId) {
     const parentGrn = await prisma.mrrv.findUnique({ where: { id: qci.mrrvId } });
     if (parentGrn && canTransition('grn', parentGrn.status, 'qc_approved')) {
-      await prisma.mrrv.update({
-        where: { id: parentGrn.id },
-        data: { status: 'qc_approved' },
-      });
+      await safeStatusUpdate(prisma.mrrv, parentGrn.id, parentGrn.status, { status: 'qc_approved' });
       grnAdvanced = true;
 
       eventBus.publish({

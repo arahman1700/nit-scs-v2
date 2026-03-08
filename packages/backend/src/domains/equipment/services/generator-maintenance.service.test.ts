@@ -214,18 +214,16 @@ describe('update', () => {
 describe('startProgress', () => {
   it('transitions Generator Maintenance to in_progress with performedById', async () => {
     const record = makeGeneratorMaintenance({ status: 'scheduled' });
-    mockPrisma.generatorMaintenance.findUnique.mockResolvedValue(record);
-    mockPrisma.generatorMaintenance.update.mockResolvedValue({
-      ...record,
-      status: 'in_progress',
-      performedById: USER_ID,
-    });
+    mockPrisma.generatorMaintenance.findUnique
+      .mockResolvedValueOnce(record)
+      .mockResolvedValueOnce({ ...record, status: 'in_progress', performedById: USER_ID });
+    mockPrisma.generatorMaintenance.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await startProgress(GM_ID, USER_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('generator_maintenance', 'scheduled', 'in_progress');
-    expect(mockPrisma.generatorMaintenance.update).toHaveBeenCalledWith({
-      where: { id: GM_ID },
+    expect(mockPrisma.generatorMaintenance.updateMany).toHaveBeenCalledWith({
+      where: { id: GM_ID, status: 'scheduled' },
       data: { status: 'in_progress', performedById: USER_ID },
     });
     expect(result.status).toBe('in_progress');
@@ -253,19 +251,16 @@ describe('startProgress', () => {
 describe('complete', () => {
   it('transitions Generator Maintenance to completed with completedDate and performedById', async () => {
     const record = makeGeneratorMaintenance({ status: 'in_progress' });
-    mockPrisma.generatorMaintenance.findUnique.mockResolvedValue(record);
-    mockPrisma.generatorMaintenance.update.mockResolvedValue({
-      ...record,
-      status: 'completed',
-      completedDate: new Date(),
-      performedById: USER_ID,
-    });
+    mockPrisma.generatorMaintenance.findUnique
+      .mockResolvedValueOnce(record)
+      .mockResolvedValueOnce({ ...record, status: 'completed', completedDate: new Date(), performedById: USER_ID });
+    mockPrisma.generatorMaintenance.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await complete(GM_ID, USER_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('generator_maintenance', 'in_progress', 'completed');
-    expect(mockPrisma.generatorMaintenance.update).toHaveBeenCalledWith({
-      where: { id: GM_ID },
+    expect(mockPrisma.generatorMaintenance.updateMany).toHaveBeenCalledWith({
+      where: { id: GM_ID, status: 'in_progress' },
       data: expect.objectContaining({
         status: 'completed',
         completedDate: expect.any(Date),
@@ -286,14 +281,16 @@ describe('complete', () => {
 describe('markOverdue', () => {
   it('transitions Generator Maintenance to overdue', async () => {
     const record = makeGeneratorMaintenance({ status: 'scheduled' });
-    mockPrisma.generatorMaintenance.findUnique.mockResolvedValue(record);
-    mockPrisma.generatorMaintenance.update.mockResolvedValue({ ...record, status: 'overdue' });
+    mockPrisma.generatorMaintenance.findUnique
+      .mockResolvedValueOnce(record)
+      .mockResolvedValueOnce({ ...record, status: 'overdue' });
+    mockPrisma.generatorMaintenance.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await markOverdue(GM_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('generator_maintenance', 'scheduled', 'overdue');
-    expect(mockPrisma.generatorMaintenance.update).toHaveBeenCalledWith({
-      where: { id: GM_ID },
+    expect(mockPrisma.generatorMaintenance.updateMany).toHaveBeenCalledWith({
+      where: { id: GM_ID, status: 'scheduled' },
       data: { status: 'overdue' },
     });
     expect(result.status).toBe('overdue');

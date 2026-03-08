@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { GeneratorMaintenanceCreateDto, GeneratorMaintenanceUpdateDto, ListParams } from '../../../types/dto.js';
 
@@ -110,10 +111,11 @@ export async function startProgress(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  const updated = await prisma.generatorMaintenance.update({
-    where: { id: record.id },
-    data: { status: 'in_progress', performedById: userId },
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, {
+    status: 'in_progress',
+    performedById: userId,
   });
+  const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'in_progress' }, userId);
 
@@ -125,14 +127,12 @@ export async function complete(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'completed');
 
-  const updated = await prisma.generatorMaintenance.update({
-    where: { id: record.id },
-    data: {
-      status: 'completed',
-      completedDate: new Date(),
-      performedById: userId,
-    },
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, {
+    status: 'completed',
+    completedDate: new Date(),
+    performedById: userId,
   });
+  const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'completed' }, userId);
 
@@ -144,10 +144,8 @@ export async function markOverdue(id: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'overdue');
 
-  const updated = await prisma.generatorMaintenance.update({
-    where: { id: record.id },
-    data: { status: 'overdue' },
-  });
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, { status: 'overdue' });
+  const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'overdue' });
 

@@ -8,6 +8,8 @@ vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../workflow/services/approval.service.js', () => ({ submitForApproval: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
+vi.mock('../../system/services/rate-card.service.js', () => ({ getActiveRateForEquipment: vi.fn() }));
 
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
@@ -625,31 +627,29 @@ describe('job-order.service', () => {
 
     it('calls assertTransition and updates to assigned with supplierId', async () => {
       const jo = makeJo({ status: 'approved' });
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({ ...jo, status: 'assigned' });
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(jo).mockResolvedValueOnce({ ...jo, status: 'assigned' });
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
 
       await assign('jo-1', 'sup-new');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('jo', 'approved', 'assigned');
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status: 'assigned', supplierId: 'sup-new' },
-        }),
-      );
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'approved' },
+        data: { status: 'assigned', supplierId: 'sup-new' },
+      });
     });
 
     it('uses existing supplierId when not provided', async () => {
       const jo = makeJo({ status: 'approved', supplierId: 'sup-existing' });
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({ ...jo, status: 'assigned' });
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(jo).mockResolvedValueOnce({ ...jo, status: 'assigned' });
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
 
       await assign('jo-1');
 
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status: 'assigned', supplierId: 'sup-existing' },
-        }),
-      );
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'approved' },
+        data: { status: 'assigned', supplierId: 'sup-existing' },
+      });
     });
   });
 
@@ -664,20 +664,19 @@ describe('job-order.service', () => {
 
     it('calls assertTransition and updates to in_progress with startDate', async () => {
       const jo = makeJo({ status: 'assigned' });
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({ ...jo, status: 'in_progress' });
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(jo).mockResolvedValueOnce({ ...jo, status: 'in_progress' });
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
 
       await start('jo-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('jo', 'assigned', 'in_progress');
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'in_progress',
-            startDate: expect.any(Date),
-          }),
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'assigned' },
+        data: expect.objectContaining({
+          status: 'in_progress',
+          startDate: expect.any(Date),
         }),
-      );
+      });
     });
   });
 
@@ -693,13 +692,16 @@ describe('job-order.service', () => {
     it('calls assertTransition, updates to on_hold, and sets stopClock', async () => {
       const jo = makeJo({ status: 'in_progress' });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
       const result = await hold('jo-1', 'Waiting for materials');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('jo', 'in_progress', 'on_hold');
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(expect.objectContaining({ data: { status: 'on_hold' } }));
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'in_progress' },
+        data: { status: 'on_hold' },
+      });
       expect(mockPrisma.joSlaTracking.update).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { jobOrderId: 'jo-1' },
@@ -715,7 +717,7 @@ describe('job-order.service', () => {
     it('sets stopClockReason to null when no reason provided', async () => {
       const jo = makeJo({ status: 'in_progress' });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
       await hold('jo-1');
@@ -737,7 +739,7 @@ describe('job-order.service', () => {
     it('calls assertTransition and updates to in_progress', async () => {
       const jo = makeJo({ status: 'on_hold' });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.findUnique.mockResolvedValue({ stopClockStart: null, slaDueDate: null });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
@@ -750,7 +752,7 @@ describe('job-order.service', () => {
     it('adjusts slaDueDate based on pause duration when stopClock data exists', async () => {
       const jo = makeJo({ status: 'on_hold' });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
 
       const stopClockStart = new Date(Date.now() - 3600000); // 1 hour ago
       const slaDueDate = new Date(Date.now() + 3600000); // 1 hour from now
@@ -769,7 +771,7 @@ describe('job-order.service', () => {
     it('sets stopClockEnd without adjusting slaDueDate when no stopClock data', async () => {
       const jo = makeJo({ status: 'on_hold' });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.findUnique.mockResolvedValue({ stopClockStart: null, slaDueDate: null });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
@@ -793,20 +795,19 @@ describe('job-order.service', () => {
     it('calls assertTransition and updates to completed', async () => {
       const jo = makeJo({ status: 'in_progress', slaTracking: null });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await complete('jo-1', 'user-1');
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('jo', 'in_progress', 'completed');
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'completed',
-            completionDate: expect.any(Date),
-            completedById: 'user-1',
-          }),
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'in_progress' },
+        data: expect.objectContaining({
+          status: 'completed',
+          completionDate: expect.any(Date),
+          completedById: 'user-1',
         }),
-      );
+      });
       expect(result).toEqual({ id: 'jo-1', slaMet: null });
     });
 
@@ -814,7 +815,7 @@ describe('job-order.service', () => {
       const futureDate = new Date(Date.now() + 86400000);
       const jo = makeJo({ status: 'in_progress', slaTracking: { slaDueDate: futureDate } });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
       const result = await complete('jo-1', 'user-1');
@@ -832,7 +833,7 @@ describe('job-order.service', () => {
       const pastDate = new Date(Date.now() - 86400000);
       const jo = makeJo({ status: 'in_progress', slaTracking: { slaDueDate: pastDate } });
       mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
-      mockPrisma.jobOrder.update.mockResolvedValue({});
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joSlaTracking.update.mockResolvedValue({});
 
       const result = await complete('jo-1', 'user-1');
@@ -857,7 +858,7 @@ describe('job-order.service', () => {
 
     it('calls assertTransition, updates to invoiced, and creates payment', async () => {
       const jo = makeJo({ status: 'completed' });
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(jo);
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(jo).mockResolvedValueOnce({ ...jo, status: 'invoiced' });
       const paymentData = {
         invoiceNumber: 'INV-001',
         invoiceReceiptDate: '2025-07-01',
@@ -866,15 +867,16 @@ describe('job-order.service', () => {
         grandTotal: 4600,
         paymentStatus: 'pending',
       };
-      mockPrisma.jobOrder.update.mockResolvedValue({ ...jo, status: 'invoiced' });
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.joPayment.create.mockResolvedValue(makePayment());
 
       const result = await invoice('jo-1', paymentData);
 
       expect(mockedAssertTransition).toHaveBeenCalledWith('jo', 'completed', 'invoiced');
-      expect(mockPrisma.jobOrder.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: { status: 'invoiced' } }),
-      );
+      expect(mockPrisma.jobOrder.updateMany).toHaveBeenCalledWith({
+        where: { id: 'jo-1', status: 'completed' },
+        data: { status: 'invoiced' },
+      });
       expect(mockPrisma.joPayment.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({

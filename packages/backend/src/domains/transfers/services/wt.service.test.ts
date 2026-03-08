@@ -243,8 +243,8 @@ describe('update', () => {
 describe('submit', () => {
   it('transitions Stock Transfer to pending', async () => {
     const st = makeStockTransfer({ status: 'draft' });
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(st);
-    mockPrisma.stockTransfer.update.mockResolvedValue({ ...st, status: 'pending' });
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(st).mockResolvedValueOnce({ ...st, status: 'pending' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await submit(ST_ID);
 
@@ -263,8 +263,8 @@ describe('submit', () => {
 describe('approve', () => {
   it('transitions Stock Transfer to approved', async () => {
     const st = makeStockTransfer({ status: 'pending' });
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(st);
-    mockPrisma.stockTransfer.update.mockResolvedValue({ ...st, status: 'approved' });
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(st).mockResolvedValueOnce({ ...st, status: 'approved' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await approve(ST_ID);
 
@@ -284,8 +284,8 @@ describe('ship', () => {
   it('deducts stock via batch call and transitions to shipped', async () => {
     const lines = makeLines();
     const st = makeStockTransfer({ status: 'approved', stockTransferLines: lines });
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(st);
-    mockPrisma.stockTransfer.update.mockResolvedValue({ ...st, status: 'shipped' });
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(st).mockResolvedValueOnce({ ...st, status: 'shipped' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await ship(ST_ID);
 
@@ -305,8 +305,8 @@ describe('ship', () => {
         ref: { referenceType: 'stock_transfer_line', referenceId: 'line-2' },
       },
     ]);
-    expect(mockPrisma.stockTransfer.update).toHaveBeenCalledWith({
-      where: { id: ST_ID },
+    expect(mockPrisma.stockTransfer.updateMany).toHaveBeenCalledWith({
+      where: { id: ST_ID, status: 'approved' },
       data: expect.objectContaining({
         status: 'shipped',
         shippedDate: expect.any(Date),
@@ -338,8 +338,8 @@ describe('receive', () => {
   it('adds stock via batch call and transitions to received', async () => {
     const lines = makeLines();
     const st = makeStockTransfer({ status: 'shipped', stockTransferLines: lines });
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(st);
-    mockPrisma.stockTransfer.update.mockResolvedValue({ ...st, status: 'received' });
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(st).mockResolvedValueOnce({ ...st, status: 'received' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await receive(ST_ID, USER_ID);
 
@@ -349,8 +349,8 @@ describe('receive', () => {
       { itemId: 'item-1', warehouseId: 'wh-to', qty: 10, performedById: USER_ID },
       { itemId: 'item-2', warehouseId: 'wh-to', qty: 5, performedById: USER_ID },
     ]);
-    expect(mockPrisma.stockTransfer.update).toHaveBeenCalledWith({
-      where: { id: ST_ID },
+    expect(mockPrisma.stockTransfer.updateMany).toHaveBeenCalledWith({
+      where: { id: ST_ID, status: 'shipped' },
       data: expect.objectContaining({
         status: 'received',
         receivedDate: expect.any(Date),
@@ -381,8 +381,8 @@ describe('receive', () => {
 describe('complete', () => {
   it('transitions Stock Transfer to completed', async () => {
     const st = makeStockTransfer({ status: 'received' });
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(st);
-    mockPrisma.stockTransfer.update.mockResolvedValue({ ...st, status: 'completed' });
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(st).mockResolvedValueOnce({ ...st, status: 'completed' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await complete(ST_ID);
 

@@ -8,6 +8,8 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -167,9 +169,11 @@ describe('surplus.service', () => {
   describe('evaluate', () => {
     it('should transition to evaluated', async () => {
       const surplus = { id: 'surplus-1', status: 'identified' };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'evaluated' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'evaluated' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await evaluate('surplus-1');
 
@@ -190,15 +194,17 @@ describe('surplus.service', () => {
   describe('approve', () => {
     it('should transition to approved and set ouHeadApprovalDate', async () => {
       const surplus = { id: 'surplus-1', status: 'evaluated' };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'approved' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'approved' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await approve('surplus-1');
 
       expect(result.status).toBe('approved');
       expect(mockedAssertTransition).toHaveBeenCalledWith('surplus', 'evaluated', 'approved');
-      const updateData = mockPrisma.surplusItem.update.mock.calls[0][0].data;
+      const updateData = mockPrisma.surplusItem.updateMany.mock.calls[0][0].data;
       expect(updateData.ouHeadApprovalDate).toBeInstanceOf(Date);
     });
 
@@ -284,11 +290,13 @@ describe('surplus.service', () => {
         surplusNumber: 'SURPLUS-001',
         projectId: null,
       };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'actioned' });
       mockedAssertTransition.mockReturnValue(undefined);
       mockedGenerateDocNumber.mockResolvedValue('WT-001');
       mockPrisma.stockTransfer.create.mockResolvedValue({ id: 'wt-1' });
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'actioned' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await action('surplus-1', 'user-1');
 
@@ -306,11 +314,13 @@ describe('surplus.service', () => {
         surplusNumber: 'SURPLUS-001',
         projectId: 'proj-1',
       };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'actioned' });
       mockedAssertTransition.mockReturnValue(undefined);
       mockedGenerateDocNumber.mockResolvedValue('MRV-001');
       mockPrisma.mrv.create.mockResolvedValue({ id: 'mrn-1' });
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'actioned' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await action('surplus-1', 'user-1');
 
@@ -330,9 +340,11 @@ describe('surplus.service', () => {
         surplusNumber: 'SURPLUS-001',
         projectId: null,
       };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'actioned' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'actioned' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await action('surplus-1', 'user-1');
 
@@ -371,9 +383,11 @@ describe('surplus.service', () => {
   describe('close', () => {
     it('should transition to closed', async () => {
       const surplus = { id: 'surplus-1', status: 'actioned' };
-      mockPrisma.surplusItem.findUnique.mockResolvedValue(surplus);
+      mockPrisma.surplusItem.findUnique
+        .mockResolvedValueOnce(surplus)
+        .mockResolvedValueOnce({ ...surplus, status: 'closed' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.surplusItem.update.mockResolvedValue({ ...surplus, status: 'closed' });
+      mockPrisma.surplusItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await close('surplus-1');
 

@@ -303,19 +303,17 @@ describe('shipment.service', () => {
   describe('updateStatus', () => {
     it('updates status on an existing shipment', async () => {
       const existing = makeShipment({ status: 'ready_to_ship' });
-      mockPrisma.shipment.findUnique.mockResolvedValue(existing);
       const updated = { ...existing, status: 'in_transit' };
-      mockPrisma.shipment.update.mockResolvedValue(updated);
+      mockPrisma.shipment.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await updateStatus('ship-1', 'in_transit', {});
 
       expect(result).toEqual({ existing, updated });
-      expect(mockPrisma.shipment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'ship-1' },
-          data: { status: 'in_transit' },
-        }),
-      );
+      expect(mockPrisma.shipment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'ship-1', status: 'ready_to_ship' },
+        data: { status: 'in_transit' },
+      });
     });
 
     it('throws NotFoundError when shipment does not exist', async () => {
@@ -325,8 +323,10 @@ describe('shipment.service', () => {
     });
 
     it('includes extra date fields when provided', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'ready_to_ship' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'in_transit' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'ready_to_ship' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'in_transit' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       await updateStatus('ship-1', 'in_transit', {
         actualShipDate: '2025-04-05',
@@ -334,19 +334,21 @@ describe('shipment.service', () => {
         actualArrivalDate: '2025-05-10',
       });
 
-      const call = mockPrisma.shipment.update.mock.calls[0][0];
+      const call = mockPrisma.shipment.updateMany.mock.calls[0][0];
       expect(call.data.actualShipDate).toEqual(new Date('2025-04-05'));
       expect(call.data.etaPort).toEqual(new Date('2025-05-01'));
       expect(call.data.actualArrivalDate).toEqual(new Date('2025-05-10'));
     });
 
     it('does not include date fields when not provided', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'ready_to_ship' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'in_transit' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'ready_to_ship' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'in_transit' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       await updateStatus('ship-1', 'in_transit', {});
 
-      const call = mockPrisma.shipment.update.mock.calls[0][0];
+      const call = mockPrisma.shipment.updateMany.mock.calls[0][0];
       expect(call.data.actualShipDate).toBeUndefined();
       expect(call.data.etaPort).toBeUndefined();
       expect(call.data.actualArrivalDate).toBeUndefined();
@@ -486,26 +488,28 @@ describe('shipment.service', () => {
     });
 
     it('delivers from cleared status', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'cleared' }));
+      const cleared = makeShipment({ status: 'cleared' });
       const updated = makeShipment({ status: 'delivered' });
-      mockPrisma.shipment.update.mockResolvedValue(updated);
+      mockPrisma.shipment.findUnique.mockResolvedValueOnce(cleared).mockResolvedValueOnce(updated);
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await deliver('ship-1');
 
       expect(result.status).toBe('delivered');
-      expect(mockPrisma.shipment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            status: 'delivered',
-            deliveryDate: expect.any(Date),
-          }),
+      expect(mockPrisma.shipment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'ship-1', status: 'cleared' },
+        data: expect.objectContaining({
+          status: 'delivered',
+          deliveryDate: expect.any(Date),
         }),
-      );
+      });
     });
 
     it('delivers from in_delivery status', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'in_delivery' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'in_delivery' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await deliver('ship-1');
 
@@ -513,8 +517,10 @@ describe('shipment.service', () => {
     });
 
     it('updates MRRV to received when mrrvId is present', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'cleared', mrrvId: 'mrrv-1' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'cleared', mrrvId: 'mrrv-1' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.mrrv.update.mockResolvedValue({});
 
       await deliver('ship-1');
@@ -528,8 +534,10 @@ describe('shipment.service', () => {
     });
 
     it('does not attempt MRRV update when mrrvId is null', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'cleared', mrrvId: null }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'cleared', mrrvId: null }))
+        .mockResolvedValueOnce(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       await deliver('ship-1');
 
@@ -537,8 +545,10 @@ describe('shipment.service', () => {
     });
 
     it('catches MRRV update errors silently', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'cleared', mrrvId: 'mrrv-1' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'cleared', mrrvId: 'mrrv-1' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'delivered' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.mrrv.update.mockRejectedValue(new Error('MRRV not found'));
 
       await expect(deliver('ship-1')).resolves.toBeDefined();
@@ -567,24 +577,25 @@ describe('shipment.service', () => {
     });
 
     it('cancels from a valid status', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'draft' }));
-      const updated = makeShipment({ status: 'cancelled' });
-      mockPrisma.shipment.update.mockResolvedValue(updated);
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'draft' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'cancelled' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await cancel('ship-1');
 
       expect(result.status).toBe('cancelled');
-      expect(mockPrisma.shipment.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: 'ship-1' },
-          data: { status: 'cancelled' },
-        }),
-      );
+      expect(mockPrisma.shipment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'ship-1', status: 'draft' },
+        data: { status: 'cancelled' },
+      });
     });
 
     it('cancels from in_transit status', async () => {
-      mockPrisma.shipment.findUnique.mockResolvedValue(makeShipment({ status: 'in_transit' }));
-      mockPrisma.shipment.update.mockResolvedValue(makeShipment({ status: 'cancelled' }));
+      mockPrisma.shipment.findUnique
+        .mockResolvedValueOnce(makeShipment({ status: 'in_transit' }))
+        .mockResolvedValueOnce(makeShipment({ status: 'cancelled' }));
+      mockPrisma.shipment.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await cancel('ship-1');
 

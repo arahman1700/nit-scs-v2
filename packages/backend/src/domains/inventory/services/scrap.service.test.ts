@@ -8,6 +8,8 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
+vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -178,9 +180,11 @@ describe('scrap.service', () => {
   describe('report', () => {
     it('should transition to reported when photos are present', async () => {
       const scrap = { id: 'scrap-1', status: 'identified', photos: ['photo1.jpg'] };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'reported' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'reported' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await report('scrap-1');
 
@@ -288,9 +292,11 @@ describe('scrap.service', () => {
         qcApproval: true,
         storekeeperApproval: true,
       };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'approved' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'approved' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await approve('scrap-1');
 
@@ -352,9 +358,11 @@ describe('scrap.service', () => {
   describe('sendToSsc', () => {
     it('should transition to in_ssc', async () => {
       const scrap = { id: 'scrap-1', status: 'approved' };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'in_ssc' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'in_ssc' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await sendToSsc('scrap-1');
 
@@ -375,14 +383,16 @@ describe('scrap.service', () => {
   describe('markSold', () => {
     it('should set status to sold with buyer name and 10-day deadline', async () => {
       const scrap = { id: 'scrap-1', status: 'in_ssc' };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'sold', buyerName: 'Buyer Co.' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'sold', buyerName: 'Buyer Co.' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await markSold('scrap-1', 'Buyer Co.');
 
       expect(result.status).toBe('sold');
-      const updateData = mockPrisma.scrapItem.update.mock.calls[0][0].data;
+      const updateData = mockPrisma.scrapItem.updateMany.mock.calls[0][0].data;
       expect(updateData.buyerName).toBe('Buyer Co.');
       expect(updateData.buyerPickupDeadline).toBeInstanceOf(Date);
     });
@@ -400,9 +410,11 @@ describe('scrap.service', () => {
   describe('dispose', () => {
     it('should transition to disposed', async () => {
       const scrap = { id: 'scrap-1', status: 'in_ssc' };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'disposed' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'disposed' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await dispose('scrap-1');
 
@@ -423,9 +435,11 @@ describe('scrap.service', () => {
   describe('close', () => {
     it('should transition to closed', async () => {
       const scrap = { id: 'scrap-1', status: 'sold' };
-      mockPrisma.scrapItem.findUnique.mockResolvedValue(scrap);
+      mockPrisma.scrapItem.findUnique
+        .mockResolvedValueOnce(scrap)
+        .mockResolvedValueOnce({ ...scrap, status: 'closed' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.scrapItem.update.mockResolvedValue({ ...scrap, status: 'closed' });
+      mockPrisma.scrapItem.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await close('scrap-1');
 

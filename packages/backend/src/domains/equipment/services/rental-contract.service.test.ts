@@ -246,14 +246,16 @@ describe('submit', () => {
       status: 'draft',
       rentalLines: [{ id: 'line-1', equipmentDescription: 'Crane A', qty: 1, unitRate: 1000, totalRate: 1000 }],
     });
-    mockPrisma.rentalContract.findUnique.mockResolvedValue(contract);
-    mockPrisma.rentalContract.update.mockResolvedValue({ ...contract, status: 'pending_approval' });
+    mockPrisma.rentalContract.findUnique
+      .mockResolvedValueOnce(contract)
+      .mockResolvedValueOnce({ ...contract, status: 'pending_approval' });
+    mockPrisma.rentalContract.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await submit(RC_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('rental_contract', 'draft', 'pending_approval');
-    expect(mockPrisma.rentalContract.update).toHaveBeenCalledWith({
-      where: { id: RC_ID },
+    expect(mockPrisma.rentalContract.updateMany).toHaveBeenCalledWith({
+      where: { id: RC_ID, status: 'draft' },
       data: { status: 'pending_approval' },
     });
     expect(result.status).toBe('pending_approval');
@@ -291,14 +293,16 @@ describe('submit', () => {
 describe('approve', () => {
   it('transitions Rental Contract to active', async () => {
     const contract = makeRentalContract({ status: 'pending_approval' });
-    mockPrisma.rentalContract.findUnique.mockResolvedValue(contract);
-    mockPrisma.rentalContract.update.mockResolvedValue({ ...contract, status: 'active' });
+    mockPrisma.rentalContract.findUnique
+      .mockResolvedValueOnce(contract)
+      .mockResolvedValueOnce({ ...contract, status: 'active' });
+    mockPrisma.rentalContract.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await approve(RC_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('rental_contract', 'pending_approval', 'active');
-    expect(mockPrisma.rentalContract.update).toHaveBeenCalledWith({
-      where: { id: RC_ID },
+    expect(mockPrisma.rentalContract.updateMany).toHaveBeenCalledWith({
+      where: { id: RC_ID, status: 'pending_approval' },
       data: { status: 'active' },
     });
     expect(result.status).toBe('active');
@@ -315,8 +319,10 @@ describe('approve', () => {
 describe('activate', () => {
   it('transitions Rental Contract to active', async () => {
     const contract = makeRentalContract({ status: 'pending_approval' });
-    mockPrisma.rentalContract.findUnique.mockResolvedValue(contract);
-    mockPrisma.rentalContract.update.mockResolvedValue({ ...contract, status: 'active' });
+    mockPrisma.rentalContract.findUnique
+      .mockResolvedValueOnce(contract)
+      .mockResolvedValueOnce({ ...contract, status: 'active' });
+    mockPrisma.rentalContract.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await activate(RC_ID);
 
@@ -336,18 +342,16 @@ describe('extend', () => {
   it('transitions Rental Contract to extended with new end date', async () => {
     const contract = makeRentalContract({ status: 'active' });
     const newEndDate = '2026-12-31';
-    mockPrisma.rentalContract.findUnique.mockResolvedValue(contract);
-    mockPrisma.rentalContract.update.mockResolvedValue({
-      ...contract,
-      status: 'extended',
-      endDate: new Date(newEndDate),
-    });
+    mockPrisma.rentalContract.findUnique
+      .mockResolvedValueOnce(contract)
+      .mockResolvedValueOnce({ ...contract, status: 'extended', endDate: new Date(newEndDate) });
+    mockPrisma.rentalContract.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await extend(RC_ID, newEndDate);
 
     expect(assertTransition).toHaveBeenCalledWith('rental_contract', 'active', 'extended');
-    expect(mockPrisma.rentalContract.update).toHaveBeenCalledWith({
-      where: { id: RC_ID },
+    expect(mockPrisma.rentalContract.updateMany).toHaveBeenCalledWith({
+      where: { id: RC_ID, status: 'active' },
       data: { status: 'extended', endDate: new Date(newEndDate) },
     });
     expect(result.status).toBe('extended');
@@ -364,14 +368,16 @@ describe('extend', () => {
 describe('terminate', () => {
   it('transitions Rental Contract to terminated', async () => {
     const contract = makeRentalContract({ status: 'active' });
-    mockPrisma.rentalContract.findUnique.mockResolvedValue(contract);
-    mockPrisma.rentalContract.update.mockResolvedValue({ ...contract, status: 'terminated' });
+    mockPrisma.rentalContract.findUnique
+      .mockResolvedValueOnce(contract)
+      .mockResolvedValueOnce({ ...contract, status: 'terminated' });
+    mockPrisma.rentalContract.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await terminate(RC_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('rental_contract', 'active', 'terminated');
-    expect(mockPrisma.rentalContract.update).toHaveBeenCalledWith({
-      where: { id: RC_ID },
+    expect(mockPrisma.rentalContract.updateMany).toHaveBeenCalledWith({
+      where: { id: RC_ID, status: 'active' },
       data: { status: 'terminated' },
     });
     expect(result.status).toBe('terminated');

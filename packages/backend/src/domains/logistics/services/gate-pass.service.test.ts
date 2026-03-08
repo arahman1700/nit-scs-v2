@@ -212,8 +212,8 @@ describe('update', () => {
 describe('submit', () => {
   it('transitions Gate Pass to pending', async () => {
     const gp = makeGatePass({ status: 'draft' });
-    mockPrisma.gatePass.findUnique.mockResolvedValue(gp);
-    mockPrisma.gatePass.update.mockResolvedValue({ ...gp, status: 'pending' });
+    mockPrisma.gatePass.findUnique.mockResolvedValueOnce(gp).mockResolvedValueOnce({ ...gp, status: 'pending' });
+    mockPrisma.gatePass.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await submit(GP_ID);
 
@@ -232,8 +232,8 @@ describe('submit', () => {
 describe('approve', () => {
   it('transitions Gate Pass to approved', async () => {
     const gp = makeGatePass({ status: 'pending' });
-    mockPrisma.gatePass.findUnique.mockResolvedValue(gp);
-    mockPrisma.gatePass.update.mockResolvedValue({ ...gp, status: 'approved' });
+    mockPrisma.gatePass.findUnique.mockResolvedValueOnce(gp).mockResolvedValueOnce({ ...gp, status: 'approved' });
+    mockPrisma.gatePass.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await approve(GP_ID);
 
@@ -252,14 +252,14 @@ describe('approve', () => {
 describe('release', () => {
   it('transitions Gate Pass to released with exitTime', async () => {
     const gp = makeGatePass({ status: 'approved' });
-    mockPrisma.gatePass.findUnique.mockResolvedValue(gp);
-    mockPrisma.gatePass.update.mockResolvedValue({ ...gp, status: 'released' });
+    mockPrisma.gatePass.findUnique.mockResolvedValueOnce(gp).mockResolvedValueOnce({ ...gp, status: 'released' });
+    mockPrisma.gatePass.updateMany.mockResolvedValue({ count: 1 });
 
     await release(GP_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('gate_pass', 'approved', 'released');
-    expect(mockPrisma.gatePass.update).toHaveBeenCalledWith({
-      where: { id: GP_ID },
+    expect(mockPrisma.gatePass.updateMany).toHaveBeenCalledWith({
+      where: { id: GP_ID, status: 'approved' },
       data: expect.objectContaining({
         status: 'released',
         exitTime: expect.any(Date),
@@ -270,12 +270,12 @@ describe('release', () => {
 
   it('stores securityOfficer when provided', async () => {
     const gp = makeGatePass({ status: 'approved' });
-    mockPrisma.gatePass.findUnique.mockResolvedValue(gp);
-    mockPrisma.gatePass.update.mockResolvedValue({ ...gp, status: 'released' });
+    mockPrisma.gatePass.findUnique.mockResolvedValueOnce(gp).mockResolvedValueOnce({ ...gp, status: 'released' });
+    mockPrisma.gatePass.updateMany.mockResolvedValue({ count: 1 });
 
     await release(GP_ID, 'Officer Smith');
 
-    const updateCall = mockPrisma.gatePass.update.mock.calls[0][0];
+    const updateCall = mockPrisma.gatePass.updateMany.mock.calls[0][0];
     expect(updateCall.data.securityOfficer).toBe('Officer Smith');
   });
 
@@ -290,14 +290,14 @@ describe('release', () => {
 describe('returnPass', () => {
   it('transitions Gate Pass to returned with returnTime', async () => {
     const gp = makeGatePass({ status: 'released' });
-    mockPrisma.gatePass.findUnique.mockResolvedValue(gp);
-    mockPrisma.gatePass.update.mockResolvedValue({ ...gp, status: 'returned' });
+    mockPrisma.gatePass.findUnique.mockResolvedValueOnce(gp).mockResolvedValueOnce({ ...gp, status: 'returned' });
+    mockPrisma.gatePass.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await returnPass(GP_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('gate_pass', 'released', 'returned');
-    expect(mockPrisma.gatePass.update).toHaveBeenCalledWith({
-      where: { id: GP_ID },
+    expect(mockPrisma.gatePass.updateMany).toHaveBeenCalledWith({
+      where: { id: GP_ID, status: 'released' },
       data: expect.objectContaining({
         status: 'returned',
         returnTime: expect.any(Date),

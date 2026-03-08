@@ -3,6 +3,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { GatePassCreateDto, GatePassUpdateDto, GatePassItemDto, ListParams } from '../../../types/dto.js';
 
@@ -120,7 +121,8 @@ export async function submit(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'pending');
-  const updated = await prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'pending' } });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'pending' });
+  const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -138,7 +140,8 @@ export async function approve(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'approved');
-  const updated = await prisma.gatePass.update({ where: { id: gp.id }, data: { status: 'approved' } });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'approved' });
+  const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -157,10 +160,12 @@ export async function release(id: string, securityOfficer?: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'released');
 
-  const updated = await prisma.gatePass.update({
-    where: { id: gp.id },
-    data: { status: 'released', exitTime: new Date(), securityOfficer: securityOfficer ?? null },
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, {
+    status: 'released',
+    exitTime: new Date(),
+    securityOfficer: securityOfficer ?? null,
   });
+  const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -179,10 +184,8 @@ export async function returnPass(id: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'returned');
 
-  const updated = await prisma.gatePass.update({
-    where: { id: gp.id },
-    data: { status: 'returned', returnTime: new Date() },
-  });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'returned', returnTime: new Date() });
+  const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -228,18 +231,15 @@ export async function verifyOutbound(
     ? `Verified ${body.itemChecks.length}/${gp.gatePassItems.length} items. ${body.verificationNotes || ''}`
     : body.verificationNotes || 'Gate verification completed';
 
-  const updated = await prisma.gatePass.update({
-    where: { id: gp.id },
-    data: {
-      status: 'released',
-      exitTime: new Date(),
-      securityOfficer: body.securityOfficer ?? null,
-      notes: gp.notes
-        ? `${gp.notes}\n[OUTBOUND VERIFICATION] ${verificationSummary}`
-        : `[OUTBOUND VERIFICATION] ${verificationSummary}`,
-    },
-    include: DETAIL_INCLUDE,
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, {
+    status: 'released',
+    exitTime: new Date(),
+    securityOfficer: body.securityOfficer ?? null,
+    notes: gp.notes
+      ? `${gp.notes}\n[OUTBOUND VERIFICATION] ${verificationSummary}`
+      : `[OUTBOUND VERIFICATION] ${verificationSummary}`,
   });
+  const updated = await prisma.gatePass.findUnique({ where: { id: gp.id }, include: DETAIL_INCLUDE });
 
   eventBus.publish({
     type: 'document:status_changed',

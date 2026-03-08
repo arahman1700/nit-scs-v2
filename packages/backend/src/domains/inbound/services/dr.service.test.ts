@@ -205,14 +205,16 @@ describe('osd.service', () => {
   describe('sendClaim', () => {
     it('should send claim from under_review status', async () => {
       const osd = { id: 'osd-1', status: 'under_review' };
-      mockPrisma.osdReport.findUnique.mockResolvedValue(osd);
-      mockPrisma.osdReport.update.mockResolvedValue({ ...osd, status: 'claim_sent' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce(osd)
+        .mockResolvedValueOnce({ ...osd, status: 'claim_sent' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await sendClaim('osd-1', 'CLM-001');
 
       expect(result.status).toBe('claim_sent');
-      expect(mockPrisma.osdReport.update).toHaveBeenCalledWith({
-        where: { id: 'osd-1' },
+      expect(mockPrisma.osdReport.updateMany).toHaveBeenCalledWith({
+        where: { id: 'osd-1', status: 'under_review' },
         data: expect.objectContaining({
           status: 'claim_sent',
           claimReference: 'CLM-001',
@@ -220,14 +222,16 @@ describe('osd.service', () => {
       });
     });
 
-    it('should send claim from under_review status', async () => {
+    it('should send claim from under_review status with null claimReference', async () => {
       const osd = { id: 'osd-1', status: 'under_review' };
-      mockPrisma.osdReport.findUnique.mockResolvedValue(osd);
-      mockPrisma.osdReport.update.mockResolvedValue({ ...osd, status: 'claim_sent' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce(osd)
+        .mockResolvedValueOnce({ ...osd, status: 'claim_sent' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       await sendClaim('osd-1');
 
-      const updateArgs = mockPrisma.osdReport.update.mock.calls[0][0];
+      const updateArgs = mockPrisma.osdReport.updateMany.mock.calls[0][0];
       expect(updateArgs.data.claimReference).toBeNull();
     });
 
@@ -250,8 +254,8 @@ describe('osd.service', () => {
   describe('resolve', () => {
     it('should resolve from awaiting_response status with full data', async () => {
       const osd = { id: 'osd-1', status: 'awaiting_response' };
-      mockPrisma.osdReport.findUnique.mockResolvedValue(osd);
-      mockPrisma.osdReport.update.mockResolvedValue({ ...osd, status: 'resolved' });
+      mockPrisma.osdReport.findUnique.mockResolvedValueOnce(osd).mockResolvedValueOnce({ ...osd, status: 'resolved' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await resolve('osd-1', 'user-1', {
         resolutionType: 'credit_note',
@@ -260,8 +264,8 @@ describe('osd.service', () => {
       });
 
       expect(result.status).toBe('resolved');
-      expect(mockPrisma.osdReport.update).toHaveBeenCalledWith({
-        where: { id: 'osd-1' },
+      expect(mockPrisma.osdReport.updateMany).toHaveBeenCalledWith({
+        where: { id: 'osd-1', status: 'awaiting_response' },
         data: expect.objectContaining({
           status: 'resolved',
           resolvedById: 'user-1',
@@ -273,8 +277,10 @@ describe('osd.service', () => {
     });
 
     it('should resolve from awaiting_response status', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'awaiting_response' });
-      mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce({ id: 'osd-1', status: 'awaiting_response' })
+        .mockResolvedValueOnce({ status: 'resolved' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await resolve('osd-1', 'user-1', {});
 
@@ -282,8 +288,10 @@ describe('osd.service', () => {
     });
 
     it('should resolve from negotiating status', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'negotiating' });
-      mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce({ id: 'osd-1', status: 'negotiating' })
+        .mockResolvedValueOnce({ status: 'resolved' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await resolve('osd-1', 'user-1', {});
 
@@ -303,22 +311,26 @@ describe('osd.service', () => {
     });
 
     it('should set responseDate when supplierResponse is provided', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'awaiting_response' });
-      mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce({ id: 'osd-1', status: 'awaiting_response' })
+        .mockResolvedValueOnce({ status: 'resolved' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       await resolve('osd-1', 'user-1', { supplierResponse: 'We accept' });
 
-      const updateArgs = mockPrisma.osdReport.update.mock.calls[0][0];
+      const updateArgs = mockPrisma.osdReport.updateMany.mock.calls[0][0];
       expect(updateArgs.data.responseDate).toBeInstanceOf(Date);
     });
 
     it('should set responseDate to null when supplierResponse is not provided', async () => {
-      mockPrisma.osdReport.findUnique.mockResolvedValue({ id: 'osd-1', status: 'negotiating' });
-      mockPrisma.osdReport.update.mockResolvedValue({ status: 'resolved' });
+      mockPrisma.osdReport.findUnique
+        .mockResolvedValueOnce({ id: 'osd-1', status: 'negotiating' })
+        .mockResolvedValueOnce({ status: 'resolved' });
+      mockPrisma.osdReport.updateMany.mockResolvedValue({ count: 1 });
 
       await resolve('osd-1', 'user-1', {});
 
-      const updateArgs = mockPrisma.osdReport.update.mock.calls[0][0];
+      const updateArgs = mockPrisma.osdReport.updateMany.mock.calls[0][0];
       expect(updateArgs.data.responseDate).toBeNull();
     });
   });

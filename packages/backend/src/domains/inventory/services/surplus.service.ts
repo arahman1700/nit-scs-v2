@@ -8,6 +8,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { SurplusCreateDto, SurplusUpdateDto, ListParams } from '../../../types/dto.js';
 
@@ -95,7 +96,8 @@ export async function evaluate(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'evaluated');
 
-  return prisma.surplusItem.update({ where: { id: surplus.id }, data: { status: 'evaluated' } });
+  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'evaluated' });
+  return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }
 
 export async function approve(id: string) {
@@ -103,10 +105,11 @@ export async function approve(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'approved');
 
-  return prisma.surplusItem.update({
-    where: { id: surplus.id },
-    data: { status: 'approved', ouHeadApprovalDate: new Date() },
+  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, {
+    status: 'approved',
+    ouHeadApprovalDate: new Date(),
   });
+  return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }
 
 /**
@@ -203,10 +206,8 @@ export async function action(id: string, userId: string) {
     }
     // 'sell' disposition: no downstream document — proceeds to SSC workflow
 
-    const updated = await tx.surplusItem.update({
-      where: { id: surplus.id },
-      data: { status: 'actioned' },
-    });
+    await safeStatusUpdateTx(tx.surplusItem, surplus.id, surplus.status, { status: 'actioned' });
+    const updated = await tx.surplusItem.findUnique({ where: { id: surplus.id } });
 
     return { updated, linkedDocumentId, linkedDocumentType };
   });
@@ -236,5 +237,6 @@ export async function close(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'closed');
 
-  return prisma.surplusItem.update({ where: { id: surplus.id }, data: { status: 'closed' } });
+  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'closed' });
+  return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }

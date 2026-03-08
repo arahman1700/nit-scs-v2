@@ -165,15 +165,17 @@ describe('update', () => {
 describe('returnTool', () => {
   it('transitions to returned and sets return fields', async () => {
     const issue = { id: ISSUE_ID, status: 'issued', toolId: 'tool-1' };
-    mockPrisma.toolIssue.findUnique.mockResolvedValue(issue);
+    mockPrisma.toolIssue.findUnique
+      .mockResolvedValueOnce(issue)
+      .mockResolvedValueOnce({ ...issue, status: 'returned' });
     mockedAssertTransition.mockReturnValue(undefined);
-    mockPrisma.toolIssue.update.mockResolvedValue({ ...issue, status: 'returned' });
+    mockPrisma.toolIssue.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await returnTool(ISSUE_ID, { returnCondition: 'good' } as any, USER_ID);
 
     expect(mockedAssertTransition).toHaveBeenCalledWith('tool_issue', 'issued', 'returned');
-    expect(mockPrisma.toolIssue.update).toHaveBeenCalledWith({
-      where: { id: ISSUE_ID },
+    expect(mockPrisma.toolIssue.updateMany).toHaveBeenCalledWith({
+      where: { id: ISSUE_ID, status: 'issued' },
       data: expect.objectContaining({
         status: 'returned',
         actualReturnDate: expect.any(Date),
@@ -186,9 +188,11 @@ describe('returnTool', () => {
 
   it('updates tool condition to damaged when returnCondition is damaged', async () => {
     const issue = { id: ISSUE_ID, status: 'issued', toolId: 'tool-1' };
-    mockPrisma.toolIssue.findUnique.mockResolvedValue(issue);
+    mockPrisma.toolIssue.findUnique
+      .mockResolvedValueOnce(issue)
+      .mockResolvedValueOnce({ ...issue, status: 'returned' });
     mockedAssertTransition.mockReturnValue(undefined);
-    mockPrisma.toolIssue.update.mockResolvedValue({ ...issue, status: 'returned' });
+    mockPrisma.toolIssue.updateMany.mockResolvedValue({ count: 1 });
 
     await returnTool(ISSUE_ID, { returnCondition: 'damaged' } as any, USER_ID);
 
@@ -200,9 +204,11 @@ describe('returnTool', () => {
 
   it('does not update tool condition when returnCondition is not damaged', async () => {
     const issue = { id: ISSUE_ID, status: 'issued', toolId: 'tool-1' };
-    mockPrisma.toolIssue.findUnique.mockResolvedValue(issue);
+    mockPrisma.toolIssue.findUnique
+      .mockResolvedValueOnce(issue)
+      .mockResolvedValueOnce({ ...issue, status: 'returned' });
     mockedAssertTransition.mockReturnValue(undefined);
-    mockPrisma.toolIssue.update.mockResolvedValue({ ...issue, status: 'returned' });
+    mockPrisma.toolIssue.updateMany.mockResolvedValue({ count: 1 });
 
     await returnTool(ISSUE_ID, { returnCondition: 'good' } as any, USER_ID);
 

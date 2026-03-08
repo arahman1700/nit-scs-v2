@@ -10,6 +10,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { createNotification } from '../../system/services/notification.service.js';
@@ -146,18 +147,15 @@ export async function complete(id: string, userId: string, body: VehicleMaintena
   assertTransition(DOC_TYPE, record.status, 'completed');
 
   const updated = await prisma.$transaction(async tx => {
-    const result = await tx.vehicleMaintenance.update({
-      where: { id: record.id },
-      data: {
-        status: 'completed',
-        completedDate: new Date(),
-        performedById: userId,
-        workPerformed: body.workPerformed,
-        partsUsed: body.partsUsed ?? null,
-        cost: body.cost ?? null,
-      },
-      include: DETAIL_INCLUDE,
+    await safeStatusUpdateTx(tx.vehicleMaintenance, record.id, record.status, {
+      status: 'completed',
+      completedDate: new Date(),
+      performedById: userId,
+      workPerformed: body.workPerformed,
+      partsUsed: body.partsUsed ?? null,
+      cost: body.cost ?? null,
     });
+    const result = await tx.vehicleMaintenance.findUnique({ where: { id: record.id }, include: DETAIL_INCLUDE });
 
     // Update the vehicle's next maintenance date if provided on the record
     if (record.nextServiceDate) {
@@ -180,11 +178,8 @@ export async function cancel(id: string, userId: string) {
   if (!record) throw new NotFoundError('VehicleMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'cancelled');
 
-  const updated = await prisma.vehicleMaintenance.update({
-    where: { id: record.id },
-    data: { status: 'cancelled' },
-    include: DETAIL_INCLUDE,
-  });
+  await safeStatusUpdate(prisma.vehicleMaintenance, record.id, record.status, { status: 'cancelled' });
+  const updated = await prisma.vehicleMaintenance.findUnique({ where: { id: record.id }, include: DETAIL_INCLUDE });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'cancelled' }, userId);
 

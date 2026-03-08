@@ -192,14 +192,14 @@ describe('update', () => {
 describe('submit', () => {
   it('transitions MRV to pending', async () => {
     const mrv = makeMrv({ status: 'draft' });
-    mockPrisma.mrv.findUnique.mockResolvedValue(mrv);
-    mockPrisma.mrv.update.mockResolvedValue({ ...mrv, status: 'pending' });
+    mockPrisma.mrv.findUnique.mockResolvedValueOnce(mrv).mockResolvedValueOnce({ ...mrv, status: 'pending' });
+    mockPrisma.mrv.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await submit(MRV_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('mrv', 'draft', 'pending');
-    expect(mockPrisma.mrv.update).toHaveBeenCalledWith({
-      where: { id: MRV_ID },
+    expect(mockPrisma.mrv.updateMany).toHaveBeenCalledWith({
+      where: { id: MRV_ID, status: 'draft' },
       data: { status: 'pending' },
     });
     expect(result.status).toBe('pending');
@@ -227,14 +227,14 @@ describe('receive', () => {
   it('transitions MRV to received with receivedById and receivedDate', async () => {
     const mrv = makeMrv({ status: 'pending' });
     const received = { ...mrv, status: 'received', receivedById: USER_ID };
-    mockPrisma.mrv.findUnique.mockResolvedValue(mrv);
-    mockPrisma.mrv.update.mockResolvedValue(received);
+    mockPrisma.mrv.findUnique.mockResolvedValueOnce(mrv).mockResolvedValueOnce(received);
+    mockPrisma.mrv.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await receive(MRV_ID, USER_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('mrv', 'pending', 'received');
-    expect(mockPrisma.mrv.update).toHaveBeenCalledWith({
-      where: { id: MRV_ID },
+    expect(mockPrisma.mrv.updateMany).toHaveBeenCalledWith({
+      where: { id: MRV_ID, status: 'pending' },
       data: expect.objectContaining({
         status: 'received',
         receivedById: USER_ID,
@@ -261,7 +261,7 @@ describe('complete', () => {
     ];
     const mrv = makeMrv({ status: 'received', mrvLines: lines });
     mockPrisma.mrv.findUnique.mockResolvedValue(mrv);
-    mockPrisma.mrv.update.mockResolvedValue({ ...mrv, status: 'completed' });
+    mockPrisma.mrv.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await complete(MRV_ID, USER_ID);
 
@@ -297,7 +297,7 @@ describe('complete', () => {
     const lines = [{ id: 'l1', itemId: 'item-1', qtyReturned: 5, condition: 'damaged' }];
     const mrv = makeMrv({ status: 'received', mrvLines: lines });
     mockPrisma.mrv.findUnique.mockResolvedValue(mrv);
-    mockPrisma.mrv.update.mockResolvedValue({ ...mrv, status: 'completed' });
+    mockPrisma.mrv.updateMany.mockResolvedValue({ count: 1 });
     mockedAddStockBatch.mockResolvedValue(undefined);
 
     const result = await complete(MRV_ID, USER_ID);

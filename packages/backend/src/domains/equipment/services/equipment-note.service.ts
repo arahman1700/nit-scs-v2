@@ -14,6 +14,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   EquipmentDeliveryNoteCreateDto,
@@ -198,14 +199,12 @@ export async function confirmDeliveryNote(id: string, userId: string) {
   if (!note) throw new NotFoundError('EquipmentDeliveryNote', id);
   assertTransition('equipment_delivery_note', note.status, 'confirmed');
 
-  const updated = await prisma.equipmentDeliveryNote.update({
-    where: { id },
-    data: {
-      status: 'confirmed',
-      confirmedAt: new Date(),
-      confirmedById: userId,
-    },
+  await safeStatusUpdate(prisma.equipmentDeliveryNote, id, note.status, {
+    status: 'confirmed',
+    confirmedAt: new Date(),
+    confirmedById: userId,
   });
+  const updated = await prisma.equipmentDeliveryNote.findUnique({ where: { id } });
 
   emitDeliveryEvent('status_change', id, { from: note.status, to: 'confirmed' }, userId);
 
@@ -224,10 +223,8 @@ export async function cancelDeliveryNote(id: string, userId: string) {
     throw new BusinessRuleError('Cannot cancel delivery note that has active return notes');
   }
 
-  const updated = await prisma.equipmentDeliveryNote.update({
-    where: { id },
-    data: { status: 'cancelled' },
-  });
+  await safeStatusUpdate(prisma.equipmentDeliveryNote, id, note.status, { status: 'cancelled' });
+  const updated = await prisma.equipmentDeliveryNote.findUnique({ where: { id } });
 
   emitDeliveryEvent('status_change', id, { from: note.status, to: 'cancelled' }, userId);
 
@@ -338,14 +335,12 @@ export async function inspectReturnNote(id: string, userId: string) {
   if (!note) throw new NotFoundError('EquipmentReturnNote', id);
   assertTransition('equipment_return_note', note.status, 'inspected');
 
-  const updated = await prisma.equipmentReturnNote.update({
-    where: { id },
-    data: {
-      status: 'inspected',
-      inspectedAt: new Date(),
-      inspectedById: userId,
-    },
+  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
+    status: 'inspected',
+    inspectedAt: new Date(),
+    inspectedById: userId,
   });
+  const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent('status_change', id, { from: note.status, to: 'inspected' }, userId);
 
@@ -385,16 +380,14 @@ export async function confirmReturnNote(id: string, userId: string) {
     }
   }
 
-  const updated = await prisma.equipmentReturnNote.update({
-    where: { id },
-    data: {
-      status: 'confirmed',
-      confirmedAt: new Date(),
-      confirmedById: userId,
-      actualDays,
-      ...(actualCost !== null && actualCost !== undefined ? { actualCost } : {}),
-    },
+  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
+    status: 'confirmed',
+    confirmedAt: new Date(),
+    confirmedById: userId,
+    actualDays,
+    ...(actualCost !== null && actualCost !== undefined ? { actualCost } : {}),
   });
+  const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent(
     'status_change',
@@ -416,13 +409,11 @@ export async function disputeReturnNote(id: string, userId: string, reason?: str
   if (!note) throw new NotFoundError('EquipmentReturnNote', id);
   assertTransition('equipment_return_note', note.status, 'disputed');
 
-  const updated = await prisma.equipmentReturnNote.update({
-    where: { id },
-    data: {
-      status: 'disputed',
-      ...(reason ? { notes: reason } : {}),
-    },
+  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
+    status: 'disputed',
+    ...(reason ? { notes: reason } : {}),
   });
+  const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent('status_change', id, { from: note.status, to: 'disputed', reason }, userId);
 

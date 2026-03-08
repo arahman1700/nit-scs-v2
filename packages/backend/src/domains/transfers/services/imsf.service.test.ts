@@ -164,9 +164,9 @@ describe('imsf.service', () => {
   describe('send', () => {
     it('should transition IMSF from created to sent', async () => {
       const imsf = { id: 'imsf-1', status: 'created', imsfLines: [{ id: 'line-1' }] };
-      mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
+      mockPrisma.imsf.findUnique.mockResolvedValueOnce(imsf).mockResolvedValueOnce({ ...imsf, status: 'sent' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'sent' });
+      mockPrisma.imsf.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await send('imsf-1');
 
@@ -204,15 +204,20 @@ describe('imsf.service', () => {
         receiverProject: { id: 'proj-2', warehouses: [{ id: 'wh-2' }] },
         imsfLines: [{ itemId: 'item-1', qty: 10, uomId: 'uom-1' }],
       };
-      mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
+      mockPrisma.imsf.findUnique.mockResolvedValueOnce(imsf).mockResolvedValueOnce({ ...imsf, status: 'confirmed' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'confirmed' });
+      mockPrisma.imsf.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, gatePassAutoCreated: true });
       mockPrisma.stockTransfer.create.mockResolvedValue({
         id: 'wt-1',
         transferNumber: 'WT-0001',
         stockTransferLines: [],
       });
-      mockedGenerateDocNumber.mockResolvedValue('WT-0001');
+      mockPrisma.gatePass.create.mockResolvedValue({
+        id: 'gp-1',
+        gatePassNumber: 'GP-0001',
+      });
+      mockedGenerateDocNumber.mockResolvedValueOnce('WT-0001').mockResolvedValueOnce('GP-0001');
 
       const result = await confirm('imsf-1', 'user-1');
 
@@ -234,9 +239,9 @@ describe('imsf.service', () => {
   describe('ship', () => {
     it('should transition IMSF to in_transit', async () => {
       const imsf = { id: 'imsf-1', status: 'confirmed' };
-      mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
+      mockPrisma.imsf.findUnique.mockResolvedValueOnce(imsf).mockResolvedValueOnce({ ...imsf, status: 'in_transit' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'in_transit' });
+      mockPrisma.imsf.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await ship('imsf-1');
 
@@ -257,9 +262,9 @@ describe('imsf.service', () => {
   describe('deliver', () => {
     it('should transition IMSF to delivered', async () => {
       const imsf = { id: 'imsf-1', status: 'in_transit' };
-      mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
+      mockPrisma.imsf.findUnique.mockResolvedValueOnce(imsf).mockResolvedValueOnce({ ...imsf, status: 'delivered' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'delivered' });
+      mockPrisma.imsf.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await deliver('imsf-1');
 
@@ -280,9 +285,9 @@ describe('imsf.service', () => {
   describe('complete', () => {
     it('should transition IMSF to completed', async () => {
       const imsf = { id: 'imsf-1', status: 'delivered' };
-      mockPrisma.imsf.findUnique.mockResolvedValue(imsf);
+      mockPrisma.imsf.findUnique.mockResolvedValueOnce(imsf).mockResolvedValueOnce({ ...imsf, status: 'completed' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.imsf.update.mockResolvedValue({ ...imsf, status: 'completed' });
+      mockPrisma.imsf.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await complete('imsf-1');
 

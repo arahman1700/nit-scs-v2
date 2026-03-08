@@ -3,6 +3,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { OsdCreateDto, OsdUpdateDto, OsdLineDto, ListParams } from '../../../types/dto.js';
 
@@ -139,10 +140,12 @@ export async function sendClaim(id: string, claimReference?: string) {
   if (!osd) throw new NotFoundError('OSD report', id);
   assertTransition(DOC_TYPE, osd.status, 'claim_sent');
 
-  const updated = await prisma.osdReport.update({
-    where: { id: osd.id },
-    data: { status: 'claim_sent', claimSentDate: new Date(), claimReference: claimReference ?? null },
+  await safeStatusUpdate(prisma.osdReport, osd.id, osd.status, {
+    status: 'claim_sent',
+    claimSentDate: new Date(),
+    claimReference: claimReference ?? null,
   });
+  const updated = await prisma.osdReport.findUnique({ where: { id: osd.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -166,18 +169,16 @@ export async function resolve(
 
   assertTransition(DOC_TYPE, osd.status, 'resolved');
 
-  const updated = await prisma.osdReport.update({
-    where: { id: osd.id },
-    data: {
-      status: 'resolved',
-      resolutionType: params.resolutionType ?? null,
-      resolutionAmount: params.resolutionAmount ?? null,
-      resolutionDate: new Date(),
-      resolvedById: userId,
-      supplierResponse: params.supplierResponse ?? null,
-      responseDate: params.supplierResponse ? new Date() : null,
-    },
+  await safeStatusUpdate(prisma.osdReport, osd.id, osd.status, {
+    status: 'resolved',
+    resolutionType: params.resolutionType ?? null,
+    resolutionAmount: params.resolutionAmount ?? null,
+    resolutionDate: new Date(),
+    resolvedById: userId,
+    supplierResponse: params.supplierResponse ?? null,
+    responseDate: params.supplierResponse ? new Date() : null,
   });
+  const updated = await prisma.osdReport.findUnique({ where: { id: osd.id } });
 
   eventBus.publish({
     type: 'document:status_changed',

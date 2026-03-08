@@ -8,6 +8,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   MrvCreateDto as MrnCreateDto,
@@ -126,7 +127,8 @@ export async function submit(id: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'pending');
 
-  return prisma.mrv.update({ where: { id: mrn.id }, data: { status: 'pending' } });
+  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, { status: 'pending' });
+  return prisma.mrv.findUnique({ where: { id: mrn.id } });
 }
 
 export async function receive(id: string, userId: string) {
@@ -134,10 +136,12 @@ export async function receive(id: string, userId: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'received');
 
-  return prisma.mrv.update({
-    where: { id: mrn.id },
-    data: { status: 'received', receivedById: userId, receivedDate: new Date() },
+  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, {
+    status: 'received',
+    receivedById: userId,
+    receivedDate: new Date(),
   });
+  return prisma.mrv.findUnique({ where: { id: mrn.id } });
 }
 
 export async function complete(id: string, userId: string) {
@@ -148,7 +152,7 @@ export async function complete(id: string, userId: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'completed');
 
-  await prisma.mrv.update({ where: { id: mrn.id }, data: { status: 'completed' } });
+  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, { status: 'completed' });
 
   // Restock good-condition items as active lots
   const goodLines = mrn.mrvLines.filter(l => l.condition === 'good');

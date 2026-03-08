@@ -136,16 +136,18 @@ describe('rfim.service', () => {
   describe('start', () => {
     it('should transition RFIM to in_progress and set inspectorId', async () => {
       const rfim = { id: 'rfim-1', status: 'pending' };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+      mockPrisma.rfim.findUnique
+        .mockResolvedValueOnce(rfim)
+        .mockResolvedValueOnce({ ...rfim, status: 'in_progress', inspectorId: 'user-1' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.rfim.update.mockResolvedValue({ ...rfim, status: 'in_progress', inspectorId: 'user-1' });
+      mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await start('rfim-1', 'user-1');
 
       expect(result.status).toBe('in_progress');
       expect(mockedAssertTransition).toHaveBeenCalledWith('rfim', 'pending', 'in_progress');
-      expect(mockPrisma.rfim.update).toHaveBeenCalledWith({
-        where: { id: 'rfim-1' },
+      expect(mockPrisma.rfim.updateMany).toHaveBeenCalledWith({
+        where: { id: 'rfim-1', status: 'pending' },
         data: expect.objectContaining({
           status: 'in_progress',
           inspectorId: 'user-1',
@@ -167,7 +169,7 @@ describe('rfim.service', () => {
       });
 
       await expect(start('rfim-1', 'user-1')).rejects.toThrow('Invalid transition');
-      expect(mockPrisma.rfim.update).not.toHaveBeenCalled();
+      expect(mockPrisma.rfim.updateMany).not.toHaveBeenCalled();
     });
   });
 
@@ -177,29 +179,31 @@ describe('rfim.service', () => {
   describe('complete', () => {
     it('should complete RFIM with pass result', async () => {
       const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
-      mockedAssertTransition.mockReturnValue(undefined);
       const updated = { ...rfim, status: 'completed', result: 'pass' };
-      mockPrisma.rfim.update.mockResolvedValue(updated);
+      mockPrisma.rfim.findUnique.mockResolvedValueOnce(rfim).mockResolvedValueOnce(updated);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await complete('rfim-1', 'pass', 'All good');
 
       expect(result).toEqual({ updated, mrrvId: 'mrrv-1' });
-      expect(mockPrisma.rfim.update).toHaveBeenCalledWith({
-        where: { id: 'rfim-1' },
+      expect(mockPrisma.rfim.updateMany).toHaveBeenCalledWith({
+        where: { id: 'rfim-1', status: 'in_progress' },
         data: { status: 'completed', result: 'pass', comments: 'All good' },
       });
     });
 
     it('should complete RFIM with fail result', async () => {
       const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: 'existing' };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+      mockPrisma.rfim.findUnique
+        .mockResolvedValueOnce(rfim)
+        .mockResolvedValueOnce({ ...rfim, status: 'completed', result: 'fail' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.rfim.update.mockResolvedValue({ ...rfim, status: 'completed', result: 'fail' });
+      mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
 
       await complete('rfim-1', 'fail');
 
-      const updateArgs = mockPrisma.rfim.update.mock.calls[0][0];
+      const updateArgs = mockPrisma.rfim.updateMany.mock.calls[0][0];
       expect(updateArgs.data.result).toBe('fail');
       // comments should fall back to existing when not provided
       expect(updateArgs.data.comments).toBe('existing');

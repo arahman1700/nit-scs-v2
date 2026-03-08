@@ -307,17 +307,18 @@ export async function completeCount(id: string, userId: string) {
   });
 
   // SOW M1-F04: Auto-flag NCR for lines with >5% variance
-  const highVarianceLines = await prisma.cycleCountLine.findMany({
-    where: {
-      cycleCountId: id,
-      status: 'counted',
-      variancePercent: { not: null },
-      OR: [{ variancePercent: { gt: 5 } }, { variancePercent: { lt: -5 } }],
-    },
-    include: {
-      item: { select: { id: true, itemCode: true, itemDescription: true } },
-    },
-  });
+  const highVarianceLines =
+    (await prisma.cycleCountLine.findMany({
+      where: {
+        cycleCountId: id,
+        status: 'counted',
+        variancePercent: { not: null },
+        OR: [{ variancePercent: { gt: 5 } }, { variancePercent: { lt: -5 } }],
+      },
+      include: {
+        item: { select: { id: true, itemCode: true, itemDescription: true } },
+      },
+    })) || [];
 
   if (highVarianceLines.length > 0) {
     const ncrItems = highVarianceLines.map(l => ({

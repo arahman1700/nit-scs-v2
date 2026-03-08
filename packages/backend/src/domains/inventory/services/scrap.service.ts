@@ -8,6 +8,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { ScrapCreateDto, ScrapUpdateDto, ListParams } from '../../../types/dto.js';
 
@@ -118,7 +119,8 @@ export async function report(id: string) {
     throw new BusinessRuleError('Photos are required before reporting scrap items (SCRAP-V001)');
   }
 
-  const updated = await prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'reported' } });
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, { status: 'reported' });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'reported');
   return updated;
 }
@@ -177,10 +179,8 @@ export async function approve(id: string) {
     throw new BusinessRuleError('Storekeeper approval is required before final approval');
   }
 
-  const updated = await prisma.scrapItem.update({
-    where: { id: scrap.id },
-    data: { status: 'approved' },
-  });
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, { status: 'approved' });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'approved');
   return updated;
 }
@@ -190,7 +190,8 @@ export async function sendToSsc(id: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'in_ssc');
 
-  const updated = await prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'in_ssc' } });
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, { status: 'in_ssc' });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'in_ssc');
   return updated;
 }
@@ -200,14 +201,12 @@ export async function markSold(id: string, buyerName: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'sold');
 
-  const updated = await prisma.scrapItem.update({
-    where: { id: scrap.id },
-    data: {
-      status: 'sold',
-      buyerName,
-      buyerPickupDeadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-    },
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, {
+    status: 'sold',
+    buyerName,
+    buyerPickupDeadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
   });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'sold');
   return updated;
 }
@@ -217,7 +216,8 @@ export async function dispose(id: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'disposed');
 
-  const updated = await prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'disposed' } });
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, { status: 'disposed' });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'disposed');
   return updated;
 }
@@ -227,7 +227,8 @@ export async function close(id: string) {
   if (!scrap) throw new NotFoundError('Scrap', id);
   assertTransition(DOC_TYPE, scrap.status, 'closed');
 
-  const updated = await prisma.scrapItem.update({ where: { id: scrap.id }, data: { status: 'closed' } });
+  await safeStatusUpdate(prisma.scrapItem, scrap.id, scrap.status, { status: 'closed' });
+  const updated = await prisma.scrapItem.findUnique({ where: { id: scrap.id } });
   emitScrapStatusChange(id, scrap.status, 'closed');
   return updated;
 }

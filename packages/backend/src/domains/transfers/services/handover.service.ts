@@ -7,6 +7,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { HandoverCreateDto, HandoverUpdateDto, ListParams } from '../../../types/dto.js';
 
@@ -85,10 +86,8 @@ export async function startVerification(id: string, _userId: string) {
   if (!record) throw new NotFoundError('StorekeeperHandover', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  const updated = await prisma.storekeeperHandover.update({
-    where: { id: record.id },
-    data: { status: 'in_progress' },
-  });
+  await safeStatusUpdate(prisma.storekeeperHandover, record.id, record.status, { status: 'in_progress' });
+  const updated = await prisma.storekeeperHandover.findUnique({ where: { id: record.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -111,10 +110,8 @@ export async function complete(id: string, _userId: string) {
     throw new BusinessRuleError('Inventory must be verified before completing the handover');
   }
 
-  const updated = await prisma.storekeeperHandover.update({
-    where: { id: record.id },
-    data: { status: 'completed' },
-  });
+  await safeStatusUpdate(prisma.storekeeperHandover, record.id, record.status, { status: 'completed' });
+  const updated = await prisma.storekeeperHandover.findUnique({ where: { id: record.id } });
 
   eventBus.publish({
     type: 'document:status_changed',

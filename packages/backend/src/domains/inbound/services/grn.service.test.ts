@@ -193,7 +193,7 @@ describe('grn.service', () => {
       const grn = { id: 'grn-1', status: 'draft', rfimRequired: false, mrrvLines: [] };
       mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await submit('grn-1');
 
@@ -206,7 +206,7 @@ describe('grn.service', () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
       mockedAssertTransition.mockReturnValue(undefined);
       mockedGenerateDocNumber.mockResolvedValue('QCI-001');
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockPrisma.rfim.create.mockResolvedValue({});
 
       const result = await submit('grn-1');
@@ -221,7 +221,7 @@ describe('grn.service', () => {
       const grn = { id: 'grn-1', status: 'draft', rfimRequired: false, mrrvLines: [] };
       mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       await submit('grn-1');
 
@@ -241,17 +241,22 @@ describe('grn.service', () => {
   describe('approveQc', () => {
     it('should approve QC and set inspector', async () => {
       const grn = { id: 'grn-1', status: 'pending_qc' };
-      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(grn).mockResolvedValueOnce({ ...grn, status: 'qc_approved' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...grn, status: 'qc_approved' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await approveQc('grn-1', 'inspector-1');
 
       expect(result.status).toBe('qc_approved');
       expect(mockedAssertTransition).toHaveBeenCalledWith('grn', 'pending_qc', 'qc_approved');
-      const updateData = mockPrisma.mrrv.update.mock.calls[0][0].data;
-      expect(updateData.qcInspectorId).toBe('inspector-1');
-      expect(updateData.qcApprovedDate).toBeInstanceOf(Date);
+      expect(mockPrisma.mrrv.updateMany).toHaveBeenCalledWith({
+        where: { id: 'grn-1', status: 'pending_qc' },
+        data: expect.objectContaining({
+          status: 'qc_approved',
+          qcInspectorId: 'inspector-1',
+          qcApprovedDate: expect.any(Date),
+        }),
+      });
     });
 
     it('should throw NotFoundError when GRN not found', async () => {
@@ -267,9 +272,9 @@ describe('grn.service', () => {
   describe('receive', () => {
     it('should transition to received', async () => {
       const grn = { id: 'grn-1', status: 'qc_approved' };
-      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(grn).mockResolvedValueOnce({ ...grn, status: 'received' });
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({ ...grn, status: 'received' });
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await receive('grn-1');
 
@@ -301,7 +306,7 @@ describe('grn.service', () => {
       };
       mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       const result = await store('grn-1', 'user-1');
@@ -327,7 +332,7 @@ describe('grn.service', () => {
       };
       mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
       mockedAssertTransition.mockReturnValue(undefined);
-      mockPrisma.mrrv.update.mockResolvedValue({});
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
       mockedAddStockBatch.mockResolvedValue(undefined);
 
       await store('grn-1', 'user-1');

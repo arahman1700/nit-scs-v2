@@ -4,6 +4,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import type { MrrvCreateDto, MrrvUpdateDto, MrrvLineDto, ListParams } from '../../../types/dto.js';
 
 const DOC_TYPE = 'mrrv';
@@ -153,10 +154,7 @@ export async function submit(id: string) {
   assertTransition(DOC_TYPE, mrrv.status, 'pending_qc');
 
   await prisma.$transaction(async tx => {
-    await tx.mrrv.update({
-      where: { id: mrrv.id },
-      data: { status: 'pending_qc' },
-    });
+    await safeStatusUpdateTx(tx.mrrv, mrrv.id, mrrv.status, { status: 'pending_qc' });
 
     if (mrrv.rfimRequired) {
       const rfimNumber = await generateDocumentNumber('rfim');
@@ -212,14 +210,12 @@ export async function approveQc(id: string, userId: string) {
   if (!mrrv) throw new NotFoundError('MRRV', id);
   assertTransition(DOC_TYPE, mrrv.status, 'qc_approved');
 
-  const updated = await prisma.mrrv.update({
-    where: { id: mrrv.id },
-    data: {
-      status: 'qc_approved',
-      qcInspectorId: userId,
-      qcApprovedDate: new Date(),
-    },
+  await safeStatusUpdate(prisma.mrrv, mrrv.id, mrrv.status, {
+    status: 'qc_approved',
+    qcInspectorId: userId,
+    qcApprovedDate: new Date(),
   });
+  const updated = await prisma.mrrv.findUnique({ where: { id: mrrv.id } });
   return updated;
 }
 
@@ -228,10 +224,8 @@ export async function receive(id: string) {
   if (!mrrv) throw new NotFoundError('MRRV', id);
   assertTransition(DOC_TYPE, mrrv.status, 'received');
 
-  const updated = await prisma.mrrv.update({
-    where: { id: mrrv.id },
-    data: { status: 'received' },
-  });
+  await safeStatusUpdate(prisma.mrrv, mrrv.id, mrrv.status, { status: 'received' });
+  const updated = await prisma.mrrv.findUnique({ where: { id: mrrv.id } });
   return updated;
 }
 
@@ -243,10 +237,7 @@ export async function store(id: string, userId: string) {
   if (!mrrv) throw new NotFoundError('MRRV', id);
   assertTransition(DOC_TYPE, mrrv.status, 'stored');
 
-  await prisma.mrrv.update({
-    where: { id: mrrv.id },
-    data: { status: 'stored' },
-  });
+  await safeStatusUpdate(prisma.mrrv, mrrv.id, mrrv.status, { status: 'stored' });
 
   const stockItems = mrrv.mrrvLines
     .map(line => ({

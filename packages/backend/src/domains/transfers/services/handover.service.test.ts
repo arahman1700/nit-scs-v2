@@ -148,12 +148,11 @@ describe('update', () => {
 describe('startVerification', () => {
   it('transitions handover to in_progress', async () => {
     const record = { id: HANDOVER_ID, status: 'initiated' };
-    mockPrisma.storekeeperHandover.findUnique.mockResolvedValue(record);
+    mockPrisma.storekeeperHandover.findUnique
+      .mockResolvedValueOnce(record)
+      .mockResolvedValueOnce({ ...record, status: 'in_progress' });
     mockedAssertTransition.mockReturnValue(undefined);
-    mockPrisma.storekeeperHandover.update.mockResolvedValue({
-      ...record,
-      status: 'in_progress',
-    });
+    mockPrisma.storekeeperHandover.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await startVerification(HANDOVER_ID, USER_ID);
 
@@ -183,12 +182,11 @@ describe('startVerification', () => {
 describe('complete', () => {
   it('transitions handover to completed when inventory is verified', async () => {
     const record = { id: HANDOVER_ID, status: 'in_progress', inventoryVerified: true };
-    mockPrisma.storekeeperHandover.findUnique.mockResolvedValue(record);
+    mockPrisma.storekeeperHandover.findUnique
+      .mockResolvedValueOnce(record)
+      .mockResolvedValueOnce({ ...record, status: 'completed' });
     mockedAssertTransition.mockReturnValue(undefined);
-    mockPrisma.storekeeperHandover.update.mockResolvedValue({
-      ...record,
-      status: 'completed',
-    });
+    mockPrisma.storekeeperHandover.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await complete(HANDOVER_ID, USER_ID);
 

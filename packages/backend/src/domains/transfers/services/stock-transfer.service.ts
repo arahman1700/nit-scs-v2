@@ -4,6 +4,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   StockTransferCreateDto,
@@ -135,7 +136,8 @@ export async function submit(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'pending');
-  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'pending' } });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'pending' });
+  const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -153,7 +155,8 @@ export async function approve(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'approved');
-  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'approved' } });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'approved' });
+  const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -183,10 +186,8 @@ export async function ship(id: string) {
   }));
   await deductStockBatch(deductItems);
 
-  const updated = await prisma.stockTransfer.update({
-    where: { id: st.id },
-    data: { status: 'shipped', shippedDate: new Date() },
-  });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'shipped', shippedDate: new Date() });
+  const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -216,10 +217,8 @@ export async function receive(id: string, userId: string) {
   }));
   await addStockBatch(stockItems);
 
-  const updated = await prisma.stockTransfer.update({
-    where: { id: st.id },
-    data: { status: 'received', receivedDate: new Date() },
-  });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'received', receivedDate: new Date() });
+  const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
@@ -238,7 +237,8 @@ export async function complete(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'completed');
-  const updated = await prisma.stockTransfer.update({ where: { id: st.id }, data: { status: 'completed' } });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'completed' });
+  const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
     type: 'document:status_changed',
