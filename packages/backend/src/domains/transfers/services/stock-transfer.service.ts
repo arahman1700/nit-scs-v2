@@ -4,7 +4,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
-import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   StockTransferCreateDto,
@@ -184,9 +184,10 @@ export async function ship(id: string) {
     qty: Number(line.quantity),
     ref: { referenceType: 'stock_transfer_line', referenceId: line.id },
   }));
-  await deductStockBatch(deductItems);
-
-  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'shipped', shippedDate: new Date() });
+  await prisma.$transaction(async tx => {
+    await deductStockBatch(deductItems, tx);
+    await safeStatusUpdateTx(tx.stockTransfer, st.id, st.status, { status: 'shipped', shippedDate: new Date() });
+  });
   const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
@@ -215,9 +216,10 @@ export async function receive(id: string, userId: string) {
     qty: Number(line.quantity),
     performedById: userId,
   }));
-  await addStockBatch(stockItems);
-
-  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'received', receivedDate: new Date() });
+  await prisma.$transaction(async tx => {
+    await addStockBatch(stockItems, tx);
+    await safeStatusUpdateTx(tx.stockTransfer, st.id, st.status, { status: 'received', receivedDate: new Date() });
+  });
   const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({

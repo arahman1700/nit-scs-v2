@@ -3,6 +3,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { createAuditLog } from '../../system/services/audit.service.js';
 import { log } from '../../../config/logger.js';
 import { eventBus } from '../../../events/event-bus.js';
+import { updateLevelWithVersion } from './inventory.service.js';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -441,14 +442,10 @@ export async function applyAdjustments(cycleCountId: string, userId: string) {
 
       if (!level) continue;
 
-      // Set onHand to the counted quantity
-      await tx.inventoryLevel.update({
-        where: { itemId_warehouseId: { itemId: line.itemId, warehouseId: cycleCount.warehouseId } },
-        data: {
-          qtyOnHand: line.countedQty!,
-          lastMovementDate: new Date(),
-          version: { increment: 1 },
-        },
+      // Set onHand to counted quantity with proper optimistic locking
+      await updateLevelWithVersion(tx, line.itemId, cycleCount.warehouseId, {
+        qtyOnHand: line.countedQty!,
+        lastMovementDate: new Date(),
       });
 
       // Mark line as adjusted

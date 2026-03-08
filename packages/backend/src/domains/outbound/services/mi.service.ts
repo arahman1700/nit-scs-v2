@@ -201,24 +201,29 @@ export async function approve(
       warehouseId: mi.warehouseId,
       qty: Number(line.qtyRequested),
     }));
-    const { success: allReserved } = await reserveStockBatch(reserveItems);
 
-    // Update all line approvals
-    await Promise.all(
-      mi.mirvLines.map(line =>
-        prisma.mirvLine.update({
-          where: { id: line.id },
-          data: { qtyApproved: line.qtyRequested },
-        }),
-      ),
-    );
+    // Atomic: reservation + line updates + MI status in one transaction
+    await prisma.$transaction(async tx => {
+      const { success: allReserved } = await reserveStockBatch(reserveItems, tx);
 
-    await prisma.mirv.update({
-      where: { id: mi.id },
-      data: { reservationStatus: allReserved ? 'reserved' : 'none' },
+      // Update all line approvals
+      await Promise.all(
+        mi.mirvLines.map(line =>
+          tx.mirvLine.update({
+            where: { id: line.id },
+            data: { qtyApproved: line.qtyRequested },
+          }),
+        ),
+      );
+
+      await tx.mirv.update({
+        where: { id: mi.id },
+        data: { reservationStatus: allReserved ? 'reserved' : 'none' },
+      });
     });
 
     // SOW M1-F02 AC-04: Auto-generate pick list (wave) on approval
+    // Stays outside the transaction — non-blocking convenience
     try {
       const { createWave } = await import('./wave-picking.service.js');
       await createWave(mi.warehouseId, [mi.id]);
@@ -265,7 +270,9 @@ export async function issue(
   userId: string,
   partialItems?: import('./mirv-operations.js').PartialIssueItem[],
 ) {
-  const result = await issueMirv(prisma, id, userId, partialItems);
+  const result = await prisma.$transaction(async tx => {
+    return issueMirv(tx, id, userId, partialItems);
+  });
 
   eventBus.publish({
     type: 'document:status_changed',

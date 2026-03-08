@@ -2,13 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-mock.js';
 
 // ── Hoisted mocks ──────────────────────────────────────────────────────
-const { mockPrisma } = vi.hoisted(() => ({ mockPrisma: {} as PrismaMock }));
+const { mockPrisma, mockUpdateLevelWithVersion } = vi.hoisted(() => ({
+  mockPrisma: {} as PrismaMock,
+  mockUpdateLevelWithVersion: vi.fn(),
+}));
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../system/services/document-number.service.js', () => ({
   generateDocumentNumber: vi.fn().mockResolvedValue('CC-2026-0001'),
 }));
 vi.mock('../../system/services/audit.service.js', () => ({ createAuditLog: vi.fn().mockResolvedValue({}) }));
+vi.mock('./inventory.service.js', () => ({
+  updateLevelWithVersion: mockUpdateLevelWithVersion,
+}));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import {
@@ -825,20 +831,18 @@ describe('applyAdjustments', () => {
     ];
     ccMock().findUniqueOrThrow.mockResolvedValue(makeCycleCount({ status: 'completed', lines }));
     mockPrisma.inventoryLevel.findUnique.mockResolvedValue(makeInventoryLevel({ qtyOnHand: 100 }));
-    mockPrisma.inventoryLevel.update.mockResolvedValue(makeInventoryLevel({ qtyOnHand: 90 }));
+    mockUpdateLevelWithVersion.mockResolvedValue(undefined);
     lineMock().update.mockResolvedValue(makeCountLine({ status: 'adjusted' }));
 
     const result = await applyAdjustments(CC_ID, USER_ID);
 
     expect(result).toEqual({ adjustedCount: 1 });
-    // Inventory update uses counted quantity
-    expect(mockPrisma.inventoryLevel.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          qtyOnHand: 90,
-          version: { increment: 1 },
-        }),
-      }),
+    // Inventory update uses updateLevelWithVersion with counted quantity
+    expect(mockUpdateLevelWithVersion).toHaveBeenCalledWith(
+      expect.anything(), // tx
+      'item-001',
+      WAREHOUSE_ID,
+      { qtyOnHand: 90, lastMovementDate: expect.any(Date) },
     );
     // Line marked as adjusted
     expect(lineMock().update).toHaveBeenCalledWith(
@@ -856,7 +860,7 @@ describe('applyAdjustments', () => {
     const result = await applyAdjustments(CC_ID, USER_ID);
 
     expect(result).toEqual({ adjustedCount: 0 });
-    expect(mockPrisma.inventoryLevel.update).not.toHaveBeenCalled();
+    expect(mockUpdateLevelWithVersion).not.toHaveBeenCalled();
   });
 
   it('should skip lines with null variance', async () => {
@@ -884,7 +888,7 @@ describe('applyAdjustments', () => {
     const result = await applyAdjustments(CC_ID, USER_ID);
 
     expect(result).toEqual({ adjustedCount: 0 });
-    expect(mockPrisma.inventoryLevel.update).not.toHaveBeenCalled();
+    expect(mockUpdateLevelWithVersion).not.toHaveBeenCalled();
   });
 
   it('should adjust multiple lines in a single transaction', async () => {
@@ -906,7 +910,7 @@ describe('applyAdjustments', () => {
     ];
     ccMock().findUniqueOrThrow.mockResolvedValue(makeCycleCount({ status: 'completed', lines }));
     mockPrisma.inventoryLevel.findUnique.mockResolvedValue(makeInventoryLevel());
-    mockPrisma.inventoryLevel.update.mockResolvedValue(makeInventoryLevel());
+    mockUpdateLevelWithVersion.mockResolvedValue(undefined);
     lineMock().update.mockResolvedValue(makeCountLine({ status: 'adjusted' }));
 
     const result = await applyAdjustments(CC_ID, USER_ID);
@@ -927,7 +931,7 @@ describe('applyAdjustments', () => {
     ];
     ccMock().findUniqueOrThrow.mockResolvedValue(makeCycleCount({ status: 'completed', lines }));
     mockPrisma.inventoryLevel.findUnique.mockResolvedValue(makeInventoryLevel({ qtyOnHand: 100 }));
-    mockPrisma.inventoryLevel.update.mockResolvedValue(makeInventoryLevel({ qtyOnHand: 80 }));
+    mockUpdateLevelWithVersion.mockResolvedValue(undefined);
     lineMock().update.mockResolvedValue(makeCountLine({ status: 'adjusted' }));
 
     await applyAdjustments(CC_ID, USER_ID);

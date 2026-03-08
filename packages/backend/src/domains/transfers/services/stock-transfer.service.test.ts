@@ -291,20 +291,23 @@ describe('ship', () => {
 
     expect(assertTransition).toHaveBeenCalledWith('stock_transfer', 'approved', 'shipped');
     expect(deductStockBatch).toHaveBeenCalledTimes(1);
-    expect(deductStockBatch).toHaveBeenCalledWith([
-      {
-        itemId: 'item-1',
-        warehouseId: 'wh-from',
-        qty: 10,
-        ref: { referenceType: 'stock_transfer_line', referenceId: 'line-1' },
-      },
-      {
-        itemId: 'item-2',
-        warehouseId: 'wh-from',
-        qty: 5,
-        ref: { referenceType: 'stock_transfer_line', referenceId: 'line-2' },
-      },
-    ]);
+    expect(deductStockBatch).toHaveBeenCalledWith(
+      [
+        {
+          itemId: 'item-1',
+          warehouseId: 'wh-from',
+          qty: 10,
+          ref: { referenceType: 'stock_transfer_line', referenceId: 'line-1' },
+        },
+        {
+          itemId: 'item-2',
+          warehouseId: 'wh-from',
+          qty: 5,
+          ref: { referenceType: 'stock_transfer_line', referenceId: 'line-2' },
+        },
+      ],
+      expect.anything(),
+    );
     expect(mockPrisma.stockTransfer.updateMany).toHaveBeenCalledWith({
       where: { id: ST_ID, status: 'approved' },
       data: expect.objectContaining({
@@ -345,10 +348,13 @@ describe('receive', () => {
 
     expect(assertTransition).toHaveBeenCalledWith('stock_transfer', 'shipped', 'received');
     expect(addStockBatch).toHaveBeenCalledTimes(1);
-    expect(addStockBatch).toHaveBeenCalledWith([
-      { itemId: 'item-1', warehouseId: 'wh-to', qty: 10, performedById: USER_ID },
-      { itemId: 'item-2', warehouseId: 'wh-to', qty: 5, performedById: USER_ID },
-    ]);
+    expect(addStockBatch).toHaveBeenCalledWith(
+      [
+        { itemId: 'item-1', warehouseId: 'wh-to', qty: 10, performedById: USER_ID },
+        { itemId: 'item-2', warehouseId: 'wh-to', qty: 5, performedById: USER_ID },
+      ],
+      expect.anything(),
+    );
     expect(mockPrisma.stockTransfer.updateMany).toHaveBeenCalledWith({
       where: { id: ST_ID, status: 'shipped' },
       data: expect.objectContaining({

@@ -8,7 +8,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
-import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
+import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   MrvCreateDto as MrnCreateDto,
@@ -152,8 +152,6 @@ export async function complete(id: string, userId: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'completed');
 
-  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, { status: 'completed' });
-
   // Restock good-condition items as active lots
   const goodLines = mrn.mrvLines.filter(l => l.condition === 'good');
   const goodStockItems = goodLines.map(line => ({
@@ -173,7 +171,10 @@ export async function complete(id: string, userId: string) {
     lotStatus: 'blocked' as const,
   }));
 
-  await addStockBatch([...goodStockItems, ...blockedStockItems]);
+  await prisma.$transaction(async tx => {
+    await safeStatusUpdateTx(tx.mrv, mrn.id, mrn.status, { status: 'completed' });
+    await addStockBatch([...goodStockItems, ...blockedStockItems], tx);
+  });
 
   // Publish event for downstream listeners
   eventBus.publish({

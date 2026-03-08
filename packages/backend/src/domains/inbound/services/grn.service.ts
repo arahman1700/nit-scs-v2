@@ -277,8 +277,6 @@ export async function store(id: string, userId: string) {
   if (!grn) throw new NotFoundError('GRN', id);
   assertTransition(DOC_TYPE, grn.status, 'stored');
 
-  await safeStatusUpdate(prisma.mrrv, grn.id, grn.status, { status: 'stored' });
-
   const stockItems = grn.mrrvLines
     .map(line => ({
       itemId: line.itemId,
@@ -292,7 +290,10 @@ export async function store(id: string, userId: string) {
     }))
     .filter(item => item.qty > 0);
 
-  await addStockBatch(stockItems);
+  await prisma.$transaction(async tx => {
+    await safeStatusUpdateTx(tx.mrrv, grn.id, grn.status, { status: 'stored' });
+    await addStockBatch(stockItems, tx);
+  });
 
   eventBus.publish({
     type: 'document:status_changed',

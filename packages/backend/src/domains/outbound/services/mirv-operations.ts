@@ -6,11 +6,13 @@
  */
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { consumeReservationBatch, releaseReservation } from '../../inventory/services/inventory.service.js';
+import {
+  consumeReservationBatch,
+  releaseReservation,
+  type TxClient,
+} from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { logger } from '../../../config/logger.js';
-
-type TxClient = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 
 interface MirvWithLines {
   id: string;
@@ -133,7 +135,7 @@ export async function issueMirv(
     }
   }
 
-  const { totalCost, lineCosts } = await consumeReservationBatch(consumeItems);
+  const { totalCost, lineCosts } = await consumeReservationBatch(consumeItems, tx as TxClient);
 
   // Update line costs and qtyIssued from batch result
   await Promise.all(

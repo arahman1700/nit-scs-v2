@@ -306,10 +306,13 @@ describe('mirv.service', () => {
         warehouseId: 'wh-1',
       });
       expect(mockedReserveStockBatch).toHaveBeenCalledTimes(1);
-      expect(mockedReserveStockBatch).toHaveBeenCalledWith([
-        { itemId: 'item-1', warehouseId: 'wh-1', qty: 10 },
-        { itemId: 'item-2', warehouseId: 'wh-1', qty: 5 },
-      ]);
+      expect(mockedReserveStockBatch).toHaveBeenCalledWith(
+        [
+          { itemId: 'item-1', warehouseId: 'wh-1', qty: 10 },
+          { itemId: 'item-2', warehouseId: 'wh-1', qty: 5 },
+        ],
+        expect.anything(),
+      );
       expect(mockPrisma.mirvLine.update).toHaveBeenCalledTimes(2);
     });
 
@@ -389,10 +392,13 @@ describe('mirv.service', () => {
       expect(result.id).toBe('mirv-1');
       expect(result.totalCost).toBe(1000);
       expect(mockedConsumeReservationBatch).toHaveBeenCalledTimes(1);
-      expect(mockedConsumeReservationBatch).toHaveBeenCalledWith([
-        { itemId: 'item-1', warehouseId: 'wh-1', qty: 8, mirvLineId: 'line-1' },
-        { itemId: 'item-2', warehouseId: 'wh-1', qty: 5, mirvLineId: 'line-2' },
-      ]);
+      expect(mockedConsumeReservationBatch).toHaveBeenCalledWith(
+        [
+          { itemId: 'item-1', warehouseId: 'wh-1', qty: 8, mirvLineId: 'line-1' },
+          { itemId: 'item-2', warehouseId: 'wh-1', qty: 5, mirvLineId: 'line-2' },
+        ],
+        expect.anything(),
+      );
       expect(mockPrisma.gatePass.create).toHaveBeenCalledTimes(1);
     });
 

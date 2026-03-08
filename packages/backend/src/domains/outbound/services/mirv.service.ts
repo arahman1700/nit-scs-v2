@@ -178,21 +178,25 @@ export async function approve(
       warehouseId: mirv.warehouseId,
       qty: Number(line.qtyRequested),
     }));
-    const { success: allReserved } = await reserveStockBatch(reserveItems);
 
-    // Update all line approvals
-    await Promise.all(
-      mirv.mirvLines.map(line =>
-        prisma.mirvLine.update({
-          where: { id: line.id },
-          data: { qtyApproved: line.qtyRequested },
-        }),
-      ),
-    );
+    // Atomic: reservation + line updates + MIRV status in one transaction
+    await prisma.$transaction(async tx => {
+      const { success: allReserved } = await reserveStockBatch(reserveItems, tx);
 
-    await prisma.mirv.update({
-      where: { id: mirv.id },
-      data: { reservationStatus: allReserved ? 'reserved' : 'none' },
+      // Update all line approvals
+      await Promise.all(
+        mirv.mirvLines.map(line =>
+          tx.mirvLine.update({
+            where: { id: line.id },
+            data: { qtyApproved: line.qtyRequested },
+          }),
+        ),
+      );
+
+      await tx.mirv.update({
+        where: { id: mirv.id },
+        data: { reservationStatus: allReserved ? 'reserved' : 'none' },
+      });
     });
   }
 
@@ -217,7 +221,9 @@ export async function signQc(id: string, qcUserId: string) {
  * Delegates to shared mirv-operations.
  */
 export async function issue(id: string, userId: string) {
-  return issueMirv(prisma, id, userId);
+  return prisma.$transaction(async tx => {
+    return issueMirv(tx, id, userId);
+  });
 }
 
 /**

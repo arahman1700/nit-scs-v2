@@ -174,9 +174,10 @@ describe('issueMirv', () => {
     expect(result.status).toBe('issued');
     expect(result.totalCost).toBe(500);
     expect(result.warehouseId).toBe('wh-001');
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([
-      { itemId: 'item-001', warehouseId: 'wh-001', qty: 10, mirvLineId: 'line-001' },
-    ]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith(
+      [{ itemId: 'item-001', warehouseId: 'wh-001', qty: 10, mirvLineId: 'line-001' }],
+      expect.anything(),
+    );
   });
 
   it('should perform full issuance for multiple lines', async () => {
@@ -207,6 +208,7 @@ describe('issueMirv', () => {
         expect.objectContaining({ itemId: 'item-001', qty: 10, mirvLineId: 'line-001' }),
         expect.objectContaining({ itemId: 'item-002', qty: 5, mirvLineId: 'line-002' }),
       ]),
+      expect.anything(),
     );
   });
 
@@ -264,9 +266,10 @@ describe('issueMirv', () => {
     const result = await issueMirv(tx(), 'mirv-001', userId, [{ lineId: 'line-001', qty: 5 }]);
 
     expect(result.status).toBe('partially_issued');
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([
-      { itemId: 'item-001', warehouseId: 'wh-001', qty: 5, mirvLineId: 'line-001' },
-    ]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith(
+      [{ itemId: 'item-001', warehouseId: 'wh-001', qty: 5, mirvLineId: 'line-001' }],
+      expect.anything(),
+    );
   });
 
   it('should cap partial qty at remaining when partial exceeds remaining', async () => {
@@ -280,7 +283,7 @@ describe('issueMirv', () => {
 
     await issueMirv(tx(), 'mirv-001', userId, [{ lineId: 'line-001', qty: 8 }]);
 
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 3 })]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 3 })], expect.anything());
   });
 
   it('should set status to partially_issued when not all lines are fully issued', async () => {
@@ -334,7 +337,10 @@ describe('issueMirv', () => {
     await issueMirv(tx(), 'mirv-001', userId);
 
     // Only the pending line should be consumed
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ mirvLineId: 'line-002' })]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith(
+      [expect.objectContaining({ mirvLineId: 'line-002' })],
+      expect.anything(),
+    );
   });
 
   it('should use qtyRequested as fallback when qtyApproved is null', async () => {
@@ -351,7 +357,7 @@ describe('issueMirv', () => {
 
     await issueMirv(tx(), 'mirv-001', userId);
 
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 15 })]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 15 })], expect.anything());
   });
 
   it('should not preserve reservationStatus when partial issue (not all fully issued)', async () => {
@@ -506,7 +512,7 @@ describe('issueMirv', () => {
     const result = await issueMirv(tx(), 'mirv-001', userId);
 
     expect(result.status).toBe('issued');
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 5 })]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([expect.objectContaining({ qty: 5 })], expect.anything());
   });
 
   it('should accumulate qtyIssued when issuing from partially_issued state', async () => {
@@ -547,9 +553,10 @@ describe('issueMirv', () => {
     ]);
 
     expect(result.status).toBe('issued');
-    expect(mockConsumeReservationBatch).toHaveBeenCalledWith([
-      expect.objectContaining({ mirvLineId: 'line-001', qty: 10 }),
-    ]);
+    expect(mockConsumeReservationBatch).toHaveBeenCalledWith(
+      [expect.objectContaining({ mirvLineId: 'line-001', qty: 10 })],
+      expect.anything(),
+    );
   });
 });
 

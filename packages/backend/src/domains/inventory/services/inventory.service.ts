@@ -46,11 +46,14 @@ export interface ConsumptionReference {
 
 const MAX_RETRIES = 3;
 
+/** Transaction client type for composing operations in a shared transaction. */
+export type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 /**
  * Update InventoryLevel with optimistic locking using the `version` field.
  * Retries up to MAX_RETRIES times on version conflict.
  */
-async function updateLevelWithVersion(
+export async function updateLevelWithVersion(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   itemId: string,
   warehouseId: string,
@@ -517,10 +520,10 @@ export async function deductStock(
  * Add stock for multiple items in a single transaction.
  * Used by MRRV (stored) and MRV (completed) to process all lines at once.
  */
-export async function addStockBatch(items: AddStockParams[]): Promise<void> {
+export async function addStockBatch(items: AddStockParams[], externalTx?: TxClient): Promise<void> {
   if (items.length === 0) return;
 
-  await prisma.$transaction(async tx => {
+  const run = async (tx: TxClient) => {
     for (const params of items) {
       const { itemId, warehouseId, qty, unitCost, supplierId, mrrvLineId, expiryDate, performedById, lotStatus } =
         params;
@@ -579,7 +582,13 @@ export async function addStockBatch(items: AddStockParams[]): Promise<void> {
       const [itemId, warehouseId] = pair.split(':');
       await checkLowStockAlert(tx, itemId, warehouseId);
     }
-  });
+  };
+
+  if (externalTx) {
+    await run(externalTx);
+  } else {
+    await prisma.$transaction(run);
+  }
 
   log('info', `[Inventory] Batch added stock for ${items.length} items`);
   await invalidateInventoryCache();
@@ -591,10 +600,11 @@ export async function addStockBatch(items: AddStockParams[]): Promise<void> {
  */
 export async function reserveStockBatch(
   items: { itemId: string; warehouseId: string; qty: number }[],
+  externalTx?: TxClient,
 ): Promise<{ success: boolean; failedItems: string[] }> {
   if (items.length === 0) return { success: true, failedItems: [] };
 
-  return prisma.$transaction(async tx => {
+  const run = async (tx: TxClient) => {
     const failedItems: string[] = [];
 
     for (const { itemId, warehouseId, qty } of items) {
@@ -642,7 +652,12 @@ export async function reserveStockBatch(
     }
 
     return { success: failedItems.length === 0, failedItems };
-  });
+  };
+
+  if (externalTx) {
+    return run(externalTx);
+  }
+  return prisma.$transaction(run);
 }
 
 /**
@@ -652,10 +667,11 @@ export async function reserveStockBatch(
  */
 export async function consumeReservationBatch(
   items: { itemId: string; warehouseId: string; qty: number; mirvLineId: string }[],
+  externalTx?: TxClient,
 ): Promise<{ totalCost: number; lineCosts: Map<string, number> }> {
   if (items.length === 0) return { totalCost: 0, lineCosts: new Map() };
 
-  return prisma.$transaction(async tx => {
+  const run = async (tx: TxClient) => {
     let totalCost = 0;
     const lineCosts = new Map<string, number>();
 
@@ -714,7 +730,12 @@ export async function consumeReservationBatch(
     }
 
     return { totalCost, lineCosts };
-  });
+  };
+
+  if (externalTx) {
+    return run(externalTx);
+  }
+  return prisma.$transaction(run);
 }
 
 /**
@@ -723,10 +744,11 @@ export async function consumeReservationBatch(
  */
 export async function deductStockBatch(
   items: { itemId: string; warehouseId: string; qty: number; ref: ConsumptionReference }[],
+  externalTx?: TxClient,
 ): Promise<{ totalCost: number }> {
   if (items.length === 0) return { totalCost: 0 };
 
-  return prisma.$transaction(async tx => {
+  const run = async (tx: TxClient) => {
     let totalCost = 0;
 
     for (const { itemId, warehouseId, qty, ref } of items) {
@@ -785,7 +807,12 @@ export async function deductStockBatch(
 
     await invalidateInventoryCache();
     return { totalCost };
-  });
+  };
+
+  if (externalTx) {
+    return run(externalTx);
+  }
+  return prisma.$transaction(run);
 }
 
 // ── Get Stock Level ─────────────────────────────────────────────────────
