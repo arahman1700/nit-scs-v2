@@ -22,7 +22,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { submitForApproval } from '../../workflow/services/approval.service.js';
-import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError, assertTransition } from '@nit-scs-v2/shared';
 import {
   list,
   getById,
@@ -677,6 +677,14 @@ describe('job-order.service', () => {
           startDate: expect.any(Date),
         }),
       });
+    });
+
+    it('throws ConflictError when status was concurrently modified', async () => {
+      const jo = makeJo({ status: 'assigned' });
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(jo);
+      mockPrisma.jobOrder.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(start('jo-1')).rejects.toThrow(ConflictError);
     });
   });
 
