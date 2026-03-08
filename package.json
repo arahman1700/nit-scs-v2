@@ -12,7 +12,7 @@
     "build:backend": "pnpm --filter @nit-scs-v2/backend build",
     "build:frontend": "pnpm --filter @nit-scs-v2/frontend build",
     "db:migrate": "pnpm --filter @nit-scs-v2/backend prisma:migrate",
-    "db:push": "pnpm --filter @nit-scs-v2/backend prisma:push",
+    "db:push": "pnpm --filter @nit-scs-v2/backend prisma:migrate:deploy",
     "db:seed": "pnpm --filter @nit-scs-v2/backend prisma:seed",
     "db:studio": "pnpm --filter @nit-scs-v2/backend prisma:studio",
     "lint": "pnpm -r run lint",

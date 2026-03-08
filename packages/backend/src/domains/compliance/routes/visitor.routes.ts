@@ -14,6 +14,7 @@ import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { validate } from '../../../middleware/validate.js';
+import { applyScopeFilter } from '../../../utils/scope-filter.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import {
   visitorPassCreateSchema,
@@ -39,38 +40,43 @@ function checkRole(req: Request, res: Response): boolean {
 
 // ── GET / — List visitor passes ──────────────────────────────────────────
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
+router.get(
+  '/',
+  applyScopeFilter({ warehouseField: 'warehouseId' }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!checkRole(req, res)) return;
 
-    const page = Math.max(1, parseInt(req.query.page as string) || 1);
-    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
-    const search = req.query.search as string | undefined;
-    const status = req.query.status as string | undefined;
-    const warehouseId = req.query.warehouseId as string | undefined;
-    const hostEmployeeId = req.query.hostEmployeeId as string | undefined;
-    const dateFrom = req.query.dateFrom as string | undefined;
-    const dateTo = req.query.dateTo as string | undefined;
-    const sortBy = req.query.sortBy as string | undefined;
-    const sortDir = (req.query.sortDir as 'asc' | 'desc') || undefined;
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
+      const search = req.query.search as string | undefined;
+      const status = req.query.status as string | undefined;
+      const warehouseId = req.query.warehouseId as string | undefined;
+      const hostEmployeeId = req.query.hostEmployeeId as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortDir = (req.query.sortDir as 'asc' | 'desc') || undefined;
 
-    const { data, total } = await visitorService.list({
-      page,
-      pageSize,
-      search,
-      status,
-      warehouseId,
-      hostEmployeeId,
-      dateFrom,
-      dateTo,
-      sortBy,
-      sortDir,
-    });
-    sendSuccess(res, data, { page, pageSize, total });
-  } catch (err) {
-    next(err);
-  }
-});
+      const { data, total } = await visitorService.list({
+        page,
+        pageSize,
+        search,
+        status,
+        warehouseId,
+        hostEmployeeId,
+        dateFrom,
+        dateTo,
+        sortBy,
+        sortDir,
+        ...req.scopeFilter,
+      });
+      sendSuccess(res, data, { page, pageSize, total });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── GET /:id — Detail ───────────────────────────────────────────────────
 

@@ -25,7 +25,7 @@ import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { sanitizeInput } from './middleware/sanitize.js';
 import { setupSocketIO } from './socket/setup.js';
-import { rateLimiter } from './middleware/rate-limiter.js';
+// rateLimiter is applied inside routes/index.ts (not here) to avoid double-counting
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startNotificationDispatcher } from './domains/system/services/notification-dispatcher.service.js';
@@ -35,8 +35,8 @@ import {
   register as registerDataSource,
 } from './domains/reporting/services/widget-data.service.js';
 import { loadCustomDataSources } from './domains/reporting/services/custom-data-source.service.js';
+import { healthCheck } from './domains/system/routes/health.routes.js';
 import apiRoutes from './routes/index.js';
-import { healthCheck } from './routes/health.routes.js';
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 dotenv.config({ path: '../../.env' });
@@ -111,7 +111,8 @@ app.get('/api/docs.json', (_req, res) => {
 });
 
 // ── API Routes (versioned) ────────────────────────────────────────────────
-app.use('/api/v1', rateLimiter(100, 60_000));
+// Rate limiter is applied inside apiRoutes (routes/index.ts) — not here,
+// to avoid double-counting each request against the same Redis key.
 app.use('/api/v1', apiRoutes);
 
 // Backward-compatible redirect: /api/* → /api/v1/*
@@ -170,7 +171,7 @@ httpServer.listen(PORT, () => {
 
   // ── AI Module (optional — behind AI_ENABLED flag) ──────────────
   if (process.env.AI_ENABLED === 'true') {
-    import('./modules/ai/index.js')
+    import('./domains/system/ai-module.js')
       .then(({ initAiModule }) => initAiModule(app))
       .catch(err => logger.error({ err }, 'Failed to initialize AI module'));
   }

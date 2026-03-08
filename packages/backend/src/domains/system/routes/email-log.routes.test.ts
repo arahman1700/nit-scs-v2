@@ -65,13 +65,12 @@ vi.mock('../../auth/services/permission.service.js', () => ({
 import { createTestApp, signTestToken } from '../../../test-utils/test-app.js';
 import supertest from 'supertest';
 
-const app = createTestApp();
-const request = supertest(app);
-
 const ADMIN_TOKEN = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
+let request: ReturnType<typeof supertest>;
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  request = supertest(createTestApp());
   if (!modelCache['emailLog']) modelCache['emailLog'] = {};
   // Re-mock permission after clearAllMocks
   const { hasPermissionDB } = await import('../../auth/services/permission.service.js');

@@ -17,6 +17,7 @@ import { authenticate } from '../../../middleware/auth.js';
 import { requireRole } from '../../../middleware/rbac.js';
 import { paginate } from '../../../middleware/pagination.js';
 import { validate } from '../../../middleware/validate.js';
+import { applyScopeFilter } from '../../../utils/scope-filter.js';
 import { sendSuccess, sendCreated } from '../../../utils/response.js';
 import { auditAndEmit } from '../../../utils/routeHelpers.js';
 import {
@@ -53,6 +54,7 @@ router.get(
   '/',
   authenticate,
   requireRole(...READ_ROLES),
+  applyScopeFilter({ warehouseField: 'locationWarehouseId' }),
   paginate('createdAt'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -63,7 +65,15 @@ router.get(
         if (value && typeof value === 'string') extra[key] = value;
       }
 
-      const { data, total } = await assetService.list({ skip, pageSize, sortBy, sortDir, search, ...extra });
+      const { data, total } = await assetService.list({
+        skip,
+        pageSize,
+        sortBy,
+        sortDir,
+        search,
+        ...extra,
+        ...req.scopeFilter,
+      });
       sendSuccess(res, data, { page, pageSize, total });
     } catch (err) {
       next(err);

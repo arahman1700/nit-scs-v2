@@ -1,7 +1,7 @@
 #!/bin/sh
-echo "==> Syncing Prisma schema to database..."
-npx prisma db push --skip-generate --accept-data-loss 2>&1 || {
-  echo "ERROR: prisma db push failed"
+echo "==> Applying pending database migrations..."
+npx prisma migrate deploy 2>&1 || {
+  echo "ERROR: prisma migrate deploy failed"
   exit 1
 }
 echo "==> Seeding database..."

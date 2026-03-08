@@ -85,7 +85,7 @@ describe('useImportFields', () => {
 describe('useImportPreview', () => {
   it('uploads file and returns preview', async () => {
     // Mock apiClient.post for FormData to avoid jsdom XMLHttpRequest issues
-    const clientModule = await import('../client');
+    const clientModule = await import('../../../api/client');
     const postSpy = vi.spyOn(clientModule.apiClient, 'post').mockResolvedValueOnce({
       data: { success: true, data: mockPreview },
     });

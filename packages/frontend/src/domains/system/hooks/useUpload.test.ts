@@ -23,7 +23,7 @@ Object.defineProperty(globalThis, 'localStorage', {
 });
 
 // Mock apiClient to avoid FormData + jsdom XMLHttpRequest issues
-vi.mock('../client', () => ({
+vi.mock('../../../api/client', () => ({
   apiClient: {
     post: vi.fn(),
   },
@@ -52,7 +52,7 @@ describe('useUpload', () => {
         data: { url: '/uploads/file-123.pdf', originalName: 'report.pdf', size: 2048, mimeType: 'application/pdf' },
       },
     };
-    vi.mocked(apiClient.post).mockResolvedValueOnce(mockResponse);
+    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockResponse as any);
 
     const wrapper = createWrapper();
     const { result } = renderHook(() => useUpload(), { wrapper });

@@ -79,7 +79,7 @@ describe('useAttachments', () => {
 describe('useUploadAttachment', () => {
   it('uploads a file attachment via apiClient.post', async () => {
     // Mock apiClient.post to avoid jsdom FormData/XMLHttpRequest issues
-    const clientModule = await import('../client');
+    const clientModule = await import('../../../api/client');
     const postSpy = vi.spyOn(clientModule.apiClient, 'post').mockResolvedValueOnce({
       data: {
         success: true,

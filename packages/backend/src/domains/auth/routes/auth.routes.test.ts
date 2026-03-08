@@ -125,7 +125,7 @@ describe('POST /api/v1/auth/login', () => {
     expect(res.body.data.user.email).toBe('admin@nit.com');
     expect(res.body.data.accessToken).toBe('fake-access-token');
     expect(res.body.data.refreshToken).toBe('fake-refresh-token');
-    expect(loginMock).toHaveBeenCalledWith('admin@nit.com', 'Secret123');
+    expect(loginMock).toHaveBeenCalledWith('admin@nit.com', 'Secret123', expect.any(String), undefined);
   });
 
   it('should return 401 when credentials are invalid', async () => {

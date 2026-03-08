@@ -184,7 +184,7 @@ const SidebarSection: React.FC<{
       </div>
     )}
     <div className="space-y-0.5">
-      {section.items.map((item, idx) => (
+      {(section.items ?? []).map((item, idx) => (
         <SidebarNavItem key={idx} item={item} isActive={isActive} isOpen={isOpen} />
       ))}
     </div>
@@ -198,7 +198,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
 
   // Use dynamic nav from backend if available, fall back to static config
   const { data: dynamicNav } = useNavigation();
-  const sections: NavSection[] = (dynamicNav as NavSection[] | undefined) || SECTION_NAVIGATION[role] || [];
+  // Only use dynamic nav if it matches NavSection[] shape (has 'section' and 'items' keys)
+  const isValidSectionNav =
+    Array.isArray(dynamicNav) && dynamicNav.length > 0 && 'section' in dynamicNav[0] && 'items' in dynamicNav[0];
+  const sections: NavSection[] =
+    (isValidSectionNav ? (dynamicNav as unknown as NavSection[]) : null) || SECTION_NAVIGATION[role] || [];
 
   // Role display name
   const roleLabel = role.replace(/_/g, ' ');

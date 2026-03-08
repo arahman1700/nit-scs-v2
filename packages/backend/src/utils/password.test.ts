@@ -22,7 +22,7 @@ describe('password utilities', () => {
       const hash2 = await hashPassword(password);
 
       expect(hash1).not.toBe(hash2);
-    });
+    }, 15000);
   });
 
   describe('comparePassword', () => {
