@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useAiChat, useAiConversations, useAiConversation } from './hooks/useAiChat';
-import type { AiMessage } from './hooks/useAiChat';
 import { MessageCircle, X, Send, Loader2, Trash2, ChevronLeft, Plus } from 'lucide-react';
+import { useAiChat, useAiConversations, useAiConversation } from '@/domains/system/hooks/useAiChat';
+import type { AiMessage } from '@/domains/system/hooks/useAiChat';
 
 export function AiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +18,6 @@ export function AiChatWidget() {
   const conversations = (conversationsData as unknown as { data?: unknown[] })?.data ?? [];
   const loadedMessages = (convData as unknown as { data?: { messages?: AiMessage[] } })?.data?.messages ?? [];
 
-  // Merge loaded messages with optimistic local ones
   const allMessages = conversationId ? loadedMessages : localMessages;
 
   useEffect(() => {
@@ -90,7 +89,6 @@ export function AiChatWidget() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-96 h-[32rem] glass-panel rounded-2xl border border-white/10 flex flex-col shadow-2xl">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           {showHistory && (
@@ -123,7 +121,6 @@ export function AiChatWidget() {
       </div>
 
       {showHistory ? (
-        /* Conversation History */
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           {(conversations as Array<{ id: string; title?: string; _count?: { messages: number } }>).map(conv => (
             <button
@@ -141,7 +138,6 @@ export function AiChatWidget() {
         </div>
       ) : (
         <>
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {allMessages.length === 0 && (
               <div className="text-center pt-10">
@@ -185,7 +181,6 @@ export function AiChatWidget() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
           <div className="p-3 border-t border-white/10">
             <div className="flex gap-2">
               <input

@@ -4,8 +4,8 @@ import {
   useDismissSuggestion,
   useApplySuggestion,
   useTriggerAnalysis,
-} from './hooks/useAiSuggestions';
-import type { AiSuggestion } from './hooks/useAiSuggestions';
+} from '@/domains/system/hooks/useAiSuggestions';
+import type { AiSuggestion } from '@/domains/system/hooks/useAiSuggestions';
 import { Lightbulb, Check, X, RefreshCw, Loader2, AlertTriangle, TrendingDown, Clock, Package } from 'lucide-react';
 
 const TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {

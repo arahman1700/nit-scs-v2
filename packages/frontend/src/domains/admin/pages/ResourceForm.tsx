@@ -5,9 +5,9 @@ import { LineItemsTable } from '@/components/LineItemsTable';
 import { DocumentComments } from '@/components/DocumentComments';
 import { DocumentAttachments } from '@/components/DocumentAttachments';
 import { useDocumentForm } from '@/pages/forms/useDocumentForm';
-import { FormFieldRenderer } from '@/pages/forms/FormFieldRenderer';
-import { FormSuccessView } from '@/pages/forms/FormSuccessView';
-import { StatusFlowIndicator, ApprovalLevelIndicator } from '@/pages/forms/FormStatusFlow';
+import { FormFieldRenderer } from '@/components/forms/FormFieldRenderer';
+import { FormSuccessView } from '@/components/forms/FormSuccessView';
+import { StatusFlowIndicator, ApprovalLevelIndicator } from '@/components/forms/FormStatusFlow';
 import type { FormFieldDef } from '@/pages/forms/formConfigs';
 
 export const ResourceForm: React.FC = () => {

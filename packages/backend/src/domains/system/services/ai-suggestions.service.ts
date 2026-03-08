@@ -5,9 +5,9 @@
  * suggestions with optional one-click action payloads.
  */
 
-import { prisma } from '../../utils/prisma.js';
-import { logger } from '../../config/logger.js';
 import { createHash } from 'crypto';
+import { logger } from '../../../config/logger.js';
+import { prisma } from '../../../utils/prisma.js';
 
 interface Suggestion {
   suggestionType: string;

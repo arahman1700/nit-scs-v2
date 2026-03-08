@@ -6,10 +6,10 @@
  */
 
 import { Prisma } from '@prisma/client';
-import { prisma } from '../../utils/prisma.js';
-import { logger } from '../../config/logger.js';
+import { logger } from '../../../config/logger.js';
+import { prisma } from '../../../utils/prisma.js';
 import { buildSchemaPrompt, validateQuery } from './ai-schema-context.js';
-import { buildScopeFilter as _buildScopeFilter } from '../../utils/scope-filter.js';
+import { buildScopeFilter as _buildScopeFilter } from '../../../utils/scope-filter.js';
 
 interface ChatMessage {
   role: 'user' | 'assistant';

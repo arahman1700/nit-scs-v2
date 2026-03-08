@@ -1,6 +1,6 @@
 import React from 'react';
 import { FileText, Upload, Loader2, X } from 'lucide-react';
-import type { FormFieldDef } from './formConfigs';
+import type { FormFieldDef } from '@/pages/forms/formConfigs';
 
 export interface FormFieldRendererProps {
   field: FormFieldDef;

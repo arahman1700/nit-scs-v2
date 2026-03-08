@@ -9,25 +9,22 @@
  */
 
 import type { Express } from 'express';
-import aiRoutes from './ai.routes.js';
-import aiSuggestionRoutes from './ai-suggestions.routes.js';
-import { generateSuggestions } from './ai-suggestions.service.js';
 import { logger } from '../../config/logger.js';
+import aiRoutes from './routes/ai.routes.js';
+import aiSuggestionRoutes from './routes/ai-suggestions.routes.js';
+import { generateSuggestions } from './services/ai-suggestions.service.js';
 
 export function initAiModule(app: Express) {
   logger.info('AI Module: initializing...');
 
-  // Mount routes
   app.use('/api/v1/ai', aiRoutes);
   app.use('/api/v1/ai/suggestions', aiSuggestionRoutes);
 
-  // Schedule suggestion generation every 6 hours
   const SIX_HOURS = 6 * 60 * 60 * 1000;
   setInterval(() => {
     generateSuggestions().catch(err => logger.error({ err }, 'AI Suggestions: scheduled run failed'));
   }, SIX_HOURS);
 
-  // Run initial analysis after 30 seconds (let other services start first)
   setTimeout(() => {
     generateSuggestions().catch(err => logger.error({ err }, 'AI Suggestions: initial run failed'));
   }, 30_000);

@@ -1,8 +1,6 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 
-// ── Status Flow Indicator ──────────────────────────────────────────────────
-
 export interface StatusFlowIndicatorProps {
   statusFlow: string[];
   isEditMode: boolean;
@@ -33,8 +31,6 @@ export const StatusFlowIndicator: React.FC<StatusFlowIndicatorProps> = ({ status
     </div>
   );
 };
-
-// ── Approval Level Indicator ───────────────────────────────────────────────
 
 export interface ApprovalLevelIndicatorProps {
   approvalInfo: { level: string; color: string };

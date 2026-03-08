@@ -2,8 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client';
 import type { ApiResponse } from '@/api/types';
 
-// ── Types ──────────────────────────────────────────────────────────────
-
 export interface AiConversation {
   id: string;
   title?: string;
@@ -25,8 +23,6 @@ export interface ChatResult {
   conversationId: string;
   message: AiMessage;
 }
-
-// ── Hooks ──────────────────────────────────────────────────────────────
 
 export function useAiConversations() {
   return useQuery({

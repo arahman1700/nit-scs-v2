@@ -1,7 +1,12 @@
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth.js';
-import { requireRole } from '../../middleware/rbac.js';
-import { listSuggestions, dismissSuggestion, applySuggestion, generateSuggestions } from './ai-suggestions.service.js';
+import { authenticate } from '../../../middleware/auth.js';
+import { requireRole } from '../../../middleware/rbac.js';
+import {
+  listSuggestions,
+  dismissSuggestion,
+  applySuggestion,
+  generateSuggestions,
+} from '../services/ai-suggestions.service.js';
 
 const router = Router();
 router.use(authenticate);

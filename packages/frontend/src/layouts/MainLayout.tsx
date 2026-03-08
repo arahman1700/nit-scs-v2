@@ -17,7 +17,7 @@ import { AI_ENABLED } from '@/modules/ai/index';
 import type { NavItem } from '@nit-scs-v2/shared/types';
 
 const AiChatWidget = AI_ENABLED
-  ? React.lazy(() => import('@/modules/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
+  ? React.lazy(() => import('@/components/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
   : () => null;
 
 export const MainLayout: React.FC<{

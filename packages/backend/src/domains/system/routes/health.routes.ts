@@ -1,16 +1,6 @@
-// ---------------------------------------------------------------------------
-// Health Check Endpoint
-// ---------------------------------------------------------------------------
-// Returns comprehensive health status including:
-// - Database connectivity (PostgreSQL via Prisma)
-// - Redis connectivity
-// - Memory usage (RSS, heap)
-// - Process uptime
-// ---------------------------------------------------------------------------
-
 import type { Request, Response } from 'express';
-import { prisma } from '../utils/prisma.js';
-import { getRedis, isRedisAvailable } from '../config/redis.js';
+import { getRedis, isRedisAvailable } from '../../../config/redis.js';
+import { prisma } from '../../../utils/prisma.js';
 
 interface ComponentStatus {
   status: 'up' | 'down';
@@ -38,9 +28,6 @@ interface HealthResponse {
 }
 
 export async function healthCheck(_req: Request, res: Response): Promise<void> {
-  const _startTime = Date.now();
-
-  // ── Database Check ──────────────────────────────────────────────────────
   let dbStatus: ComponentStatus;
   try {
     const dbStart = Date.now();
@@ -53,7 +40,6 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
     };
   }
 
-  // ── Redis Check ─────────────────────────────────────────────────────────
   let redisStatus: ComponentStatus;
   if (!isRedisAvailable()) {
     redisStatus = { status: 'down', message: 'Not connected' };
@@ -71,11 +57,9 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
     }
   }
 
-  // ── Memory Stats ────────────────────────────────────────────────────────
   const mem = process.memoryUsage();
   const toMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
 
-  // ── Overall Status ──────────────────────────────────────────────────────
   const dbUp = dbStatus.status === 'up';
   const redisUp = redisStatus.status === 'up';
 
@@ -83,10 +67,8 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
   if (dbUp && redisUp) {
     overallStatus = 'healthy';
   } else if (dbUp) {
-    // Redis down is degraded (non-fatal)
     overallStatus = 'degraded';
   } else {
-    // Database down is unhealthy
     overallStatus = 'unhealthy';
   }
 

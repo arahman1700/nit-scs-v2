@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { authenticate } from '../../middleware/auth.js';
-import { requireRole as _requireRole } from '../../middleware/rbac.js';
-import { aiRateLimiter } from '../../middleware/rate-limiter.js';
-import { chat, listConversations, getConversation, deleteConversation } from './ai-chat.service.js';
+import { authenticate } from '../../../middleware/auth.js';
+import { requireRole as _requireRole } from '../../../middleware/rbac.js';
+import { aiRateLimiter } from '../../../middleware/rate-limiter.js';
+import { chat, listConversations, getConversation, deleteConversation } from '../services/ai-chat.service.js';
 
 const chatRequestSchema = z.object({
   conversationId: z.string().uuid().optional().nullable(),
