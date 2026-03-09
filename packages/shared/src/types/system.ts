@@ -1,4 +1,3 @@
-import type { UserRole } from './enums.js';
 import type { FormField, ColumnConfig, EmployeeRef } from './common.js';
 
 // ── Notifications ────────────────────────────────────────────────────────
@@ -217,9 +216,19 @@ export interface NavItem {
   section?: string;
 }
 
+export interface NavSubGroup {
+  label: string;
+  items: NavItem[];
+}
+
 export interface NavSection {
   section: string;
+  /** Direct items in this section (no sub-group) */
   items: NavItem[];
+  /** Optional sub-groups for 2-level hierarchy (e.g. Inbound/Outbound under OPERATIONS) */
+  children?: NavSubGroup[];
+  /** If true, section is always expanded and cannot be collapsed */
+  alwaysExpanded?: boolean;
 }
 
 // ── Reports & SLA ────────────────────────────────────────────────────────

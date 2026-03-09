@@ -11,10 +11,10 @@ import { OfflineIndicator } from '@/components/OfflineIndicator';
 import { useRealtimeSync } from '@/socket/useRealtimeSync';
 import { useCurrentUser } from '@/domains/auth/hooks/useAuth';
 import { useNavigation } from '@/domains/system/hooks/useNavigation';
-import { NAVIGATION_LINKS } from '@/config/navigation';
+import { NAVIGATION_LINKS, SECTION_NAVIGATION } from '@/config/navigation';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AI_ENABLED } from '@/modules/ai/index';
-import type { NavItem } from '@nit-scs-v2/shared/types';
+import type { NavItem, NavSection } from '@nit-scs-v2/shared/types';
 
 const AiChatWidget = AI_ENABLED
   ? React.lazy(() => import('@/components/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
@@ -117,6 +117,9 @@ export const MainLayout: React.FC<{
   const navLinks: NavItem[] =
     (dynamicNav as NavItem[] | undefined) || (NAVIGATION_LINKS as Record<string, NavItem[]>)[role] || [];
 
+  // Section-based navigation for the mobile bottom sheet
+  const mobileSections: NavSection[] = SECTION_NAVIGATION[role] || [];
+
   return (
     <div className="flex h-screen overflow-hidden bg-gradient-to-br from-nesma-dark to-nesma-dark text-white font-sans">
       {/* Skip Navigation — Accessibility */}
@@ -177,7 +180,7 @@ export const MainLayout: React.FC<{
       </div>
 
       {/* Mobile Bottom Tab Bar */}
-      {isMobile && <MobileTabBar navLinks={navLinks} onMoreClick={toggleSidebar} />}
+      {isMobile && <MobileTabBar navLinks={navLinks} onMoreClick={toggleSidebar} sections={mobileSections} />}
 
       <PwaInstallPrompt />
       <PwaUpdatePrompt />

@@ -1,14 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import type { NavItem, NavSection } from '@nit-scs-v2/shared/types';
+import type { NavItem, NavSection, NavSubGroup } from '@nit-scs-v2/shared/types';
 import { UserRole } from '@nit-scs-v2/shared/types';
 import { SECTION_NAVIGATION } from '@/config/navigation';
 import { useNavigation } from '@/domains/system/hooks/useNavigation';
-import { NesmaLogo } from '@/components/NesmaLogo';
-import { toRecord } from '@/utils/type-helpers';
 import {
   LogOut,
   Search,
+  ChevronRight,
   type LucideIcon,
   LayoutDashboard,
   Clock,
@@ -99,6 +98,27 @@ function getIcon(name?: string): LucideIcon | undefined {
   return ICON_REGISTRY[name];
 }
 
+// ── LocalStorage helpers ─────────────────────────────────────────────────
+
+const STORAGE_KEY = 'sidebar-expanded';
+
+function loadExpandedSections(): Record<string, boolean> {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveExpandedSections(expanded: Record<string, boolean>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(expanded));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 // ── Props ────────────────────────────────────────────────────────────────
 
 interface SidebarProps {
@@ -130,13 +150,42 @@ function useActiveCheck() {
   };
 }
 
+// ── Utility: check if any item in a section is active ────────────────────
+
+function sectionHasActiveItem(section: NavSection, isActive: (path?: string) => boolean): boolean {
+  for (const item of section.items) {
+    if (isActive(item.path)) return true;
+  }
+  if (section.children) {
+    for (const group of section.children) {
+      for (const item of group.items) {
+        if (isActive(item.path)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ── Count total items in a section ───────────────────────────────────────
+
+function getSectionItemCount(section: NavSection): number {
+  let count = section.items.length;
+  if (section.children) {
+    for (const group of section.children) {
+      count += group.items.length;
+    }
+  }
+  return count;
+}
+
 // ── Nav Item Component ───────────────────────────────────────────────────
 
 const SidebarNavItem: React.FC<{
   item: NavItem;
   isActive: (path?: string) => boolean;
   isOpen: boolean;
-}> = ({ item, isActive, isOpen }) => {
+  indent?: boolean;
+}> = ({ item, isActive, isOpen, indent = false }) => {
   const Icon = getIcon(item.icon);
   const active = isActive(item.path);
 
@@ -144,6 +193,7 @@ const SidebarNavItem: React.FC<{
     <Link
       to={item.path || '#'}
       className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition-all duration-200 group relative
+        ${indent && isOpen ? 'ml-2' : ''}
         ${
           active
             ? 'bg-nesma-primary/30 text-nesma-secondary font-medium border-l-[3px] border-nesma-secondary pl-[9px]'
@@ -171,26 +221,97 @@ const SidebarNavItem: React.FC<{
   );
 };
 
-// ── Section Component ────────────────────────────────────────────────────
+// ── Sub-Group Component ──────────────────────────────────────────────────
+
+const SidebarSubGroup: React.FC<{
+  group: NavSubGroup;
+  isActive: (path?: string) => boolean;
+  isOpen: boolean;
+}> = ({ group, isActive, isOpen }) => (
+  <div className="mt-1">
+    {isOpen && (
+      <div className="pl-6 pt-2 pb-1">
+        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{group.label}</span>
+      </div>
+    )}
+    <div className="space-y-0.5">
+      {group.items.map((item, idx) => (
+        <SidebarNavItem key={idx} item={item} isActive={isActive} isOpen={isOpen} indent />
+      ))}
+    </div>
+  </div>
+);
+
+// ── Section Component (Collapsible) ──────────────────────────────────────
 
 const SidebarSection: React.FC<{
   section: NavSection;
   isActive: (path?: string) => boolean;
   isOpen: boolean;
-}> = ({ section, isActive, isOpen }) => (
-  <div className="mb-1">
-    {isOpen && (
-      <div className="px-3 pt-4 pb-1.5">
-        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">{section.section}</span>
+  isExpanded: boolean;
+  onToggle: () => void;
+}> = ({ section, isActive, isOpen, isExpanded, onToggle }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const isAlwaysExpanded = section.alwaysExpanded === true;
+  const shouldExpand = isAlwaysExpanded || isExpanded;
+  const itemCount = getSectionItemCount(section);
+
+  return (
+    <div className="mb-1">
+      {/* Section Header */}
+      {isOpen && (
+        <button
+          onClick={isAlwaysExpanded ? undefined : onToggle}
+          className={`flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200
+            ${isAlwaysExpanded ? 'cursor-default' : 'cursor-pointer hover:bg-white/5'}
+          `}
+          aria-expanded={shouldExpand}
+          aria-label={`${shouldExpand ? 'Collapse' : 'Expand'} ${section.section} section`}
+          type="button"
+        >
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">{section.section}</span>
+          <div className="flex items-center gap-1.5">
+            {/* Item count badge when collapsed */}
+            {!shouldExpand && itemCount > 0 && (
+              <span className="text-[9px] font-semibold text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                {itemCount}
+              </span>
+            )}
+            {/* Chevron (hidden for always-expanded sections) */}
+            {!isAlwaysExpanded && (
+              <ChevronRight
+                size={14}
+                className={`text-gray-500 transition-transform duration-300 ${shouldExpand ? 'rotate-90' : ''}`}
+              />
+            )}
+          </div>
+        </button>
+      )}
+
+      {/* Collapsible Content */}
+      <div
+        ref={contentRef}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          shouldExpand || !isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        {/* Direct items */}
+        {section.items.length > 0 && (
+          <div className="space-y-0.5">
+            {section.items.map((item, idx) => (
+              <SidebarNavItem key={idx} item={item} isActive={isActive} isOpen={isOpen} />
+            ))}
+          </div>
+        )}
+
+        {/* Sub-groups (children) */}
+        {section.children?.map((group, idx) => (
+          <SidebarSubGroup key={idx} group={group} isActive={isActive} isOpen={isOpen} />
+        ))}
       </div>
-    )}
-    <div className="space-y-0.5">
-      {(section.items ?? []).map((item, idx) => (
-        <SidebarNavItem key={idx} item={item} isActive={isActive} isOpen={isOpen} />
-      ))}
     </div>
-  </div>
-);
+  );
+};
 
 // ── Main Sidebar ─────────────────────────────────────────────────────────
 
@@ -204,6 +325,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
     Array.isArray(dynamicNav) && dynamicNav.length > 0 && 'section' in dynamicNav[0] && 'items' in dynamicNav[0];
   const sections: NavSection[] =
     (isValidSectionNav ? (dynamicNav as unknown as NavSection[]) : null) || SECTION_NAVIGATION[role] || [];
+
+  // ── Expanded state management ──
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
+    const stored = loadExpandedSections();
+    // Initialize: auto-expand sections that contain the active route
+    const initial: Record<string, boolean> = { ...stored };
+    return initial;
+  });
+
+  // Auto-expand the section containing the active item on mount and route changes
+  const location = useLocation();
+  useEffect(() => {
+    setExpanded(prev => {
+      const next = { ...prev };
+      let changed = false;
+      for (const section of sections) {
+        if (!section.alwaysExpanded && sectionHasActiveItem(section, isActive)) {
+          if (!next[section.section]) {
+            next[section.section] = true;
+            changed = true;
+          }
+        }
+      }
+      if (changed) {
+        saveExpandedSections(next);
+        return next;
+      }
+      return prev;
+    });
+  }, [location.pathname, location.search, sections, isActive]);
+
+  const toggleSection = useCallback((sectionName: string) => {
+    setExpanded(prev => {
+      const next = { ...prev, [sectionName]: !prev[sectionName] };
+      saveExpandedSections(next);
+      return next;
+    });
+  }, []);
 
   // Role display name
   const roleLabel = role.replace(/_/g, ' ');
@@ -255,7 +414,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
       {/* ── Navigation Sections ── */}
       <nav className="flex-1 overflow-y-auto px-2 pt-1 pb-4 custom-scrollbar">
         {sections.map((section, idx) => (
-          <SidebarSection key={idx} section={section} isActive={isActive} isOpen={isOpen} />
+          <SidebarSection
+            key={idx}
+            section={section}
+            isActive={isActive}
+            isOpen={isOpen}
+            isExpanded={expanded[section.section] ?? false}
+            onToggle={() => toggleSection(section.section)}
+          />
         ))}
       </nav>
 

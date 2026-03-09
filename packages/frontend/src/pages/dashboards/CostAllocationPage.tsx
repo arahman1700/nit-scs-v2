@@ -160,7 +160,7 @@ export const CostAllocationPage: React.FC = () => {
         </div>
 
         {/* Date Range Filter */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <label htmlFor="costDateFrom" className="text-xs text-gray-400">
               From
@@ -218,7 +218,7 @@ export const CostAllocationPage: React.FC = () => {
       {isLoading && (
         <div className="space-y-6">
           {/* KPI skeleton */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="glass-card p-4 rounded-xl animate-pulse">
                 <div className="flex items-center gap-3">
@@ -250,7 +250,7 @@ export const CostAllocationPage: React.FC = () => {
       {!isLoading && !selectedProjectId && summaryData && (
         <>
           {/* ── Category KPI Cards ─────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {CATEGORY_CONFIGS.map(cat => {
               const catData = summaryData.totals[cat.key as keyof typeof summaryData.totals] as
                 | CostCategory
@@ -296,11 +296,11 @@ export const CostAllocationPage: React.FC = () => {
 
           {/* ── Projects Table ──────────────────────────────────────────── */}
           <div className="glass-card rounded-2xl overflow-hidden">
-            <div className="p-4 border-b border-white/10 bg-white/5">
+            <div className="px-4 py-4 border-b border-white/10 bg-white/5">
               <h3 className="text-lg font-semibold text-white">Projects by Total Cost</h3>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+            <div className="overflow-x-auto mobile-scroll">
+              <table className="w-full text-left text-sm min-w-[800px]">
                 <thead className="text-gray-400 text-xs uppercase tracking-wider border-b border-white/10">
                   <tr>
                     <th className="px-4 py-3">#</th>
@@ -367,7 +367,7 @@ export const CostAllocationPage: React.FC = () => {
       {!isLoading && selectedProjectId && detailData && (
         <>
           {/* ── Category Detail Cards ──────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
             {CATEGORY_CONFIGS.map(cat => {
               const catData = detailData.categories[cat.key as keyof typeof detailData.categories] as
                 | CostCategory

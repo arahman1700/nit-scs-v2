@@ -180,14 +180,14 @@ export function OperationsDashboard() {
 
         {/* Warehouse Detail Table */}
         <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/10">
+          <div className="px-4 sm:px-6 py-4 border-b border-white/10">
             <h2 className="text-lg font-semibold text-white flex items-center gap-2">
               <TrendingUp size={18} className="text-nesma-secondary" />
               Warehouse Breakdown
             </h2>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto mobile-scroll">
+            <table className="w-full min-w-[480px]">
               <thead>
                 <tr className="border-b border-white/10">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -242,16 +242,16 @@ export function OperationsDashboard() {
             {data.recentActivity.map(item => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 gap-2"
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300 uppercase">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/10 text-gray-300 uppercase shrink-0">
                     {item.tableName}
                   </span>
-                  <span className="text-sm text-white capitalize">{item.action.replace(/_/g, ' ')}</span>
+                  <span className="text-sm text-white capitalize truncate">{item.action.replace(/_/g, ' ')}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500">
-                  <span>{item.performedBy?.fullName ?? 'System'}</span>
+                <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                  <span className="truncate max-w-[120px]">{item.performedBy?.fullName ?? 'System'}</span>
                   <span>{new Date(item.performedAt).toLocaleDateString()}</span>
                 </div>
               </div>

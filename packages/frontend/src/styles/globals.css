@@ -78,6 +78,17 @@
   .animate-slide-in-right {
     animation: slide-in-right 0.25s ease-out;
   }
+
+  /* Safe area bottom padding for PWA install prompt */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Mobile touch scroll for tables */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
 }
 
 @keyframes slide-in-right {

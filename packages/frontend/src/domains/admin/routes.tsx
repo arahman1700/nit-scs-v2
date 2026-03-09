@@ -104,6 +104,29 @@ const WorkflowBuilderPage = React.lazy(() =>
   import('@/domains/workflow/pages/WorkflowBuilderPage').then(m => ({ default: m.WorkflowBuilderPage })),
 );
 
+// Admin Settings Hub
+const AdminSettingsHub = React.lazy(() =>
+  import('@/pages/admin/AdminSettingsHub').then(m => ({ default: m.AdminSettingsHub })),
+);
+const NavigationSettingsPage = React.lazy(() =>
+  import('@/pages/admin/NavigationSettingsPage').then(m => ({ default: m.NavigationSettingsPage })),
+);
+const CustomFieldsPage = React.lazy(() =>
+  import('@/pages/admin/CustomFieldsPage').then(m => ({ default: m.CustomFieldsPage })),
+);
+const DynamicTypeListPage = React.lazy(() =>
+  import('@/pages/admin/DynamicTypeListPage').then(m => ({ default: m.DynamicTypeListPage })),
+);
+const DynamicTypeBuilderPage = React.lazy(() =>
+  import('@/pages/admin/DynamicTypeBuilderPage').then(m => ({ default: m.DynamicTypeBuilderPage })),
+);
+const _ApprovalWorkflowPage = React.lazy(() =>
+  import('@/pages/admin/ApprovalWorkflowPage').then(m => ({ default: m.ApprovalWorkflowPage })),
+);
+const _ApprovalLevelsPageStandalone = React.lazy(() =>
+  import('@/pages/admin/ApprovalLevelsPage').then(m => ({ default: m.ApprovalLevelsPage })),
+);
+
 // Inspection Tools (AQL Calculator & Checklists)
 const InspectionToolsPage = React.lazy(() =>
   import('@/pages/quality/InspectionToolsPage').then(m => ({ default: m.InspectionToolsPage })),
@@ -112,6 +135,12 @@ const InspectionToolsPage = React.lazy(() =>
 // Route Optimizer page
 const RouteOptimizerPage = React.lazy(() =>
   import('@/pages/logistics/RouteOptimizerPage').then(m => ({ default: m.RouteOptimizerPage })),
+);
+
+// Reports Hub & Dashboards Hub
+const ReportsHubPage = React.lazy(() => import('@/pages/ReportsHubPage').then(m => ({ default: m.ReportsHubPage })));
+const DashboardsHubPage = React.lazy(() =>
+  import('@/pages/DashboardsHubPage').then(m => ({ default: m.DashboardsHubPage })),
 );
 
 // Gap Analysis Feature Pages
@@ -167,6 +196,17 @@ export function adminRoutes(currentRole: UserRole) {
       {/* Section Landing Pages (V1 - kept for backward compatibility) */}
       <Route path="/admin/inventory" element={<InventorySectionPage />} />
       <Route path="/admin/quality" element={<QualitySectionPage />} />
+
+      {/* Admin Settings Hub Routes */}
+      <Route path="/admin/settings/hub" element={<AdminSettingsHub />} />
+      <Route path="/admin/settings/navigation" element={<NavigationSettingsPage />} />
+      <Route path="/admin/settings/custom-fields" element={<CustomFieldsPage />} />
+      <Route path="/admin/settings/document-types" element={<DynamicTypeListPage />} />
+      <Route path="/admin/settings/document-types/new" element={<DynamicTypeBuilderPage />} />
+      <Route path="/admin/settings/document-types/:id" element={<DynamicTypeBuilderPage />} />
+      <Route path="/admin/settings/workflows" element={<AdminSystemPage />} />
+      <Route path="/admin/settings/notifications" element={<AdminSystemPage />} />
+      <Route path="/admin/settings/system" element={<AdminSystemPage />} />
 
       {/* Section Landing Pages (V3 — Reorganized) */}
       <Route path="/admin/warehouses" element={<MaterialSectionPage />} />
@@ -225,6 +265,10 @@ export function adminRoutes(currentRole: UserRole) {
       <Route path="/admin/forms/warehouse-zone/:id" element={<WarehouseZoneForm />} />
       <Route path="/admin/forms/tool" element={<ToolForm />} />
       <Route path="/admin/forms/tool/:id" element={<ToolForm />} />
+
+      {/* Reports Hub & Dashboards Hub */}
+      <Route path="/admin/reports-hub" element={<ReportsHubPage />} />
+      <Route path="/admin/dashboards-hub" element={<DashboardsHubPage />} />
 
       {/* V2 Dashboard Routes */}
       <Route path="/admin/dashboards/assets" element={<AssetDashboard />} />

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useKpis } from '@/domains/reporting/hooks/useKpis';
 import type { KpiResult, KpiCategory, ComprehensiveKpis } from '@/domains/reporting/hooks/useKpis';
-import type { ApiResponse } from '@/api/types';
+
 import { toRecord } from '@/utils/type-helpers';
 
 // ── Category Metadata ────────────────────────────────────────────────────────
@@ -341,7 +341,7 @@ export function KpiDashboard() {
 
           {/* ── Category Summary Cards ────────────────────────────────────── */}
           {activeTab === 'all' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {ALL_CATEGORIES.map(cat => {
                 const meta = CATEGORY_META[cat];
                 const CatIcon = meta.icon;

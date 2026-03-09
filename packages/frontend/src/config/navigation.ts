@@ -2,13 +2,16 @@ import type { NavSection } from '@nit-scs-v2/shared/types';
 import { UserRole } from '@nit-scs-v2/shared/types';
 
 // ── Section-based navigation config ─────────────────────────────────────
-// Each role gets an array of NavSections. Each section has a header label
-// and flat items with icons. No nested dropdowns — sections are always visible.
+// Each role gets an array of NavSections. Sections support:
+// - `alwaysExpanded: true` for sections that cannot be collapsed (e.g. OVERVIEW)
+// - `children` for sub-groups (e.g. Inbound/Outbound under OPERATIONS)
+// - `items` for flat item lists within a section
 
 export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.ADMIN]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' },
         { label: 'Pending Approvals', path: '/admin/settings?tab=approval-levels', icon: 'Clock', badge: 0 },
@@ -17,20 +20,40 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
     },
     {
       section: 'OPERATIONS',
-      items: [
-        { label: 'GRN - Receiving', path: '/admin/warehouses?tab=grn', icon: 'PackageCheck' },
-        { label: 'MI - Issuing', path: '/admin/warehouses?tab=mi', icon: 'Send' },
-        { label: 'MRN - Returns', path: '/admin/warehouses?tab=mrn', icon: 'CornerDownLeft' },
-        { label: 'MR - Requests', path: '/admin/warehouses?tab=mr', icon: 'ClipboardList' },
-        { label: 'WT - Transfers', path: '/admin/warehouses?tab=wt', icon: 'Repeat' },
-        { label: 'IMSF - Inter-Store', path: '/admin/warehouses?tab=imsf', icon: 'GitBranch' },
+      items: [],
+      children: [
+        {
+          label: 'Inbound',
+          items: [
+            { label: 'GRN - Receiving', path: '/admin/warehouses?tab=grn', icon: 'PackageCheck' },
+            { label: 'QCI - Inspections', path: '/admin/warehouses?tab=qci', icon: 'CheckCircle' },
+            { label: 'DR - Discrepancy', path: '/admin/warehouses?tab=dr', icon: 'AlertTriangle' },
+          ],
+        },
+        {
+          label: 'Outbound',
+          items: [
+            { label: 'MI - Issuing', path: '/admin/warehouses?tab=mi', icon: 'Send' },
+            { label: 'MRN - Returns', path: '/admin/warehouses?tab=mrn', icon: 'CornerDownLeft' },
+            { label: 'MR - Requests', path: '/admin/warehouses?tab=mr', icon: 'ClipboardList' },
+          ],
+        },
+        {
+          label: 'Transfers',
+          items: [
+            { label: 'WT - Transfers', path: '/admin/warehouses?tab=wt', icon: 'Repeat' },
+            { label: 'IMSF - Inter-Store', path: '/admin/warehouses?tab=imsf', icon: 'GitBranch' },
+          ],
+        },
       ],
     },
     {
-      section: 'QUALITY',
+      section: 'INVENTORY',
       items: [
-        { label: 'QCI - Inspections', path: '/admin/warehouses?tab=qci', icon: 'CheckCircle' },
-        { label: 'DR - Discrepancy', path: '/admin/warehouses?tab=dr', icon: 'AlertTriangle' },
+        { label: 'Stock Overview', path: '/admin/warehouses?tab=inventory', icon: 'Layers' },
+        { label: 'Bin Cards', path: '/admin/warehouses?tab=bin-cards', icon: 'Database' },
+        { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts', icon: 'AlertCircle', badge: 0 },
+        { label: 'Scrap & Surplus', path: '/admin/scrap', icon: 'Recycle' },
       ],
     },
     {
@@ -45,15 +68,6 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
       ],
     },
     {
-      section: 'INVENTORY',
-      items: [
-        { label: 'Stock Overview', path: '/admin/warehouses?tab=inventory', icon: 'Layers' },
-        { label: 'Bin Cards', path: '/admin/warehouses?tab=bin-cards', icon: 'Database' },
-        { label: 'Scrap & Surplus', path: '/admin/scrap', icon: 'Recycle' },
-        { label: 'Expiry Alerts', path: '/warehouse/expiry-alerts', icon: 'AlertCircle', badge: 0 },
-      ],
-    },
-    {
       section: 'LOGISTICS',
       items: [
         { label: 'Shipments', path: '/admin/shipping?tab=shipments', icon: 'Ship' },
@@ -62,7 +76,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
       ],
     },
     {
-      section: 'ANALYTICS',
+      section: 'ANALYTICS & REPORTS',
       items: [
         { label: 'KPI Dashboard', path: '/admin/dashboards/kpis', icon: 'BarChart2' },
         { label: 'Cost Allocation', path: '/admin/dashboards/cost-allocation', icon: 'DollarSign' },
@@ -71,7 +85,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
       ],
     },
     {
-      section: 'ADMIN',
+      section: 'ADMIN & SETTINGS',
       items: [
         { label: 'Master Data', path: '/admin/master', icon: 'Database' },
         { label: 'Employees & Org', path: '/admin/employees', icon: 'Users' },
@@ -84,24 +98,31 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.WAREHOUSE_SUPERVISOR]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' },
         { label: 'Mobile Dashboard', path: '/warehouse/mobile', icon: 'Smartphone' },
       ],
     },
     {
-      section: 'RECEIVING',
-      items: [
-        { label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' },
-        { label: 'QCI - Inspections', path: '/qc/inspections', icon: 'CheckCircle' },
-        { label: 'DR - Discrepancy', path: '/qc/dr', icon: 'AlertTriangle' },
-      ],
-    },
-    {
-      section: 'ISSUING',
-      items: [
-        { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
-        { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+      section: 'OPERATIONS',
+      items: [],
+      children: [
+        {
+          label: 'Receiving',
+          items: [
+            { label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' },
+            { label: 'QCI - Inspections', path: '/qc/inspections', icon: 'CheckCircle' },
+            { label: 'DR - Discrepancy', path: '/qc/dr', icon: 'AlertTriangle' },
+          ],
+        },
+        {
+          label: 'Issuing',
+          items: [
+            { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
+            { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+          ],
+        },
       ],
     },
     {
@@ -128,20 +149,27 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.WAREHOUSE_STAFF]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' },
         { label: 'Mobile Dashboard', path: '/warehouse/mobile', icon: 'Smartphone' },
       ],
     },
     {
-      section: 'RECEIVING',
-      items: [{ label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' }],
-    },
-    {
-      section: 'ISSUING',
-      items: [
-        { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
-        { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+      section: 'OPERATIONS',
+      items: [],
+      children: [
+        {
+          label: 'Receiving',
+          items: [{ label: 'GRN - Receiving', path: '/warehouse/receive', icon: 'PackageCheck' }],
+        },
+        {
+          label: 'Issuing',
+          items: [
+            { label: 'MI - Issuing', path: '/warehouse/issue', icon: 'Send' },
+            { label: 'MRN - Returns', path: '/warehouse/return', icon: 'CornerDownLeft' },
+          ],
+        },
       ],
     },
     {
@@ -157,6 +185,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.FREIGHT_FORWARDER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/transport', icon: 'LayoutDashboard' }],
     },
     {
@@ -171,6 +200,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.MANAGER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/manager', icon: 'LayoutDashboard' },
         { label: 'Pending Approvals', path: '/manager/approvals', icon: 'Clock', badge: 0 },
@@ -196,6 +226,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.QC_OFFICER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/qc', icon: 'LayoutDashboard' },
         { label: 'Tasks', path: '/qc/tasks', icon: 'ListTodo' },
@@ -214,6 +245,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.LOGISTICS_COORDINATOR]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' },
         { label: 'Tasks', path: '/logistics/tasks', icon: 'ListTodo' },
@@ -239,6 +271,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.SITE_ENGINEER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/site-engineer', icon: 'LayoutDashboard' },
         { label: 'Tasks', path: '/site-engineer/tasks', icon: 'ListTodo' },
@@ -263,6 +296,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.TRANSPORT_SUPERVISOR]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/logistics/transport', icon: 'LayoutDashboard' },
         { label: 'Tasks', path: '/logistics/tasks', icon: 'ListTodo' },
@@ -281,6 +315,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.SCRAP_COMMITTEE_MEMBER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'SSC Dashboard', path: '/admin/scrap?tab=ssc', icon: 'LayoutDashboard' }],
     },
     {
@@ -295,6 +330,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.TECHNICAL_MANAGER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [
         { label: 'Dashboard', path: '/manager', icon: 'LayoutDashboard' },
         { label: 'Pending Approvals', path: '/manager/approvals', icon: 'Clock', badge: 0 },
@@ -313,6 +349,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.GATE_OFFICER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' }],
     },
     {
@@ -328,6 +365,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.INVENTORY_SPECIALIST]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/warehouse', icon: 'LayoutDashboard' }],
     },
     {
@@ -351,6 +389,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.SHIPPING_OFFICER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' }],
     },
     {
@@ -366,6 +405,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.FINANCE_USER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' }],
     },
     {
@@ -387,6 +427,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.CUSTOMS_SPECIALIST]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/logistics', icon: 'LayoutDashboard' }],
     },
     {
@@ -402,6 +443,7 @@ export const SECTION_NAVIGATION: Record<string, NavSection[]> = {
   [UserRole.COMPLIANCE_OFFICER]: [
     {
       section: 'OVERVIEW',
+      alwaysExpanded: true,
       items: [{ label: 'Dashboard', path: '/admin', icon: 'LayoutDashboard' }],
     },
     {
@@ -427,18 +469,22 @@ import type { NavItem } from '@nit-scs-v2/shared/types';
 function sectionsToFlatNav(sections: NavSection[]): NavItem[] {
   const result: NavItem[] = [];
   for (const sec of sections) {
-    if (sec.items.length === 1 && sec.section === 'OVERVIEW') {
-      // Dashboard item stays flat
-      result.push(sec.items[0]);
-    } else if (sec.items.length <= 2 && sec.section === 'OVERVIEW') {
+    if (sec.items.length <= 2 && sec.section === 'OVERVIEW' && !sec.children?.length) {
       // Short overview sections stay flat
       for (const item of sec.items) result.push(item);
     } else {
+      // Collect all items including children sub-groups
+      const allItems: NavItem[] = [...sec.items];
+      if (sec.children) {
+        for (const child of sec.children) {
+          allItems.push(...child.items);
+        }
+      }
       // Create a group parent with children
       result.push({
         label: sec.section.charAt(0) + sec.section.slice(1).toLowerCase(),
-        path: sec.items[0]?.path,
-        children: sec.items,
+        path: allItems[0]?.path,
+        children: allItems,
       });
     }
   }

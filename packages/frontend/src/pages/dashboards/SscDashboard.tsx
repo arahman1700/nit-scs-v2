@@ -110,11 +110,11 @@ export const SscDashboard: React.FC = () => {
 
         {/* ── Bids Table ─────────────────────────────────────────────────── */}
         <div className="glass-card rounded-2xl overflow-hidden">
-          <div className="p-4 border-b border-white/10">
+          <div className="px-4 py-4 border-b border-white/10">
             <h3 className="text-lg font-semibold text-white">SSC Bids</h3>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="overflow-x-auto mobile-scroll">
+            <table className="w-full text-left text-sm min-w-[580px]">
               <thead className="text-gray-400 border-b border-white/10">
                 <tr>
                   <th className="pb-3 pt-3 pl-4">Scrap Batch</th>

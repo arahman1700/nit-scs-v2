@@ -105,8 +105,8 @@ function EmptyState() {
 function OverdueApprovalsTable({ items }: { items: ExceptionData['overdueApprovals']['items'] }) {
   if (items.length === 0) return <EmptyState />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto mobile-scroll">
+      <table className="w-full min-w-[480px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
@@ -144,8 +144,8 @@ function OverdueApprovalsTable({ items }: { items: ExceptionData['overdueApprova
 function SlaBreachesTable({ items }: { items: ExceptionData['slaBreaches']['items'] }) {
   if (items.length === 0) return <EmptyState />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto mobile-scroll">
+      <table className="w-full min-w-[520px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -180,8 +180,8 @@ function SlaBreachesTable({ items }: { items: ExceptionData['slaBreaches']['item
 function LowStockTable({ items }: { items: ExceptionData['lowStock']['items'] }) {
   if (items.length === 0) return <EmptyState />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto mobile-scroll">
+      <table className="w-full min-w-[640px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -227,8 +227,8 @@ function LowStockTable({ items }: { items: ExceptionData['lowStock']['items'] })
 function StalledDocumentsTable({ items }: { items: ExceptionData['stalledDocuments']['items'] }) {
   if (items.length === 0) return <EmptyState />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto mobile-scroll">
+      <table className="w-full min-w-[580px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
@@ -270,8 +270,8 @@ function StalledDocumentsTable({ items }: { items: ExceptionData['stalledDocumen
 function ExpiringInventoryTable({ items }: { items: ExceptionData['expiringInventory']['items'] }) {
   if (items.length === 0) return <EmptyState />;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
+    <div className="overflow-x-auto mobile-scroll">
+      <table className="w-full min-w-[520px]">
         <thead>
           <tr className="border-b border-white/10">
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -364,7 +364,7 @@ export const ExceptionDashboard: React.FC = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <KpiCard
             icon={Clock}
             label="Overdue Approvals"

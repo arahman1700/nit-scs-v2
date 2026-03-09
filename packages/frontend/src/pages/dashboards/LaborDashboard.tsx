@@ -125,15 +125,15 @@ function StandardsTab() {
 
   return (
     <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/10">
+      <div className="px-4 sm:px-6 py-4 border-b border-white/10">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <Settings size={18} className="text-nesma-secondary" />
           Labor Standards Configuration
         </h2>
         <p className="text-sm text-gray-400 mt-1">Define standard minutes per task type for efficiency calculations</p>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div className="overflow-x-auto mobile-scroll">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-white/10">
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
@@ -344,7 +344,7 @@ function PerformanceTab() {
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-        <div className="flex items-center justify-center gap-6 mt-4 text-xs text-gray-400">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-4 text-xs text-gray-400">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-sm bg-emerald-500" /> 100%+ (Above Standard)
           </span>
@@ -359,14 +359,14 @@ function PerformanceTab() {
 
       {/* Detailed Table */}
       <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-        <div className="px-6 py-4 border-b border-white/10">
+        <div className="px-4 sm:px-6 py-4 border-b border-white/10">
           <h2 className="text-lg font-semibold text-white flex items-center gap-2">
             <Users size={18} className="text-nesma-secondary" />
             Detailed Performance Metrics
           </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto mobile-scroll">
+          <table className="w-full min-w-[640px]">
             <thead>
               <tr className="border-b border-white/10">
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">#</th>
@@ -477,7 +477,7 @@ export function LaborDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-white/5 rounded-xl w-fit">
+        <div className="flex gap-1 p-1 bg-white/5 rounded-xl w-full sm:w-fit overflow-x-auto mobile-scroll">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;
@@ -620,14 +620,14 @@ export function LaborDashboard() {
 
                 {/* Worker Performance Table */}
                 <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
-                  <div className="px-6 py-4 border-b border-white/10">
+                  <div className="px-4 sm:px-6 py-4 border-b border-white/10">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                       <Clock size={18} className="text-nesma-secondary" />
                       Detailed Worker Metrics
                     </h2>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
+                  <div className="overflow-x-auto mobile-scroll">
+                    <table className="w-full min-w-[700px]">
                       <thead>
                         <tr className="border-b border-white/10">
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">

@@ -204,7 +204,7 @@ export const ForecastDashboard: React.FC = () => {
         {/* ── KPI Cards ───────────────────────────────────────────────────── */}
         {!isLoading && warehouseId && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <KpiCard title="Items Tracked" value={kpis.totalTracked} icon={Package} color="bg-blue-500" />
               <KpiCard
                 title="Reorder Alerts"
@@ -350,8 +350,8 @@ export const ForecastDashboard: React.FC = () => {
                     {alerts.length} items
                   </span>
                 </div>
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                  <table className="w-full text-left text-sm">
+                <div className="overflow-x-auto mobile-scroll max-h-96 overflow-y-auto">
+                  <table className="w-full text-left text-sm min-w-[360px]">
                     <thead className="text-gray-400 border-b border-white/10 sticky top-0 bg-gray-900/90 backdrop-blur-sm">
                       <tr>
                         <th className="pb-3 pt-3 pl-4">Item</th>
@@ -433,8 +433,8 @@ export const ForecastDashboard: React.FC = () => {
               </div>
 
               {heatmapItems.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto mobile-scroll">
+                  <table className="w-full text-sm min-w-[780px]">
                     <thead>
                       <tr>
                         <th className="text-left text-gray-400 pb-3 pr-4 min-w-[140px]">Item</th>
