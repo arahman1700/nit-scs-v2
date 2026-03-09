@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { ClipboardCheck, AlertTriangle, CheckCircle, Eye, Package, Search } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useRfimList } from '@/domains/inbound/hooks/useRfim';
-import { useOsdList } from '@/domains/inbound/hooks/useOsd';
-import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useQciList } from '@/domains/inbound/hooks/useQci';
+import { useDrList } from '@/domains/inbound/hooks/useDr';
+import { useGrnList } from '@/domains/inbound/hooks/useGrn';
 import { useParams, useNavigate } from 'react-router-dom';
 import { displayStr } from '@/utils/displayStr';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -19,15 +19,15 @@ export const QCOfficerDashboard: React.FC = () => {
   ) as QCTab;
   const [search, setSearch] = useState('');
 
-  const rfimQuery = useRfimList({ pageSize: 200 });
-  const osdQuery = useOsdList({ pageSize: 200 });
-  const mrrvQuery = useMrrvList({ pageSize: 200 });
+  const qciQuery = useQciList({ pageSize: 200 });
+  const drQuery = useDrList({ pageSize: 200 });
+  const grnQuery = useGrnList({ pageSize: 200 });
 
-  const allRfims = (rfimQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allOsds = (osdQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allMrrvs = (mrrvQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allRfims = (qciQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allOsds = (drQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allMrrvs = (grnQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
 
-  const isLoading = rfimQuery.isLoading || osdQuery.isLoading || mrrvQuery.isLoading;
+  const isLoading = qciQuery.isLoading || drQuery.isLoading || grnQuery.isLoading;
 
   const openInspections = useMemo(
     () => allRfims.filter(r => r.status === 'Pending' || r.status === 'pending'),

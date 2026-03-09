@@ -22,13 +22,14 @@ vi.mock('../../../config/logger.js', () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 vi.mock('../../../utils/cache.js', () => ({ invalidateCachePattern: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
 });
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
-import { list, getById, create, update, submit, approve, issue, cancel } from './mirv.service.js';
+import { list, getById, create, update, submit, approve, issue, cancel } from './mi.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { submitForApproval, processApproval } from '../../workflow/services/approval.service.js';
 import {
@@ -46,7 +47,7 @@ const mockedConsumeReservationBatch = consumeReservationBatch as ReturnType<type
 const mockedReleaseReservation = releaseReservation as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 
-describe('mirv.service', () => {
+describe('mi.service', () => {
   beforeEach(() => {
     Object.assign(mockPrisma, createPrismaMock());
     vi.clearAllMocks();
@@ -231,7 +232,7 @@ describe('mirv.service', () => {
     it('should throw BusinessRuleError when MIRV is not draft', async () => {
       mockPrisma.mirv.findUnique.mockResolvedValue({ id: 'mirv-1', status: 'approved' });
 
-      await expect(update('mirv-1', {})).rejects.toThrow('Only draft MIRVs can be updated');
+      await expect(update('mirv-1', {})).rejects.toThrow('Only draft MIs can be updated');
     });
   });
 
@@ -248,7 +249,7 @@ describe('mirv.service', () => {
       const result = await submit('mirv-1', 'user-1');
 
       expect(result).toEqual({ id: 'mirv-1', approverRole: 'warehouse_manager', slaHours: 24 });
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mirv', 'draft', 'pending_approval');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('mi', 'draft', 'pending_approval');
     });
 
     it('should throw NotFoundError when MIRV not found', async () => {
@@ -352,7 +353,7 @@ describe('mirv.service', () => {
         mirvLines: [],
       });
 
-      await expect(approve('mirv-1', 'approve', 'user-1')).rejects.toThrow('MIRV must be pending approval');
+      await expect(approve('mirv-1', 'approve', 'user-1')).rejects.toThrow('MI must be pending approval');
     });
   });
 

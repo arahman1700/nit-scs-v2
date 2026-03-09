@@ -4,7 +4,7 @@ import { KpiCard } from '@/components/KpiCard';
 import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
 import { useShipmentList } from '@/domains/logistics/hooks/useShipments';
 import { useGatePassList } from '@/domains/logistics/hooks/useGatePasses';
-import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useGrnList } from '@/domains/inbound/hooks/useGrn';
 import { useSLACompliance, flattenSLA } from '@/domains/reporting/hooks/useDashboard';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -25,7 +25,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
   const joQuery = useJobOrderList({ pageSize: 200 });
   const shipQuery = useShipmentList({ pageSize: 200 });
   const gpQuery = useGatePassList({ pageSize: 200 });
-  const mrrvQuery = useMrrvList({ pageSize: 200 });
+  const mrrvQuery = useGrnList({ pageSize: 200 });
   const slaQuery = useSLACompliance();
 
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];

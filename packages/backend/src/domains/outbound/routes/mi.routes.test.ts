@@ -49,7 +49,7 @@ vi.mock('../../system/services/audit.service.js', () => ({
   createAuditLog: vi.fn().mockResolvedValue({}),
 }));
 
-vi.mock('../services/mirv.service.js', () => ({
+vi.mock('../services/mi.service.js', () => ({
   list: vi.fn().mockResolvedValue({ data: [], total: 0 }),
   getById: vi.fn().mockResolvedValue({ id: 'mi1', status: 'draft' }),
   create: vi.fn().mockResolvedValue({ id: 'mi1' }),
@@ -61,7 +61,7 @@ vi.mock('../services/mirv.service.js', () => ({
   cancel: vi.fn().mockResolvedValue({ updated: { id: 'mi1' }, wasReserved: false }),
 }));
 
-import * as mirvService from '../services/mirv.service.js';
+import * as miService from '../services/mi.service.js';
 
 const app = createTestApp();
 const request = supertest(app);
@@ -81,7 +81,7 @@ describe('MI Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(mirvService.list).toHaveBeenCalled();
+      expect(miService.list).toHaveBeenCalled();
     });
 
     it('returns 401 without auth', async () => {
@@ -96,7 +96,7 @@ describe('MI Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(mirvService.getById).toHaveBeenCalledWith('mi1');
+      expect(miService.getById).toHaveBeenCalledWith('mi1');
     });
   });
 

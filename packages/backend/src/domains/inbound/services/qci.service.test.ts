@@ -8,18 +8,33 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
+vi.mock('../../../utils/safe-status-transition.js', () => ({
+  safeStatusUpdate: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any) => {
+    const result = await delegate.updateMany({ where: { id, status: expectedStatus }, data });
+    return result.count;
+  }),
+  safeStatusUpdateTx: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any) => {
+    const result = await delegate.updateMany({ where: { id, status: expectedStatus }, data });
+    return result.count;
+  }),
+}));
+vi.mock('../../system/services/document-number.service.js', () => ({
+  generateDocumentNumber: vi.fn(),
+}));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
-  return { ...actual, assertTransition: vi.fn() };
+  return { ...actual, assertTransition: vi.fn(), canTransition: vi.fn() };
 });
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
-import { list, getById, update, start, complete } from './rfim.service.js';
-import { assertTransition } from '@nit-scs-v2/shared';
+import { list, getById, update, start, complete } from './qci.service.js';
+import { assertTransition, canTransition } from '@nit-scs-v2/shared';
 
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
+const mockedCanTransition = canTransition as ReturnType<typeof vi.fn>;
 
-describe('rfim.service', () => {
+describe('qci.service', () => {
   beforeEach(() => {
     Object.assign(mockPrisma, createPrismaMock());
     vi.clearAllMocks();
@@ -87,17 +102,17 @@ describe('rfim.service', () => {
   // getById
   // ─────────────────────────────────────────────────────────────────────────
   describe('getById', () => {
-    it('should return the RFIM when found', async () => {
-      const rfim = { id: 'rfim-1', rfimNumber: 'RFIM-001' };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+    it('should return the QCI when found', async () => {
+      const qci = { id: 'rfim-1', rfimNumber: 'RFIM-001' };
+      mockPrisma.rfim.findUnique.mockResolvedValue(qci);
 
       const result = await getById('rfim-1');
 
-      expect(result).toEqual(rfim);
+      expect(result).toEqual(qci);
       expect(mockPrisma.rfim.findUnique).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'rfim-1' } }));
     });
 
-    it('should throw NotFoundError when RFIM not found', async () => {
+    it('should throw NotFoundError when QCI not found', async () => {
       mockPrisma.rfim.findUnique.mockResolvedValue(null);
 
       await expect(getById('nonexistent')).rejects.toThrow(NotFoundError);
@@ -108,7 +123,7 @@ describe('rfim.service', () => {
   // update
   // ─────────────────────────────────────────────────────────────────────────
   describe('update', () => {
-    it('should update an existing RFIM', async () => {
+    it('should update an existing QCI', async () => {
       const existing = { id: 'rfim-1', comments: null };
       const updated = { id: 'rfim-1', comments: 'Updated' };
       mockPrisma.rfim.findUnique.mockResolvedValue(existing);
@@ -123,7 +138,7 @@ describe('rfim.service', () => {
       });
     });
 
-    it('should throw NotFoundError when RFIM not found', async () => {
+    it('should throw NotFoundError when QCI not found', async () => {
       mockPrisma.rfim.findUnique.mockResolvedValue(null);
 
       await expect(update('nonexistent', {})).rejects.toThrow(NotFoundError);
@@ -134,18 +149,18 @@ describe('rfim.service', () => {
   // start
   // ─────────────────────────────────────────────────────────────────────────
   describe('start', () => {
-    it('should transition RFIM to in_progress and set inspectorId', async () => {
-      const rfim = { id: 'rfim-1', status: 'pending' };
+    it('should transition QCI to in_progress and set inspectorId', async () => {
+      const qci = { id: 'rfim-1', status: 'pending' };
       mockPrisma.rfim.findUnique
-        .mockResolvedValueOnce(rfim)
-        .mockResolvedValueOnce({ ...rfim, status: 'in_progress', inspectorId: 'user-1' });
+        .mockResolvedValueOnce(qci)
+        .mockResolvedValueOnce({ ...qci, status: 'in_progress', inspectorId: 'user-1' });
       mockedAssertTransition.mockReturnValue(undefined);
       mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await start('rfim-1', 'user-1');
 
       expect(result.status).toBe('in_progress');
-      expect(mockedAssertTransition).toHaveBeenCalledWith('rfim', 'pending', 'in_progress');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('qci', 'pending', 'in_progress');
       expect(mockPrisma.rfim.updateMany).toHaveBeenCalledWith({
         where: { id: 'rfim-1', status: 'pending' },
         data: expect.objectContaining({
@@ -155,15 +170,15 @@ describe('rfim.service', () => {
       });
     });
 
-    it('should throw NotFoundError when RFIM not found', async () => {
+    it('should throw NotFoundError when QCI not found', async () => {
       mockPrisma.rfim.findUnique.mockResolvedValue(null);
 
       await expect(start('nonexistent', 'user-1')).rejects.toThrow(NotFoundError);
     });
 
     it('should call assertTransition before updating', async () => {
-      const rfim = { id: 'rfim-1', status: 'completed' };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+      const qci = { id: 'rfim-1', status: 'completed' };
+      mockPrisma.rfim.findUnique.mockResolvedValue(qci);
       mockedAssertTransition.mockImplementation(() => {
         throw new BusinessRuleError('Invalid transition');
       });
@@ -177,11 +192,13 @@ describe('rfim.service', () => {
   // complete
   // ─────────────────────────────────────────────────────────────────────────
   describe('complete', () => {
-    it('should complete RFIM with pass result', async () => {
-      const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
-      const updated = { ...rfim, status: 'completed', result: 'pass' };
-      mockPrisma.rfim.findUnique.mockResolvedValueOnce(rfim).mockResolvedValueOnce(updated);
+    it('should complete QCI with pass result', async () => {
+      const qci = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
+      const updated = { ...qci, status: 'completed', result: 'pass' };
+      // First findUnique is outside transaction, second is inside (tx.rfim.findUnique)
+      mockPrisma.rfim.findUnique.mockResolvedValueOnce(qci).mockResolvedValueOnce(updated);
       mockedAssertTransition.mockReturnValue(undefined);
+      mockedCanTransition.mockReturnValue(false); // parent GRN not transitionable
       mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await complete('rfim-1', 'pass', 'All good');
@@ -193,13 +210,15 @@ describe('rfim.service', () => {
       });
     });
 
-    it('should complete RFIM with fail result', async () => {
-      const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: 'existing' };
+    it('should complete QCI with fail result', async () => {
+      const qci = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: 'existing' };
       mockPrisma.rfim.findUnique
-        .mockResolvedValueOnce(rfim)
-        .mockResolvedValueOnce({ ...rfim, status: 'completed', result: 'fail' });
+        .mockResolvedValueOnce(qci)
+        .mockResolvedValueOnce({ ...qci, status: 'completed', result: 'fail' });
       mockedAssertTransition.mockReturnValue(undefined);
       mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
+      // Mock for auto-create DR check: existing DR found, so no new DR created
+      mockPrisma.osdReport.findFirst.mockResolvedValue({ id: 'dr-existing' });
 
       await complete('rfim-1', 'fail');
 
@@ -209,15 +228,15 @@ describe('rfim.service', () => {
       expect(updateArgs.data.comments).toBe('existing');
     });
 
-    it('should throw NotFoundError when RFIM not found', async () => {
+    it('should throw NotFoundError when QCI not found', async () => {
       mockPrisma.rfim.findUnique.mockResolvedValue(null);
 
       await expect(complete('nonexistent', 'pass')).rejects.toThrow(NotFoundError);
     });
 
     it('should throw BusinessRuleError for invalid result', async () => {
-      const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+      const qci = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
+      mockPrisma.rfim.findUnique.mockResolvedValue(qci);
       mockedAssertTransition.mockReturnValue(undefined);
 
       await expect(complete('rfim-1', 'invalid')).rejects.toThrow(
@@ -226,8 +245,8 @@ describe('rfim.service', () => {
     });
 
     it('should throw BusinessRuleError for empty result', async () => {
-      const rfim = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
-      mockPrisma.rfim.findUnique.mockResolvedValue(rfim);
+      const qci = { id: 'rfim-1', status: 'in_progress', mrrvId: 'mrrv-1', comments: null };
+      mockPrisma.rfim.findUnique.mockResolvedValue(qci);
       mockedAssertTransition.mockReturnValue(undefined);
 
       await expect(complete('rfim-1', '')).rejects.toThrow(

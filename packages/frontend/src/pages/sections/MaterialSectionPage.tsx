@@ -18,8 +18,6 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
 import {
-  useMrrvList,
-  useRfimList,
   useGrnList,
   useQciList,
   useDrList,
@@ -37,9 +35,9 @@ export { MaterialSectionPage as WarehouseSectionPage };
 
 export const MaterialSectionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { data: grnAll, isLoading } = useMrrvList({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
-  const { data: grnPending } = useMrrvList({ pageSize: 1, status: 'pending_qc' });
-  const { data: qciPending } = useRfimList({ pageSize: 1, status: 'pending' });
+  const { data: grnAll, isLoading } = useGrnList({ pageSize: 10, sortBy: 'createdAt', sortDir: 'desc' });
+  const { data: grnPending } = useGrnList({ pageSize: 1, status: 'pending_qc' });
+  const { data: qciPending } = useQciList({ pageSize: 1, status: 'pending' });
 
   const grnQuery = useGrnList({ pageSize: 50, sortBy: 'createdAt', sortDir: 'desc' });
   const qciQuery = useQciList({ pageSize: 50 });

@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Save, LogOut, CheckCircle } from 'lucide-react';
-import { useMirvList } from '@/domains/outbound/hooks/useMirv';
-import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
+import { useMiList } from '@/domains/outbound/hooks/useMi';
+import { useGrnList } from '@/domains/inbound/hooks/useGrn';
 import { useCreateGatePass } from '@/domains/logistics/hooks/useGatePasses';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
@@ -14,8 +14,8 @@ export const GatePassForm: React.FC = () => {
   const linkedMirv = searchParams.get('mirv');
   const linkedMrrv = searchParams.get('mrrv');
 
-  const mirvQuery = useMirvList({ pageSize: 100 });
-  const mrrvQuery = useMrrvList({ pageSize: 100 });
+  const mirvQuery = useMiList({ pageSize: 100 });
+  const mrrvQuery = useGrnList({ pageSize: 100 });
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const mirvData = (mirvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
   const mrrvData = (mrrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;

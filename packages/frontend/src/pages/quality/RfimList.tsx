@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Eye, AlertTriangle, CheckCircle, Clock, XCircle, FileCheck, X } from 'lucide-react';
-import { useRfimList } from '@/domains/inbound/hooks/useRfim';
+import { useQciList } from '@/domains/inbound/hooks/useQci';
 import { DocumentActions } from '@/components/DocumentActions';
 import { ExportButton } from '@/components/ExportButton';
 import type { RFIM } from '@nit-scs-v2/shared/types';
@@ -64,7 +64,7 @@ export const RfimList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState<RFIM | null>(null);
 
-  const rfimQuery = useRfimList({ pageSize: 200 });
+  const rfimQuery = useQciList({ pageSize: 200 });
   const rfimData = (rfimQuery.data?.data ?? []) as RFIM[];
 
   // Filter Logic

@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { FileText, Truck, Package, Briefcase, PlusCircle, Clock, CheckCircle, Search, ArrowRight } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useMiList } from '@/domains/outbound/hooks/useMi';
 import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
-import { useMrfList } from '@/domains/outbound/hooks/useMrf';
+import { useMrList } from '@/domains/outbound/hooks/useMr';
 import { useProjects, useInventory } from '@/domains/master-data/hooks/useMasterData';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
@@ -28,9 +28,9 @@ export const SiteEngineerDashboard: React.FC = () => {
   })();
 
   // API hooks
-  const mirvQuery = useMirvList({ pageSize: 200 });
+  const mirvQuery = useMiList({ pageSize: 200 });
   const joQuery = useJobOrderList({ pageSize: 200 });
-  const mrfQuery = useMrfList({ pageSize: 200 });
+  const mrfQuery = useMrList({ pageSize: 200 });
   const projectsQuery = useProjects({ pageSize: 200 });
   const inventoryQuery = useInventory({ pageSize: 100 });
 

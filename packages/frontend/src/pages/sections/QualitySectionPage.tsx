@@ -6,7 +6,7 @@ import { SectionLandingPage } from '@/components/SectionLandingPage';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
-import { useMrvList, useRfimList, useOsdList } from '@/api/hooks';
+import { useMrnList, useQciList, useDrList } from '@/api/hooks';
 import { CHART_PALETTE } from '@/config/chartTheme';
 
 const LazyRfimList = React.lazy(() => import('@/pages/quality/RfimList').then(m => ({ default: m.RfimList })));
@@ -35,9 +35,9 @@ function StatusBadge({ status }: { status: string }) {
 export const QualitySectionPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const mrvQuery = useMrvList({ pageSize: 50 });
-  const rfimQuery = useRfimList({ pageSize: 50 });
-  const osdQuery = useOsdList({ pageSize: 50 });
+  const mrvQuery = useMrnList({ pageSize: 50 });
+  const rfimQuery = useQciList({ pageSize: 50 });
+  const osdQuery = useDrList({ pageSize: 50 });
 
   const mrvData = mrvQuery.data?.data ?? [];
   const rfimData = rfimQuery.data?.data ?? [];

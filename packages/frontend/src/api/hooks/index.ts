@@ -25,7 +25,14 @@ export {
   useReceiveGrn,
   useStoreGrn,
 } from '../../domains/inbound/hooks/useGrn';
-export { useQciList, useQci, useUpdateQci, useStartQci, useCompleteQci } from '../../domains/inbound/hooks/useQci';
+export {
+  useQciList,
+  useQci,
+  useCreateQci,
+  useUpdateQci,
+  useStartQci,
+  useCompleteQci,
+} from '../../domains/inbound/hooks/useQci';
 export {
   useDrList,
   useDr,

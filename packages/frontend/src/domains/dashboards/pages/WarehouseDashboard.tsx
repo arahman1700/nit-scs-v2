@@ -16,9 +16,9 @@ import {
   Undo2,
 } from 'lucide-react';
 import { useInventory } from '@/domains/master-data/hooks/useMasterData';
-import { useMrrvList } from '@/domains/inbound/hooks/useMrrv';
-import { useMirvList } from '@/domains/outbound/hooks/useMirv';
-import { useMrvList } from '@/domains/outbound/hooks/useMrv';
+import { useGrnList } from '@/domains/inbound/hooks/useGrn';
+import { useMiList } from '@/domains/outbound/hooks/useMi';
+import { useMrnList } from '@/domains/outbound/hooks/useMrn';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { displayStr } from '@/utils/displayStr';
@@ -85,9 +85,9 @@ export const WarehouseDashboard: React.FC = () => {
   const [scannerOpen, setScannerOpen] = useState(false);
 
   // API hooks
-  const mrrvQuery = useMrrvList({ pageSize: 100 });
-  const mirvQuery = useMirvList({ pageSize: 100 });
-  const mrvQuery = useMrvList({ pageSize: 100 });
+  const mrrvQuery = useGrnList({ pageSize: 100 });
+  const mirvQuery = useMiList({ pageSize: 100 });
+  const mrvQuery = useMrnList({ pageSize: 100 });
   const inventoryQuery = useInventory({ pageSize: 100 });
 
   // Normalize InventoryLevel records (API shape) into display-friendly objects

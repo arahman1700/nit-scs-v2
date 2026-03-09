@@ -40,14 +40,14 @@ import { getResourceConfig } from '@/config/resourceColumns';
 import type { StatusHistoryEntry } from '@nit-scs-v2/shared/types';
 import type { ListParams } from '@/api/types';
 import {
-  useMrrvList,
-  useMirvList,
-  useMrvList,
+  useGrnList,
+  useMiList,
+  useMrnList,
   useShipments,
   useInventory,
   useJobOrders,
-  useRfimList,
-  useOsdList,
+  useQciList,
+  useDrList,
   useProjects,
   useEmployees,
   useSuppliers,
@@ -100,14 +100,14 @@ interface AnyQueryResult {
 }
 
 function useResourceData(resource: string | undefined, params: ListParams): AnyQueryResult {
-  const mrrv = useMrrvList(resource === 'mrrv' ? params : undefined);
-  const mirv = useMirvList(resource === 'mirv' ? params : undefined);
-  const mrv = useMrvList(resource === 'mrv' ? params : undefined);
+  const mrrv = useGrnList(resource === 'mrrv' ? params : undefined);
+  const mirv = useMiList(resource === 'mirv' ? params : undefined);
+  const mrv = useMrnList(resource === 'mrv' ? params : undefined);
   const shipments = useShipments(resource === 'shipments' || resource === 'reports' ? params : undefined);
   const inventory = useInventory(resource === 'inventory' ? params : undefined);
   const jobOrders = useJobOrders(resource === 'job-orders' ? params : undefined);
-  const rfim = useRfimList(resource === 'rfim' ? params : undefined);
-  const osd = useOsdList(resource === 'osd' ? params : undefined);
+  const rfim = useQciList(resource === 'rfim' ? params : undefined);
+  const osd = useDrList(resource === 'osd' ? params : undefined);
   const projects = useProjects(resource === 'projects' ? params : undefined);
   const employees = useEmployees(resource === 'employees' ? params : undefined);
   const suppliers = useSuppliers(resource === 'suppliers' ? params : undefined);

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, CheckCircle, AlertCircle } from 'lucide-react';
 import type { VoucherLineItem } from '@nit-scs-v2/shared/types';
 import { LineItemsTable } from '@/components/LineItemsTable';
-import { useCreateMrf } from '@/domains/outbound/hooks/useMrf';
+import { useCreateMr } from '@/domains/outbound/hooks/useMr';
 import { useWarehouses, useProjects } from '@/domains/master-data/hooks/useMasterData';
 import { useCurrentUser } from '@/domains/auth/hooks/useAuth';
 import { previewNextNumber } from '@/utils/autoNumber';
@@ -15,7 +15,7 @@ export const MrfForm: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>({});
   const [lineItems, setLineItems] = useState<VoucherLineItem[]>([]);
 
-  const createMutation = useCreateMrf();
+  const createMutation = useCreateMr();
   const meQuery = useCurrentUser();
   const currentUserName = meQuery.data?.data?.fullName ?? '';
   const warehouseQuery = useWarehouses({ pageSize: 200 });

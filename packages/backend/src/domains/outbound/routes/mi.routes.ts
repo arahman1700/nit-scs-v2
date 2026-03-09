@@ -1,12 +1,11 @@
 /**
  * MI (Material Issuance) Routes — V2 rename of MIRV
- * Delegates to V1 mirv.service internally.
  */
 import type { Server as SocketIOServer } from 'socket.io';
 import { createDocumentRouter } from '../../../utils/document-factory.js';
 import { miCreateSchema, miUpdateSchema, approvalActionSchema } from '../../../schemas/document.schema.js';
 import { emitToAll } from '../../../socket/setup.js';
-import * as mirvService from '../services/mirv.service.js';
+import * as miService from '../services/mi.service.js';
 import type { MiCreateDto, MiUpdateDto } from '../../../types/dto.js';
 
 const WRITE_ROLES = ['admin', 'manager', 'site_engineer', 'warehouse_supervisor'];
@@ -17,19 +16,19 @@ export default createDocumentRouter({
   resource: 'mi',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'requestedById' },
 
-  list: mirvService.list,
-  getById: mirvService.getById,
+  list: miService.list,
+  getById: miService.getById,
 
   createSchema: miCreateSchema,
   createRoles: WRITE_ROLES,
   create: (body, userId) => {
     const { lines, ...headerData } = body as MiCreateDto;
-    return mirvService.create(headerData, lines, userId);
+    return miService.create(headerData, lines, userId);
   },
 
   updateSchema: miUpdateSchema,
   updateRoles: WRITE_ROLES,
-  update: (id, body) => mirvService.update(id, body as MiUpdateDto),
+  update: (id, body) => miService.update(id, body as MiUpdateDto),
 
   actions: [
     {
@@ -37,7 +36,7 @@ export default createDocumentRouter({
       roles: WRITE_ROLES,
       handler: (id, req) => {
         const io = req.app.get('io') as SocketIOServer | undefined;
-        return mirvService.submit(id, req.user!.userId, io);
+        return miService.submit(id, req.user!.userId, io);
       },
       socketEvent: 'mi:submitted',
       socketData: r => {
@@ -52,7 +51,7 @@ export default createDocumentRouter({
       handler: async (id, req) => {
         const { action, comments } = req.body as { action: 'approve' | 'reject'; comments?: string };
         const io = req.app.get('io') as SocketIOServer | undefined;
-        const result = await mirvService.approve(id, action, req.user!.userId, comments, io);
+        const result = await miService.approve(id, action, req.user!.userId, comments, io);
         if (action === 'approve' && io) {
           emitToAll(io, 'inventory:reserved', { miId: id, warehouseId: result.warehouseId });
         }
@@ -67,7 +66,7 @@ export default createDocumentRouter({
     {
       path: 'sign-qc',
       roles: ['admin', 'qc_officer'],
-      handler: (id, req) => mirvService.signQc(id, req.user!.userId),
+      handler: (id, req) => miService.signQc(id, req.user!.userId),
       socketEvent: 'mi:qc_signed',
       socketData: () => ({ status: 'approved', qcSigned: true }),
     },
@@ -75,7 +74,7 @@ export default createDocumentRouter({
       path: 'issue',
       roles: ['admin', 'warehouse_supervisor', 'warehouse_staff'],
       handler: async (id, req) => {
-        const result = await mirvService.issue(id, req.user!.userId);
+        const result = await miService.issue(id, req.user!.userId);
         const io = req.app.get('io') as SocketIOServer | undefined;
         if (io) emitToAll(io, 'inventory:updated', { warehouseId: result.warehouseId, miId: id });
         return result;
@@ -90,7 +89,7 @@ export default createDocumentRouter({
       path: 'cancel',
       roles: ['admin', 'manager'],
       handler: async (id, req) => {
-        const result = await mirvService.cancel(id);
+        const result = await miService.cancel(id);
         if (result.wasReserved) {
           const io = req.app.get('io') as SocketIOServer | undefined;
           if (io) emitToAll(io, 'inventory:released', { miId: id, warehouseId: result.warehouseId });

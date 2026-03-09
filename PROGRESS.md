@@ -5,12 +5,12 @@
 ---
 
 ## RESUME POINT
-- المرحلة: Phase 2 — Security Hardening
-- آخر ملف: packages/backend/src/domains/inventory/services/inventory.service.ts
-- الحالة: Phase 1 مكتمل (3 Critical issues حُلّت)
-- التالي: Phase 2 — localStorage token → httpOnly cookie, requirePermission على 31 route, CSRF
-- الاختبارات: 4,160/4,160 passed (0 failures)
-- آخر commit: 5922cb9 fix: make status+stock operations atomic, fix cycle-count optimistic locking
+- المرحلة: Phase 4 — N+1 & Performance
+- آخر ملف: packages/backend/src/domains/system/services/bulk.service.ts
+- الحالة: Phase 3 مكتمل (V1/V2 unification — 6 service pairs unified, frontend migrated)
+- التالي: Phase 4 — MR/MRF checkStock() N+1 queries fix
+- الاختبارات: 3,988/3,988 passed (0 failures, 172 deleted redundant V1 tests)
+- آخر commit: (pending)
 
 ---
 
@@ -19,10 +19,10 @@
 ### Tests
 | Package | Files | Tests | Status |
 |---------|-------|-------|--------|
-| Backend | 153 | 3,183 | ✅ ALL PASSED |
+| Backend | 147 | 3,011 | ✅ ALL PASSED |
 | Frontend | 81 | 663 | ✅ ALL PASSED |
 | Shared | 5 | 314 | ✅ ALL PASSED |
-| **Total** | **239** | **4,160** | **✅ 0 failures** |
+| **Total** | **233** | **3,988** | **✅ 0 failures** |
 
 ### Build
 | Package | Status | Notes |
@@ -51,9 +51,9 @@
 | $queryRawUnsafe | ✅ FIXED + ESLint ban |
 | xlsx vulnerabilities | ✅ FIXED (exceljs) |
 | Safe status transitions | ✅ FIXED |
-| localStorage tokens | ❌ NOT FIXED |
+| localStorage tokens | ✅ FIXED (httpOnly cookies) |
 | CSRF protection | ❌ NOT FIXED |
-| requirePermission gaps | ⚠️ ~31 routes missing |
+| requirePermission gaps | ✅ FIXED (~31 routes secured) |
 
 ### Frontend Status
 | Item | Status |
@@ -69,10 +69,10 @@
 ### Known Issues Summary
 | Severity | Count | Status |
 |----------|-------|--------|
-| Critical | 3 | ❌ Pending |
-| High | 10 | ❌ Pending |
+| Critical | 3 | ✅ Done |
+| High | 10 | ⚠️ 2 Pending (9-10) |
 | Medium | 5 | ❌ Pending |
-| Resolved | 12 | ✅ Done |
+| Resolved | 20 | ✅ Done |
 
 ### Architecture
 - 14 backend domains | 120+ Prisma models | 250+ API endpoints
@@ -102,8 +102,37 @@
 - 6 test files محدّثة لتتوافق مع الأنماط الجديدة
 #### قرارات معمارية
 - قرار: Optional externalTx بدل Tx functions منفصلة — backward compatible، أقل تكرار
-### Phase 2: Security Hardening — PENDING
-### Phase 3: V1/V2 Unification — PENDING
+### Phase 2: Security Hardening — ✅ DONE
+#### ما تم
+- Frontend migrated from localStorage to httpOnly cookie auth (withCredentials: true)
+- ~31 routes secured with requirePermission middleware
+- Factory routes got `resource:` field for automatic RBAC
+- Custom routes got explicit requirePermission per-endpoint
+- Added cycle_count resource to 5 roles in shared/permissions.ts
+- 6 test files updated to mock hasPermissionDB
+#### قرارات معمارية
+- قرار: Two-pronged RBAC — factory routes use `resource:` field, custom routes use explicit middleware
+- CSRF deferred to later phase (MEDIUM priority, needs research on SPA best practices)
+### Phase 3: V1/V2 Unification — ✅ DONE
+#### ما تم
+- 6 V1 service files converted to thin re-exports of V2 services (~2,600 LOC → ~60 LOC)
+  - mrrv.service.ts → re-exports grn.service.ts
+  - mirv.service.ts → re-exports mi.service.ts
+  - mrv.service.ts → re-exports mrn.service.ts
+  - mrf.service.ts → re-exports mr.service.ts
+  - rfim.service.ts → re-exports qci.service.ts
+  - osd.service.ts → re-exports dr.service.ts
+- mi.routes.ts fixed: was importing mirv.service (V1), now imports mi.service (V2)
+- bulk.service.ts migrated to V2 imports + V2 docType aliases (grn/mrrv both work)
+- 6 V1 test files deleted (redundant with V2 tests)
+- 7 V2 test files fixed (imports, assertions, mocks)
+- 12 frontend files migrated from V1 hooks to V2 hooks
+- useDocumentForm.ts updated to use V2 hooks directly
+#### قرارات معمارية
+- قرار: Re-export pattern — V1 services become thin re-exports of V2 services
+  - السبب: أقل كود، backward compatible، تلقائي لكل المستهلكين
+  - البدائل: Import-and-delegate (أكثر boilerplate بلا فائدة)
+- V1 route paths preserved as aliases — backward compatibility per MISSION requirements
 ### Phase 4: N+1 & Performance — PENDING
 ### Phase 5: Type Safety — PENDING
 ### Phase 6: SOW Alignment — PENDING

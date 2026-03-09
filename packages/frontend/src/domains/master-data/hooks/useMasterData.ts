@@ -316,11 +316,21 @@ export const {
 /** Returns the correct useList hook given a URL resource parameter */
 export function getResourceListHook(resource: string) {
   const hookMap: Record<string, (params?: ListParams) => ReturnType<typeof useQuery>> = {
+    // V1 names (backward compat)
     mrrv: useMrrvList,
     mirv: useMirvList,
     mrv: useMrvList,
     rfim: useRfimList,
     osd: useOsdList,
+    mrf: useMrfList,
+    // V2 names (preferred)
+    grn: useMrrvList,
+    mi: useMirvList,
+    mrn: useMrvList,
+    qci: useRfimList,
+    dr: useOsdList,
+    mr: useMrfList,
+    // Other resources
     'job-orders': useJobOrders,
     'gate-pass': useGatePasses,
     'stock-transfer': useStockTransfers,

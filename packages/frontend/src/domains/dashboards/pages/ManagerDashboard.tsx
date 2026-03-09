@@ -13,9 +13,9 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { KpiCard } from '@/components/KpiCard';
-import { useMirvList } from '@/domains/outbound/hooks/useMirv';
+import { useMiList } from '@/domains/outbound/hooks/useMi';
 import { useJobOrderList } from '@/domains/job-orders/hooks/useJobOrders';
-import { useMrfList } from '@/domains/outbound/hooks/useMrf';
+import { useMrList } from '@/domains/outbound/hooks/useMr';
 import { useStockTransferList } from '@/domains/transfers/hooks/useStockTransfers';
 import { useGrnList } from '@/domains/inbound/hooks/useGrn';
 import { useScrapList } from '@/domains/inventory/hooks/useScrap';
@@ -69,9 +69,9 @@ export const ManagerDashboard: React.FC = () => {
   const [docPage, setDocPage] = useState(1);
 
   // API data
-  const mirvQuery = useMirvList({ pageSize: 200 });
+  const mirvQuery = useMiList({ pageSize: 200 });
   const joQuery = useJobOrderList({ pageSize: 200 });
-  const mrfQuery = useMrfList({ pageSize: 200 });
+  const mrfQuery = useMrList({ pageSize: 200 });
   const stQuery = useStockTransferList({ pageSize: 200 });
   const grnQuery = useGrnList({ pageSize: 200 });
   const scrapQuery = useScrapList({ pageSize: 200 });

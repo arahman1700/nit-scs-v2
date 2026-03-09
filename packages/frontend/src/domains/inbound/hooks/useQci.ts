@@ -26,6 +26,18 @@ export function useQci(id: string | undefined) {
   });
 }
 
+// ── Create ──────────────────────────────────────────────────────────────────
+export function useCreateQci() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: Partial<RFIM>) => {
+      const { data } = await apiClient.post<ApiResponse<RFIM>>('/qci', body);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['qci'] }),
+  });
+}
+
 // ── Update ──────────────────────────────────────────────────────────────────
 export function useUpdateQci() {
   const qc = useQueryClient();

@@ -5,28 +5,14 @@ import {
   useProjects,
   useWarehouses,
   useSuppliers,
-  useMrrvList,
+  useGrnList,
   useEmployees,
   useUpload,
   useCurrentUser,
 } from '@/api/hooks';
-import {
-  useCreateMrrv,
-  useCreateMirv,
-  useCreateMrv,
-  useCreateJobOrder,
-  useCreateRfim,
-  useCreateOsd,
-} from '@/api/hooks';
-import {
-  useUpdateMrrv,
-  useUpdateMirv,
-  useUpdateMrv,
-  useUpdateJobOrder,
-  useUpdateRfim,
-  useUpdateOsd,
-} from '@/api/hooks';
-import { useMrrv, useMirv, useMrv, useJobOrder, useRfim, useOsd } from '@/api/hooks';
+import { useCreateGrn, useCreateMi, useCreateMrn, useCreateJobOrder, useCreateQci, useCreateDr } from '@/api/hooks';
+import { useUpdateGrn, useUpdateMi, useUpdateMrn, useUpdateJobOrder, useUpdateQci, useUpdateDr } from '@/api/hooks';
+import { useGrn, useMi, useMrn, useJobOrder, useQci, useDr } from '@/api/hooks';
 import type { VoucherLineItem, ApiResponse } from '@nit-scs-v2/shared/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,12 +109,12 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
   const uploadMutation = useUpload();
 
   // Fetch existing document for edit mode
-  const mrrvQuery = useMrrv(formType === 'mrrv' ? id : undefined);
-  const mirvQuery = useMirv(formType === 'mirv' ? id : undefined);
-  const mrvQuery = useMrv(formType === 'mrv' ? id : undefined);
+  const mrrvQuery = useGrn(formType === 'mrrv' ? id : undefined);
+  const mirvQuery = useMi(formType === 'mirv' ? id : undefined);
+  const mrvQuery = useMrn(formType === 'mrv' ? id : undefined);
   const joQuery = useJobOrder(formType === 'jo' ? id : undefined);
-  const rfimQuery = useRfim(formType === 'rfim' ? id : undefined);
-  const osdQuery = useOsd(formType === 'osd' ? id : undefined);
+  const rfimQuery = useQci(formType === 'rfim' ? id : undefined);
+  const osdQuery = useDr(formType === 'osd' ? id : undefined);
 
   const detailQueryMap: Record<string, AnyDetailQuery> = {
     mrrv: mrrvQuery,
@@ -174,26 +160,26 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
   const projectsQuery = useProjects({ pageSize: 200 });
   const warehousesQuery = useWarehouses({ pageSize: 200 });
   const suppliersQuery = useSuppliers({ pageSize: 200 });
-  const mrrvListQuery = useMrrvList({ pageSize: 200 });
+  const mrrvListQuery = useGrnList({ pageSize: 200 });
   const employeesQuery = useEmployees({ pageSize: 200 });
 
   // Smart defaults removed (deferred feature — Intelligence module)
 
   // Create mutations
-  const createMrrv = useCreateMrrv();
-  const createMirv = useCreateMirv();
-  const createMrv = useCreateMrv();
+  const createMrrv = useCreateGrn();
+  const createMirv = useCreateMi();
+  const createMrv = useCreateMrn();
   const createJo = useCreateJobOrder();
-  const createRfim = useCreateRfim();
-  const createOsd = useCreateOsd();
+  const createRfim = useCreateQci();
+  const createOsd = useCreateDr();
 
   // Update mutations
-  const updateMrrv = useUpdateMrrv();
-  const updateMirv = useUpdateMirv();
-  const updateMrv = useUpdateMrv();
+  const updateMrrv = useUpdateGrn();
+  const updateMirv = useUpdateMi();
+  const updateMrv = useUpdateMrn();
   const updateJo = useUpdateJobOrder();
-  const updateRfim = useUpdateRfim();
-  const updateOsd = useUpdateOsd();
+  const updateRfim = useUpdateQci();
+  const updateOsd = useUpdateDr();
 
   const createMutationMap: Record<string, AnyCreateMutation> = {
     mrrv: createMrrv,
@@ -311,7 +297,7 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
     if (Object.keys(defaults).length > 0) {
       setFormData(prev => ({ ...defaults, ...prev }));
     }
-  }, [formConfig.sections, isEditMode]);  
+  }, [formConfig.sections, isEditMode]);
 
   // Dynamic JO sections based on selected type
   const joTypeSections = useMemo(() => {

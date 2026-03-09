@@ -8,6 +8,7 @@ vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../inventory/services/inventory.service.js', () => ({ getStockLevel: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
@@ -21,6 +22,7 @@ import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { getStockLevel } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../../../events/event-bus.js';
 import {
   list,
   getById,
@@ -34,11 +36,13 @@ import {
   fulfill,
   reject,
   cancel,
-} from './mrf.service.js';
+  convertToJo,
+} from './mr.service.js';
 
 const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const mockedGetStockLevel = getStockLevel as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
+const mockedEventBus = eventBus as { publish: ReturnType<typeof vi.fn> };
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -88,7 +92,7 @@ function makeMrfLine(overrides: Record<string, unknown> = {}) {
 
 // ═════════════════════════════════════════════════════════════════════════
 
-describe('mrf.service', () => {
+describe('mr.service', () => {
   beforeEach(() => {
     Object.assign(mockPrisma, createPrismaMock());
     vi.clearAllMocks();
@@ -318,7 +322,7 @@ describe('mrf.service', () => {
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(makeMrf({ status: 'submitted' }));
 
       await expect(update('mrf-1', { notes: 'x' })).rejects.toThrow(BusinessRuleError);
-      await expect(update('mrf-1', { notes: 'x' })).rejects.toThrow('Only draft MRFs can be updated');
+      await expect(update('mrf-1', { notes: 'x' })).rejects.toThrow('Only draft MRs can be updated');
     });
 
     it('transforms date fields to Date objects', async () => {
@@ -345,7 +349,7 @@ describe('mrf.service', () => {
 
       await submit('mrf-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'draft', 'submitted');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('mr', 'draft', 'submitted');
       expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
         where: { id: 'mrf-1', status: 'draft' },
         data: { status: 'submitted' },
@@ -371,7 +375,7 @@ describe('mrf.service', () => {
 
       await review('mrf-1', 'reviewer-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'submitted', 'under_review');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('mr', 'submitted', 'under_review');
       expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
         where: { id: 'mrf-1', status: 'submitted' },
         data: expect.objectContaining({
@@ -401,7 +405,7 @@ describe('mrf.service', () => {
 
       await approve('mrf-1', 'approver-1');
 
-      expect(mockedAssertTransition).toHaveBeenCalledWith('mrf', 'under_review', 'approved');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('mr', 'under_review', 'approved');
       expect(mockPrisma.materialRequisition.updateMany).toHaveBeenCalledWith({
         where: { id: 'mrf-1', status: 'under_review' },
         data: expect.objectContaining({
@@ -434,7 +438,7 @@ describe('mrf.service', () => {
       );
 
       await expect(checkStock('mrf-1')).rejects.toThrow(BusinessRuleError);
-      await expect(checkStock('mrf-1')).rejects.toThrow('MRF must be approved to check stock');
+      await expect(checkStock('mrf-1')).rejects.toThrow('MR must be approved to check stock');
     });
 
     it('checks stock for each line across project warehouses', async () => {
@@ -825,6 +829,94 @@ describe('mrf.service', () => {
       const result = await cancel('mrf-1');
 
       expect(result.status).toBe('cancelled');
+    });
+  });
+
+  // ─── convertToJo ─────────────────────────────────────────────────────
+
+  describe('convertToJo', () => {
+    it('throws NotFoundError when MR not found', async () => {
+      mockPrisma.materialRequisition.findUnique.mockResolvedValue(null);
+
+      await expect(convertToJo('nonexistent', 'user-1')).rejects.toThrow(NotFoundError);
+    });
+
+    it('throws BusinessRuleError when status is not eligible', async () => {
+      mockPrisma.materialRequisition.findUnique.mockResolvedValue(
+        makeMrf({ status: 'draft', mrfLines: [], project: { id: 'proj-1', projectName: 'Test' } }),
+      );
+
+      await expect(convertToJo('mrf-1', 'user-1')).rejects.toThrow(BusinessRuleError);
+      await expect(convertToJo('mrf-1', 'user-1')).rejects.toThrow(
+        'MR must be in approved or checking_stock status to convert to JO',
+      );
+    });
+
+    it('creates a job order and publishes an event', async () => {
+      const mr = makeMrf({
+        status: 'approved',
+        mrfNumber: 'MRF-2025-0001',
+        priority: 'normal',
+        requiredDate: new Date('2025-07-01'),
+        mrfLines: [makeMrfLine({ item: { id: 'item-1', itemCode: 'STEEL-001', itemDescription: 'Steel pipe' } })],
+        project: { id: 'proj-1', projectName: 'Test Project' },
+      });
+      mockPrisma.materialRequisition.findUnique.mockResolvedValue(mr);
+      mockedGenDoc.mockResolvedValue('JO-2025-0001');
+      mockPrisma.jobOrder.create.mockResolvedValue({
+        id: 'jo-1',
+        joNumber: 'JO-2025-0001',
+        joType: 'transport',
+      });
+
+      const result = await convertToJo('mrf-1', 'user-1');
+
+      expect(mockedGenDoc).toHaveBeenCalledWith('jo');
+      expect(mockPrisma.jobOrder.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            joNumber: 'JO-2025-0001',
+            joType: 'transport',
+            projectId: 'proj-1',
+            requestedById: 'user-1',
+            status: 'draft',
+          }),
+        }),
+      );
+      expect(result).toEqual({
+        id: 'mrf-1',
+        jo: { id: 'jo-1', joNumber: 'JO-2025-0001', joType: 'transport' },
+      });
+      expect(mockedEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'document:created',
+          entityType: 'job_order',
+          entityId: 'jo-1',
+          action: 'create',
+          payload: { sourceMrId: 'mrf-1', autoCreated: true },
+        }),
+      );
+    });
+
+    it('uses custom joType when provided', async () => {
+      const mr = makeMrf({
+        status: 'checking_stock',
+        mrfLines: [makeMrfLine({ item: { id: 'item-1', itemCode: 'X', itemDescription: 'Widget' } })],
+        project: { id: 'proj-1', projectName: 'Test' },
+      });
+      mockPrisma.materialRequisition.findUnique.mockResolvedValue(mr);
+      mockedGenDoc.mockResolvedValue('JO-2025-0002');
+      mockPrisma.jobOrder.create.mockResolvedValue({
+        id: 'jo-2',
+        joNumber: 'JO-2025-0002',
+        joType: 'maintenance',
+      });
+
+      const result = await convertToJo('mrf-1', 'user-1', 'maintenance');
+
+      const call = mockPrisma.jobOrder.create.mock.calls[0][0];
+      expect(call.data.joType).toBe('maintenance');
+      expect(result.jo.joType).toBe('maintenance');
     });
   });
 });
