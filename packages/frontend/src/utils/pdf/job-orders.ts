@@ -17,8 +17,8 @@ export interface JobOrderData {
   notes?: string;
 }
 
-export function generateJobOrderPdf(jobOrder: JobOrderData): void {
-  const doc = createNitPdf({
+export async function generateJobOrderPdf(jobOrder: JobOrderData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Job Order',
     documentNumber: jobOrder.documentNumber,
     subtitle: `Type: ${jobOrder.joType} | Priority: ${jobOrder.priority}`,

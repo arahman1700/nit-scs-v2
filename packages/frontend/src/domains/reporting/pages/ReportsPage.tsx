@@ -261,7 +261,7 @@ export const ReportsPage: React.FC = () => {
       summary: summaryArr,
       filters: filterList,
     };
-    generateReportPdf(pdfOptions);
+    void generateReportPdf(pdfOptions);
   }, [
     activeTab,
     inventoryQ,

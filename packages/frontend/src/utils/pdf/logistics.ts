@@ -18,8 +18,8 @@ export interface GatePassData {
   notes?: string;
 }
 
-export function generateGatePassPdf(gatePass: GatePassData): void {
-  const doc = createNitPdf({
+export async function generateGatePassPdf(gatePass: GatePassData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Gate Pass',
     documentNumber: gatePass.documentNumber,
     subtitle: `Type: ${gatePass.type}`,
@@ -89,8 +89,8 @@ export interface ShipmentPdfData {
   notes?: string;
 }
 
-export function generateShipmentPdf(shipment: ShipmentPdfData): void {
-  const doc = createNitPdf({
+export async function generateShipmentPdf(shipment: ShipmentPdfData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Shipment',
     documentNumber: shipment.documentNumber,
     subtitle: `Supplier: ${shipment.supplier}`,
@@ -111,7 +111,7 @@ export function generateShipmentPdf(shipment: ShipmentPdfData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },

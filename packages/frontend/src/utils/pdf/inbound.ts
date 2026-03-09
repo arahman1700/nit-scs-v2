@@ -26,8 +26,8 @@ export interface GrnData {
   notes?: string;
 }
 
-export function generateGrnPdf(grn: GrnData): void {
-  const doc = createNitPdf({
+export async function generateGrnPdf(grn: GrnData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Goods Receipt Note (GRN)',
     documentNumber: grn.documentNumber,
     subtitle: `Supplier: ${grn.supplier}`,
@@ -46,7 +46,7 @@ export function generateGrnPdf(grn: GrnData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -110,8 +110,8 @@ export interface QciData {
   items: QciLineItem[];
 }
 
-export function generateQciPdf(qci: QciData): void {
-  const doc = createNitPdf({
+export async function generateQciPdf(qci: QciData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Quality Control Inspection (QCI)',
     documentNumber: qci.documentNumber,
     subtitle: `Result: ${qci.result}`,
@@ -130,7 +130,7 @@ export function generateQciPdf(qci: QciData): void {
     getStartY(doc),
   );
 
-  addTable(
+  await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -171,8 +171,8 @@ export interface DrData {
   items: DrLineItem[];
 }
 
-export function generateDrPdf(dr: DrData): void {
-  const doc = createNitPdf({
+export async function generateDrPdf(dr: DrData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Discrepancy Report (DR)',
     documentNumber: dr.documentNumber,
     subtitle: `Type: ${dr.discrepancyType}`,
@@ -191,7 +191,7 @@ export function generateDrPdf(dr: DrData): void {
     getStartY(doc),
   );
 
-  addTable(
+  await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },

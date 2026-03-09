@@ -23,8 +23,8 @@ export interface ImsfData {
   notes?: string;
 }
 
-export function generateImsfPdf(imsf: ImsfData): void {
-  const doc = createNitPdf({
+export async function generateImsfPdf(imsf: ImsfData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Inter-project Material Shifting Form (IMSF)',
     documentNumber: imsf.documentNumber,
     subtitle: `${imsf.senderProject} → ${imsf.receiverProject}`,
@@ -43,7 +43,7 @@ export function generateImsfPdf(imsf: ImsfData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -88,8 +88,8 @@ export interface WtData {
   notes?: string;
 }
 
-export function generateWtPdf(wt: WtData): void {
-  const doc = createNitPdf({
+export async function generateWtPdf(wt: WtData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Warehouse Transfer (WT)',
     documentNumber: wt.documentNumber,
     subtitle: `${wt.fromWarehouse} → ${wt.toWarehouse}`,
@@ -108,7 +108,7 @@ export function generateWtPdf(wt: WtData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -147,8 +147,8 @@ export interface HandoverPdfData {
   notes?: string;
 }
 
-export function generateHandoverPdf(handover: HandoverPdfData): void {
-  const doc = createNitPdf({
+export async function generateHandoverPdf(handover: HandoverPdfData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Storekeeper Handover',
     documentNumber: handover.documentNumber,
     subtitle: `Warehouse: ${handover.warehouse}`,

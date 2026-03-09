@@ -1,22 +1,10 @@
 import React, { Suspense, useMemo, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Edit3,
-  Trash2,
-  ChevronUp,
-  ChevronDown,
-  CheckSquare,
-  Square,
-  Loader2,
-  X,
-  Zap,
-  Upload,
-  ScanLine,
-} from 'lucide-react';
+import { Plus, Eye, Edit3, Trash2, Upload } from 'lucide-react';
+import { ResourceToolbar } from '../components/ResourceToolbar';
+import { BulkActionBar } from '../components/BulkActionBar';
+import { ResourceCardView } from '../components/ResourceCardView';
+import { ResourceListView } from '../components/ResourceListView';
 import { DetailModal } from '@/components/DetailModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ExportButton } from '@/components/ExportButton';
@@ -24,11 +12,10 @@ import { FilterPanel } from '@/components/FilterPanel';
 import { ApprovalWorkflow } from '@/components/ApprovalWorkflow';
 import { StatusTimeline } from '@/components/StatusTimeline';
 import { Pagination } from '@/components/Pagination';
-import { EmptyState } from '@/components/EmptyState';
 import { DocumentActions } from '@/components/DocumentActions';
 import { DocumentComments } from '@/components/DocumentComments';
 import { ImportDialog } from '@/components/ImportDialog';
-import { SmartGrid, ViewSwitcher } from '@/components/smart-grid';
+import { SmartGrid } from '@/components/smart-grid';
 import type { ViewMode } from '@/components/smart-grid';
 import type { ColumnState } from 'ag-grid-community';
 import { useUserViews, useSaveView, useUpdateView } from '@/domains/system/hooks/useUserViews';
@@ -704,160 +691,46 @@ export const AdminResourceList: React.FC = () => {
         <TableSkeleton cols={config.columns.length} />
       ) : (
         <div className="glass-card rounded-2xl overflow-hidden">
-          {/* Toolbar */}
-          <div className="p-4 border-b border-white/10 flex flex-col md:flex-row gap-4 justify-between items-center bg-white/5">
-            <div className="relative flex-1 w-full md:max-w-md flex gap-2">
-              <div className="relative flex-1">
-                <Search size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder={`Search ${config.title}...`}
-                  value={searchTerm}
-                  onChange={e => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-nesma-secondary/50 focus:ring-1 focus:ring-nesma-secondary/50 transition-all"
-                />
-              </div>
-              {SCANNABLE_RESOURCES.has(resource || '') && (
-                <button
-                  onClick={() => setScannerOpen(true)}
-                  className="flex items-center gap-2 px-3 py-2 bg-nesma-primary/20 text-nesma-secondary border border-nesma-primary/30 rounded-lg text-sm hover:bg-nesma-primary/30 transition-all"
-                  title="Scan Barcode"
-                  aria-label="Scan barcode"
-                >
-                  <ScanLine size={16} />
-                </button>
-              )}
-            </div>
-            <div className="flex gap-2 w-full md:w-auto">
-              <button
-                onClick={() => setFilterOpen(true)}
-                className={`flex items-center gap-2 px-3 py-2 bg-black/20 border rounded-lg text-sm transition-all flex-1 md:flex-none justify-center ${
-                  Object.values(filterValues).some(v => v)
-                    ? 'border-nesma-secondary/50 text-nesma-secondary bg-nesma-secondary/5'
-                    : 'border-white/10 text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Filter size={16} />
-                <span>
-                  Filter
-                  {Object.values(filterValues).filter(v => v).length > 0
-                    ? ` (${Object.values(filterValues).filter(v => v).length})`
-                    : ''}
-                </span>
-              </button>
-              <ViewSwitcher mode={viewMode} onChange={setViewMode} availableModes={['grid', 'list', 'card']} />
-              {viewMode === 'grid' && (
-                <button
-                  type="button"
-                  onClick={handleSaveView}
-                  disabled={saveViewMutation.isPending || updateViewMutation.isPending}
-                  className="px-2.5 py-1.5 text-xs border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all disabled:opacity-40"
-                  title="Save current grid layout"
-                >
-                  {saveViewMutation.isPending || updateViewMutation.isPending ? 'Saving...' : 'Save View'}
-                </button>
-              )}
-            </div>
-          </div>
+          <ResourceToolbar
+            searchTerm={searchTerm}
+            onSearchChange={v => {
+              setSearchTerm(v);
+              setCurrentPage(1);
+            }}
+            title={config.title}
+            filterValues={filterValues}
+            onFilterClick={() => setFilterOpen(true)}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onSaveView={handleSaveView}
+            isSaveLoading={saveViewMutation.isPending || updateViewMutation.isPending}
+            canScan={SCANNABLE_RESOURCES.has(resource || '')}
+            onScan={() => setScannerOpen(true)}
+          />
 
-          {/* Bulk Action Bar */}
           {isDocument && someSelected && (
-            <div className="px-4 py-3 border-b border-nesma-secondary/20 bg-nesma-secondary/5 flex items-center gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <CheckSquare size={16} className="text-nesma-secondary" />
-                <span className="text-sm font-medium text-nesma-secondary">{selectedIds.size} selected</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedIds(new Set());
-                    setBulkAction('');
-                  }}
-                  className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                  title="Clear selection"
-                  aria-label="Clear selection"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-              {availableBulkActions.length > 0 && (
-                <>
-                  <select
-                    value={bulkAction}
-                    onChange={e => setBulkAction(e.target.value)}
-                    className="bg-black/30 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
-                  >
-                    <option value="">Select action...</option>
-                    {availableBulkActions.map(a => (
-                      <option key={a} value={a}>
-                        {a.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleBulkExecute}
-                    disabled={!bulkAction || executeBulk.isPending}
-                    className="flex items-center gap-1.5 px-4 py-1.5 bg-nesma-primary hover:bg-nesma-accent text-white text-sm font-medium rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                  >
-                    {executeBulk.isPending ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
-                    Execute
-                  </button>
-                </>
-              )}
-            </div>
+            <BulkActionBar
+              selectedCount={selectedIds.size}
+              onClear={() => {
+                setSelectedIds(new Set());
+                setBulkAction('');
+              }}
+              availableActions={availableBulkActions}
+              bulkAction={bulkAction}
+              onBulkActionChange={setBulkAction}
+              onExecute={handleBulkExecute}
+              isExecuting={executeBulk.isPending}
+            />
           )}
 
-          {/* Card View */}
           {viewMode === 'card' ? (
-            <div className="p-4">
-              {apiData.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {apiData.map((row, idx) => {
-                    const primaryCol = config.columns[0];
-                    const titleCol = config.columns.find(c => c.key === 'name') || config.columns[1];
-                    const statusCol = config.columns.find(c => c.key === 'status' || c.key === 'stockStatus');
-                    const restCols = config.columns.filter(c => c !== primaryCol && c !== titleCol && c !== statusCol);
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => setSelectedRow(row)}
-                        className="glass-card p-5 rounded-xl hover:bg-white/10 transition-all cursor-pointer group border border-white/5 hover:border-nesma-secondary/20"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="min-w-0">
-                            <p className="text-white font-medium text-sm truncate group-hover:text-nesma-secondary transition-colors">
-                              {titleCol ? renderCellValue(titleCol, row) : '-'}
-                            </p>
-                            <p className="text-gray-400 text-xs font-mono mt-0.5">
-                              {primaryCol ? (row[primaryCol.key] as string) || '-' : '-'}
-                            </p>
-                          </div>
-                          {statusCol && <div className="flex-shrink-0 ml-2">{renderCellValue(statusCol, row)}</div>}
-                        </div>
-                        <div className="space-y-1.5 pt-3 border-t border-white/5">
-                          {restCols.slice(0, 4).map((col, cIdx) => (
-                            <div key={cIdx} className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400">{col.label}</span>
-                              <span className="text-gray-300 truncate ml-2 max-w-[60%] text-right">
-                                {renderCellValue(col, row)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {renderActions(row, 14, true)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptyState />
-              )}
-            </div>
+            <ResourceCardView
+              data={apiData}
+              columns={config.columns}
+              onRowClick={setSelectedRow}
+              renderCellValue={renderCellValue}
+              renderActions={renderActions}
+            />
           ) : viewMode === 'grid' ? (
             /* AG Grid View */
             <div className="px-2">
@@ -877,91 +750,20 @@ export const AdminResourceList: React.FC = () => {
               />
             </div>
           ) : (
-            /* Table View */
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="nesma-table-head text-nesma-secondary text-xs uppercase tracking-wider font-semibold">
-                  <tr>
-                    {isDocument && (
-                      <th className="px-3 py-4 w-10">
-                        <button
-                          type="button"
-                          onClick={toggleSelectAll}
-                          className="text-gray-400 hover:text-nesma-secondary transition-colors"
-                          title={allSelected ? 'Deselect all' : 'Select all'}
-                          aria-label={allSelected ? 'Deselect all' : 'Select all'}
-                        >
-                          {allSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-                        </button>
-                      </th>
-                    )}
-                    {config.columns.map((col, idx) => (
-                      <th
-                        key={idx}
-                        className="px-6 py-4 whitespace-nowrap cursor-pointer hover:text-white transition-colors select-none"
-                        onClick={() => handleSort(col.key)}
-                      >
-                        <span className="flex items-center gap-1">
-                          {col.label}
-                          {sortKey === col.key &&
-                            (sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
-                        </span>
-                      </th>
-                    ))}
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-sm text-gray-300">
-                  {apiData.length > 0 ? (
-                    apiData.map((row, idx) => {
-                      const rowId = row.id as string;
-                      const isRowSelected = rowId ? selectedIds.has(rowId) : false;
-                      return (
-                        <tr
-                          key={idx}
-                          className={`nesma-table-row group ${isRowSelected ? 'bg-nesma-secondary/5' : ''}`}
-                        >
-                          {isDocument && (
-                            <td className="px-3 py-4 w-10">
-                              <button
-                                type="button"
-                                onClick={e => {
-                                  e.stopPropagation();
-                                  if (rowId) toggleSelect(rowId);
-                                }}
-                                className="text-gray-400 hover:text-nesma-secondary transition-colors"
-                                aria-label={isRowSelected ? 'Deselect row' : 'Select row'}
-                              >
-                                {isRowSelected ? (
-                                  <CheckSquare size={16} className="text-nesma-secondary" />
-                                ) : (
-                                  <Square size={16} />
-                                )}
-                              </button>
-                            </td>
-                          )}
-                          {config.columns.map((col, cIdx) => (
-                            <td
-                              key={cIdx}
-                              className="px-6 py-4 whitespace-nowrap group-hover:text-white transition-colors"
-                            >
-                              {renderCellValue(col, row)}
-                            </td>
-                          ))}
-                          <td className="px-6 py-4 text-right">{renderActions(row, 16)}</td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={config.columns.length + (isDocument ? 2 : 1)} className="px-6 py-12 text-center">
-                        <EmptyState />
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <ResourceListView
+              data={apiData}
+              columns={config.columns}
+              isDocument={isDocument}
+              selectedIds={selectedIds}
+              allSelected={allSelected}
+              sortKey={sortKey}
+              sortDir={sortDir}
+              onSort={handleSort}
+              onToggleSelect={toggleSelect}
+              onToggleSelectAll={toggleSelectAll}
+              renderCellValue={renderCellValue}
+              renderActions={renderActions}
+            />
           )}
 
           <Pagination

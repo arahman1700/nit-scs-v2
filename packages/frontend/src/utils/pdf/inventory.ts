@@ -17,8 +17,8 @@ export interface InventoryItem {
   balance: number;
 }
 
-export function generateInventoryReportPdf(items: InventoryItem[], warehouseName: string): void {
-  const doc = createNitPdf({
+export async function generateInventoryReportPdf(items: InventoryItem[], warehouseName: string): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Inventory Report',
     subtitle: `Warehouse: ${warehouseName}`,
     orientation: items.length > 0 ? 'landscape' : 'portrait',
@@ -40,7 +40,7 @@ export function generateInventoryReportPdf(items: InventoryItem[], warehouseName
     getStartY(doc),
   );
 
-  addTable(
+  await addTable(
     doc,
     [
       { header: '#', dataKey: 'sn', width: 10 },
@@ -80,8 +80,8 @@ export interface ScrapPdfData {
   notes?: string;
 }
 
-export function generateScrapPdf(scrap: ScrapPdfData): void {
-  const doc = createNitPdf({
+export async function generateScrapPdf(scrap: ScrapPdfData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Scrap Report',
     documentNumber: scrap.documentNumber,
     subtitle: `Category: ${scrap.category}`,

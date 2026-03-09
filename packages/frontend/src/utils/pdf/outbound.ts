@@ -17,8 +17,8 @@ export interface MiData {
   notes?: string;
 }
 
-export function generateMiPdf(mi: MiData): void {
-  const doc = createNitPdf({
+export async function generateMiPdf(mi: MiData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Material Issuance (MI)',
     documentNumber: mi.documentNumber,
     subtitle: `Project: ${mi.project}`,
@@ -37,7 +37,7 @@ export function generateMiPdf(mi: MiData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -92,8 +92,8 @@ export interface MrnData {
   notes?: string;
 }
 
-export function generateMrnPdf(mrn: MrnData): void {
-  const doc = createNitPdf({
+export async function generateMrnPdf(mrn: MrnData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Material Return Note (MRN)',
     documentNumber: mrn.documentNumber,
     subtitle: `Return Type: ${mrn.returnType}`,
@@ -113,7 +113,7 @@ export function generateMrnPdf(mrn: MrnData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
@@ -159,8 +159,8 @@ export interface MrData {
   notes?: string;
 }
 
-export function generateMrPdf(mr: MrData): void {
-  const doc = createNitPdf({
+export async function generateMrPdf(mr: MrData): Promise<void> {
+  const doc = await createNitPdf({
     title: 'Material Request (MR)',
     documentNumber: mr.documentNumber,
     subtitle: `Project: ${mr.project}`,
@@ -179,7 +179,7 @@ export function generateMrPdf(mr: MrData): void {
     getStartY(doc),
   );
 
-  y = addTable(
+  y = await addTable(
     doc,
     [
       { header: '#', dataKey: '_index', width: 10 },
