@@ -42,6 +42,9 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockResolvedValue(true),
+}));
 
 vi.mock('../services/aql.service.js', () => ({
   calculateSampleSize: vi.fn().mockReturnValue({

@@ -12,6 +12,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import { optimizePickPath } from '../services/pick-optimizer.service.js';
@@ -22,22 +23,10 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
-const ALLOWED_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for pick optimizer operations');
-    return false;
-  }
-  return true;
-}
-
 // ── GET /path — Optimize an ad-hoc pick path ────────────────────────────
 
-router.get('/path', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/path', requirePermission('mi', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const warehouseId = req.query.warehouseId as string | undefined;
     const itemsRaw = req.query.items as string | undefined;
 
@@ -71,10 +60,8 @@ router.get('/path', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST /waves — Create a wave from MI IDs ─────────────────────────────
 
-router.post('/waves', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/waves', requirePermission('mi', 'create'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { warehouseId, miIds } = req.body;
     if (!warehouseId || !miIds || !Array.isArray(miIds)) {
       return sendError(res, 400, 'warehouseId and miIds (array) are required');
@@ -95,10 +82,8 @@ router.post('/waves', async (req: Request, res: Response, next: NextFunction) =>
 
 // ── GET /waves — List waves ─────────────────────────────────────────────
 
-router.get('/waves', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/waves', requirePermission('mi', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     // Row-level security: restrict warehouse-scoped users to their assigned warehouse
     const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
     const scopedWarehouseId = (scopeFilter.warehouseId as string) || undefined;
@@ -115,10 +100,8 @@ router.get('/waves', async (req: Request, res: Response, next: NextFunction) => 
 
 // ── GET /waves/:id — Get wave with pick list ────────────────────────────
 
-router.get('/waves/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/waves/:id', requirePermission('mi', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const wave = waveService.getWave(req.params.id as string);
     if (!wave) {
       return sendError(res, 404, 'Wave not found');
@@ -134,28 +117,32 @@ router.get('/waves/:id', async (req: Request, res: Response, next: NextFunction)
 
 // ── POST /waves/:id/start — Start picking ───────────────────────────────
 
-router.post('/waves/:id/start', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const wave = waveService.startPicking(req.params.id as string);
-    sendSuccess(res, wave);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/waves/:id/start',
+  requirePermission('mi', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const wave = waveService.startPicking(req.params.id as string);
+      sendSuccess(res, wave);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /waves/:id/complete — Complete a wave ──────────────────────────
 
-router.post('/waves/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const wave = waveService.completeWave(req.params.id as string);
-    sendSuccess(res, wave);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/waves/:id/complete',
+  requirePermission('mi', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const wave = waveService.completeWave(req.params.id as string);
+      sendSuccess(res, wave);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

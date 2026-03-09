@@ -14,6 +14,7 @@ const ROLES = ['admin', 'manager', 'qc_officer', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'rfim',
   tableName: 'rfim',
+  resource: 'qci',
   // RFIM scoping: list filtering is via mrrv.warehouseId (handled in service),
   // getById/action access check uses inspectorId as creator field
   scopeMapping: { warehouseField: 'warehouseId', createdByField: 'inspectorId' },

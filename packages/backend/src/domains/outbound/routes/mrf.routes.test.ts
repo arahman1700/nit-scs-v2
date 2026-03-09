@@ -37,6 +37,12 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockImplementation((role: string) => {
+    // Admin always has permission; warehouse_staff does not
+    return Promise.resolve(role === 'admin');
+  }),
+}));
 
 vi.mock('../services/mrf.service.js', () => ({
   list: vi.fn().mockResolvedValue({ data: [], total: 0 }),

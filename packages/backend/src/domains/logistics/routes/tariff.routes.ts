@@ -6,11 +6,9 @@
  */
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated } from '../../../utils/response.js';
 import * as tariffService from '../services/tariff.service.js';
-
-const ALLOWED_ROLES = ['admin', 'manager', 'customs_specialist', 'finance_user', 'logistics_coordinator'];
 
 const router = Router();
 
@@ -23,31 +21,35 @@ router.use(authenticate);
  * GET /tariffs/tariff-rates
  * List tariff rates with search, filtering, and pagination.
  */
-router.get('/tariff-rates', requireRole(...ALLOWED_ROLES), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const page = parseInt(req.query.page as string, 10) || 1;
-    const pageSize = Math.min(parseInt(req.query.pageSize as string, 10) || 25, 100);
-    const sortBy = (req.query.sortBy as string) || 'updatedAt';
-    const sortDir = (req.query.sortDir as string) === 'asc' ? 'asc' : 'desc';
-    const search = req.query.search as string | undefined;
+router.get(
+  '/tariff-rates',
+  requirePermission('customs', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const pageSize = Math.min(parseInt(req.query.pageSize as string, 10) || 25, 100);
+      const sortBy = (req.query.sortBy as string) || 'updatedAt';
+      const sortDir = (req.query.sortDir as string) === 'asc' ? 'asc' : 'desc';
+      const search = req.query.search as string | undefined;
 
-    const params = {
-      skip: (page - 1) * pageSize,
-      pageSize,
-      sortBy,
-      sortDir: sortDir as 'asc' | 'desc',
-      search,
-      isActive: req.query.isActive as string | undefined,
-      country: req.query.country as string | undefined,
-      hsCode: req.query.hsCode as string | undefined,
-    };
+      const params = {
+        skip: (page - 1) * pageSize,
+        pageSize,
+        sortBy,
+        sortDir: sortDir as 'asc' | 'desc',
+        search,
+        isActive: req.query.isActive as string | undefined,
+        country: req.query.country as string | undefined,
+        hsCode: req.query.hsCode as string | undefined,
+      };
 
-    const { data, total } = await tariffService.listTariffRates(params);
-    sendSuccess(res, data, { page, pageSize, total });
-  } catch (err) {
-    next(err);
-  }
-});
+      const { data, total } = await tariffService.listTariffRates(params);
+      sendSuccess(res, data, { page, pageSize, total });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── Get Tariff Rate by ID ──────────────────────────────────────────────────
 
@@ -56,7 +58,7 @@ router.get('/tariff-rates', requireRole(...ALLOWED_ROLES), async (req: Request, 
  */
 router.get(
   '/tariff-rates/:id',
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('customs', 'read'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
@@ -75,7 +77,7 @@ router.get(
  */
 router.post(
   '/tariff-rates',
-  requireRole('admin', 'manager', 'customs_specialist'),
+  requirePermission('customs', 'create'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
@@ -94,7 +96,7 @@ router.post(
  */
 router.put(
   '/tariff-rates/:id',
-  requireRole('admin', 'manager', 'customs_specialist'),
+  requirePermission('customs', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = req.params.id as string;
@@ -114,7 +116,7 @@ router.put(
  */
 router.post(
   '/tariff-rates/calculate/:shipmentId',
-  requireRole(...ALLOWED_ROLES),
+  requirePermission('customs', 'read'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const shipmentId = req.params.shipmentId as string;
@@ -134,7 +136,7 @@ router.post(
  */
 router.post(
   '/tariff-rates/apply/:shipmentId',
-  requireRole('admin', 'manager', 'customs_specialist', 'finance_user'),
+  requirePermission('customs', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const shipmentId = req.params.shipmentId as string;

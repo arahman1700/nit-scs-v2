@@ -117,11 +117,11 @@ describe('useAppStore', () => {
       expect(state.isAuthenticated).toBe(false);
     });
 
-    it('removes both tokens from localStorage', () => {
+    it('removes access token from localStorage (refresh token is in httpOnly cookie)', () => {
       useAppStore.getState().clearAuth();
 
       expect(removeItemSpy).toHaveBeenCalledWith('nit_scs_token');
-      expect(removeItemSpy).toHaveBeenCalledWith('nit_scs_refresh_token');
+      expect(removeItemSpy).not.toHaveBeenCalledWith('nit_scs_refresh_token');
     });
   });
 

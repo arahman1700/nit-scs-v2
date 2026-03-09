@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 import { bulkActionSchema } from '../../../schemas/bulk.schema.js';
@@ -16,15 +17,20 @@ const router = Router();
  * GET /bulk/actions/:documentType
  * List available bulk actions for a document type.
  */
-router.get('/actions/:documentType', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const documentType = req.params.documentType as string;
-    const actions = getAvailableBulkActions(documentType);
-    sendSuccess(res, { documentType, actions });
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/actions/:documentType',
+  authenticate,
+  requirePermission('settings', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const documentType = req.params.documentType as string;
+      const actions = getAvailableBulkActions(documentType);
+      sendSuccess(res, { documentType, actions });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 /**
  * POST /bulk/execute
@@ -34,6 +40,7 @@ router.get('/actions/:documentType', authenticate, async (req: Request, res: Res
 router.post(
   '/execute',
   authenticate,
+  requirePermission('settings', 'update'),
   validate(bulkActionSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

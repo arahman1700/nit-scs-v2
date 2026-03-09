@@ -13,6 +13,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import {
@@ -27,22 +28,10 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
-const ALLOWED_ROLES = ['admin', 'manager', 'customs_specialist', 'logistics_coordinator', 'freight_forwarder'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for customs document operations');
-    return false;
-  }
-  return true;
-}
-
 // ── GET / — List customs documents by shipment ──────────────────────────
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', requirePermission('customs', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const shipmentId = req.query.shipmentId as string | undefined;
     if (!shipmentId) {
       sendError(res, 400, 'shipmentId query parameter is required');
@@ -73,23 +62,23 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── GET /completeness/:shipmentId — Document completeness check ─────────
 
-router.get('/completeness/:shipmentId', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const completeness = await customsDocService.getCompleteness(req.params.shipmentId as string);
-    sendSuccess(res, completeness);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/completeness/:shipmentId',
+  requirePermission('customs', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const completeness = await customsDocService.getCompleteness(req.params.shipmentId as string);
+      sendSuccess(res, completeness);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── GET /:id — Detail ───────────────────────────────────────────────────
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', requirePermission('customs', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const doc = await customsDocService.getById(req.params.id as string);
     sendSuccess(res, doc);
   } catch (err) {
@@ -99,52 +88,59 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST / — Create customs document ────────────────────────────────────
 
-router.post('/', validate(customsDocumentCreateSchema), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const doc = await customsDocService.create(req.body, req.user!.userId);
-    sendCreated(res, doc);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/',
+  requirePermission('customs', 'create'),
+  validate(customsDocumentCreateSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const doc = await customsDocService.create(req.body, req.user!.userId);
+      sendCreated(res, doc);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── PUT /:id — Update customs document ──────────────────────────────────
 
-router.put('/:id', validate(customsDocumentUpdateSchema), async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const doc = await customsDocService.update(req.params.id as string, req.body);
-    sendSuccess(res, doc);
-  } catch (err) {
-    next(err);
-  }
-});
+router.put(
+  '/:id',
+  requirePermission('customs', 'update'),
+  validate(customsDocumentUpdateSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const doc = await customsDocService.update(req.params.id as string, req.body);
+      sendSuccess(res, doc);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/verify — Verify customs document ─────────────────────────
 
-router.post('/:id/verify', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const doc = await customsDocService.verify(req.params.id as string, req.user!.userId);
-    sendSuccess(res, doc);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/verify',
+  requirePermission('customs', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const doc = await customsDocService.verify(req.params.id as string, req.user!.userId);
+      sendSuccess(res, doc);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/reject — Reject customs document ─────────────────────────
 
 router.post(
   '/:id/reject',
+  requirePermission('customs', 'update'),
   validate(customsDocumentRejectSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!checkRole(req, res)) return;
-
       const doc = await customsDocService.reject(req.params.id as string, req.user!.userId, req.body.reason);
       sendSuccess(res, doc);
     } catch (err) {

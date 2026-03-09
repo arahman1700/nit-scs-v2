@@ -27,24 +27,16 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import * as yardService from '../services/yard.service.js';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication + warehouse_zone permission
 router.use(authenticate);
-
-const ALLOWED_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for yard management');
-    return false;
-  }
-  return true;
-}
+router.use(requirePermission('warehouse_zone', 'read'));
 
 /**
  * Enforce warehouse scope: scoped users are restricted to their assigned warehouse.
@@ -67,8 +59,6 @@ function resolveWarehouseScope(req: Request, warehouseId: string | undefined): s
 // GET /yard/dock-doors/available — must be before /:id to avoid collision
 router.get('/dock-doors/available', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;
@@ -85,8 +75,6 @@ router.get('/dock-doors/available', async (req: Request, res: Response, next: Ne
 // GET /yard/dock-doors
 router.get('/dock-doors', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
@@ -105,7 +93,6 @@ router.get('/dock-doors', async (req: Request, res: Response, next: NextFunction
 // GET /yard/dock-doors/:id
 router.get('/dock-doors/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.getDockDoor(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -116,8 +103,6 @@ router.get('/dock-doors/:id', async (req: Request, res: Response, next: NextFunc
 // POST /yard/dock-doors
 router.post('/dock-doors', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { warehouseId, doorNumber, doorType, status } = req.body;
     if (!warehouseId || !doorNumber || !doorType) {
       return sendError(res, 400, 'warehouseId, doorNumber, and doorType are required');
@@ -138,8 +123,6 @@ router.post('/dock-doors', async (req: Request, res: Response, next: NextFunctio
 // PUT /yard/dock-doors/:id
 router.put('/dock-doors/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { doorType, status } = req.body;
     const data = await yardService.updateDockDoor(req.params.id as string, { doorType, status });
     sendSuccess(res, data);
@@ -149,19 +132,18 @@ router.put('/dock-doors/:id', async (req: Request, res: Response, next: NextFunc
 });
 
 // DELETE /yard/dock-doors/:id
-router.delete('/dock-doors/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const role = req.user!.systemRole;
-    if (role !== 'admin' && role !== 'warehouse_supervisor') {
-      return sendError(res, 403, 'Only admin or warehouse supervisor can delete dock doors');
+router.delete(
+  '/dock-doors/:id',
+  requirePermission('warehouse_zone', 'delete'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await yardService.deleteDockDoor(req.params.id as string);
+      sendSuccess(res, { deleted: true });
+    } catch (err) {
+      next(err);
     }
-
-    await yardService.deleteDockDoor(req.params.id as string);
-    sendSuccess(res, { deleted: true });
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ############################################################################
 // APPOINTMENTS
@@ -170,8 +152,6 @@ router.delete('/dock-doors/:id', async (req: Request, res: Response, next: NextF
 // GET /yard/appointments
 router.get('/appointments', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
@@ -191,7 +171,6 @@ router.get('/appointments', async (req: Request, res: Response, next: NextFuncti
 // GET /yard/appointments/:id
 router.get('/appointments/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.getAppointment(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -202,8 +181,6 @@ router.get('/appointments/:id', async (req: Request, res: Response, next: NextFu
 // POST /yard/appointments
 router.post('/appointments', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { warehouseId, appointmentType, scheduledStart, scheduledEnd } = req.body;
     if (!warehouseId || !appointmentType || !scheduledStart || !scheduledEnd) {
       return sendError(res, 400, 'warehouseId, appointmentType, scheduledStart, and scheduledEnd are required');
@@ -224,7 +201,6 @@ router.post('/appointments', async (req: Request, res: Response, next: NextFunct
 // POST /yard/appointments/:id/check-in
 router.post('/appointments/:id/check-in', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.checkInAppointment(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -235,7 +211,6 @@ router.post('/appointments/:id/check-in', async (req: Request, res: Response, ne
 // POST /yard/appointments/:id/complete
 router.post('/appointments/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.completeAppointment(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -246,7 +221,6 @@ router.post('/appointments/:id/complete', async (req: Request, res: Response, ne
 // DELETE /yard/appointments/:id (cancel)
 router.delete('/appointments/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.cancelAppointment(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -261,8 +235,6 @@ router.delete('/appointments/:id', async (req: Request, res: Response, next: Nex
 // GET /yard/trucks
 router.get('/trucks', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
@@ -281,8 +253,6 @@ router.get('/trucks', async (req: Request, res: Response, next: NextFunction) =>
 // POST /yard/trucks/check-in
 router.post('/trucks/check-in', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { warehouseId, vehiclePlate, purpose } = req.body;
     if (!warehouseId || !vehiclePlate || !purpose) {
       return sendError(res, 400, 'warehouseId, vehiclePlate, and purpose are required');
@@ -303,8 +273,6 @@ router.post('/trucks/check-in', async (req: Request, res: Response, next: NextFu
 // POST /yard/trucks/:id/assign-dock
 router.post('/trucks/:id/assign-dock', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { dockDoorId } = req.body;
     if (!dockDoorId) return sendError(res, 400, 'dockDoorId is required');
 
@@ -318,7 +286,6 @@ router.post('/trucks/:id/assign-dock', async (req: Request, res: Response, next:
 // POST /yard/trucks/:id/check-out
 router.post('/trucks/:id/check-out', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
     const data = await yardService.checkOutTruck(req.params.id as string);
     sendSuccess(res, data);
   } catch (err) {
@@ -333,8 +300,6 @@ router.post('/trucks/:id/check-out', async (req: Request, res: Response, next: N
 // GET /yard/status
 router.get('/status', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;
@@ -350,8 +315,6 @@ router.get('/status', async (req: Request, res: Response, next: NextFunction) =>
 // GET /yard/utilization
 router.get('/utilization', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;

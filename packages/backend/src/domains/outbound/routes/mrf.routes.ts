@@ -15,6 +15,7 @@ const APPROVE_ROLES = ['admin', 'manager', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'mrf',
   tableName: 'material_requisitions',
+  resource: 'mr',
   scopeMapping: { projectField: 'projectId', createdByField: 'requestedById' },
 
   list: mrfService.list,

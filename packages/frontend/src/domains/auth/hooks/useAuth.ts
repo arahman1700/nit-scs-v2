@@ -54,7 +54,7 @@ export function useLogin() {
     },
     onSuccess: result => {
       localStorage.setItem('nit_scs_token', result.data.accessToken);
-      localStorage.setItem('nit_scs_refresh_token', result.data.refreshToken);
+      // Refresh token is set as httpOnly cookie by the server
       qc.setQueryData(['auth', 'me'], { success: true, data: result.data.user });
       Sentry.setUser({ id: result.data.user.id, email: result.data.user.email });
     },
@@ -70,7 +70,7 @@ export function useLogout() {
     },
     onSettled: () => {
       localStorage.removeItem('nit_scs_token');
-      localStorage.removeItem('nit_scs_refresh_token');
+      // Refresh token cookie is cleared by the server on logout
       qc.clear();
       Sentry.setUser(null);
     },

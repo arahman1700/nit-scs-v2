@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
 import { auditAndEmit } from '../../../utils/routeHelpers.js';
@@ -22,51 +23,61 @@ const ADMIN_ROLES = ['admin', 'manager'];
  * GET /delegations
  * List delegation rules. Admin sees all, others see only their own.
  */
-router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10));
-    const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? '25'), 10)));
-    const activeOnly = req.query.activeOnly === 'true';
+router.get(
+  '/',
+  authenticate,
+  requirePermission('settings', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = Math.max(1, parseInt(String(req.query.page ?? '1'), 10));
+      const pageSize = Math.min(100, Math.max(1, parseInt(String(req.query.pageSize ?? '25'), 10)));
+      const activeOnly = req.query.activeOnly === 'true';
 
-    const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
-    const userId = isPrivileged ? undefined : req.user!.userId;
+      const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
+      const userId = isPrivileged ? undefined : req.user!.userId;
 
-    const result = await listDelegations({ userId, page, pageSize, activeOnly });
+      const result = await listDelegations({ userId, page, pageSize, activeOnly });
 
-    sendSuccess(res, result.delegations, {
-      page: result.page,
-      pageSize: result.pageSize,
-      total: result.total,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+      sendSuccess(res, result.delegations, {
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 /**
  * GET /delegations/:id
  */
-router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = req.params.id as string;
-    const delegation = await getDelegation(id);
-    if (!delegation) {
-      sendError(res, 404, 'Delegation rule not found');
-      return;
-    }
+router.get(
+  '/:id',
+  authenticate,
+  requirePermission('settings', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id as string;
+      const delegation = await getDelegation(id);
+      if (!delegation) {
+        sendError(res, 404, 'Delegation rule not found');
+        return;
+      }
 
-    // Non-admin can only see their own
-    const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
-    if (!isPrivileged && delegation.delegatorId !== req.user!.userId && delegation.delegateId !== req.user!.userId) {
-      sendError(res, 403, 'Not authorized');
-      return;
-    }
+      // Non-admin can only see their own
+      const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
+      if (!isPrivileged && delegation.delegatorId !== req.user!.userId && delegation.delegateId !== req.user!.userId) {
+        sendError(res, 403, 'Not authorized');
+        return;
+      }
 
-    sendSuccess(res, delegation);
-  } catch (err) {
-    next(err);
-  }
-});
+      sendSuccess(res, delegation);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 /**
  * POST /delegations
@@ -75,6 +86,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
 router.post(
   '/',
   authenticate,
+  requirePermission('settings', 'update'),
   validate(createDelegationSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -115,6 +127,7 @@ router.post(
 router.put(
   '/:id',
   authenticate,
+  requirePermission('settings', 'update'),
   validate(updateDelegationSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -145,65 +158,75 @@ router.put(
  * POST /delegations/:id/toggle
  * Toggle active/inactive.
  */
-router.post('/:id/toggle', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = req.params.id as string;
-    const userId = req.user!.userId;
+router.post(
+  '/:id/toggle',
+  authenticate,
+  requirePermission('settings', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id as string;
+      const userId = req.user!.userId;
 
-    const existing = await getDelegation(id);
-    if (!existing) {
-      sendError(res, 404, 'Delegation rule not found');
-      return;
+      const existing = await getDelegation(id);
+      if (!existing) {
+        sendError(res, 404, 'Delegation rule not found');
+        return;
+      }
+
+      const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
+      if (!isPrivileged && existing.delegatorId !== userId) {
+        sendError(res, 403, 'Not authorized');
+        return;
+      }
+
+      const toggled = await toggleDelegation(id);
+      sendSuccess(res, toggled);
+    } catch (err) {
+      next(err);
     }
-
-    const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
-    if (!isPrivileged && existing.delegatorId !== userId) {
-      sendError(res, 403, 'Not authorized');
-      return;
-    }
-
-    const toggled = await toggleDelegation(id);
-    sendSuccess(res, toggled);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 /**
  * DELETE /delegations/:id
  */
-router.delete('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const id = req.params.id as string;
-    const userId = req.user!.userId;
+router.delete(
+  '/:id',
+  authenticate,
+  requirePermission('settings', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const id = req.params.id as string;
+      const userId = req.user!.userId;
 
-    const existing = await getDelegation(id);
-    if (!existing) {
-      sendError(res, 404, 'Delegation rule not found');
-      return;
+      const existing = await getDelegation(id);
+      if (!existing) {
+        sendError(res, 404, 'Delegation rule not found');
+        return;
+      }
+
+      const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
+      if (!isPrivileged && existing.delegatorId !== userId) {
+        sendError(res, 403, 'Not authorized to delete this delegation');
+        return;
+      }
+
+      await deleteDelegation(id);
+
+      await auditAndEmit(req, {
+        action: 'delete',
+        tableName: 'delegation_rules',
+        recordId: id,
+        oldValues: { delegatorId: existing.delegatorId, delegateId: existing.delegateId },
+        entityEvent: 'deleted',
+        entityName: 'delegations',
+      });
+
+      sendNoContent(res);
+    } catch (err) {
+      next(err);
     }
-
-    const isPrivileged = ADMIN_ROLES.includes(req.user!.systemRole);
-    if (!isPrivileged && existing.delegatorId !== userId) {
-      sendError(res, 403, 'Not authorized to delete this delegation');
-      return;
-    }
-
-    await deleteDelegation(id);
-
-    await auditAndEmit(req, {
-      action: 'delete',
-      tableName: 'delegation_rules',
-      recordId: id,
-      oldValues: { delegatorId: existing.delegatorId, delegateId: existing.delegateId },
-      entityEvent: 'deleted',
-      entityName: 'delegations',
-    });
-
-    sendNoContent(res);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 export default router;

@@ -15,6 +15,7 @@ const APPROVE_ROLES = ['admin', 'manager', 'warehouse_supervisor'];
 export default createDocumentRouter({
   docType: 'mrrv',
   tableName: 'mrrv',
+  resource: 'grn',
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'receivedById' },
 
   list: mrrvService.list,

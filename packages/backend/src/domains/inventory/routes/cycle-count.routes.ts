@@ -15,6 +15,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import * as cycleCountService from '../services/cycle-count.service.js';
@@ -24,22 +25,10 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
-const ALLOWED_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for cycle count operations');
-    return false;
-  }
-  return true;
-}
-
 // ── GET / — List cycle counts ───────────────────────────────────────────
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', requirePermission('cycle_count', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const status = req.query.status as string | undefined;
@@ -65,132 +54,145 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── GET /:id — Detail with lines ────────────────────────────────────────
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const cycleCount = await cycleCountService.getById(req.params.id as string);
-    sendSuccess(res, cycleCount);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/:id',
+  requirePermission('cycle_count', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const cycleCount = await cycleCountService.getById(req.params.id as string);
+      sendSuccess(res, cycleCount);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST / — Create cycle count ─────────────────────────────────────────
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
+router.post(
+  '/',
+  requirePermission('cycle_count', 'create'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { countType, warehouseId, zoneId, scheduledDate, notes } = req.body;
+      if (!countType || !warehouseId || !scheduledDate) {
+        return sendError(res, 400, 'countType, warehouseId, and scheduledDate are required');
+      }
 
-    const { countType, warehouseId, zoneId, scheduledDate, notes } = req.body;
-    if (!countType || !warehouseId || !scheduledDate) {
-      return sendError(res, 400, 'countType, warehouseId, and scheduledDate are required');
+      const validTypes = ['full', 'abc_based', 'zone', 'random'];
+      if (!validTypes.includes(countType)) {
+        return sendError(res, 400, `countType must be one of: ${validTypes.join(', ')}`);
+      }
+
+      const cycleCount = await cycleCountService.createCycleCount(
+        { countType, warehouseId, zoneId, scheduledDate, notes },
+        req.user!.userId,
+      );
+      sendCreated(res, cycleCount);
+    } catch (err) {
+      next(err);
     }
-
-    const validTypes = ['full', 'abc_based', 'zone', 'random'];
-    if (!validTypes.includes(countType)) {
-      return sendError(res, 400, `countType must be one of: ${validTypes.join(', ')}`);
-    }
-
-    const cycleCount = await cycleCountService.createCycleCount(
-      { countType, warehouseId, zoneId, scheduledDate, notes },
-      req.user!.userId,
-    );
-    sendCreated(res, cycleCount);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── POST /:id/generate-lines — Generate count lines ─────────────────────
 
-router.post('/:id/generate-lines', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const result = await cycleCountService.generateCountLines(req.params.id as string, req.user!.userId);
-    sendSuccess(res, result);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/generate-lines',
+  requirePermission('cycle_count', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await cycleCountService.generateCountLines(req.params.id as string, req.user!.userId);
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/start — Start counting ────────────────────────────────────
 
-router.post('/:id/start', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const updated = await cycleCountService.startCount(req.params.id as string, req.user!.userId);
-    sendSuccess(res, updated);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/start',
+  requirePermission('cycle_count', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const updated = await cycleCountService.startCount(req.params.id as string, req.user!.userId);
+      sendSuccess(res, updated);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/lines/:lineId/count — Record a count ─────────────────────
 
-router.post('/:id/lines/:lineId/count', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
+router.post(
+  '/:id/lines/:lineId/count',
+  requirePermission('cycle_count', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { countedQty, notes } = req.body;
+      if (countedQty === undefined || countedQty === null) {
+        return sendError(res, 400, 'countedQty is required');
+      }
 
-    const { countedQty, notes } = req.body;
-    if (countedQty === undefined || countedQty === null) {
-      return sendError(res, 400, 'countedQty is required');
+      const updated = await cycleCountService.recordCount(
+        req.params.lineId as string,
+        Number(countedQty),
+        req.user!.userId,
+        notes,
+      );
+      sendSuccess(res, updated);
+    } catch (err) {
+      next(err);
     }
-
-    const updated = await cycleCountService.recordCount(
-      req.params.lineId as string,
-      Number(countedQty),
-      req.user!.userId,
-      notes,
-    );
-    sendSuccess(res, updated);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── POST /:id/complete — Complete count ─────────────────────────────────
 
-router.post('/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const updated = await cycleCountService.completeCount(req.params.id as string, req.user!.userId);
-    sendSuccess(res, updated);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/complete',
+  requirePermission('cycle_count', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const updated = await cycleCountService.completeCount(req.params.id as string, req.user!.userId);
+      sendSuccess(res, updated);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/apply-adjustments — Apply inventory adjustments ───────────
 
-router.post('/:id/apply-adjustments', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const role = req.user!.systemRole;
-    if (role !== 'admin' && role !== 'warehouse_supervisor') {
-      return sendError(res, 403, 'Only admin or warehouse supervisor can apply adjustments');
+router.post(
+  '/:id/apply-adjustments',
+  requirePermission('cycle_count', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await cycleCountService.applyAdjustments(req.params.id as string, req.user!.userId);
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
     }
-
-    const result = await cycleCountService.applyAdjustments(req.params.id as string, req.user!.userId);
-    sendSuccess(res, result);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── DELETE /:id — Cancel cycle count ────────────────────────────────────
 
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const updated = await cycleCountService.cancelCount(req.params.id as string, req.user!.userId);
-    sendSuccess(res, updated);
-  } catch (err) {
-    next(err);
-  }
-});
+router.delete(
+  '/:id',
+  requirePermission('cycle_count', 'delete'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const updated = await cycleCountService.cancelCount(req.params.id as string, req.user!.userId);
+      sendSuccess(res, updated);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

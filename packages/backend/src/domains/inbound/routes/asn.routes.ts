@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import * as asnService from '../services/asn.service.js';
@@ -9,22 +10,10 @@ const router = Router();
 
 router.use(authenticate);
 
-const ALLOWED_ROLES = ['admin', 'manager', 'warehouse_supervisor', 'warehouse_staff'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for ASN operations');
-    return false;
-  }
-  return true;
-}
-
 // ── GET / — List ASNs ───────────────────────────────────────────────────
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', requirePermission('grn', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const status = req.query.status as string | undefined;
@@ -45,10 +34,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── GET /:id — Detail with lines ────────────────────────────────────────
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', requirePermission('grn', 'read'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const asn = await asnService.getAsnById(req.params.id as string);
     sendSuccess(res, asn);
   } catch (err) {
@@ -58,10 +45,8 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST / — Create ASN ────────────────────────────────────────────────
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', requirePermission('grn', 'create'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { supplierId, warehouseId, expectedArrival, carrierName, trackingNumber, purchaseOrderRef, notes, lines } =
       req.body;
 
@@ -90,10 +75,8 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── PUT /:id — Update ASN ──────────────────────────────────────────────
 
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', requirePermission('grn', 'update'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const asn = await asnService.updateAsn(req.params.id as string, req.body);
     sendSuccess(res, asn);
   } catch (err) {
@@ -103,52 +86,53 @@ router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST /:id/in-transit — Mark in transit ──────────────────────────────
 
-router.post('/:id/in-transit', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const asn = await asnService.markInTransit(req.params.id as string);
-    sendSuccess(res, asn);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/in-transit',
+  requirePermission('grn', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const asn = await asnService.markInTransit(req.params.id as string);
+      sendSuccess(res, asn);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/arrived — Mark arrived ────────────────────────────────────
 
-router.post('/:id/arrived', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const asn = await asnService.markArrived(req.params.id as string);
-    sendSuccess(res, asn);
-  } catch (err) {
-    next(err);
-  }
-});
+router.post(
+  '/:id/arrived',
+  requirePermission('grn', 'update'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const asn = await asnService.markArrived(req.params.id as string);
+      sendSuccess(res, asn);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST /:id/receive — Receive and create GRN ─────────────────────────
 
-router.post('/:id/receive', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const role = req.user!.systemRole;
-    if (role !== 'admin' && role !== 'manager' && role !== 'warehouse_supervisor') {
-      return sendError(res, 403, 'Only admin, manager, or warehouse supervisor can receive ASNs');
+router.post(
+  '/:id/receive',
+  requirePermission('grn', 'approve'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await asnService.receiveAsn(req.params.id as string, req.user!.userId);
+      sendSuccess(res, result);
+    } catch (err) {
+      next(err);
     }
-
-    const result = await asnService.receiveAsn(req.params.id as string, req.user!.userId);
-    sendSuccess(res, result);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── DELETE /:id — Cancel ASN ────────────────────────────────────────────
 
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', requirePermission('grn', 'delete'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const asn = await asnService.cancelAsn(req.params.id as string);
     sendSuccess(res, asn);
   } catch (err) {
@@ -158,15 +142,17 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
 
 // ── GET /:id/variance — Variance report ─────────────────────────────────
 
-router.get('/:id/variance', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    if (!checkRole(req, res)) return;
-
-    const report = await asnService.getVarianceReport(req.params.id as string);
-    sendSuccess(res, report);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/:id/variance',
+  requirePermission('grn', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const report = await asnService.getVarianceReport(req.params.id as string);
+      sendSuccess(res, report);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

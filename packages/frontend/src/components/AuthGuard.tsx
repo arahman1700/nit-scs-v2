@@ -43,7 +43,6 @@ export const AuthGuard: React.FC = () => {
     } else if (meQuery.isError || (!hasToken && !meQuery.isLoading)) {
       if (meQuery.isError) {
         localStorage.removeItem('nit_scs_token');
-        localStorage.removeItem('nit_scs_refresh_token');
       }
       setIsInitializing(false);
     }
@@ -59,7 +58,6 @@ export const AuthGuard: React.FC = () => {
   const handleLogout = () => {
     disconnectSocket();
     localStorage.removeItem('nit_scs_token');
-    localStorage.removeItem('nit_scs_refresh_token');
     queryClient.clear();
     setIsAuthenticated(false);
   };

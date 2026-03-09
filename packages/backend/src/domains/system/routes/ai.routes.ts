@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole as _requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { aiRateLimiter } from '../../../middleware/rate-limiter.js';
 import { chat, listConversations, getConversation, deleteConversation } from '../services/ai-chat.service.js';
 
@@ -15,7 +15,7 @@ router.use(authenticate);
 
 // ── Chat ───────────────────────────────────────────────────────────────
 
-router.post('/chat', aiRateLimiter(30, 3600), async (req, res, next) => {
+router.post('/chat', requirePermission('settings', 'read'), aiRateLimiter(30, 3600), async (req, res, next) => {
   try {
     const parsed = chatRequestSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -32,7 +32,7 @@ router.post('/chat', aiRateLimiter(30, 3600), async (req, res, next) => {
 
 // ── Conversations ──────────────────────────────────────────────────────
 
-router.get('/conversations', async (req, res, next) => {
+router.get('/conversations', requirePermission('settings', 'read'), async (req, res, next) => {
   try {
     const conversations = await listConversations(req.user!.userId);
     res.json({ success: true, data: conversations });
@@ -41,7 +41,7 @@ router.get('/conversations', async (req, res, next) => {
   }
 });
 
-router.get('/conversations/:id', async (req, res, next) => {
+router.get('/conversations/:id', requirePermission('settings', 'read'), async (req, res, next) => {
   try {
     const conversation = await getConversation(req.params.id as string, req.user!.userId);
     if (!conversation) {
@@ -54,7 +54,7 @@ router.get('/conversations/:id', async (req, res, next) => {
   }
 });
 
-router.delete('/conversations/:id', async (req, res, next) => {
+router.delete('/conversations/:id', requirePermission('settings', 'read'), async (req, res, next) => {
   try {
     const deleted = await deleteConversation(req.params.id as string, req.user!.userId);
     if (!deleted) {

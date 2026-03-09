@@ -6,13 +6,15 @@
 
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { prisma } from '../../../utils/prisma.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication + inventory read permission
 router.use(authenticate);
+router.use(requirePermission('inventory', 'read'));
 
 /**
  * GET /inventory/expiring?daysAhead=30

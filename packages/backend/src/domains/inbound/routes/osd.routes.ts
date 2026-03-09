@@ -13,6 +13,7 @@ const RESOLVE_ROLES = ['admin', 'warehouse_supervisor', 'qc_officer'];
 export default createDocumentRouter({
   docType: 'osd',
   tableName: 'osd_reports',
+  resource: 'dr',
   scopeMapping: { warehouseField: 'warehouseId' },
 
   list: osdService.list,

@@ -4,6 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache',
@@ -67,16 +68,10 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('nit_scs_refresh_token');
-        if (!refreshToken) throw new Error('No refresh token');
-
-        const { data } = await axios.post(`${API_URL}/auth/refresh`, {
-          refreshToken,
-        });
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true });
 
         const newToken = data.data.accessToken;
         localStorage.setItem('nit_scs_token', newToken);
-        localStorage.setItem('nit_scs_refresh_token', data.data.refreshToken);
 
         isRefreshing = false;
         onRefreshSuccess(newToken);
@@ -88,7 +83,6 @@ apiClient.interceptors.response.use(
         onRefreshFailure(refreshError);
 
         localStorage.removeItem('nit_scs_token');
-        localStorage.removeItem('nit_scs_refresh_token');
         // Use soft navigation instead of full page reload
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';

@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from '../../../utils/response.js';
 import { createAuditLog } from '../../system/services/audit.service.js';
@@ -23,15 +23,20 @@ import {
 const router = Router();
 
 // ── GET / — List rules (optional ?warehouseId filter) ────────────────────
-router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const warehouseId = req.query.warehouseId as string | undefined;
-    const data = await listRules(warehouseId);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/',
+  authenticate,
+  requirePermission('warehouse_zone', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const warehouseId = req.query.warehouseId as string | undefined;
+      const data = await listRules(warehouseId);
+      sendSuccess(res, data);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── GET /suggest — Get put-away suggestions for an item ──────────────────
 router.get('/suggest', authenticate, async (req: Request, res: Response, next: NextFunction) => {
@@ -62,7 +67,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response, next: NextF
 router.post(
   '/',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'create'),
   validate(putAwayRuleCreateSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -88,7 +93,7 @@ router.post(
 router.put(
   '/:id',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'update'),
   validate(putAwayRuleUpdateSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -114,7 +119,7 @@ router.put(
 router.delete(
   '/:id',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'delete'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       await deleteRule(req.params.id as string);

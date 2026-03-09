@@ -48,7 +48,8 @@ describe('useLogin', () => {
     });
 
     expect(mockStorage.setItem).toHaveBeenCalledWith('nit_scs_token', 'mock-access-token');
-    expect(mockStorage.setItem).toHaveBeenCalledWith('nit_scs_refresh_token', 'mock-refresh-token');
+    // Refresh token is now set as httpOnly cookie by server, not in localStorage
+    expect(mockStorage.setItem).not.toHaveBeenCalledWith('nit_scs_refresh_token', expect.anything());
   });
 
   it('rejects with 401 on wrong password', async () => {
@@ -97,10 +98,9 @@ describe('useLogout', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStorage.setItem('nit_scs_token', 'token');
-    mockStorage.setItem('nit_scs_refresh_token', 'refresh');
   });
 
-  it('clears tokens on logout', async () => {
+  it('clears access token on logout (refresh token cookie cleared by server)', async () => {
     const wrapper = createWrapper();
     const { result } = renderHook(() => useLogout(), { wrapper });
 
@@ -109,6 +109,6 @@ describe('useLogout', () => {
     });
 
     expect(mockStorage.removeItem).toHaveBeenCalledWith('nit_scs_token');
-    expect(mockStorage.removeItem).toHaveBeenCalledWith('nit_scs_refresh_token');
+    expect(mockStorage.removeItem).not.toHaveBeenCalledWith('nit_scs_refresh_token');
   });
 });

@@ -5,12 +5,12 @@
 ---
 
 ## RESUME POINT
-- المرحلة: Pre-Mission (Baseline مكتمل، المهمة لم تبدأ بعد)
-- آخر ملف: MISSION.md (إنشاء التوجيه)
-- الحالة: Baseline مسجّل، جاهز لبدء التنفيذ
-- التالي: ابدأ من الخطوة الأولى — اقرأ MISSION.md ثم نفّذ
+- المرحلة: Phase 2 — Security Hardening
+- آخر ملف: packages/backend/src/domains/inventory/services/inventory.service.ts
+- الحالة: Phase 1 مكتمل (3 Critical issues حُلّت)
+- التالي: Phase 2 — localStorage token → httpOnly cookie, requirePermission على 31 route, CSRF
 - الاختبارات: 4,160/4,160 passed (0 failures)
-- آخر commit: 556ad34 fix: flatten Zod schemas, add comment access control, guard warehouse delete, expose cron rules API
+- آخر commit: 5922cb9 fix: make status+stock operations atomic, fix cycle-count optimistic locking
 
 ---
 
@@ -92,7 +92,16 @@
 
 ## Execution Phases — All PENDING
 
-### Phase 1: Transaction Safety & Data Integrity — PENDING
+### Phase 1: Transaction Safety & Data Integrity — ✅ DONE
+#### ما تم
+- GRN store(), ST ship/receive(), MRN complete() — status + stock عمليات atomic الآن
+- MI/MIRV approve() — reservation + line updates + MI header update atomic
+- MI/MIRV issue() — consumeReservationBatch + line costs + status + GatePass atomic
+- Cycle count applyAdjustments() — optimistic locking مصلح (updateLevelWithVersion)
+- Inventory batch functions تقبل externalTx اختياري للتركيب في transactions أكبر
+- 6 test files محدّثة لتتوافق مع الأنماط الجديدة
+#### قرارات معمارية
+- قرار: Optional externalTx بدل Tx functions منفصلة — backward compatible، أقل تكرار
 ### Phase 2: Security Hardening — PENDING
 ### Phase 3: V1/V2 Unification — PENDING
 ### Phase 4: N+1 & Performance — PENDING

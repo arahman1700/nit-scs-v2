@@ -14,6 +14,7 @@ const WRITE_ROLES = ['admin', 'manager', 'site_engineer', 'warehouse_supervisor'
 export default createDocumentRouter({
   docType: 'mrv',
   tableName: 'mrv',
+  resource: 'mrn',
   scopeMapping: { warehouseField: 'toWarehouseId', projectField: 'projectId', createdByField: 'returnedById' },
 
   list: mrvService.list,

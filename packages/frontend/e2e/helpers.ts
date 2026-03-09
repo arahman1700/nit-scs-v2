@@ -69,18 +69,18 @@ export async function gotoAuth(page: Page, url: string) {
     await clearRateLimits();
   }
 
-  // Add init script that runs before any page JS - this sets localStorage tokens
-  // so the app sees them immediately on load
+  // Add init script that runs before any page JS - this sets the access token
+  // in localStorage so the app sees it immediately on load.
+  // The refresh token is handled via httpOnly cookie (set by the server).
   await page.addInitScript(
-    ({ t, rt }) => {
+    ({ t }) => {
       try {
         localStorage.setItem('nit_scs_token', t);
-        localStorage.setItem('nit_scs_refresh_token', rt);
       } catch {
         // ignore - might be about:blank
       }
     },
-    { t: token, rt: refreshToken },
+    { t: token },
   );
 
   // Navigate directly to target

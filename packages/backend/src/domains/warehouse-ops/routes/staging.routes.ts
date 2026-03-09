@@ -12,24 +12,16 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import * as stagingService from '../services/staging.service.js';
 
 const router = Router();
 
-// All routes require authentication
+// All routes require authentication + warehouse_zone permission
 router.use(authenticate);
-
-const ALLOWED_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff'];
-
-function checkRole(req: Request, res: Response): boolean {
-  if (!ALLOWED_ROLES.includes(req.user!.systemRole)) {
-    sendError(res, 403, 'Insufficient permissions for staging area management');
-    return false;
-  }
-  return true;
-}
+router.use(requirePermission('warehouse_zone', 'read'));
 
 /**
  * If the user is warehouse-scoped, return their assigned warehouseId,
@@ -54,8 +46,6 @@ function resolveWarehouseScope(req: Request, warehouseId: string | undefined): s
 // GET /staging/zones
 router.get('/zones', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;
@@ -75,8 +65,6 @@ router.get('/zones', async (req: Request, res: Response, next: NextFunction) => 
 // GET /staging/alerts
 router.get('/alerts', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;
@@ -92,8 +80,6 @@ router.get('/alerts', async (req: Request, res: Response, next: NextFunction) =>
 // GET /staging/occupancy
 router.get('/occupancy', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const resolved = resolveWarehouseScope(req, req.query.warehouseId as string);
     if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
     const warehouseId = resolved;
@@ -113,8 +99,6 @@ router.get('/occupancy', async (req: Request, res: Response, next: NextFunction)
 // GET /staging
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const zoneId = req.query.zoneId as string | undefined;
@@ -143,8 +127,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 // POST /staging
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const { zoneId, warehouseId, itemId, sourceDocType, sourceDocId, quantity, direction } = req.body;
     if (!zoneId || !warehouseId || !itemId || !sourceDocType || !sourceDocId || !quantity || !direction) {
       return sendError(
@@ -174,8 +156,6 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 // POST /staging/:id/move
 router.post('/:id/move', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!checkRole(req, res)) return;
-
     const data = await stagingService.moveFromStaging(req.params.id as string, req.user!.userId);
     sendSuccess(res, data);
   } catch (err) {

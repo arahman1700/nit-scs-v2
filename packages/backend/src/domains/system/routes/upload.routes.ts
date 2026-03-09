@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { mkdirSync, existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -68,31 +69,36 @@ const upload = multer({
 const router = Router();
 
 // POST /api/upload — Upload a single file (auth required)
-router.post('/', authenticate, (req: Request, res: Response, _next: NextFunction) => {
-  upload.single('file')(req, res, err => {
-    if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') {
-        return sendError(res, 400, 'File too large. Maximum size is 10MB.');
+router.post(
+  '/',
+  authenticate,
+  requirePermission('settings', 'create'),
+  (req: Request, res: Response, _next: NextFunction) => {
+    upload.single('file')(req, res, err => {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return sendError(res, 400, 'File too large. Maximum size is 10MB.');
+        }
+        return sendError(res, 400, err.message);
       }
-      return sendError(res, 400, err.message);
-    }
-    if (err) {
-      return sendError(res, 400, err.message);
-    }
-    if (!req.file) {
-      return sendError(res, 400, 'No file uploaded');
-    }
+      if (err) {
+        return sendError(res, 400, err.message);
+      }
+      if (!req.file) {
+        return sendError(res, 400, 'No file uploaded');
+      }
 
-    // Return the API-served URL (not a direct static path)
-    const fileUrl = `/api/v1/upload/files/${req.file.filename}`;
-    sendSuccess(res, {
-      url: fileUrl,
-      originalName: req.file.originalname,
-      size: req.file.size,
-      mimeType: req.file.mimetype,
+      // Return the API-served URL (not a direct static path)
+      const fileUrl = `/api/v1/upload/files/${req.file.filename}`;
+      sendSuccess(res, {
+        url: fileUrl,
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      });
     });
-  });
-});
+  },
+);
 
 // GET /api/upload/files/:filename — Serve uploaded files (auth required)
 router.get('/files/:filename', authenticate, (req: Request, res: Response) => {

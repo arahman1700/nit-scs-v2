@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { createAuditLog } from '../../system/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
@@ -39,72 +39,92 @@ function resolveWarehouseScope(req: Request, warehouseId: string | undefined): s
 }
 
 // ── GET /opportunities — Identify cross-dock opportunities ──────────────
-router.get('/opportunities', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
-    if (resolved === null) {
-      sendError(res, 403, 'You do not have access to this warehouse');
-      return;
+router.get(
+  '/opportunities',
+  authenticate,
+  requirePermission('warehouse_zone', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+      if (resolved === null) {
+        sendError(res, 403, 'You do not have access to this warehouse');
+        return;
+      }
+      const warehouseId = resolved;
+      if (!warehouseId) {
+        sendError(res, 400, 'warehouseId query param is required');
+        return;
+      }
+      const data = await identifyOpportunities(warehouseId);
+      sendSuccess(res, data);
+    } catch (err) {
+      next(err);
     }
-    const warehouseId = resolved;
-    if (!warehouseId) {
-      sendError(res, 400, 'warehouseId query param is required');
-      return;
-    }
-    const data = await identifyOpportunities(warehouseId);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── GET /stats — Cross-dock statistics ──────────────────────────────────
-router.get('/stats', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
-    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
-    const warehouseId = resolved;
-    const data = await getStats(warehouseId);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/stats',
+  authenticate,
+  requirePermission('warehouse_zone', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+      if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+      const warehouseId = resolved;
+      const data = await getStats(warehouseId);
+      sendSuccess(res, data);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── GET / — Paginated list ──────────────────────────────────────────────
-router.get('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { status, page, pageSize } = req.query as Record<string, string | undefined>;
-    const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
-    if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
-    const warehouseId = resolved;
-    const result = await getCrossDocks({
-      warehouseId,
-      status,
-      page: page ? Number(page) : undefined,
-      pageSize: pageSize ? Number(pageSize) : undefined,
-    });
-    sendSuccess(res, result.data, { page: result.page, pageSize: result.pageSize, total: result.total });
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/',
+  authenticate,
+  requirePermission('warehouse_zone', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { status, page, pageSize } = req.query as Record<string, string | undefined>;
+      const resolved = resolveWarehouseScope(req, req.query.warehouseId as string | undefined);
+      if (resolved === null) return sendError(res, 403, 'You do not have access to this warehouse');
+      const warehouseId = resolved;
+      const result = await getCrossDocks({
+        warehouseId,
+        status,
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+      });
+      sendSuccess(res, result.data, { page: result.page, pageSize: result.pageSize, total: result.total });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── GET /:id — Single cross-dock detail ─────────────────────────────────
-router.get('/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const data = await getCrossDockById(req.params.id as string);
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  '/:id',
+  authenticate,
+  requirePermission('warehouse_zone', 'read'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getCrossDockById(req.params.id as string);
+      sendSuccess(res, data);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── POST / — Create a cross-dock record ─────────────────────────────────
 router.post(
   '/',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'create'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await createCrossDock(req.body);
@@ -129,7 +149,7 @@ router.post(
 router.post(
   '/:id/approve',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'approve'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await approveCrossDock(req.params.id as string);
@@ -153,7 +173,7 @@ router.post(
 router.post(
   '/:id/execute',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor', 'warehouse_staff'),
+  requirePermission('warehouse_zone', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await executeCrossDock(req.params.id as string);
@@ -177,7 +197,7 @@ router.post(
 router.post(
   '/:id/complete',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor', 'warehouse_staff'),
+  requirePermission('warehouse_zone', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await completeCrossDock(req.params.id as string);
@@ -201,7 +221,7 @@ router.post(
 router.post(
   '/:id/cancel',
   authenticate,
-  requireRole('admin', 'warehouse_supervisor'),
+  requirePermission('warehouse_zone', 'update'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await cancelCrossDock(req.params.id as string);

@@ -53,6 +53,9 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockResolvedValue(true),
+}));
 
 vi.mock('../services/barcode.service.js', () => ({
   formatGS1Barcode: vi.fn().mockReturnValue('(01)12345678901234'),

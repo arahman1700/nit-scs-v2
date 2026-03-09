@@ -40,6 +40,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     generator_fuel: ['create', 'read'],
     generator_maintenance: ['create', 'read', 'update'],
     warehouse_zone: ['create', 'read', 'update', 'delete'],
+    cycle_count: ['create', 'read', 'update', 'delete'],
   },
   [UserRole.MANAGER]: {
     grn: ['read', 'approve', 'export'],
@@ -64,6 +65,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     generator_fuel: ['read'],
     generator_maintenance: ['read'],
     reports: ['read', 'export'],
+    cycle_count: ['read'],
   },
   [UserRole.WAREHOUSE_SUPERVISOR]: {
     grn: ['create', 'read', 'update', 'approve'],
@@ -84,6 +86,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     warehouse_zone: ['read'],
     tool: ['read', 'update'],
     tool_issue: ['create', 'read', 'update'],
+    cycle_count: ['create', 'read', 'update'],
   },
   [UserRole.WAREHOUSE_STAFF]: {
     grn: ['create', 'read', 'update'],
@@ -99,6 +102,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     imsf: ['read'],
     bin_card: ['read', 'update'],
     tool_issue: ['create', 'read'],
+    cycle_count: ['create', 'read', 'update'],
   },
   [UserRole.LOGISTICS_COORDINATOR]: {
     grn: ['create', 'read', 'update'],
@@ -189,6 +193,7 @@ const ROLE_PERMISSIONS: Record<string, ResourcePermissions> = {
     warehouse_zone: ['read', 'update'],
     tool: ['read', 'update'],
     tool_issue: ['create', 'read', 'update'],
+    cycle_count: ['read', 'update'],
   },
   [UserRole.SHIPPING_OFFICER]: {
     shipment: ['create', 'read', 'update', 'export'],

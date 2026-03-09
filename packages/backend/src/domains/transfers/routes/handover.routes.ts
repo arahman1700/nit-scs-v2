@@ -8,6 +8,7 @@ import { handoverCreateSchema, handoverUpdateSchema } from '../../../schemas/doc
 export default createCrudRouter({
   modelName: 'storekeeperHandover',
   tableName: 'storekeeper_handovers',
+  resource: 'wt',
   createSchema: handoverCreateSchema,
   updateSchema: handoverUpdateSchema,
   searchFields: [],

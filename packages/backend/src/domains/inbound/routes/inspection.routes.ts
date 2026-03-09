@@ -4,6 +4,7 @@
  */
 import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from '../../../utils/response.js';
 import * as aqlService from '../services/aql.service.js';
 import * as checklistService from '../services/inspection-checklist.service.js';
@@ -11,8 +12,9 @@ import type { InspectionLevel } from '../services/aql.service.js';
 
 const router = Router();
 
-// All inspection routes require authentication
+// All inspection routes require authentication + permission
 router.use(authenticate);
+router.use(requirePermission('qci', 'read'));
 
 // ── AQL Calculator ─────────────────────────────────────────────────────────
 

@@ -40,7 +40,7 @@ export const useAppStore = create<AppState>(set => ({
   },
   clearAuth: () => {
     localStorage.removeItem('nit_scs_token');
-    localStorage.removeItem('nit_scs_refresh_token');
+    // Refresh token cookie is cleared by the server
     set({ user: null, token: null, isAuthenticated: false });
   },
 

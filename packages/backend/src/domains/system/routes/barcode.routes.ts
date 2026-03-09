@@ -2,12 +2,14 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import bwipjs from 'bwip-js';
 import { authenticate } from '../../../middleware/auth.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { prisma } from '../../../utils/prisma.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 import { formatGS1Barcode, generateBinLocationQR, generateItemLabel } from '../services/barcode.service.js';
 
 const router = Router();
 router.use(authenticate);
+router.use(requirePermission('items', 'read'));
 
 // ── Generate Barcode Image ──────────────────────────────────────────────────
 router.get('/generate', async (req: Request, res: Response) => {
