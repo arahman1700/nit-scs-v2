@@ -685,8 +685,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Supplier</label>
+              <label htmlFor="asn-supplier-field" className="block text-sm text-gray-400 mb-1">
+                Supplier
+              </label>
               <select
+                id="asn-supplier-field"
                 value={form.supplierId}
                 onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
                 className="input-field w-full py-2 px-3 rounded-xl text-sm"
@@ -701,8 +704,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Warehouse</label>
+              <label htmlFor="asn-warehouse-field" className="block text-sm text-gray-400 mb-1">
+                Warehouse
+              </label>
               <select
+                id="asn-warehouse-field"
                 value={form.warehouseId}
                 onChange={e => setForm(f => ({ ...f, warehouseId: e.target.value }))}
                 className="input-field w-full py-2 px-3 rounded-xl text-sm"
@@ -720,8 +726,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Expected Arrival</label>
+              <label htmlFor="asn-expected-arrival-field" className="block text-sm text-gray-400 mb-1">
+                Expected Arrival
+              </label>
               <input
+                id="asn-expected-arrival-field"
                 type="date"
                 value={form.expectedArrival}
                 onChange={e => setForm(f => ({ ...f, expectedArrival: e.target.value }))}
@@ -730,8 +739,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">PO Reference</label>
+              <label htmlFor="asn-po-ref-field" className="block text-sm text-gray-400 mb-1">
+                PO Reference
+              </label>
               <input
+                id="asn-po-ref-field"
                 type="text"
                 value={form.purchaseOrderRef}
                 onChange={e => setForm(f => ({ ...f, purchaseOrderRef: e.target.value }))}
@@ -743,8 +755,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Carrier Name</label>
+              <label htmlFor="asn-carrier-name-field" className="block text-sm text-gray-400 mb-1">
+                Carrier Name
+              </label>
               <input
+                id="asn-carrier-name-field"
                 type="text"
                 value={form.carrierName}
                 onChange={e => setForm(f => ({ ...f, carrierName: e.target.value }))}
@@ -753,8 +768,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Tracking Number</label>
+              <label htmlFor="asn-tracking-number-field" className="block text-sm text-gray-400 mb-1">
+                Tracking Number
+              </label>
               <input
+                id="asn-tracking-number-field"
                 type="text"
                 value={form.trackingNumber}
                 onChange={e => setForm(f => ({ ...f, trackingNumber: e.target.value }))}
@@ -764,8 +782,11 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Notes</label>
+            <label htmlFor="asn-notes-field" className="block text-sm text-gray-400 mb-1">
+              Notes
+            </label>
             <textarea
+              id="asn-notes-field"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input-field w-full py-2 px-3 rounded-xl text-sm"

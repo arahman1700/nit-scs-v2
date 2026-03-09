@@ -182,8 +182,11 @@ const DataSourceFilterBuilder: React.FC<{
       {/* groupBy — only for group_by aggregation */}
       {editing.aggregation === 'group_by' && (
         <div>
-          <label className="text-sm text-gray-300 block mb-1">Group By Field</label>
+          <label htmlFor="ds-group-by-field" className="text-sm text-gray-300 block mb-1">
+            Group By Field
+          </label>
           <input
+            id="ds-group-by-field"
             type="text"
             value={editing.queryTemplate?.groupBy ?? ''}
             onChange={e => updateQueryField('groupBy', e.target.value)}
@@ -203,8 +206,11 @@ const DataSourceFilterBuilder: React.FC<{
       {editing.aggregation === 'timeseries' && (
         <div className="space-y-3">
           <div>
-            <label className="text-sm text-gray-300 block mb-1">Date Field</label>
+            <label htmlFor="ds-date-field" className="text-sm text-gray-300 block mb-1">
+              Date Field
+            </label>
             <input
+              id="ds-date-field"
               type="text"
               value={editing.queryTemplate?.dateField ?? ''}
               onChange={e => updateQueryField('dateField', e.target.value)}
@@ -246,8 +252,11 @@ const DataSourceFilterBuilder: React.FC<{
       {/* sumField — only for sum / avg */}
       {(editing.aggregation === 'sum' || editing.aggregation === 'avg') && (
         <div>
-          <label className="text-sm text-gray-300 block mb-1">Aggregate Field</label>
+          <label htmlFor="ds-aggregate-field" className="text-sm text-gray-300 block mb-1">
+            Aggregate Field
+          </label>
           <input
+            id="ds-aggregate-field"
             type="text"
             value={editing.queryTemplate?.sumField ?? ''}
             onChange={e => updateQueryField('sumField', e.target.value)}
@@ -434,16 +443,22 @@ export function CustomDataSourcePage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="text-sm text-gray-300 block mb-1">Name</label>
+                <label htmlFor="ds-name-field" className="text-sm text-gray-300 block mb-1">
+                  Name
+                </label>
                 <input
+                  id="ds-name-field"
                   className="input-field w-full"
                   value={editing.name}
                   onChange={e => setEditing(p => ({ ...p, name: e.target.value }))}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Source Key</label>
+                <label htmlFor="ds-source-key-field" className="text-sm text-gray-300 block mb-1">
+                  Source Key
+                </label>
                 <input
+                  id="ds-source-key-field"
                   className="input-field w-full"
                   value={editing.sourceKey}
                   onChange={e => setEditing(p => ({ ...p, sourceKey: e.target.value }))}
@@ -451,8 +466,11 @@ export function CustomDataSourcePage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Entity Type</label>
+                <label htmlFor="ds-entity-type-field" className="text-sm text-gray-300 block mb-1">
+                  Entity Type
+                </label>
                 <select
+                  id="ds-entity-type-field"
                   className="input-field w-full"
                   value={editing.entityType}
                   onChange={e => setEditing(p => ({ ...p, entityType: e.target.value }))}
@@ -466,8 +484,11 @@ export function CustomDataSourcePage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Aggregation</label>
+                <label htmlFor="ds-aggregation-field" className="text-sm text-gray-300 block mb-1">
+                  Aggregation
+                </label>
                 <select
+                  id="ds-aggregation-field"
                   className="input-field w-full"
                   value={editing.aggregation}
                   onChange={e => setEditing(p => ({ ...p, aggregation: e.target.value as typeof p.aggregation }))}
@@ -480,8 +501,11 @@ export function CustomDataSourcePage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Output Type</label>
+                <label htmlFor="ds-output-type-field" className="text-sm text-gray-300 block mb-1">
+                  Output Type
+                </label>
                 <select
+                  id="ds-output-type-field"
                   className="input-field w-full"
                   value={editing.outputType}
                   onChange={e => setEditing(p => ({ ...p, outputType: e.target.value as typeof p.outputType }))}

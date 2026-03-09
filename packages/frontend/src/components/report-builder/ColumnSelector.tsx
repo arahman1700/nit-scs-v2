@@ -51,7 +51,9 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ dataSource, sele
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="text-sm text-gray-400">Columns</label>
+        <label id="columnSelectorLabel" className="text-sm text-gray-400">
+          Columns
+        </label>
         <div className="flex gap-2 text-xs">
           <button onClick={selectAll} className="text-nesma-secondary hover:underline">
             All

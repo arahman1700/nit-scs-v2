@@ -39,12 +39,17 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ templateId, va
     <div className="space-y-4">
       {/* Sample variable inputs */}
       <div>
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Sample Variables</label>
+        <label id="sampleVariablesLabel" className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+          Sample Variables
+        </label>
         <div className="grid grid-cols-2 gap-2">
           {variables.map(v => (
             <div key={v}>
-              <label className="text-[10px] text-gray-500 uppercase">{v}</label>
+              <label htmlFor={`sampleVar-${v}`} className="text-[10px] text-gray-500 uppercase">
+                {v}
+              </label>
               <input
+                id={`sampleVar-${v}`}
                 type="text"
                 value={sampleData[v] || ''}
                 onChange={e => setSampleData({ ...sampleData, [v]: e.target.value })}

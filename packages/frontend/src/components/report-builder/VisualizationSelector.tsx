@@ -16,7 +16,9 @@ interface VisualizationSelectorProps {
 export const VisualizationSelector: React.FC<VisualizationSelectorProps> = ({ value, onChange }) => {
   return (
     <div>
-      <label className="block text-sm text-gray-400 mb-1.5">Visualization</label>
+      <label id="visualizationLabel" className="block text-sm text-gray-400 mb-1.5">
+        Visualization
+      </label>
       <div className="grid grid-cols-2 gap-2">
         {VIZ_OPTIONS.map(opt => {
           const Icon = opt.icon;

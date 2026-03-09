@@ -128,10 +128,14 @@ export const WorkflowBuilderPage: React.FC = () => {
           {editingRule && (
             <div className="bg-white/[0.02] rounded-2xl border border-white/10 p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+                <label
+                  htmlFor="ruleName"
+                  className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5"
+                >
                   Rule Name
                 </label>
                 <input
+                  id="ruleName"
                   type="text"
                   value={editingRule.name}
                   onChange={e => setEditingRule({ ...editingRule, name: e.target.value })}

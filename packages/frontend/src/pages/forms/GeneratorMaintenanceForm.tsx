@@ -130,8 +130,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Generator */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Generator</label>
+            <label htmlFor="generator-field" className="block text-gray-400 text-sm mb-1">
+              Generator
+            </label>
             <select
+              id="generator-field"
               value={(formData.generatorId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, generatorId: e.target.value }))}
               className="input-field w-full"
@@ -148,8 +151,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
 
           {/* Maintenance Type */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Maintenance Type</label>
+            <label htmlFor="maintenance-type-field" className="block text-gray-400 text-sm mb-1">
+              Maintenance Type
+            </label>
             <select
+              id="maintenance-type-field"
               value={(formData.maintenanceType as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, maintenanceType: e.target.value }))}
               className="input-field w-full"
@@ -166,8 +172,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
 
           {/* Scheduled Date */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Scheduled Date</label>
+            <label htmlFor="scheduled-date-field" className="block text-gray-400 text-sm mb-1">
+              Scheduled Date
+            </label>
             <input
+              id="scheduled-date-field"
               type="date"
               value={(formData.scheduledDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, scheduledDate: e.target.value }))}
@@ -178,8 +187,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
 
           {/* Cost */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Cost</label>
+            <label htmlFor="cost-field" className="block text-gray-400 text-sm mb-1">
+              Cost
+            </label>
             <input
+              id="cost-field"
               type="number"
               step="0.01"
               min="0"
@@ -198,8 +210,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
 
         {/* Findings */}
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Findings</label>
+          <label htmlFor="findings-field" className="block text-gray-400 text-sm mb-1">
+            Findings
+          </label>
           <textarea
+            id="findings-field"
             value={(formData.findings as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, findings: e.target.value }))}
             className="input-field w-full"
@@ -210,8 +225,11 @@ export const GeneratorMaintenanceForm: React.FC = () => {
 
         {/* Parts Replaced */}
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Parts Replaced</label>
+          <label htmlFor="parts-replaced-field" className="block text-gray-400 text-sm mb-1">
+            Parts Replaced
+          </label>
           <textarea
+            id="parts-replaced-field"
             value={(formData.partsReplaced as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, partsReplaced: e.target.value }))}
             className="input-field w-full"

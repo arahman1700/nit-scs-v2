@@ -129,8 +129,11 @@ export const ToolForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Tool Name */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Tool Name</label>
+            <label htmlFor="tool-name-field" className="block text-gray-400 text-sm mb-1">
+              Tool Name
+            </label>
             <input
+              id="tool-name-field"
               type="text"
               value={(formData.toolName as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, toolName: e.target.value }))}
@@ -142,8 +145,11 @@ export const ToolForm: React.FC = () => {
 
           {/* Category */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Category</label>
+            <label htmlFor="category-field" className="block text-gray-400 text-sm mb-1">
+              Category
+            </label>
             <input
+              id="category-field"
               type="text"
               value={(formData.category as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, category: e.target.value }))}
@@ -154,8 +160,11 @@ export const ToolForm: React.FC = () => {
 
           {/* Serial Number */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Serial Number</label>
+            <label htmlFor="serial-number-field" className="block text-gray-400 text-sm mb-1">
+              Serial Number
+            </label>
             <input
+              id="serial-number-field"
               type="text"
               value={(formData.serialNumber as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, serialNumber: e.target.value }))}
@@ -166,8 +175,11 @@ export const ToolForm: React.FC = () => {
 
           {/* Warehouse */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Warehouse</label>
+            <label htmlFor="warehouse-field" className="block text-gray-400 text-sm mb-1">
+              Warehouse
+            </label>
             <select
+              id="warehouse-field"
               value={(formData.warehouseId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, warehouseId: e.target.value }))}
               className="input-field w-full"
@@ -183,8 +195,11 @@ export const ToolForm: React.FC = () => {
 
           {/* Purchase Date */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Purchase Date</label>
+            <label htmlFor="purchase-date-field" className="block text-gray-400 text-sm mb-1">
+              Purchase Date
+            </label>
             <input
+              id="purchase-date-field"
               type="date"
               value={(formData.purchaseDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, purchaseDate: e.target.value }))}
@@ -194,8 +209,11 @@ export const ToolForm: React.FC = () => {
 
           {/* Warranty Expiry */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Warranty Expiry</label>
+            <label htmlFor="warranty-expiry-field" className="block text-gray-400 text-sm mb-1">
+              Warranty Expiry
+            </label>
             <input
+              id="warranty-expiry-field"
               type="date"
               value={(formData.warrantyExpiry as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, warrantyExpiry: e.target.value }))}

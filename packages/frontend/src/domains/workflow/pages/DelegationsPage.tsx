@@ -129,8 +129,11 @@ export const DelegationsPage: React.FC = () => {
           <h3 className="text-sm font-semibold text-white">Create Delegation</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Delegate To *</label>
+              <label htmlFor="delegate-to-field" className="block text-xs text-gray-400 mb-1">
+                Delegate To *
+              </label>
               <select
+                id="delegate-to-field"
                 value={delegateId}
                 onChange={e => setDelegateId(e.target.value)}
                 required
@@ -146,8 +149,11 @@ export const DelegationsPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Scope</label>
+              <label htmlFor="scope-field" className="block text-xs text-gray-400 mb-1">
+                Scope
+              </label>
               <select
+                id="scope-field"
                 value={scope}
                 onChange={e => setScope(e.target.value)}
                 className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
@@ -160,8 +166,11 @@ export const DelegationsPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Start Date *</label>
+              <label htmlFor="start-date-field" className="block text-xs text-gray-400 mb-1">
+                Start Date *
+              </label>
               <input
+                id="start-date-field"
                 type="date"
                 value={startDate}
                 onChange={e => setStartDate(e.target.value)}
@@ -170,8 +179,11 @@ export const DelegationsPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">End Date *</label>
+              <label htmlFor="end-date-field" className="block text-xs text-gray-400 mb-1">
+                End Date *
+              </label>
               <input
+                id="end-date-field"
                 type="date"
                 value={endDate}
                 onChange={e => setEndDate(e.target.value)}
@@ -180,8 +192,11 @@ export const DelegationsPage: React.FC = () => {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs text-gray-400 mb-1">Notes</label>
+              <label htmlFor="notes-field" className="block text-xs text-gray-400 mb-1">
+                Notes
+              </label>
               <textarea
+                id="notes-field"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Reason for delegation (optional)"

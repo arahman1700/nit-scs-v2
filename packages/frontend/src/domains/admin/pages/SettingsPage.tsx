@@ -62,8 +62,11 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">VAT Rate (%)</label>
+            <label htmlFor="vatRate" className="text-sm font-medium text-gray-300">
+              VAT Rate (%)
+            </label>
             <input
+              id="vatRate"
               type="number"
               value={settings.vatRate}
               onChange={e => setSettings(s => ({ ...s, vatRate: Number(e.target.value) }))}
@@ -71,8 +74,11 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">Currency</label>
+            <label htmlFor="currency" className="text-sm font-medium text-gray-300">
+              Currency
+            </label>
             <input
+              id="currency"
               type="text"
               value={settings.currency}
               readOnly
@@ -80,8 +86,11 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">Timezone</label>
+            <label htmlFor="timezone" className="text-sm font-medium text-gray-300">
+              Timezone
+            </label>
             <input
+              id="timezone"
               type="text"
               value={settings.timezone}
               readOnly
@@ -89,8 +98,11 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">Date Format</label>
+            <label htmlFor="dateFormat" className="text-sm font-medium text-gray-300">
+              Date Format
+            </label>
             <select
+              id="dateFormat"
               value={settings.dateFormat}
               onChange={e => setSettings(s => ({ ...s, dateFormat: e.target.value }))}
               className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -101,8 +113,11 @@ export const SettingsPage: React.FC = () => {
             </select>
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">Over-Delivery Tolerance (%)</label>
+            <label htmlFor="overDeliveryTolerance" className="text-sm font-medium text-gray-300">
+              Over-Delivery Tolerance (%)
+            </label>
             <input
+              id="overDeliveryTolerance"
               type="number"
               value={settings.overDeliveryTolerance}
               onChange={e => setSettings(s => ({ ...s, overDeliveryTolerance: Number(e.target.value) }))}
@@ -110,8 +125,11 @@ export const SettingsPage: React.FC = () => {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-300">Backdate Limit (days)</label>
+            <label htmlFor="backdateLimit" className="text-sm font-medium text-gray-300">
+              Backdate Limit (days)
+            </label>
             <input
+              id="backdateLimit"
               type="number"
               value={settings.backdateLimit}
               onChange={e => setSettings(s => ({ ...s, backdateLimit: Number(e.target.value) }))}

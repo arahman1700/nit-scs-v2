@@ -148,8 +148,11 @@ export const HandoverForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Warehouse */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Warehouse</label>
+            <label htmlFor="warehouse-field" className="block text-gray-400 text-sm mb-1">
+              Warehouse
+            </label>
             <select
+              id="warehouse-field"
               value={(formData.warehouseId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, warehouseId: e.target.value }))}
               className="input-field w-full"
@@ -166,8 +169,11 @@ export const HandoverForm: React.FC = () => {
 
           {/* Handover Date */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Handover Date</label>
+            <label htmlFor="handover-date-field" className="block text-gray-400 text-sm mb-1">
+              Handover Date
+            </label>
             <input
+              id="handover-date-field"
               type="date"
               value={(formData.handoverDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, handoverDate: e.target.value }))}
@@ -178,8 +184,11 @@ export const HandoverForm: React.FC = () => {
 
           {/* Outgoing Employee */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Outgoing Employee</label>
+            <label htmlFor="outgoing-employee-field" className="block text-gray-400 text-sm mb-1">
+              Outgoing Employee
+            </label>
             <select
+              id="outgoing-employee-field"
               value={(formData.outgoingEmployeeId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, outgoingEmployeeId: e.target.value }))}
               className="input-field w-full"
@@ -196,8 +205,11 @@ export const HandoverForm: React.FC = () => {
 
           {/* Incoming Employee */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Incoming Employee</label>
+            <label htmlFor="incoming-employee-field" className="block text-gray-400 text-sm mb-1">
+              Incoming Employee
+            </label>
             <select
+              id="incoming-employee-field"
               value={(formData.incomingEmployeeId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, incomingEmployeeId: e.target.value }))}
               className="input-field w-full"
@@ -233,8 +245,11 @@ export const HandoverForm: React.FC = () => {
 
         {/* Discrepancies Found */}
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Discrepancies Found</label>
+          <label htmlFor="discrepancies-field" className="block text-gray-400 text-sm mb-1">
+            Discrepancies Found
+          </label>
           <textarea
+            id="discrepancies-field"
             value={(formData.discrepancies as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, discrepancies: e.target.value }))}
             className="input-field w-full"
@@ -245,8 +260,11 @@ export const HandoverForm: React.FC = () => {
 
         {/* Notes */}
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+          <label htmlFor="notes-field" className="block text-gray-400 text-sm mb-1">
+            Notes
+          </label>
           <textarea
+            id="notes-field"
             value={(formData.notes as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
             className="input-field w-full"

@@ -134,9 +134,12 @@ export const ApprovalLevelsPage: React.FC = () => {
       {/* Document Type Selector */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="glass-card rounded-xl p-4 flex-1">
-          <label className="text-xs text-gray-400 block mb-2">Document Type</label>
+          <label htmlFor="approval-document-type-field" className="text-xs text-gray-400 block mb-2">
+            Document Type
+          </label>
           <div className="relative">
             <select
+              id="approval-document-type-field"
               value={selectedType}
               onChange={e => setSelectedType(e.target.value)}
               className="input-field w-full appearance-none pr-10"
@@ -156,9 +159,12 @@ export const ApprovalLevelsPage: React.FC = () => {
 
         {/* Chain Preview */}
         <div className="glass-card rounded-xl p-4 flex-1">
-          <label className="text-xs text-gray-400 block mb-2">Preview Chain for Amount</label>
+          <label htmlFor="approval-preview-amount-field" className="text-xs text-gray-400 block mb-2">
+            Preview Chain for Amount
+          </label>
           <div className="flex gap-2">
             <input
+              id="approval-preview-amount-field"
               type="number"
               value={previewAmount}
               onChange={e => setPreviewAmount(e.target.value)}

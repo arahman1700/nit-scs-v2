@@ -82,8 +82,11 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
 
       {/* Step 1: Pick Measure */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-1.5">1. Select Measure</label>
+        <label htmlFor="semanticMeasure" className="block text-sm font-medium text-gray-400 mb-1.5">
+          1. Select Measure
+        </label>
         <select
+          id="semanticMeasure"
           value={selectedMeasure}
           onChange={e => setSelectedMeasure(e.target.value)}
           className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white
@@ -108,7 +111,9 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
       {/* Step 2: Pick Dimensions */}
       {selectedMeasure && (
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1.5">2. Slice by Dimensions (optional)</label>
+          <label id="dimensionsLabel" className="block text-sm font-medium text-gray-400 mb-1.5">
+            2. Slice by Dimensions (optional)
+          </label>
           {compatibleDimensions.length === 0 ? (
             <p className="text-sm text-gray-500">No compatible dimensions</p>
           ) : (
@@ -135,14 +140,17 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
       {/* Step 3: Filters & Date Range */}
       {selectedMeasure && (
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1.5">3. Filters (optional)</label>
+          <label id="filtersLabel" className="block text-sm font-medium text-gray-400 mb-1.5">
+            3. Filters (optional)
+          </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="semanticStartDate" className="block text-xs text-gray-500 mb-1">
                 <Calendar size={12} className="inline mr-1" />
                 Start Date
               </label>
               <input
+                id="semanticStartDate"
                 type="date"
                 value={dateStart}
                 onChange={e => setDateStart(e.target.value)}
@@ -151,11 +159,12 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="semanticEndDate" className="block text-xs text-gray-500 mb-1">
                 <Calendar size={12} className="inline mr-1" />
                 End Date
               </label>
               <input
+                id="semanticEndDate"
                 type="date"
                 value={dateEnd}
                 onChange={e => setDateEnd(e.target.value)}
@@ -170,7 +179,9 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
       {/* Step 4: Preview Result */}
       {selectedMeasure && (
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-1.5">4. Preview</label>
+          <label id="previewLabel" className="block text-sm font-medium text-gray-400 mb-1.5">
+            4. Preview
+          </label>
           <div className="bg-white/5 border border-white/10 rounded-xl p-4 min-h-[80px]">
             {queryMutation.isPending && (
               <div className="flex items-center gap-2 text-gray-400">

@@ -283,10 +283,14 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({ documentId, o
               {/* Reject reason input */}
               {showRejectInput && (
                 <div className="bg-red-500/5 rounded-xl p-4 border border-red-500/20 space-y-3">
-                  <label className="block text-xs text-red-400 uppercase tracking-wider font-semibold">
+                  <label
+                    htmlFor="rejectionReason"
+                    className="block text-xs text-red-400 uppercase tracking-wider font-semibold"
+                  >
                     Rejection Reason
                   </label>
                   <textarea
+                    id="rejectionReason"
                     value={rejectReason}
                     onChange={e => setRejectReason(e.target.value)}
                     placeholder="Provide a reason for rejection..."

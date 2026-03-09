@@ -146,8 +146,11 @@ export function PutAwayRulesPage() {
 
       {/* Filter by warehouse */}
       <div className="glass-card rounded-2xl p-4">
-        <label className="block text-sm text-gray-400 mb-1">Filter by Warehouse</label>
+        <label htmlFor="putaway-filter-warehouse-field" className="block text-sm text-gray-400 mb-1">
+          Filter by Warehouse
+        </label>
         <select
+          id="putaway-filter-warehouse-field"
           value={selectedWarehouse}
           onChange={e => setSelectedWarehouse(e.target.value)}
           className="input-field w-full max-w-xs"
@@ -167,8 +170,11 @@ export function PutAwayRulesPage() {
           <h2 className="text-lg font-semibold text-white mb-4">Test Put-Away Suggestion</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Warehouse</label>
+              <label htmlFor="putaway-test-warehouse-field" className="block text-sm text-gray-400 mb-1">
+                Warehouse
+              </label>
               <select
+                id="putaway-test-warehouse-field"
                 value={testWarehouseId}
                 onChange={e => setTestWarehouseId(e.target.value)}
                 className="input-field w-full"
@@ -182,8 +188,15 @@ export function PutAwayRulesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Item</label>
-              <select value={testItemId} onChange={e => setTestItemId(e.target.value)} className="input-field w-full">
+              <label htmlFor="putaway-test-item-field" className="block text-sm text-gray-400 mb-1">
+                Item
+              </label>
+              <select
+                id="putaway-test-item-field"
+                value={testItemId}
+                onChange={e => setTestItemId(e.target.value)}
+                className="input-field w-full"
+              >
                 <option value="">Select item...</option>
                 {items.map(item => (
                   <option key={item.id} value={item.id}>
@@ -310,8 +323,11 @@ export function PutAwayRulesPage() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Rule Name *</label>
+                <label htmlFor="putaway-rule-name-field" className="block text-sm text-gray-400 mb-1">
+                  Rule Name *
+                </label>
                 <input
+                  id="putaway-rule-name-field"
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -322,8 +338,11 @@ export function PutAwayRulesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Priority (lower = higher)</label>
+                  <label htmlFor="putaway-priority-field" className="block text-sm text-gray-400 mb-1">
+                    Priority (lower = higher)
+                  </label>
                   <input
+                    id="putaway-priority-field"
                     type="number"
                     value={form.priority}
                     onChange={e => setForm(f => ({ ...f, priority: Number(e.target.value) }))}
@@ -333,8 +352,11 @@ export function PutAwayRulesPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Warehouse *</label>
+                  <label htmlFor="putaway-warehouse-field" className="block text-sm text-gray-400 mb-1">
+                    Warehouse *
+                  </label>
                   <select
+                    id="putaway-warehouse-field"
                     value={form.warehouseId}
                     onChange={e => setForm(f => ({ ...f, warehouseId: e.target.value, targetZoneId: '' }))}
                     className="input-field w-full"
@@ -352,8 +374,11 @@ export function PutAwayRulesPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Target Zone</label>
+                <label htmlFor="putaway-target-zone-field" className="block text-sm text-gray-400 mb-1">
+                  Target Zone
+                </label>
                 <select
+                  id="putaway-target-zone-field"
                   value={form.targetZoneId}
                   onChange={e => setForm(f => ({ ...f, targetZoneId: e.target.value }))}
                   className="input-field w-full"
@@ -369,8 +394,11 @@ export function PutAwayRulesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Item Category Filter</label>
+                  <label htmlFor="putaway-item-category-field" className="block text-sm text-gray-400 mb-1">
+                    Item Category Filter
+                  </label>
                   <select
+                    id="putaway-item-category-field"
                     value={form.itemCategory}
                     onChange={e => setForm(f => ({ ...f, itemCategory: e.target.value }))}
                     className="input-field w-full"
@@ -384,8 +412,11 @@ export function PutAwayRulesPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Max Weight (kg)</label>
+                  <label htmlFor="putaway-max-weight-field" className="block text-sm text-gray-400 mb-1">
+                    Max Weight (kg)
+                  </label>
                   <input
+                    id="putaway-max-weight-field"
                     type="number"
                     value={form.maxWeight}
                     onChange={e => setForm(f => ({ ...f, maxWeight: e.target.value }))}

@@ -41,7 +41,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const [showVariables, setShowVariables] = useState(false);
 
   const insertVariable = (variable: string) => {
-    const textarea = document.getElementById('template-body') as HTMLTextAreaElement;
+    const textarea = document.getElementById('templateBody') as HTMLTextAreaElement;
     if (textarea) {
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -66,8 +66,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     <div className="space-y-4">
       {/* Template Code */}
       <div>
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Template Code</label>
+        <label htmlFor="templateCode" className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+          Template Code
+        </label>
         <input
+          id="templateCode"
           type="text"
           value={code}
           onChange={e => onCodeChange(e.target.value.replace(/[^a-z0-9_]/g, ''))}
@@ -78,8 +81,14 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       {/* Subject */}
       <div>
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Email Subject</label>
+        <label
+          htmlFor="templateSubject"
+          className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5"
+        >
+          Email Subject
+        </label>
         <input
+          id="templateSubject"
           type="text"
           value={subject}
           onChange={e => onSubjectChange(e.target.value)}
@@ -121,11 +130,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       {/* HTML Body */}
       <div>
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+        <label htmlFor="templateBody" className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">
           HTML Body (Handlebars)
         </label>
         <textarea
-          id="template-body"
+          id="templateBody"
           value={bodyHtml}
           onChange={e => onBodyChange(e.target.value)}
           rows={16}
@@ -141,7 +150,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       {/* Variables list */}
       <div>
-        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">
+        <label
+          id="declaredVariablesLabel"
+          className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5"
+        >
           Declared Variables
         </label>
         <div className="flex flex-wrap gap-1.5">

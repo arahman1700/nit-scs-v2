@@ -235,8 +235,11 @@ export function MobileGrnReceive() {
               )}
 
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Received Quantity</label>
+                <label htmlFor="received-quantity-field" className="text-xs text-gray-400 block mb-1">
+                  Received Quantity
+                </label>
                 <input
+                  id="received-quantity-field"
                   type="number"
                   value={receivedQty}
                   onChange={e => setReceivedQty(e.target.value)}

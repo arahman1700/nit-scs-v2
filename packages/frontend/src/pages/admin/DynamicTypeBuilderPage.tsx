@@ -194,8 +194,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showNumber && (
             <>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Min</label>
+                <label htmlFor="validation-min-field" className="block text-xs text-gray-500 mb-1">
+                  Min
+                </label>
                 <input
+                  id="validation-min-field"
                   type="number"
                   value={(rules.min as number) ?? ''}
                   onChange={e => updateRule('min', e.target.value ? Number(e.target.value) : '')}
@@ -204,8 +207,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Max</label>
+                <label htmlFor="validation-max-field" className="block text-xs text-gray-500 mb-1">
+                  Max
+                </label>
                 <input
+                  id="validation-max-field"
                   type="number"
                   value={(rules.max as number) ?? ''}
                   onChange={e => updateRule('max', e.target.value ? Number(e.target.value) : '')}
@@ -218,8 +224,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showText && (
             <>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Min Length</label>
+                <label htmlFor="validation-min-length-field" className="block text-xs text-gray-500 mb-1">
+                  Min Length
+                </label>
                 <input
+                  id="validation-min-length-field"
                   type="number"
                   value={(rules.minLength as number) ?? ''}
                   onChange={e => updateRule('minLength', e.target.value ? Number(e.target.value) : '')}
@@ -228,8 +237,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Max Length</label>
+                <label htmlFor="validation-max-length-field" className="block text-xs text-gray-500 mb-1">
+                  Max Length
+                </label>
                 <input
+                  id="validation-max-length-field"
                   type="number"
                   value={(rules.maxLength as number) ?? ''}
                   onChange={e => updateRule('maxLength', e.target.value ? Number(e.target.value) : '')}
@@ -242,8 +254,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showDate && (
             <>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Min Date</label>
+                <label htmlFor="validation-min-date-field" className="block text-xs text-gray-500 mb-1">
+                  Min Date
+                </label>
                 <input
+                  id="validation-min-date-field"
                   type={fieldType === 'datetime' ? 'datetime-local' : 'date'}
                   value={(rules.min as string) ?? ''}
                   onChange={e => updateRule('min', e.target.value)}
@@ -252,8 +267,11 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Max Date</label>
+                <label htmlFor="validation-max-date-field" className="block text-xs text-gray-500 mb-1">
+                  Max Date
+                </label>
                 <input
+                  id="validation-max-date-field"
                   type={fieldType === 'datetime' ? 'datetime-local' : 'date'}
                   value={(rules.max as string) ?? ''}
                   onChange={e => updateRule('max', e.target.value)}
@@ -265,9 +283,12 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           )}
           {showPattern && (
             <div className="col-span-2">
-              <label className="block text-xs text-gray-500 mb-1">Pattern (regex)</label>
+              <label htmlFor="validation-pattern-field" className="block text-xs text-gray-500 mb-1">
+                Pattern (regex)
+              </label>
               <div className="flex gap-2">
                 <input
+                  id="validation-pattern-field"
                   value={(rules.pattern as string) ?? ''}
                   onChange={e => updateRule('pattern', e.target.value)}
                   onBlur={handleBlur}
@@ -339,9 +360,12 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
         <div className="mt-2 space-y-3">
           {/* Conditional Display */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Conditional Display</label>
+            <label htmlFor={`cond-depends-on-${field.id}`} className="block text-xs text-gray-500 mb-1">
+              Conditional Display
+            </label>
             <div className="flex gap-2">
               <select
+                id={`cond-depends-on-${field.id}`}
                 value={cond.dependsOn ?? ''}
                 onChange={e => handleCondChange('dependsOn', e.target.value)}
                 className={`${INPUT_CLS} flex-1 appearance-none`}
@@ -379,8 +403,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
           <div className="grid grid-cols-2 gap-3">
             {/* Section Name */}
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Section</label>
+              <label htmlFor={`section-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                Section
+              </label>
               <input
+                id={`section-${field.id}`}
                 defaultValue={field.sectionName ?? ''}
                 onBlur={e => onSave({ sectionName: e.target.value || undefined })}
                 className={INPUT_CLS}
@@ -396,8 +423,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
 
             {/* Column Span */}
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Column Span</label>
+              <label htmlFor={`col-span-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                Column Span
+              </label>
               <select
+                id={`col-span-${field.id}`}
                 defaultValue={field.colSpan}
                 onChange={e => onSave({ colSpan: Number(e.target.value) })}
                 className={`${INPUT_CLS} appearance-none`}
@@ -592,8 +622,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Code (unique slug)</label>
+              <label htmlFor="doctype-code-field" className="block text-sm font-medium text-gray-300 mb-1.5">
+                Code (unique slug)
+              </label>
               <input
+                id="doctype-code-field"
                 value={form.code}
                 onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
                 className={inputBase}
@@ -602,8 +635,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Name (English)</label>
+              <label htmlFor="doctype-name-field" className="block text-sm font-medium text-gray-300 mb-1.5">
+                Name (English)
+              </label>
               <input
+                id="doctype-name-field"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className={inputBase}
@@ -611,8 +647,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Category</label>
+              <label htmlFor="doctype-category-field" className="block text-sm font-medium text-gray-300 mb-1.5">
+                Category
+              </label>
               <select
+                id="doctype-category-field"
                 value={form.category}
                 onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                 className={`${inputBase} appearance-none`}
@@ -626,8 +665,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Description</label>
+              <label htmlFor="doctype-description-field" className="block text-sm font-medium text-gray-300 mb-1.5">
+                Description
+              </label>
               <textarea
+                id="doctype-description-field"
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 className={`${inputBase} min-h-[80px]`}
@@ -691,8 +733,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                 <div className="flex-1">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Key</label>
+                      <label htmlFor={`field-key-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                        Key
+                      </label>
                       <input
+                        id={`field-key-${field.id}`}
                         defaultValue={field.fieldKey}
                         onBlur={e =>
                           updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldKey: e.target.value })
@@ -701,16 +746,22 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Label</label>
+                      <label htmlFor={`field-label-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                        Label
+                      </label>
                       <input
+                        id={`field-label-${field.id}`}
                         defaultValue={field.label}
                         onBlur={e => updateFieldMut.mutate({ typeId: id!, fieldId: field.id, label: e.target.value })}
                         className={`${inputBase} text-sm`}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Type</label>
+                      <label htmlFor={`field-type-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                        Type
+                      </label>
                       <select
+                        id={`field-type-${field.id}`}
                         defaultValue={field.fieldType}
                         onChange={e =>
                           updateFieldMut.mutate({ typeId: id!, fieldId: field.id, fieldType: e.target.value })
@@ -790,8 +841,11 @@ export const DynamicTypeBuilderPage: React.FC = () => {
       {activeTab === 'Status Flow' && (
         <div className="glass-card rounded-2xl p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1.5">Initial Status</label>
+            <label htmlFor="initial-status-field" className="block text-sm font-medium text-gray-300 mb-1.5">
+              Initial Status
+            </label>
             <input
+              id="initial-status-field"
               value={form.statusFlow.initialStatus}
               onChange={e => setForm(f => ({ ...f, statusFlow: { ...f.statusFlow, initialStatus: e.target.value } }))}
               className={inputBase}

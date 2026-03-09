@@ -198,8 +198,11 @@ export const CrossDockDashboard: React.FC = () => {
       {/* Warehouse filter */}
       <div className="glass-card rounded-2xl p-4 border border-white/10">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <label className="text-sm text-gray-400 whitespace-nowrap">Warehouse:</label>
+          <label htmlFor="crossdock-warehouse-field" className="text-sm text-gray-400 whitespace-nowrap">
+            Warehouse:
+          </label>
           <select
+            id="crossdock-warehouse-field"
             value={selectedWarehouse}
             onChange={e => setSelectedWarehouse(e.target.value)}
             className="input-field w-full sm:w-72"

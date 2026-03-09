@@ -64,8 +64,11 @@ export const ToolIssueForm: React.FC = () => {
         <h2 className="text-white font-semibold">Issue Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Tool</label>
+            <label htmlFor="tool-field" className="block text-gray-400 text-sm mb-1">
+              Tool
+            </label>
             <select
+              id="tool-field"
               value={(formData.toolId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, toolId: e.target.value }))}
               className="input-field w-full"
@@ -80,8 +83,11 @@ export const ToolIssueForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Issued To (Employee ID)</label>
+            <label htmlFor="issued-to-field" className="block text-gray-400 text-sm mb-1">
+              Issued To (Employee ID)
+            </label>
             <input
+              id="issued-to-field"
               type="text"
               value={(formData.issuedToId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, issuedToId: e.target.value }))}
@@ -90,8 +96,11 @@ export const ToolIssueForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Expected Return Date</label>
+            <label htmlFor="expected-return-date-field" className="block text-gray-400 text-sm mb-1">
+              Expected Return Date
+            </label>
             <input
+              id="expected-return-date-field"
               type="date"
               value={(formData.expectedReturnDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, expectedReturnDate: e.target.value }))}
@@ -101,8 +110,11 @@ export const ToolIssueForm: React.FC = () => {
           </div>
         </div>
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+          <label htmlFor="notes-field" className="block text-gray-400 text-sm mb-1">
+            Notes
+          </label>
           <textarea
+            id="notes-field"
             value={(formData.notes as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
             className="input-field w-full"

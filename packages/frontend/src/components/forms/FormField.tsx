@@ -43,12 +43,13 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   return (
     <div className={`flex flex-col gap-2 ${colSpan}`}>
-      <label className="text-sm font-medium text-gray-300 ml-1">
+      <label htmlFor={`formField-${field.key}`} className="text-sm font-medium text-gray-300 ml-1">
         {field.label} {field.required && <span className="text-red-400">*</span>}
       </label>
 
       {field.type === 'select' ? (
         <select
+          id={`formField-${field.key}`}
           {...register(field.key, { required: field.required ? `${field.label} is required` : false })}
           className="nesma-input px-4 py-3 w-full appearance-none bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"
           disabled={disabled}
@@ -62,6 +63,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         </select>
       ) : field.type === 'textarea' ? (
         <textarea
+          id={`formField-${field.key}`}
           {...register(field.key, { required: field.required ? `${field.label} is required` : false })}
           className="nesma-input px-4 py-3 w-full min-h-[120px] bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"
           disabled={disabled}
@@ -141,6 +143,7 @@ export const FormField: React.FC<FormFieldProps> = ({
         )
       ) : (
         <input
+          id={`formField-${field.key}`}
           type={field.type}
           {...register(field.key, { required: field.required ? `${field.label} is required` : false })}
           className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all"

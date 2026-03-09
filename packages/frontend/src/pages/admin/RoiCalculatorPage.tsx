@@ -98,10 +98,13 @@ export const RoiCalculatorPage: React.FC = () => {
             {SLIDERS.map(s => (
               <div key={s.key}>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs text-gray-400">{s.label}</label>
+                  <label htmlFor={`roi-${s.key}-field`} className="text-xs text-gray-400">
+                    {s.label}
+                  </label>
                   <span className="text-sm font-medium text-white">{formatNumber(inputs[s.key], s.unit)}</span>
                 </div>
                 <input
+                  id={`roi-${s.key}-field`}
                   type="range"
                   min={s.min}
                   max={s.max}

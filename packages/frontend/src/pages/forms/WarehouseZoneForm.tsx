@@ -130,8 +130,11 @@ export const WarehouseZoneForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Warehouse */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Warehouse</label>
+            <label htmlFor="warehouse-field" className="block text-gray-400 text-sm mb-1">
+              Warehouse
+            </label>
             <select
+              id="warehouse-field"
               value={(formData.warehouseId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, warehouseId: e.target.value }))}
               className="input-field w-full"
@@ -148,8 +151,11 @@ export const WarehouseZoneForm: React.FC = () => {
 
           {/* Zone Name */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Zone Name</label>
+            <label htmlFor="zone-name-field" className="block text-gray-400 text-sm mb-1">
+              Zone Name
+            </label>
             <input
+              id="zone-name-field"
               type="text"
               value={(formData.zoneName as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, zoneName: e.target.value }))}
@@ -161,8 +167,11 @@ export const WarehouseZoneForm: React.FC = () => {
 
           {/* Zone Code */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Zone Code</label>
+            <label htmlFor="zone-code-field" className="block text-gray-400 text-sm mb-1">
+              Zone Code
+            </label>
             <input
+              id="zone-code-field"
               type="text"
               value={(formData.zoneCode as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, zoneCode: e.target.value }))}
@@ -174,8 +183,11 @@ export const WarehouseZoneForm: React.FC = () => {
 
           {/* Zone Type */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Zone Type</label>
+            <label htmlFor="zone-type-field" className="block text-gray-400 text-sm mb-1">
+              Zone Type
+            </label>
             <select
+              id="zone-type-field"
               value={(formData.zoneType as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, zoneType: e.target.value }))}
               className="input-field w-full"
@@ -192,8 +204,11 @@ export const WarehouseZoneForm: React.FC = () => {
 
           {/* Capacity */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Capacity</label>
+            <label htmlFor="capacity-field" className="block text-gray-400 text-sm mb-1">
+              Capacity
+            </label>
             <input
+              id="capacity-field"
               type="number"
               min="0"
               value={(formData.capacity as number) ?? ''}
@@ -205,8 +220,11 @@ export const WarehouseZoneForm: React.FC = () => {
 
           {/* Current Occupancy */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Current Occupancy</label>
+            <label htmlFor="current-occupancy-field" className="block text-gray-400 text-sm mb-1">
+              Current Occupancy
+            </label>
             <input
+              id="current-occupancy-field"
               type="number"
               min="0"
               value={(formData.currentOccupancy as number) ?? ''}

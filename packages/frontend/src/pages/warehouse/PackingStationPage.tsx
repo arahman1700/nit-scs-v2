@@ -296,9 +296,12 @@ export function PackingStationPage() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       {/* Item + Barcode */}
                       <div className="col-span-2">
-                        <label className="text-xs text-gray-500 mb-1 block">Item</label>
+                        <label htmlFor="packing-item-field" className="text-xs text-gray-500 mb-1 block">
+                          Item
+                        </label>
                         <div className="flex gap-2">
                           <input
+                            id="packing-item-field"
                             className="input-field w-full"
                             placeholder="Scan or select item..."
                             value={lineForm.itemLabel}
@@ -316,10 +319,13 @@ export function PackingStationPage() {
 
                       {/* Qty */}
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Qty Packed</label>
+                        <label htmlFor="packing-qty-field" className="text-xs text-gray-500 mb-1 block">
+                          Qty Packed
+                        </label>
                         <div className="relative">
                           <Hash size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                           <input
+                            id="packing-qty-field"
                             type="number"
                             min={1}
                             className="input-field w-full pl-8"
@@ -331,8 +337,11 @@ export function PackingStationPage() {
 
                       {/* Container Type */}
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Container</label>
+                        <label htmlFor="packing-container-field" className="text-xs text-gray-500 mb-1 block">
+                          Container
+                        </label>
                         <select
+                          id="packing-container-field"
                           className="input-field w-full"
                           value={lineForm.containerType}
                           onChange={e => setLineForm(f => ({ ...f, containerType: e.target.value }))}
@@ -347,8 +356,11 @@ export function PackingStationPage() {
 
                       {/* Container Label */}
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Container Label</label>
+                        <label htmlFor="packing-container-label-field" className="text-xs text-gray-500 mb-1 block">
+                          Container Label
+                        </label>
                         <input
+                          id="packing-container-label-field"
                           className="input-field w-full"
                           placeholder="e.g. CTN-001"
                           value={lineForm.containerLabel}
@@ -358,10 +370,13 @@ export function PackingStationPage() {
 
                       {/* Weight */}
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Weight (kg)</label>
+                        <label htmlFor="packing-weight-field" className="text-xs text-gray-500 mb-1 block">
+                          Weight (kg)
+                        </label>
                         <div className="relative">
                           <Scale size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                           <input
+                            id="packing-weight-field"
                             type="number"
                             step="0.01"
                             className="input-field w-full pl-8"
@@ -374,10 +389,13 @@ export function PackingStationPage() {
 
                       {/* Volume */}
                       <div>
-                        <label className="text-xs text-gray-500 mb-1 block">Volume (m3)</label>
+                        <label htmlFor="packing-volume-field" className="text-xs text-gray-500 mb-1 block">
+                          Volume (m3)
+                        </label>
                         <div className="relative">
                           <Ruler size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                           <input
+                            id="packing-volume-field"
                             type="number"
                             step="0.001"
                             className="input-field w-full pl-8"

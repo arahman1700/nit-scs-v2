@@ -394,8 +394,12 @@ export const JobOrdersKanban: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <div className="relative">
+            <label htmlFor="kanban-search-field" className="sr-only">
+              Search orders
+            </label>
             <Search size={16} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
             <input
+              id="kanban-search-field"
               type="text"
               placeholder="Search orders..."
               value={searchTerm}

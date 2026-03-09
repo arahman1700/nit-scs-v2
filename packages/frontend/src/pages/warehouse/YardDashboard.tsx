@@ -144,8 +144,11 @@ const ScheduleModal: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Type</label>
+            <label htmlFor="appt-type-field" className="block text-xs text-gray-400 mb-1">
+              Type
+            </label>
             <select
+              id="appt-type-field"
               className="input-field w-full"
               value={form.appointmentType}
               onChange={e => setForm(f => ({ ...f, appointmentType: e.target.value }))}
@@ -158,8 +161,11 @@ const ScheduleModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Start Time</label>
+              <label htmlFor="appt-start-time-field" className="block text-xs text-gray-400 mb-1">
+                Start Time
+              </label>
               <input
+                id="appt-start-time-field"
                 type="datetime-local"
                 required
                 className="input-field w-full"
@@ -168,8 +174,11 @@ const ScheduleModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">End Time</label>
+              <label htmlFor="appt-end-time-field" className="block text-xs text-gray-400 mb-1">
+                End Time
+              </label>
               <input
+                id="appt-end-time-field"
                 type="datetime-local"
                 required
                 className="input-field w-full"
@@ -180,8 +189,11 @@ const ScheduleModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Dock Door (optional)</label>
+            <label htmlFor="appt-dock-door-field" className="block text-xs text-gray-400 mb-1">
+              Dock Door (optional)
+            </label>
             <select
+              id="appt-dock-door-field"
               className="input-field w-full"
               value={form.dockDoorId}
               onChange={e => setForm(f => ({ ...f, dockDoorId: e.target.value }))}
@@ -197,8 +209,11 @@ const ScheduleModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Carrier</label>
+              <label htmlFor="appt-carrier-field" className="block text-xs text-gray-400 mb-1">
+                Carrier
+              </label>
               <input
+                id="appt-carrier-field"
                 className="input-field w-full"
                 placeholder="Carrier name"
                 value={form.carrierName}
@@ -206,8 +221,11 @@ const ScheduleModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Vehicle Plate</label>
+              <label htmlFor="appt-vehicle-plate-field" className="block text-xs text-gray-400 mb-1">
+                Vehicle Plate
+              </label>
               <input
+                id="appt-vehicle-plate-field"
                 className="input-field w-full"
                 placeholder="e.g. ABC 1234"
                 value={form.vehiclePlate}
@@ -217,8 +235,11 @@ const ScheduleModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Driver Name</label>
+            <label htmlFor="appt-driver-name-field" className="block text-xs text-gray-400 mb-1">
+              Driver Name
+            </label>
             <input
+              id="appt-driver-name-field"
               className="input-field w-full"
               placeholder="Driver name"
               value={form.driverName}
@@ -227,8 +248,11 @@ const ScheduleModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Notes</label>
+            <label htmlFor="appt-notes-field" className="block text-xs text-gray-400 mb-1">
+              Notes
+            </label>
             <textarea
+              id="appt-notes-field"
               className="input-field w-full"
               rows={2}
               value={form.notes}
@@ -295,8 +319,11 @@ const CheckInTruckModal: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Vehicle Plate *</label>
+            <label htmlFor="truck-vehicle-plate-field" className="block text-xs text-gray-400 mb-1">
+              Vehicle Plate *
+            </label>
             <input
+              id="truck-vehicle-plate-field"
               required
               className="input-field w-full"
               placeholder="e.g. ABC 1234"
@@ -306,8 +333,11 @@ const CheckInTruckModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Purpose</label>
+            <label htmlFor="truck-purpose-field" className="block text-xs text-gray-400 mb-1">
+              Purpose
+            </label>
             <select
+              id="truck-purpose-field"
               className="input-field w-full"
               value={form.purpose}
               onChange={e => setForm(f => ({ ...f, purpose: e.target.value }))}
@@ -320,8 +350,11 @@ const CheckInTruckModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Driver</label>
+              <label htmlFor="truck-driver-field" className="block text-xs text-gray-400 mb-1">
+                Driver
+              </label>
               <input
+                id="truck-driver-field"
                 className="input-field w-full"
                 placeholder="Driver name"
                 value={form.driverName}
@@ -329,8 +362,11 @@ const CheckInTruckModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Carrier</label>
+              <label htmlFor="truck-carrier-field" className="block text-xs text-gray-400 mb-1">
+                Carrier
+              </label>
               <input
+                id="truck-carrier-field"
                 className="input-field w-full"
                 placeholder="Carrier name"
                 value={form.carrierName}
@@ -340,8 +376,11 @@ const CheckInTruckModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Notes</label>
+            <label htmlFor="truck-notes-field" className="block text-xs text-gray-400 mb-1">
+              Notes
+            </label>
             <textarea
+              id="truck-notes-field"
               className="input-field w-full"
               rows={2}
               value={form.notes}

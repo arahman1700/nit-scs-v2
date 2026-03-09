@@ -257,8 +257,11 @@ const NewAssignmentModal: React.FC<{
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Zone</label>
+            <label htmlFor="staging-zone-field" className="block text-sm text-gray-300 mb-1">
+              Zone
+            </label>
             <select
+              id="staging-zone-field"
               value={form.zoneId}
               onChange={e => setForm(f => ({ ...f, zoneId: e.target.value }))}
               className="input-field w-full"
@@ -275,8 +278,11 @@ const NewAssignmentModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Direction</label>
+              <label htmlFor="staging-direction-field" className="block text-sm text-gray-300 mb-1">
+                Direction
+              </label>
               <select
+                id="staging-direction-field"
                 value={form.direction}
                 onChange={e => setForm(f => ({ ...f, direction: e.target.value as 'inbound' | 'outbound' }))}
                 className="input-field w-full"
@@ -286,8 +292,11 @@ const NewAssignmentModal: React.FC<{
               </select>
             </div>
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Source Doc Type</label>
+              <label htmlFor="staging-source-doc-type-field" className="block text-sm text-gray-300 mb-1">
+                Source Doc Type
+              </label>
               <select
+                id="staging-source-doc-type-field"
                 value={form.sourceDocType}
                 onChange={e => setForm(f => ({ ...f, sourceDocType: e.target.value }))}
                 className="input-field w-full"
@@ -301,8 +310,11 @@ const NewAssignmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Source Document ID</label>
+            <label htmlFor="staging-source-doc-id-field" className="block text-sm text-gray-300 mb-1">
+              Source Document ID
+            </label>
             <input
+              id="staging-source-doc-id-field"
               type="text"
               value={form.sourceDocId}
               onChange={e => setForm(f => ({ ...f, sourceDocId: e.target.value }))}
@@ -313,8 +325,11 @@ const NewAssignmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Item ID</label>
+            <label htmlFor="staging-item-id-field" className="block text-sm text-gray-300 mb-1">
+              Item ID
+            </label>
             <input
+              id="staging-item-id-field"
               type="text"
               value={form.itemId}
               onChange={e => setForm(f => ({ ...f, itemId: e.target.value }))}
@@ -326,8 +341,11 @@ const NewAssignmentModal: React.FC<{
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Quantity</label>
+              <label htmlFor="staging-quantity-field" className="block text-sm text-gray-300 mb-1">
+                Quantity
+              </label>
               <input
+                id="staging-quantity-field"
                 type="number"
                 min={1}
                 value={form.quantity}
@@ -337,8 +355,11 @@ const NewAssignmentModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-300 mb-1">Max Dwell (hours)</label>
+              <label htmlFor="staging-max-dwell-field" className="block text-sm text-gray-300 mb-1">
+                Max Dwell (hours)
+              </label>
               <input
+                id="staging-max-dwell-field"
                 type="number"
                 min={1}
                 value={form.maxDwellHours}
@@ -349,8 +370,11 @@ const NewAssignmentModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm text-gray-300 mb-1">Notes</label>
+            <label htmlFor="staging-notes-field" className="block text-sm text-gray-300 mb-1">
+              Notes
+            </label>
             <textarea
+              id="staging-notes-field"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input-field w-full"

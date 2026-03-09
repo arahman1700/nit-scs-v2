@@ -36,7 +36,9 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="text-sm text-gray-400">Filters</label>
+        <label id="filterBuilderLabel" className="text-sm text-gray-400">
+          Filters
+        </label>
         <button
           onClick={addFilter}
           disabled={columns.length === 0}

@@ -10,8 +10,11 @@ const eventEntries = Object.entries(ALL_EVENTS) as [string, SystemEventType][];
 export const TriggerSelector: React.FC<TriggerSelectorProps> = ({ value, onChange }) => {
   return (
     <div>
-      <label className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Trigger Event</label>
+      <label htmlFor="triggerEvent" className="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+        Trigger Event
+      </label>
       <select
+        id="triggerEvent"
         value={value}
         onChange={e => onChange(e.target.value)}
         className="w-full bg-black/40 text-white text-sm rounded-lg p-3 border border-white/10 focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none"

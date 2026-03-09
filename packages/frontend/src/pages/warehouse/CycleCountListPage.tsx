@@ -269,8 +269,11 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
         <h2 className="text-lg font-semibold text-white mb-4">Create Cycle Count</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Count Type</label>
+            <label htmlFor="count-type-field" className="block text-sm text-gray-400 mb-1">
+              Count Type
+            </label>
             <select
+              id="count-type-field"
               value={form.countType}
               onChange={e => setForm(f => ({ ...f, countType: e.target.value }))}
               className="input-field w-full py-2 px-3 rounded-xl text-sm"
@@ -283,8 +286,11 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Warehouse</label>
+            <label htmlFor="warehouse-field" className="block text-sm text-gray-400 mb-1">
+              Warehouse
+            </label>
             <select
+              id="warehouse-field"
               value={form.warehouseId}
               onChange={e => setForm(f => ({ ...f, warehouseId: e.target.value }))}
               className="input-field w-full py-2 px-3 rounded-xl text-sm"
@@ -300,8 +306,11 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Scheduled Date</label>
+            <label htmlFor="scheduled-date-field" className="block text-sm text-gray-400 mb-1">
+              Scheduled Date
+            </label>
             <input
+              id="scheduled-date-field"
               type="date"
               value={form.scheduledDate}
               onChange={e => setForm(f => ({ ...f, scheduledDate: e.target.value }))}
@@ -311,8 +320,11 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Notes (optional)</label>
+            <label htmlFor="notes-field" className="block text-sm text-gray-400 mb-1">
+              Notes (optional)
+            </label>
             <textarea
+              id="notes-field"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               className="input-field w-full py-2 px-3 rounded-xl text-sm"

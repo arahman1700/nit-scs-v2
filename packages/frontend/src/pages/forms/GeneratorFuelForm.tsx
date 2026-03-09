@@ -129,8 +129,11 @@ export const GeneratorFuelForm: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Generator */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Generator</label>
+            <label htmlFor="generator-field" className="block text-gray-400 text-sm mb-1">
+              Generator
+            </label>
             <select
+              id="generator-field"
               value={(formData.generatorId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, generatorId: e.target.value }))}
               className="input-field w-full"
@@ -147,8 +150,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Fuel Date */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Fuel Date</label>
+            <label htmlFor="fuel-date-field" className="block text-gray-400 text-sm mb-1">
+              Fuel Date
+            </label>
             <input
+              id="fuel-date-field"
               type="date"
               value={(formData.fuelDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, fuelDate: e.target.value }))}
@@ -159,8 +165,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Fuel Quantity */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Fuel Quantity (Liters)</label>
+            <label htmlFor="fuel-quantity-field" className="block text-gray-400 text-sm mb-1">
+              Fuel Quantity (Liters)
+            </label>
             <input
+              id="fuel-quantity-field"
               type="number"
               step="0.01"
               min="0"
@@ -175,8 +184,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Meter Reading */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Meter Reading</label>
+            <label htmlFor="meter-reading-field" className="block text-gray-400 text-sm mb-1">
+              Meter Reading
+            </label>
             <input
+              id="meter-reading-field"
               type="number"
               step="0.01"
               min="0"
@@ -189,8 +201,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Fuel Supplier */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Fuel Supplier</label>
+            <label htmlFor="fuel-supplier-field" className="block text-gray-400 text-sm mb-1">
+              Fuel Supplier
+            </label>
             <input
+              id="fuel-supplier-field"
               type="text"
               value={(formData.fuelSupplier as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, fuelSupplier: e.target.value }))}
@@ -201,8 +216,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Cost Per Liter */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Cost Per Liter</label>
+            <label htmlFor="cost-per-liter-field" className="block text-gray-400 text-sm mb-1">
+              Cost Per Liter
+            </label>
             <input
+              id="cost-per-liter-field"
               type="number"
               step="0.01"
               min="0"
@@ -215,8 +233,11 @@ export const GeneratorFuelForm: React.FC = () => {
 
           {/* Total Cost (auto-calculated or manual) */}
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Total Cost</label>
+            <label htmlFor="total-cost-field" className="block text-gray-400 text-sm mb-1">
+              Total Cost
+            </label>
             <input
+              id="total-cost-field"
               type="number"
               step="0.01"
               min="0"
@@ -233,8 +254,11 @@ export const GeneratorFuelForm: React.FC = () => {
       <div className="glass-card rounded-2xl p-6 space-y-4">
         <h2 className="text-white font-semibold">Additional Information</h2>
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+          <label htmlFor="notes-field" className="block text-gray-400 text-sm mb-1">
+            Notes
+          </label>
           <textarea
+            id="notes-field"
             value={(formData.notes as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
             className="input-field w-full"

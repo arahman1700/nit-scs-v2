@@ -25,8 +25,11 @@ interface ReportDataSourceSelectorProps {
 export const ReportDataSourceSelector: React.FC<ReportDataSourceSelectorProps> = ({ value, onChange }) => {
   return (
     <div>
-      <label className="block text-sm text-gray-400 mb-1.5">Data Source</label>
+      <label htmlFor="reportDataSource" className="block text-sm text-gray-400 mb-1.5">
+        Data Source
+      </label>
       <select
+        id="reportDataSource"
         value={value}
         onChange={e => onChange(e.target.value)}
         className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white

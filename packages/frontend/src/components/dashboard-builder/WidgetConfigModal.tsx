@@ -71,8 +71,11 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Title</label>
+            <label htmlFor="widgetTitle" className="block text-sm text-gray-400 mb-1.5">
+              Title
+            </label>
             <input
+              id="widgetTitle"
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
@@ -83,7 +86,9 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
 
           {/* Data Source Tab Switcher */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Data Source</label>
+            <label htmlFor="widgetDataSource" className="block text-sm text-gray-400 mb-1.5">
+              Data Source
+            </label>
             <div className="flex gap-2 mb-3">
               <button
                 type="button"
@@ -113,6 +118,7 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
 
             {sourceTab === 'preset' ? (
               <select
+                id="widgetDataSource"
                 value={dataSource}
                 onChange={e => setDataSource(e.target.value)}
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
@@ -133,7 +139,9 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
           {/* Chart type (for chart widgets) */}
           {widget.widgetType === 'chart' && (
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Chart Type</label>
+              <label id="widgetChartTypeLabel" className="block text-sm text-gray-400 mb-1.5">
+                Chart Type
+              </label>
               <div className="flex gap-2">
                 {CHART_TYPES.map(ct => (
                   <button
@@ -156,7 +164,9 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
 
           {/* Width */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Width</label>
+            <label id="widgetWidthLabel" className="block text-sm text-gray-400 mb-1.5">
+              Width
+            </label>
             <div className="flex gap-2">
               {[1, 2].map(w => (
                 <button
@@ -179,7 +189,9 @@ export const WidgetConfigModal: React.FC<WidgetConfigModalProps> = ({ widget, on
           {/* Color (for KPI widgets) */}
           {widget.widgetType === 'kpi' && (
             <div>
-              <label className="block text-sm text-gray-400 mb-1.5">Color</label>
+              <label id="widgetColorLabel" className="block text-sm text-gray-400 mb-1.5">
+                Color
+              </label>
               <div className="flex gap-2">
                 {['emerald', 'blue', 'amber', 'red', 'purple'].map(color => (
                   <button

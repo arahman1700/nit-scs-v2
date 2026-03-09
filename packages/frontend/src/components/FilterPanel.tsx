@@ -68,12 +68,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-6 space-y-5">
           {filters.map(filter => (
             <div key={filter.key}>
-              <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <label
+                htmlFor={`filter-${filter.key}`}
+                className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2"
+              >
                 {filter.label}
               </label>
 
               {filter.type === 'text' && (
                 <input
+                  id={`filter-${filter.key}`}
                   type="text"
                   value={values[filter.key] || ''}
                   onChange={e => onChange(filter.key, e.target.value)}
@@ -84,6 +88,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
               {filter.type === 'select' && (
                 <select
+                  id={`filter-${filter.key}`}
                   value={values[filter.key] || ''}
                   onChange={e => onChange(filter.key, e.target.value)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all appearance-none cursor-pointer"
@@ -99,6 +104,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
               {filter.type === 'date' && (
                 <input
+                  id={`filter-${filter.key}`}
                   type="date"
                   value={values[filter.key] || ''}
                   onChange={e => onChange(filter.key, e.target.value)}

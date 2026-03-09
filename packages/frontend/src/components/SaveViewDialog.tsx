@@ -62,8 +62,11 @@ export const SaveViewDialog: React.FC<SaveViewDialogProps> = ({ open, onClose, e
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">View Name</label>
+            <label htmlFor="viewName" className="block text-sm text-gray-400 mb-1.5">
+              View Name
+            </label>
             <input
+              id="viewName"
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}

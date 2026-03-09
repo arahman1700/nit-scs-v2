@@ -144,8 +144,12 @@ export const RfimList: React.FC = () => {
         <div className="p-4 border-b border-white/10 flex flex-col lg:flex-row gap-4 justify-between items-center bg-white/5">
           {/* Search */}
           <div className="relative flex-1 w-full lg:max-w-xs">
+            <label htmlFor="qci-search-field" className="sr-only">
+              Search QCI
+            </label>
             <Search size={18} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
             <input
+              id="qci-search-field"
               type="text"
               placeholder="Search QCI ID, GRN, Inspector..."
               value={searchQuery}
@@ -161,7 +165,11 @@ export const RfimList: React.FC = () => {
               <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Filters:</span>
             </div>
 
+            <label htmlFor="qci-status-filter" className="sr-only">
+              Filter by status
+            </label>
             <select
+              id="qci-status-filter"
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
               className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50 cursor-pointer hover:bg-white/5"
@@ -173,7 +181,11 @@ export const RfimList: React.FC = () => {
               <option value="Pending">Pending</option>
             </select>
 
+            <label htmlFor="qci-priority-filter" className="sr-only">
+              Filter by priority
+            </label>
             <select
+              id="qci-priority-filter"
               value={filterPriority}
               onChange={e => setFilterPriority(e.target.value)}
               className="bg-black/20 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-300 focus:outline-none focus:border-nesma-secondary/50 cursor-pointer hover:bg-white/5"
@@ -328,15 +340,15 @@ export const RfimList: React.FC = () => {
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div>
-                    <label className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
                       Inspection Type
-                    </label>
+                    </span>
                     <p className="text-white text-lg">{selectedItem.inspectionType}</p>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
                       Assigned Inspector
-                    </label>
+                    </span>
                     <div className="flex items-center gap-3 mt-2">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-nesma-primary to-nesma-dark flex items-center justify-center text-xs text-white font-bold border border-white/10 shadow-lg">
                         {selectedItem.inspector ? selectedItem.inspector.charAt(0) : '?'}
@@ -348,15 +360,15 @@ export const RfimList: React.FC = () => {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
                       Form Number
-                    </label>
+                    </span>
                     <p className="text-gray-300 font-mono">{selectedItem.formNumber || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
                       Inspector Notes
-                    </label>
+                    </span>
                     <p className="text-gray-300 text-sm leading-relaxed bg-black/20 p-3 rounded-lg border border-white/5 min-h-[80px]">
                       {selectedItem.notes || 'No additional notes provided.'}
                     </p>

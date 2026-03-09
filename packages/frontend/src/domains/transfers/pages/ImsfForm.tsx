@@ -84,8 +84,11 @@ export const ImsfForm: React.FC = () => {
         <h2 className="text-white font-semibold">Header Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Sender Project</label>
+            <label htmlFor="sender-project-field" className="block text-gray-400 text-sm mb-1">
+              Sender Project
+            </label>
             <select
+              id="sender-project-field"
               value={(formData.senderProjectId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, senderProjectId: e.target.value }))}
               className="input-field w-full"
@@ -100,8 +103,11 @@ export const ImsfForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Receiver Project</label>
+            <label htmlFor="receiver-project-field" className="block text-gray-400 text-sm mb-1">
+              Receiver Project
+            </label>
             <select
+              id="receiver-project-field"
               value={(formData.receiverProjectId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, receiverProjectId: e.target.value }))}
               className="input-field w-full"
@@ -116,8 +122,11 @@ export const ImsfForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Material Type</label>
+            <label htmlFor="material-type-field" className="block text-gray-400 text-sm mb-1">
+              Material Type
+            </label>
             <select
+              id="material-type-field"
               value={(formData.materialType as string) ?? 'normal'}
               onChange={e => setFormData(p => ({ ...p, materialType: e.target.value }))}
               className="input-field w-full"
@@ -127,8 +136,11 @@ export const ImsfForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Required Date</label>
+            <label htmlFor="required-date-field" className="block text-gray-400 text-sm mb-1">
+              Required Date
+            </label>
             <input
+              id="required-date-field"
               type="date"
               value={(formData.requiredDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, requiredDate: e.target.value }))}
@@ -137,8 +149,11 @@ export const ImsfForm: React.FC = () => {
           </div>
         </div>
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Notes</label>
+          <label htmlFor="notes-field" className="block text-gray-400 text-sm mb-1">
+            Notes
+          </label>
           <textarea
+            id="notes-field"
             value={(formData.notes as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, notes: e.target.value }))}
             className="input-field w-full"

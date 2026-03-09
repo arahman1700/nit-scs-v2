@@ -134,8 +134,11 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
 
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">File</label>
+              <label htmlFor="docFile" className="text-sm font-medium text-gray-300">
+                File
+              </label>
               <input
+                id="docFile"
                 ref={fileRef}
                 type="file"
                 onChange={e => setSelectedFile(e.target.files?.[0] ?? null)}
@@ -148,8 +151,11 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">Title</label>
+              <label htmlFor="docTitle" className="text-sm font-medium text-gray-300">
+                Title
+              </label>
               <input
+                id="docTitle"
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -158,8 +164,15 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">Category</label>
-              <select value={category} onChange={e => setCategory(e.target.value as Category)} className={inputClass}>
+              <label htmlFor="docCategory" className="text-sm font-medium text-gray-300">
+                Category
+              </label>
+              <select
+                id="docCategory"
+                value={category}
+                onChange={e => setCategory(e.target.value as Category)}
+                className={inputClass}
+              >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -168,8 +181,11 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
               </select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">Description</label>
+              <label htmlFor="docDescription" className="text-sm font-medium text-gray-300">
+                Description
+              </label>
               <textarea
+                id="docDescription"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Optional description"
@@ -178,8 +194,11 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300">Visibility</label>
+              <label htmlFor="docVisibility" className="text-sm font-medium text-gray-300">
+                Visibility
+              </label>
               <select
+                id="docVisibility"
                 value={visibility}
                 onChange={e => setVisibility(e.target.value as 'all' | 'admin_only' | 'management')}
                 className={inputClass}

@@ -122,10 +122,11 @@ export const CustomsForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="linked-shipment-field" className="text-sm font-medium text-gray-300 ml-1">
                   Linked Shipment <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="linked-shipment-field"
                   onChange={e => handleChange('shipmentId', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -139,8 +140,11 @@ export const CustomsForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Declaration Number</label>
+                <label htmlFor="declaration-number-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Declaration Number
+                </label>
                 <input
+                  id="declaration-number-field"
                   type="text"
                   onChange={e => handleChange('declarationNumber', e.target.value)}
                   placeholder="SAD-2026-XXXXX"
@@ -157,8 +161,11 @@ export const CustomsForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">HS Code</label>
+                <label htmlFor="hs-code-field" className="text-sm font-medium text-gray-300 ml-1">
+                  HS Code
+                </label>
                 <input
+                  id="hs-code-field"
                   type="text"
                   onChange={e => handleChange('hsCode', e.target.value)}
                   placeholder="8544.49"
@@ -166,8 +173,11 @@ export const CustomsForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Customs Broker</label>
+                <label htmlFor="customs-broker-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Customs Broker
+                </label>
                 <input
+                  id="customs-broker-field"
                   type="text"
                   onChange={e => handleChange('brokerName', e.target.value)}
                   placeholder="Broker name"
@@ -175,8 +185,11 @@ export const CustomsForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Customs Fees (SAR)</label>
+                <label htmlFor="customs-fees-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Customs Fees (SAR)
+                </label>
                 <input
+                  id="customs-fees-field"
                   type="number"
                   min="0"
                   onChange={e => handleChange('customsFees', Number(e.target.value))}
@@ -184,8 +197,11 @@ export const CustomsForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">VAT Amount (SAR)</label>
+                <label htmlFor="vat-amount-field" className="text-sm font-medium text-gray-300 ml-1">
+                  VAT Amount (SAR)
+                </label>
                 <input
+                  id="vat-amount-field"
                   type="number"
                   min="0"
                   onChange={e => handleChange('vatAmount', Number(e.target.value))}
@@ -193,8 +209,11 @@ export const CustomsForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Broker Contact</label>
+                <label htmlFor="broker-contact-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Broker Contact
+                </label>
                 <input
+                  id="broker-contact-field"
                   type="text"
                   onChange={e => handleChange('brokerContact', e.target.value)}
                   placeholder="Phone/Email"
@@ -203,8 +222,11 @@ export const CustomsForm: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">Notes</label>
+              <label htmlFor="notes-field" className="text-sm font-medium text-gray-300 ml-1">
+                Notes
+              </label>
               <textarea
+                id="notes-field"
                 onChange={e => handleChange('notes', e.target.value)}
                 placeholder="Additional customs notes..."
                 className="nesma-input px-4 py-3 w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"

@@ -143,10 +143,11 @@ export const StockTransferForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="transfer-type-field" className="text-sm font-medium text-gray-300 ml-1">
                   Transfer Type <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="transfer-type-field"
                   value={String(formData.transferType ?? '')}
                   onChange={e => handleChange('transferType', e.target.value)}
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -156,10 +157,11 @@ export const StockTransferForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="date-field" className="text-sm font-medium text-gray-300 ml-1">
                   Date <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="date-field"
                   type="date"
                   defaultValue={new Date().toISOString().split('T')[0]}
                   onChange={e => handleChange('date', e.target.value)}
@@ -168,10 +170,11 @@ export const StockTransferForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="from-warehouse-field" className="text-sm font-medium text-gray-300 ml-1">
                   From Warehouse <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="from-warehouse-field"
                   onChange={e => handleChange('fromWarehouse', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -185,10 +188,11 @@ export const StockTransferForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="to-warehouse-field" className="text-sm font-medium text-gray-300 ml-1">
                   To Warehouse <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="to-warehouse-field"
                   onChange={e => handleChange('toWarehouse', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -204,8 +208,11 @@ export const StockTransferForm: React.FC = () => {
               {formData.transferType === 'inter_project' && (
                 <>
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300 ml-1">From Project</label>
+                    <label htmlFor="from-project-field" className="text-sm font-medium text-gray-300 ml-1">
+                      From Project
+                    </label>
                     <select
+                      id="from-project-field"
                       onChange={e => handleChange('fromProject', e.target.value)}
                       className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                     >
@@ -218,8 +225,11 @@ export const StockTransferForm: React.FC = () => {
                     </select>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300 ml-1">To Project</label>
+                    <label htmlFor="to-project-field" className="text-sm font-medium text-gray-300 ml-1">
+                      To Project
+                    </label>
                     <select
+                      id="to-project-field"
                       onChange={e => handleChange('toProject', e.target.value)}
                       className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                     >

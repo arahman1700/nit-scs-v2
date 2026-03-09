@@ -213,8 +213,11 @@ export function MobileWtTransfer() {
                 </div>
               )}
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Transfer Quantity</label>
+                <label htmlFor="transfer-quantity-field" className="text-xs text-gray-400 block mb-1">
+                  Transfer Quantity
+                </label>
                 <input
+                  id="transfer-quantity-field"
                   type="number"
                   value={transferQty}
                   onChange={e => setTransferQty(e.target.value)}

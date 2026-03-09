@@ -79,8 +79,11 @@ const AqlCalculatorTab: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Lot Size */}
           <div>
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Lot Size (quantity)</label>
+            <label htmlFor="lot-size-field" className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Lot Size (quantity)
+            </label>
             <input
+              id="lot-size-field"
               type="number"
               min="1"
               value={lotSize}
@@ -92,8 +95,14 @@ const AqlCalculatorTab: React.FC = () => {
 
           {/* Inspection Level */}
           <div>
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Inspection Level</label>
+            <label
+              htmlFor="inspection-level-field"
+              className="block text-xs text-gray-400 uppercase tracking-wider mb-2"
+            >
+              Inspection Level
+            </label>
             <select
+              id="inspection-level-field"
               value={level}
               onChange={e => setLevel(e.target.value as InspectionLevel)}
               className="input-field w-full"
@@ -108,10 +117,15 @@ const AqlCalculatorTab: React.FC = () => {
 
           {/* AQL % */}
           <div>
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
+            <label htmlFor="aql-percent-field" className="block text-xs text-gray-400 uppercase tracking-wider mb-2">
               AQL % (Acceptable Quality Level)
             </label>
-            <select value={aqlPercent} onChange={e => setAqlPercent(e.target.value)} className="input-field w-full">
+            <select
+              id="aql-percent-field"
+              value={aqlPercent}
+              onChange={e => setAqlPercent(e.target.value)}
+              className="input-field w-full"
+            >
               {STANDARD_AQL_VALUES.map(v => (
                 <option key={v} value={v}>
                   {v}%
@@ -358,8 +372,14 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
           {/* Metadata */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Name *</label>
+              <label
+                htmlFor="checklist-name-field"
+                className="block text-xs text-gray-400 uppercase tracking-wider mb-2"
+              >
+                Name *
+              </label>
               <input
+                id="checklist-name-field"
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -368,8 +388,18 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Category</label>
-              <select value={category} onChange={e => setCategory(e.target.value)} className="input-field w-full">
+              <label
+                htmlFor="checklist-category-field"
+                className="block text-xs text-gray-400 uppercase tracking-wider mb-2"
+              >
+                Category
+              </label>
+              <select
+                id="checklist-category-field"
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="input-field w-full"
+              >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -379,8 +409,14 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
             </div>
           </div>
           <div>
-            <label className="block text-xs text-gray-400 uppercase tracking-wider mb-2">Description</label>
+            <label
+              htmlFor="checklist-description-field"
+              className="block text-xs text-gray-400 uppercase tracking-wider mb-2"
+            >
+              Description
+            </label>
             <textarea
+              id="checklist-description-field"
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Optional description..."

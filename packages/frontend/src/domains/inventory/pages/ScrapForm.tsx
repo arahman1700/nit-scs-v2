@@ -278,8 +278,11 @@ export const ScrapForm: React.FC = () => {
         <h2 className="text-white font-semibold">Scrap Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Project</label>
+            <label htmlFor="project-field" className="block text-gray-400 text-sm mb-1">
+              Project
+            </label>
             <select
+              id="project-field"
               value={(formData.projectId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, projectId: e.target.value }))}
               className="input-field w-full"
@@ -294,8 +297,11 @@ export const ScrapForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Warehouse</label>
+            <label htmlFor="warehouse-field" className="block text-gray-400 text-sm mb-1">
+              Warehouse
+            </label>
             <select
+              id="warehouse-field"
               value={(formData.warehouseId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, warehouseId: e.target.value }))}
               className="input-field w-full"
@@ -310,8 +316,11 @@ export const ScrapForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Material Type</label>
+            <label htmlFor="material-type-field" className="block text-gray-400 text-sm mb-1">
+              Material Type
+            </label>
             <select
+              id="material-type-field"
               value={(formData.materialType as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, materialType: e.target.value }))}
               className="input-field w-full"
@@ -326,8 +335,11 @@ export const ScrapForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Quantity</label>
+            <label htmlFor="quantity-field" className="block text-gray-400 text-sm mb-1">
+              Quantity
+            </label>
             <input
+              id="quantity-field"
               type="number"
               value={(formData.qty as number) ?? ''}
               onChange={e => setFormData(p => ({ ...p, qty: Number(e.target.value) }))}
@@ -336,8 +348,11 @@ export const ScrapForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Packaging</label>
+            <label htmlFor="packaging-field" className="block text-gray-400 text-sm mb-1">
+              Packaging
+            </label>
             <input
+              id="packaging-field"
               type="text"
               value={(formData.packaging as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, packaging: e.target.value }))}
@@ -345,8 +360,11 @@ export const ScrapForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Condition</label>
+            <label htmlFor="condition-field" className="block text-gray-400 text-sm mb-1">
+              Condition
+            </label>
             <select
+              id="condition-field"
               value={(formData.condition as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, condition: e.target.value }))}
               className="input-field w-full"
@@ -360,8 +378,11 @@ export const ScrapForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Estimated Value</label>
+            <label htmlFor="estimated-value-field" className="block text-gray-400 text-sm mb-1">
+              Estimated Value
+            </label>
             <input
+              id="estimated-value-field"
               type="number"
               value={(formData.estimatedValue as number) ?? ''}
               onChange={e => setFormData(p => ({ ...p, estimatedValue: Number(e.target.value) }))}
@@ -370,8 +391,11 @@ export const ScrapForm: React.FC = () => {
           </div>
         </div>
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Description</label>
+          <label htmlFor="description-field" className="block text-gray-400 text-sm mb-1">
+            Description
+          </label>
           <textarea
+            id="description-field"
             value={(formData.description as string) ?? ''}
             onChange={e => setFormData(p => ({ ...p, description: e.target.value }))}
             className="input-field w-full"

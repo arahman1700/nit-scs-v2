@@ -411,11 +411,12 @@ export const AssetRegisterPage: React.FC = () => {
           <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">
+                <label htmlFor="asset-tag-field" className="block text-xs text-gray-400 mb-1.5">
                   <Tag size={12} className="inline mr-1" />
                   Asset Tag
                 </label>
                 <input
+                  id="asset-tag-field"
                   type="text"
                   value={formData.assetTag}
                   onChange={e => setFormData({ ...formData, assetTag: e.target.value })}
@@ -424,8 +425,11 @@ export const AssetRegisterPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Category</label>
+                <label htmlFor="category-field" className="block text-xs text-gray-400 mb-1.5">
+                  Category
+                </label>
                 <input
+                  id="category-field"
                   type="text"
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value })}
@@ -436,8 +440,11 @@ export const AssetRegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Description</label>
+              <label htmlFor="description-field" className="block text-xs text-gray-400 mb-1.5">
+                Description
+              </label>
               <input
+                id="description-field"
                 type="text"
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -448,11 +455,12 @@ export const AssetRegisterPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">
+                <label htmlFor="location-field" className="block text-xs text-gray-400 mb-1.5">
                   <MapPin size={12} className="inline mr-1" />
                   Location
                 </label>
                 <input
+                  id="location-field"
                   type="text"
                   value={formData.location}
                   onChange={e => setFormData({ ...formData, location: e.target.value })}
@@ -461,8 +469,11 @@ export const AssetRegisterPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">Warehouse</label>
+                <label htmlFor="warehouse-field" className="block text-xs text-gray-400 mb-1.5">
+                  Warehouse
+                </label>
                 <select
+                  id="warehouse-field"
                   value={formData.warehouseId}
                   onChange={e => setFormData({ ...formData, warehouseId: e.target.value })}
                   className="input-field w-full"
@@ -479,11 +490,12 @@ export const AssetRegisterPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">
+                <label htmlFor="purchase-value-field" className="block text-xs text-gray-400 mb-1.5">
                   <DollarSign size={12} className="inline mr-1" />
                   Purchase Value
                 </label>
                 <input
+                  id="purchase-value-field"
                   type="number"
                   step="0.01"
                   min="0"
@@ -493,11 +505,12 @@ export const AssetRegisterPage: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">
+                <label htmlFor="purchase-date-field" className="block text-xs text-gray-400 mb-1.5">
                   <Calendar size={12} className="inline mr-1" />
                   Purchase Date
                 </label>
                 <input
+                  id="purchase-date-field"
                   type="date"
                   value={formData.purchaseDate}
                   onChange={e => setFormData({ ...formData, purchaseDate: e.target.value })}
@@ -507,8 +520,11 @@ export const AssetRegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Serial Number</label>
+              <label htmlFor="serial-number-field" className="block text-xs text-gray-400 mb-1.5">
+                Serial Number
+              </label>
               <input
+                id="serial-number-field"
                 type="text"
                 value={formData.serialNumber}
                 onChange={e => setFormData({ ...formData, serialNumber: e.target.value })}
@@ -518,8 +534,11 @@ export const AssetRegisterPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Notes</label>
+              <label htmlFor="asset-notes-field" className="block text-xs text-gray-400 mb-1.5">
+                Notes
+              </label>
               <textarea
+                id="asset-notes-field"
                 value={formData.notes}
                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
                 placeholder="Optional notes"
@@ -638,11 +657,12 @@ export const AssetRegisterPage: React.FC = () => {
               Transfer <span className="text-white font-medium">{selectedAsset?.assetTag}</span> to a new warehouse.
             </p>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label htmlFor="destination-warehouse-field" className="block text-xs text-gray-400 mb-1.5">
                 <MapPin size={12} className="inline mr-1" />
                 Destination Warehouse
               </label>
               <select
+                id="destination-warehouse-field"
                 value={transferWarehouseId}
                 onChange={e => setTransferWarehouseId(e.target.value)}
                 className="input-field w-full"
@@ -656,8 +676,11 @@ export const AssetRegisterPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Notes</label>
+              <label htmlFor="transfer-notes-field" className="block text-xs text-gray-400 mb-1.5">
+                Notes
+              </label>
               <textarea
+                id="transfer-notes-field"
                 value={transferNotes}
                 onChange={e => setTransferNotes(e.target.value)}
                 placeholder="Transfer reason or notes"
@@ -697,8 +720,11 @@ export const AssetRegisterPage: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Reason for Retirement</label>
+              <label htmlFor="retire-reason-field" className="block text-xs text-gray-400 mb-1.5">
+                Reason for Retirement
+              </label>
               <textarea
+                id="retire-reason-field"
                 value={retireReason}
                 onChange={e => setRetireReason(e.target.value)}
                 placeholder="End of life, replaced, etc."
@@ -738,11 +764,12 @@ export const AssetRegisterPage: React.FC = () => {
               </p>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label htmlFor="disposal-value-field" className="block text-xs text-gray-400 mb-1.5">
                 <DollarSign size={12} className="inline mr-1" />
                 Disposal / Salvage Value
               </label>
               <input
+                id="disposal-value-field"
                 type="number"
                 step="0.01"
                 min="0"

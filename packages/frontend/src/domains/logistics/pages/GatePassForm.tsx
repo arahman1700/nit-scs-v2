@@ -150,10 +150,11 @@ export const GatePassForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="type-field" className="text-sm font-medium text-gray-300 ml-1">
                   Type <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="type-field"
                   value={String(formData.type ?? '')}
                   onChange={e => handleChange('type', e.target.value)}
                   required
@@ -165,10 +166,11 @@ export const GatePassForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="date-field" className="text-sm font-medium text-gray-300 ml-1">
                   Date <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="date-field"
                   type="date"
                   defaultValue={new Date().toISOString().split('T')[0]}
                   onChange={e => handleChange('date', e.target.value)}
@@ -177,10 +179,11 @@ export const GatePassForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="warehouse-field" className="text-sm font-medium text-gray-300 ml-1">
                   Warehouse <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="warehouse-field"
                   value={String(formData.warehouse ?? '')}
                   onChange={e => handleChange('warehouse', e.target.value)}
                   required
@@ -195,8 +198,11 @@ export const GatePassForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Linked Document</label>
+                <label htmlFor="linked-document-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Linked Document
+                </label>
                 <select
+                  id="linked-document-field"
                   value={String(formData.linkedDocument ?? '')}
                   onChange={e => handleChange('linkedDocument', e.target.value)}
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -229,10 +235,11 @@ export const GatePassForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="vehicle-plate-field" className="text-sm font-medium text-gray-300 ml-1">
                   Vehicle Plate <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="vehicle-plate-field"
                   type="text"
                   placeholder="ABC 1234"
                   onChange={e => handleChange('vehiclePlate', e.target.value)}
@@ -241,10 +248,11 @@ export const GatePassForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="driver-name-field" className="text-sm font-medium text-gray-300 ml-1">
                   Driver Name <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="driver-name-field"
                   type="text"
                   placeholder="Full name"
                   onChange={e => handleChange('driverName', e.target.value)}
@@ -253,8 +261,11 @@ export const GatePassForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Driver ID Number</label>
+                <label htmlFor="driver-id-number-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Driver ID Number
+                </label>
                 <input
+                  id="driver-id-number-field"
                   type="text"
                   placeholder="National ID"
                   onChange={e => handleChange('driverIdNumber', e.target.value)}
@@ -271,10 +282,11 @@ export const GatePassForm: React.FC = () => {
               Destination
             </h3>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
+              <label htmlFor="destination-field" className="text-sm font-medium text-gray-300 ml-1">
                 Destination <span className="text-red-400">*</span>
               </label>
               <input
+                id="destination-field"
                 type="text"
                 placeholder="Project site, warehouse location..."
                 onChange={e => handleChange('destination', e.target.value)}

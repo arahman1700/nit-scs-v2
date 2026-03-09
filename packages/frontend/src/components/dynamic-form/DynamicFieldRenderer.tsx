@@ -36,6 +36,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   const inputBase =
     'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all';
 
+  const fieldId = `dynamic-${field.fieldKey}`;
   const handleChange = (val: unknown) => onChange(field.fieldKey, val);
 
   const renderField = () => {
@@ -54,6 +55,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'url':
         return (
           <input
+            id={fieldId}
             type={field.fieldType === 'phone' ? 'tel' : field.fieldType}
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
@@ -70,6 +72,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'currency':
         return (
           <input
+            id={fieldId}
             type="number"
             value={(value as number) ?? ''}
             onChange={e => handleChange(e.target.value ? Number(e.target.value) : '')}
@@ -84,6 +87,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'date':
         return (
           <input
+            id={fieldId}
             type="date"
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
@@ -97,6 +101,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'datetime':
         return (
           <input
+            id={fieldId}
             type="datetime-local"
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
@@ -110,6 +115,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'textarea':
         return (
           <textarea
+            id={fieldId}
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
             className={`${inputBase} min-h-[100px]`}
@@ -123,6 +129,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'select':
         return (
           <select
+            id={fieldId}
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
             className={`${inputBase} appearance-none`}
@@ -162,8 +169,12 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
 
       case 'checkbox':
         return (
-          <label className="flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+          <label
+            htmlFor={fieldId}
+            className="flex items-center gap-3 p-3 border border-white/10 rounded-lg bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+          >
             <input
+              id={fieldId}
               type="checkbox"
               checked={!!value}
               onChange={e => handleChange(e.target.checked)}
@@ -177,6 +188,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'lookup_project':
         return (
           <LookupField
+            id={fieldId}
             type="projects"
             value={value as string}
             onChange={handleChange}
@@ -186,6 +198,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'lookup_warehouse':
         return (
           <LookupField
+            id={fieldId}
             type="warehouses"
             value={value as string}
             onChange={handleChange}
@@ -195,6 +208,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'lookup_supplier':
         return (
           <LookupField
+            id={fieldId}
             type="suppliers"
             value={value as string}
             onChange={handleChange}
@@ -204,6 +218,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'lookup_employee':
         return (
           <LookupField
+            id={fieldId}
             type="employees"
             value={value as string}
             onChange={handleChange}
@@ -213,6 +228,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       case 'lookup_item':
         return (
           <LookupField
+            id={fieldId}
             type="items"
             value={value as string}
             onChange={handleChange}
@@ -233,6 +249,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
       default:
         return (
           <input
+            id={fieldId}
             type="text"
             value={(value as string) ?? ''}
             onChange={e => handleChange(e.target.value)}
@@ -246,7 +263,7 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
   return (
     <div className={hideLabel ? undefined : (COL_SPAN_MAP[field.colSpan] ?? 'md:col-span-1')}>
       {!hideLabel && (
-        <label className="block text-sm font-medium text-gray-300 mb-1.5">
+        <label htmlFor={fieldId} className="block text-sm font-medium text-gray-300 mb-1.5">
           {field.label}
           {field.isRequired && <span className="text-red-400 ml-1">*</span>}
         </label>
@@ -268,11 +285,13 @@ const LOOKUP_HOOKS = {
 } as const;
 
 function LookupField({
+  id,
   type,
   value,
   onChange,
   disabled,
 }: {
+  id?: string;
   type: keyof typeof LOOKUP_HOOKS;
   value: string | undefined;
   onChange: (val: unknown) => void;
@@ -296,7 +315,13 @@ function LookupField({
   };
 
   return (
-    <select value={value ?? ''} onChange={e => onChange(e.target.value)} className={inputBase} disabled={disabled}>
+    <select
+      id={id}
+      value={value ?? ''}
+      onChange={e => onChange(e.target.value)}
+      className={inputBase}
+      disabled={disabled}
+    >
       <option value="">Select...</option>
       {items.map(item => (
         <option key={item.id} value={item.id}>

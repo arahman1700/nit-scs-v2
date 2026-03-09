@@ -71,8 +71,11 @@ export const RentalContractForm: React.FC = () => {
         <h2 className="text-white font-semibold">Header Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Supplier</label>
+            <label htmlFor="supplier-field" className="block text-gray-400 text-sm mb-1">
+              Supplier
+            </label>
             <select
+              id="supplier-field"
               value={(formData.supplierId as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, supplierId: e.target.value }))}
               className="input-field w-full"
@@ -87,8 +90,11 @@ export const RentalContractForm: React.FC = () => {
             </select>
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Equipment Type</label>
+            <label htmlFor="equipment-type-field" className="block text-gray-400 text-sm mb-1">
+              Equipment Type
+            </label>
             <input
+              id="equipment-type-field"
               type="text"
               value={(formData.equipmentType as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, equipmentType: e.target.value }))}
@@ -97,8 +103,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Start Date</label>
+            <label htmlFor="start-date-field" className="block text-gray-400 text-sm mb-1">
+              Start Date
+            </label>
             <input
+              id="start-date-field"
               type="date"
               value={(formData.startDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, startDate: e.target.value }))}
@@ -107,8 +116,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">End Date</label>
+            <label htmlFor="end-date-field" className="block text-gray-400 text-sm mb-1">
+              End Date
+            </label>
             <input
+              id="end-date-field"
               type="date"
               value={(formData.endDate as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, endDate: e.target.value }))}
@@ -117,8 +129,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Monthly Rate</label>
+            <label htmlFor="monthly-rate-field" className="block text-gray-400 text-sm mb-1">
+              Monthly Rate
+            </label>
             <input
+              id="monthly-rate-field"
               type="number"
               value={(formData.monthlyRate as number) ?? ''}
               onChange={e => setFormData(p => ({ ...p, monthlyRate: Number(e.target.value) }))}
@@ -127,8 +142,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Daily Rate</label>
+            <label htmlFor="daily-rate-field" className="block text-gray-400 text-sm mb-1">
+              Daily Rate
+            </label>
             <input
+              id="daily-rate-field"
               type="number"
               value={(formData.dailyRate as number) ?? ''}
               onChange={e => setFormData(p => ({ ...p, dailyRate: Number(e.target.value) }))}
@@ -136,8 +154,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Insurance Value</label>
+            <label htmlFor="insurance-value-field" className="block text-gray-400 text-sm mb-1">
+              Insurance Value
+            </label>
             <input
+              id="insurance-value-field"
               type="number"
               value={(formData.insuranceValue as number) ?? ''}
               onChange={e => setFormData(p => ({ ...p, insuranceValue: Number(e.target.value) }))}
@@ -145,8 +166,11 @@ export const RentalContractForm: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-gray-400 text-sm mb-1">Insurance Expiry</label>
+            <label htmlFor="insurance-expiry-field" className="block text-gray-400 text-sm mb-1">
+              Insurance Expiry
+            </label>
             <input
+              id="insurance-expiry-field"
               type="date"
               value={(formData.insuranceExpiry as string) ?? ''}
               onChange={e => setFormData(p => ({ ...p, insuranceExpiry: e.target.value }))}

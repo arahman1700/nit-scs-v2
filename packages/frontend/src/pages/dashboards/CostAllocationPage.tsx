@@ -162,8 +162,11 @@ export const CostAllocationPage: React.FC = () => {
         {/* Date Range Filter */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-400">From</label>
+            <label htmlFor="costDateFrom" className="text-xs text-gray-400">
+              From
+            </label>
             <input
+              id="costDateFrom"
               type="date"
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
@@ -171,8 +174,11 @@ export const CostAllocationPage: React.FC = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-400">To</label>
+            <label htmlFor="costDateTo" className="text-xs text-gray-400">
+              To
+            </label>
             <input
+              id="costDateTo"
               type="date"
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}

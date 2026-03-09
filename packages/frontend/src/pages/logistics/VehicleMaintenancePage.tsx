@@ -431,11 +431,14 @@ const MaintenanceDetailModal: React.FC<{ id: string; onClose: () => void }> = ({
             {/* Complete Form */}
             {showComplete && (
               <div className="mb-4 bg-emerald-500/5 rounded-xl p-4 border border-emerald-500/20">
-                <label className="block text-sm text-emerald-400 mb-3 font-medium">Complete Maintenance</label>
+                <span className="block text-sm text-emerald-400 mb-3 font-medium">Complete Maintenance</span>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Work Performed</label>
+                    <label htmlFor="work-performed-field" className="block text-xs text-gray-400 mb-1">
+                      Work Performed
+                    </label>
                     <textarea
+                      id="work-performed-field"
                       value={completeForm.workPerformed}
                       onChange={e => setCompleteForm(f => ({ ...f, workPerformed: e.target.value }))}
                       placeholder="Describe work performed..."
@@ -446,8 +449,11 @@ const MaintenanceDetailModal: React.FC<{ id: string; onClose: () => void }> = ({
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Parts Used (optional)</label>
+                      <label htmlFor="parts-used-field" className="block text-xs text-gray-400 mb-1">
+                        Parts Used (optional)
+                      </label>
                       <input
+                        id="parts-used-field"
                         type="text"
                         value={completeForm.partsUsed}
                         onChange={e => setCompleteForm(f => ({ ...f, partsUsed: e.target.value }))}
@@ -456,8 +462,11 @@ const MaintenanceDetailModal: React.FC<{ id: string; onClose: () => void }> = ({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Cost (optional)</label>
+                      <label htmlFor="maintenance-cost-field" className="block text-xs text-gray-400 mb-1">
+                        Cost (optional)
+                      </label>
                       <input
+                        id="maintenance-cost-field"
                         type="number"
                         value={completeForm.cost}
                         onChange={e => setCompleteForm(f => ({ ...f, cost: e.target.value }))}
@@ -570,8 +579,11 @@ const CreateMaintenanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Vehicle</label>
+            <label htmlFor="vehicle-field" className="block text-sm text-gray-400 mb-1">
+              Vehicle
+            </label>
             <input
+              id="vehicle-field"
               type="text"
               value={form.vehicleId}
               onChange={e => setForm(f => ({ ...f, vehicleId: e.target.value }))}
@@ -582,8 +594,11 @@ const CreateMaintenanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Maintenance Type</label>
+            <label htmlFor="maintenance-type-field" className="block text-sm text-gray-400 mb-1">
+              Maintenance Type
+            </label>
             <select
+              id="maintenance-type-field"
               value={form.maintenanceType}
               onChange={e => setForm(f => ({ ...f, maintenanceType: e.target.value }))}
               className="input-field w-full py-2 px-3 rounded-xl text-sm"
@@ -601,8 +616,11 @@ const CreateMaintenanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Scheduled Date</label>
+            <label htmlFor="scheduled-date-field" className="block text-sm text-gray-400 mb-1">
+              Scheduled Date
+            </label>
             <input
+              id="scheduled-date-field"
               type="date"
               value={form.scheduledDate}
               onChange={e => setForm(f => ({ ...f, scheduledDate: e.target.value }))}
@@ -612,8 +630,11 @@ const CreateMaintenanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) 
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Notes</label>
+            <label htmlFor="maintenance-notes-field" className="block text-sm text-gray-400 mb-1">
+              Notes
+            </label>
             <textarea
+              id="maintenance-notes-field"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Additional notes..."

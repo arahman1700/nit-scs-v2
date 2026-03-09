@@ -530,8 +530,11 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wider">From</label>
+            <label htmlFor="reportDateFrom" className="text-xs text-gray-500 uppercase tracking-wider">
+              From
+            </label>
             <input
+              id="reportDateFrom"
               type="date"
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
@@ -540,8 +543,11 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wider">To</label>
+            <label htmlFor="reportDateTo" className="text-xs text-gray-500 uppercase tracking-wider">
+              To
+            </label>
             <input
+              id="reportDateTo"
               type="date"
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
@@ -550,8 +556,11 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wider">Project</label>
+            <label htmlFor="reportProject" className="text-xs text-gray-500 uppercase tracking-wider">
+              Project
+            </label>
             <select
+              id="reportProject"
               value={projectId}
               onChange={e => setProjectId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"
@@ -568,8 +577,11 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-gray-500 uppercase tracking-wider">Warehouse</label>
+            <label htmlFor="reportWarehouse" className="text-xs text-gray-500 uppercase tracking-wider">
+              Warehouse
+            </label>
             <select
+              id="reportWarehouse"
               value={warehouseId}
               onChange={e => setWarehouseId(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl text-sm text-white px-3 py-2 focus:outline-none focus:border-nesma-primary/50 min-w-[160px]"

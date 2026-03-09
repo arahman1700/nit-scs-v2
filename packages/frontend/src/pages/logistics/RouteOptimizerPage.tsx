@@ -133,11 +133,15 @@ export const RouteOptimizerPage: React.FC = () => {
       {/* Warehouse Selector */}
       <div className="glass-card rounded-2xl p-5 border border-white/10">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <label className="text-sm text-gray-400 whitespace-nowrap flex items-center gap-2">
+          <label
+            htmlFor="origin-warehouse-field"
+            className="text-sm text-gray-400 whitespace-nowrap flex items-center gap-2"
+          >
             <MapPin className="w-4 h-4" />
             Origin Warehouse:
           </label>
           <select
+            id="origin-warehouse-field"
             value={selectedWarehouse}
             onChange={e => handleWarehouseChange(e.target.value)}
             className="input-field w-full sm:w-80"

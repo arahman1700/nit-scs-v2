@@ -276,8 +276,11 @@ export function ApprovalWorkflowPage() {
             <div className="space-y-4">
               {/* Document Type */}
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Document Type</label>
+                <label htmlFor="approvalDocType" className="text-sm text-gray-300 block mb-1">
+                  Document Type
+                </label>
                 <select
+                  id="approvalDocType"
                   className="input-field w-full"
                   value={form.documentType}
                   onChange={e => setForm(p => ({ ...p, documentType: e.target.value }))}
@@ -297,8 +300,11 @@ export function ApprovalWorkflowPage() {
               {/* Amount Range */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-300 block mb-1">Min Amount (SAR)</label>
+                  <label htmlFor="approvalMinAmount" className="text-sm text-gray-300 block mb-1">
+                    Min Amount (SAR)
+                  </label>
                   <input
+                    id="approvalMinAmount"
                     type="number"
                     className="input-field w-full"
                     value={form.minAmount}
@@ -308,8 +314,11 @@ export function ApprovalWorkflowPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-300 block mb-1">Max Amount (SAR)</label>
+                  <label htmlFor="approvalMaxAmount" className="text-sm text-gray-300 block mb-1">
+                    Max Amount (SAR)
+                  </label>
                   <input
+                    id="approvalMaxAmount"
                     type="number"
                     className="input-field w-full"
                     value={form.maxAmount}
@@ -322,8 +331,11 @@ export function ApprovalWorkflowPage() {
 
               {/* Approver Role */}
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Approver Role</label>
+                <label htmlFor="approverRole" className="text-sm text-gray-300 block mb-1">
+                  Approver Role
+                </label>
                 <select
+                  id="approverRole"
                   className="input-field w-full"
                   value={form.approverRole}
                   onChange={e => setForm(p => ({ ...p, approverRole: e.target.value }))}
@@ -338,8 +350,11 @@ export function ApprovalWorkflowPage() {
 
               {/* SLA Hours */}
               <div>
-                <label className="text-sm text-gray-300 block mb-1">SLA (hours)</label>
+                <label htmlFor="approvalSlaHours" className="text-sm text-gray-300 block mb-1">
+                  SLA (hours)
+                </label>
                 <input
+                  id="approvalSlaHours"
                   type="number"
                   className="input-field w-full"
                   value={form.slaHours}

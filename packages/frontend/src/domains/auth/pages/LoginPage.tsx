@@ -182,8 +182,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">{t.email}</label>
+              <label htmlFor="loginEmail" className="block text-sm font-medium text-gray-300 mb-2">
+                {t.email}
+              </label>
               <input
+                id="loginEmail"
                 type="email"
                 value={email}
                 onChange={e => {
@@ -198,9 +201,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">{t.password}</label>
+              <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                {t.password}
+              </label>
               <div className="relative">
                 <input
+                  id="loginPassword"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={e => {
@@ -317,8 +323,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                  <label htmlFor="resetEmail" className="block text-sm font-medium text-gray-300 mb-2">
+                    Email Address
+                  </label>
                   <input
+                    id="resetEmail"
                     type="email"
                     value={resetEmail}
                     onChange={e => {
@@ -370,8 +379,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">6-Digit Code</label>
+                  <label htmlFor="resetCode" className="block text-sm font-medium text-gray-300 mb-2">
+                    6-Digit Code
+                  </label>
                   <input
+                    id="resetCode"
                     type="text"
                     value={resetCode}
                     onChange={e => {
@@ -387,8 +399,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                  <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                    New Password
+                  </label>
                   <input
+                    id="newPassword"
                     type="password"
                     value={newPassword}
                     onChange={e => {
@@ -402,8 +417,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                    Confirm Password
+                  </label>
                   <input
+                    id="confirmPassword"
                     type="password"
                     value={confirmPassword}
                     onChange={e => {

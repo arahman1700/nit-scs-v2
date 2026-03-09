@@ -146,10 +146,11 @@ export const MrfForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="project-field" className="text-sm font-medium text-gray-300 ml-1">
                   Project <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="project-field"
                   onChange={e => handleChange('project', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -163,8 +164,11 @@ export const MrfForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Preferred Warehouse</label>
+                <label htmlFor="preferred-warehouse-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Preferred Warehouse
+                </label>
                 <select
+                  id="preferred-warehouse-field"
                   onChange={e => handleChange('warehouse', e.target.value)}
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
                 >
@@ -177,10 +181,11 @@ export const MrfForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="priority-field" className="text-sm font-medium text-gray-300 ml-1">
                   Priority <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="priority-field"
                   onChange={e => handleChange('priority', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -192,8 +197,11 @@ export const MrfForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Requester</label>
+                <label htmlFor="requester-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Requester
+                </label>
                 <input
+                  id="requester-field"
                   type="text"
                   value={currentUserName}
                   readOnly
@@ -202,8 +210,11 @@ export const MrfForm: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">Notes</label>
+              <label htmlFor="notes-field" className="text-sm font-medium text-gray-300 ml-1">
+                Notes
+              </label>
               <textarea
+                id="notes-field"
                 onChange={e => handleChange('notes', e.target.value)}
                 placeholder="Reason for request, special requirements..."
                 className="nesma-input px-4 py-3 w-full min-h-[100px] bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"

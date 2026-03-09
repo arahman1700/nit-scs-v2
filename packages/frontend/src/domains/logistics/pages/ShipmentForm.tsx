@@ -150,10 +150,11 @@ export const ShipmentForm: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="supplier-field" className="text-sm font-medium text-gray-300 ml-1">
                   Supplier <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="supplier-field"
                   onChange={e => handleChange('supplier', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -167,10 +168,11 @@ export const ShipmentForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="shipment-type-field" className="text-sm font-medium text-gray-300 ml-1">
                   Shipment Type <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="shipment-type-field"
                   value={String(formData.shipmentType ?? '')}
                   onChange={e => handleChange('shipmentType', e.target.value)}
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -181,10 +183,11 @@ export const ShipmentForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="port-of-discharge-field" className="text-sm font-medium text-gray-300 ml-1">
                   Port of Discharge <span className="text-red-400">*</span>
                 </label>
                 <select
+                  id="port-of-discharge-field"
                   onChange={e => handleChange('port', e.target.value)}
                   required
                   className="nesma-input px-4 py-3 w-full bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"
@@ -198,8 +201,11 @@ export const ShipmentForm: React.FC = () => {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Estimated Value (SAR)</label>
+                <label htmlFor="estimated-value-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Estimated Value (SAR)
+                </label>
                 <input
+                  id="estimated-value-field"
                   type="number"
                   min="0"
                   onChange={e => handleChange('value', Number(e.target.value))}
@@ -207,10 +213,11 @@ export const ShipmentForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="etd-field" className="text-sm font-medium text-gray-300 ml-1">
                   ETD <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="etd-field"
                   type="date"
                   onChange={e => handleChange('etd', e.target.value)}
                   required
@@ -218,10 +225,11 @@ export const ShipmentForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="eta-field" className="text-sm font-medium text-gray-300 ml-1">
                   ETA <span className="text-red-400">*</span>
                 </label>
                 <input
+                  id="eta-field"
                   type="date"
                   onChange={e => handleChange('eta', e.target.value)}
                   required
@@ -229,7 +237,7 @@ export const ShipmentForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
+                <label htmlFor="container-number-field" className="text-sm font-medium text-gray-300 ml-1">
                   {formData.shipmentType === 'Sea'
                     ? 'Container No.'
                     : formData.shipmentType === 'Air'
@@ -237,6 +245,7 @@ export const ShipmentForm: React.FC = () => {
                       : 'Truck Plate'}
                 </label>
                 <input
+                  id="container-number-field"
                   type="text"
                   onChange={e => handleChange('containerNumber', e.target.value)}
                   placeholder={formData.shipmentType === 'Sea' ? 'MSKU1234567' : 'AWB-12345678'}
@@ -244,8 +253,11 @@ export const ShipmentForm: React.FC = () => {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">Freight Agent</label>
+                <label htmlFor="freight-agent-field" className="text-sm font-medium text-gray-300 ml-1">
+                  Freight Agent
+                </label>
                 <input
+                  id="freight-agent-field"
                   type="text"
                   onChange={e => handleChange('agent', e.target.value)}
                   placeholder="Agent name"
@@ -254,8 +266,11 @@ export const ShipmentForm: React.FC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">Description</label>
+              <label htmlFor="description-field" className="text-sm font-medium text-gray-300 ml-1">
+                Description
+              </label>
               <textarea
+                id="description-field"
                 onChange={e => handleChange('description', e.target.value)}
                 placeholder="Shipment description..."
                 className="nesma-input px-4 py-3 w-full min-h-[80px] bg-white/5 border border-white/10 rounded-xl text-white focus:border-nesma-secondary outline-none"

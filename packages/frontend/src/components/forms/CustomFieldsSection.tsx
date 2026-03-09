@@ -104,8 +104,10 @@ function CustomFieldInput({
   const strValue = (value ?? '') as string;
   const numValue = value as number | undefined;
 
+  const fieldId = `cf-${definition.fieldKey}`;
+
   const label = (
-    <label className="text-sm text-gray-300 block mb-1">
+    <label htmlFor={fieldId} className="text-sm text-gray-300 block mb-1">
       {definition.label}
       {definition.isRequired && <span className="text-red-400 ml-1">*</span>}
     </label>
@@ -120,6 +122,7 @@ function CustomFieldInput({
         <div>
           {label}
           <input
+            id={fieldId}
             type={definition.fieldType === 'phone' ? 'tel' : definition.fieldType}
             className="input-field w-full"
             value={strValue}
@@ -137,6 +140,7 @@ function CustomFieldInput({
         <div>
           {label}
           <input
+            id={fieldId}
             type="number"
             className="input-field w-full"
             value={numValue ?? ''}
@@ -154,6 +158,7 @@ function CustomFieldInput({
         <div>
           {label}
           <input
+            id={fieldId}
             type="date"
             className="input-field w-full"
             value={strValue}
@@ -170,6 +175,7 @@ function CustomFieldInput({
         <div className="md:col-span-2">
           {label}
           <textarea
+            id={fieldId}
             className="input-field w-full min-h-[80px]"
             value={strValue}
             onChange={e => onChange(e.target.value)}
@@ -185,6 +191,7 @@ function CustomFieldInput({
         <div>
           {label}
           <select
+            id={fieldId}
             className="input-field w-full"
             value={strValue}
             onChange={e => onChange(e.target.value)}
@@ -227,6 +234,7 @@ function CustomFieldInput({
         <div>
           {label}
           <input
+            id={fieldId}
             className="input-field w-full"
             value={strValue}
             onChange={e => onChange(e.target.value)}

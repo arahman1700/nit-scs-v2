@@ -400,8 +400,11 @@ const CalculatorTab: React.FC<{
       </h3>
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
         <div className="flex-1 w-full sm:max-w-md">
-          <label className="block text-xs text-gray-400 mb-1.5">Shipment ID</label>
+          <label htmlFor="shipment-id-field" className="block text-xs text-gray-400 mb-1.5">
+            Shipment ID
+          </label>
           <input
+            id="shipment-id-field"
             type="text"
             value={shipmentId}
             onChange={e => onShipmentIdChange(e.target.value)}
@@ -609,11 +612,12 @@ const TariffModal: React.FC<{
           {/* HS Code + Country */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label htmlFor="hs-code-field" className="block text-xs text-gray-400 mb-1.5">
                 <Hash size={12} className="inline mr-1" />
                 HS Code
               </label>
               <input
+                id="hs-code-field"
                 type="text"
                 value={formData.hsCode}
                 onChange={e => update('hsCode', e.target.value)}
@@ -622,11 +626,12 @@ const TariffModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">
+              <label htmlFor="country-field" className="block text-xs text-gray-400 mb-1.5">
                 <Globe size={12} className="inline mr-1" />
                 Country
               </label>
               <input
+                id="country-field"
                 type="text"
                 value={formData.country}
                 onChange={e => update('country', e.target.value)}
@@ -638,8 +643,11 @@ const TariffModal: React.FC<{
 
           {/* Description */}
           <div>
-            <label className="block text-xs text-gray-400 mb-1.5">Description</label>
+            <label htmlFor="tariff-description-field" className="block text-xs text-gray-400 mb-1.5">
+              Description
+            </label>
             <input
+              id="tariff-description-field"
               type="text"
               value={formData.description}
               onChange={e => update('description', e.target.value)}
@@ -651,8 +659,11 @@ const TariffModal: React.FC<{
           {/* Duty Rate + VAT Rate */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Duty Rate (%)</label>
+              <label htmlFor="duty-rate-field" className="block text-xs text-gray-400 mb-1.5">
+                Duty Rate (%)
+              </label>
               <input
+                id="duty-rate-field"
                 type="number"
                 step="0.01"
                 min="0"
@@ -662,8 +673,11 @@ const TariffModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">VAT Rate (%)</label>
+              <label htmlFor="vat-rate-field" className="block text-xs text-gray-400 mb-1.5">
+                VAT Rate (%)
+              </label>
               <input
+                id="vat-rate-field"
                 type="number"
                 step="0.01"
                 min="0"
@@ -677,8 +691,11 @@ const TariffModal: React.FC<{
           {/* Effective Dates */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Effective From</label>
+              <label htmlFor="effective-from-field" className="block text-xs text-gray-400 mb-1.5">
+                Effective From
+              </label>
               <input
+                id="effective-from-field"
                 type="date"
                 value={formData.effectiveFrom}
                 onChange={e => update('effectiveFrom', e.target.value)}
@@ -686,8 +703,11 @@ const TariffModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Effective Until</label>
+              <label htmlFor="effective-until-field" className="block text-xs text-gray-400 mb-1.5">
+                Effective Until
+              </label>
               <input
+                id="effective-until-field"
                 type="date"
                 value={formData.effectiveUntil}
                 onChange={e => update('effectiveUntil', e.target.value)}
@@ -699,8 +719,11 @@ const TariffModal: React.FC<{
           {/* Exemption */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Exemption Code</label>
+              <label htmlFor="exemption-code-field" className="block text-xs text-gray-400 mb-1.5">
+                Exemption Code
+              </label>
               <input
+                id="exemption-code-field"
                 type="text"
                 value={formData.exemptionCode}
                 onChange={e => update('exemptionCode', e.target.value)}
@@ -709,8 +732,11 @@ const TariffModal: React.FC<{
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1.5">Exemption Description</label>
+              <label htmlFor="exemption-description-field" className="block text-xs text-gray-400 mb-1.5">
+                Exemption Description
+              </label>
               <input
+                id="exemption-description-field"
                 type="text"
                 value={formData.exemptionDescription}
                 onChange={e => update('exemptionDescription', e.target.value)}

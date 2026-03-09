@@ -212,8 +212,11 @@ export function CustomFieldsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-gray-300 block mb-1">Field Key</label>
+                  <label htmlFor="custom-field-key" className="text-sm text-gray-300 block mb-1">
+                    Field Key
+                  </label>
                   <input
+                    id="custom-field-key"
                     className="input-field w-full"
                     value={editing.fieldKey}
                     onChange={e => setEditing(p => ({ ...p, fieldKey: e.target.value }))}
@@ -222,8 +225,11 @@ export function CustomFieldsPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-gray-300 block mb-1">Field Type</label>
+                  <label htmlFor="custom-field-type" className="text-sm text-gray-300 block mb-1">
+                    Field Type
+                  </label>
                   <select
+                    id="custom-field-type"
                     className="input-field w-full"
                     value={editing.fieldType}
                     onChange={e => setEditing(p => ({ ...p, fieldType: e.target.value as typeof p.fieldType }))}
@@ -237,16 +243,22 @@ export function CustomFieldsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Label</label>
+                <label htmlFor="custom-field-label" className="text-sm text-gray-300 block mb-1">
+                  Label
+                </label>
                 <input
+                  id="custom-field-label"
                   className="input-field w-full"
                   value={editing.label}
                   onChange={e => setEditing(p => ({ ...p, label: e.target.value }))}
                 />
               </div>
               <div>
-                <label className="text-sm text-gray-300 block mb-1">Sort Order</label>
+                <label htmlFor="custom-field-sort-order" className="text-sm text-gray-300 block mb-1">
+                  Sort Order
+                </label>
                 <input
+                  id="custom-field-sort-order"
                   type="number"
                   className="input-field w-full"
                   value={editing.sortOrder}
@@ -312,8 +324,11 @@ export function CustomFieldsPage() {
                   <label className="text-sm text-gray-300 block mb-2">Validation Rules</label>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Min Value</label>
+                      <label htmlFor="custom-field-min-value" className="text-xs text-gray-400 block mb-1">
+                        Min Value
+                      </label>
                       <input
+                        id="custom-field-min-value"
                         type="number"
                         className="input-field w-full"
                         value={(editing.validationRules?.min as number) ?? ''}
@@ -330,8 +345,11 @@ export function CustomFieldsPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-gray-400 block mb-1">Max Value</label>
+                      <label htmlFor="custom-field-max-value" className="text-xs text-gray-400 block mb-1">
+                        Max Value
+                      </label>
                       <input
+                        id="custom-field-max-value"
                         type="number"
                         className="input-field w-full"
                         value={(editing.validationRules?.max as number) ?? ''}

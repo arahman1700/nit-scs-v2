@@ -211,8 +211,11 @@ export function MobileMiIssue() {
                 </div>
               )}
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Issue Quantity</label>
+                <label htmlFor="issue-quantity-field" className="text-xs text-gray-400 block mb-1">
+                  Issue Quantity
+                </label>
                 <input
+                  id="issue-quantity-field"
                   type="number"
                   value={issueQty}
                   onChange={e => setIssueQty(e.target.value)}

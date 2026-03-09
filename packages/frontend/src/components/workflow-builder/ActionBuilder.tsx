@@ -54,8 +54,11 @@ const ActionCard: React.FC<{
         <div className="space-y-2">
           {typeInfo.params.map(param => (
             <div key={param}>
-              <label className="text-[10px] text-gray-500 uppercase">{param}</label>
+              <label htmlFor={`action-${index}-${param}`} className="text-[10px] text-gray-500 uppercase">
+                {param}
+              </label>
               <input
+                id={`action-${index}-${param}`}
                 type="text"
                 value={action.params[param] || ''}
                 onChange={e =>

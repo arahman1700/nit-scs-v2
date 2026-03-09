@@ -229,8 +229,11 @@ const CreateTaskModal: React.FC<{
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Title *</label>
+              <label htmlFor="taskTitle" className="block text-xs font-medium text-gray-400 mb-1.5">
+                Title *
+              </label>
               <input
+                id="taskTitle"
                 type="text"
                 value={title}
                 onChange={e => setTitle(e.target.value)}
@@ -241,8 +244,11 @@ const CreateTaskModal: React.FC<{
 
             {/* Description */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Description</label>
+              <label htmlFor="taskDescription" className="block text-xs font-medium text-gray-400 mb-1.5">
+                Description
+              </label>
               <textarea
+                id="taskDescription"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Describe the task..."
@@ -254,8 +260,11 @@ const CreateTaskModal: React.FC<{
             {/* Priority + Due Date row */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Priority</label>
+                <label htmlFor="taskPriority" className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Priority
+                </label>
                 <select
+                  id="taskPriority"
                   value={priority}
                   onChange={e => setPriority(e.target.value as 'high' | 'medium' | 'low')}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"
@@ -269,8 +278,11 @@ const CreateTaskModal: React.FC<{
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-400 mb-1.5">Due Date</label>
+                <label htmlFor="taskDueDate" className="block text-xs font-medium text-gray-400 mb-1.5">
+                  Due Date
+                </label>
                 <input
+                  id="taskDueDate"
                   type="date"
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
@@ -281,8 +293,11 @@ const CreateTaskModal: React.FC<{
 
             {/* Assignee */}
             <div>
-              <label className="block text-xs font-medium text-gray-400 mb-1.5">Assignee</label>
+              <label htmlFor="taskAssignee" className="block text-xs font-medium text-gray-400 mb-1.5">
+                Assignee
+              </label>
               <select
+                id="taskAssignee"
                 value={assigneeId}
                 onChange={e => setAssigneeId(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-nesma-secondary/50"

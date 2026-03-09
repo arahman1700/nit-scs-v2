@@ -71,8 +71,12 @@ export const DynamicDocumentListPage: React.FC = () => {
       {/* Filters */}
       <div className="glass-card rounded-2xl p-4 flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
+          <label htmlFor="dynamic-doc-search-field" className="sr-only">
+            Search documents
+          </label>
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
+            id="dynamic-doc-search-field"
             type="text"
             value={search}
             onChange={e => {
@@ -83,7 +87,11 @@ export const DynamicDocumentListPage: React.FC = () => {
             className="input-field w-full pl-9"
           />
         </div>
+        <label htmlFor="dynamic-doc-status-filter" className="sr-only">
+          Filter by status
+        </label>
         <select
+          id="dynamic-doc-status-filter"
           value={statusFilter}
           onChange={e => {
             setStatusFilter(e.target.value);

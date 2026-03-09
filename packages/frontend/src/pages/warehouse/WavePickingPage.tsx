@@ -255,8 +255,11 @@ export const WavePickingPage: React.FC = () => {
       {/* Warehouse filter */}
       <div className="glass-card rounded-2xl p-4 border border-white/10">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-          <label className="text-sm text-gray-400 whitespace-nowrap">Warehouse:</label>
+          <label htmlFor="wave-warehouse-field" className="text-sm text-gray-400 whitespace-nowrap">
+            Warehouse:
+          </label>
           <select
+            id="wave-warehouse-field"
             value={selectedWarehouse}
             onChange={e => setSelectedWarehouse(e.target.value)}
             className="input-field w-full sm:w-72"
@@ -448,8 +451,11 @@ function CreateWaveModal({ warehouses, onClose, defaultWarehouse }: CreateWaveMo
         <div className="p-6 space-y-5 overflow-y-auto flex-1">
           {/* Warehouse selector */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1.5">Warehouse</label>
+            <label htmlFor="wave-modal-warehouse-field" className="block text-sm text-gray-400 mb-1.5">
+              Warehouse
+            </label>
             <select
+              id="wave-modal-warehouse-field"
               value={warehouseId}
               onChange={e => {
                 setWarehouseId(e.target.value);

@@ -383,8 +383,11 @@ const AmcDetailModal: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
             {/* Terminate Reason Input */}
             {showTerminate && (
               <div className="mb-4 bg-red-500/5 rounded-xl p-4 border border-red-500/20">
-                <label className="block text-sm text-red-400 mb-2">Reason for Termination</label>
+                <label htmlFor="termination-reason-field" className="block text-sm text-red-400 mb-2">
+                  Reason for Termination
+                </label>
                 <textarea
+                  id="termination-reason-field"
                   value={terminateReason}
                   onChange={e => setTerminateReason(e.target.value)}
                   placeholder="Enter reason for terminating this contract..."
@@ -509,8 +512,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Supplier</label>
+              <label htmlFor="amc-supplier-field" className="block text-sm text-gray-400 mb-1">
+                Supplier
+              </label>
               <input
+                id="amc-supplier-field"
                 type="text"
                 value={form.supplierId}
                 onChange={e => setForm(f => ({ ...f, supplierId: e.target.value }))}
@@ -520,8 +526,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Equipment Type</label>
+              <label htmlFor="amc-equipment-type-field" className="block text-sm text-gray-400 mb-1">
+                Equipment Type
+              </label>
               <input
+                id="amc-equipment-type-field"
                 type="text"
                 value={form.equipmentTypeId}
                 onChange={e => setForm(f => ({ ...f, equipmentTypeId: e.target.value }))}
@@ -534,8 +543,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Start Date</label>
+              <label htmlFor="amc-start-date-field" className="block text-sm text-gray-400 mb-1">
+                Start Date
+              </label>
               <input
+                id="amc-start-date-field"
                 type="date"
                 value={form.startDate}
                 onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
@@ -544,8 +556,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">End Date</label>
+              <label htmlFor="amc-end-date-field" className="block text-sm text-gray-400 mb-1">
+                End Date
+              </label>
               <input
+                id="amc-end-date-field"
                 type="date"
                 value={form.endDate}
                 onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
@@ -557,8 +572,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Contract Value (SAR)</label>
+              <label htmlFor="amc-contract-value-field" className="block text-sm text-gray-400 mb-1">
+                Contract Value (SAR)
+              </label>
               <input
+                id="amc-contract-value-field"
                 type="number"
                 value={form.contractValue}
                 onChange={e => setForm(f => ({ ...f, contractValue: e.target.value }))}
@@ -570,8 +588,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Coverage Type</label>
+              <label htmlFor="amc-coverage-type-field" className="block text-sm text-gray-400 mb-1">
+                Coverage Type
+              </label>
               <select
+                id="amc-coverage-type-field"
                 value={form.coverageType}
                 onChange={e =>
                   setForm(f => ({
@@ -590,8 +611,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Response Time SLA (hours)</label>
+              <label htmlFor="amc-response-time-field" className="block text-sm text-gray-400 mb-1">
+                Response Time SLA (hours)
+              </label>
               <input
+                id="amc-response-time-field"
                 type="number"
                 value={form.responseTimeSlaHours}
                 onChange={e => setForm(f => ({ ...f, responseTimeSlaHours: e.target.value }))}
@@ -600,8 +624,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">PM Frequency</label>
+              <label htmlFor="amc-pm-frequency-field" className="block text-sm text-gray-400 mb-1">
+                PM Frequency
+              </label>
               <select
+                id="amc-pm-frequency-field"
                 value={form.preventiveMaintenanceFrequency}
                 onChange={e =>
                   setForm(f => ({
@@ -621,8 +648,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Max Callouts (optional)</label>
+              <label htmlFor="amc-max-callouts-field" className="block text-sm text-gray-400 mb-1">
+                Max Callouts (optional)
+              </label>
               <input
+                id="amc-max-callouts-field"
                 type="number"
                 value={form.maxCallouts}
                 onChange={e => setForm(f => ({ ...f, maxCallouts: e.target.value }))}
@@ -645,8 +675,11 @@ const CreateAmcModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Notes</label>
+            <label htmlFor="amc-notes-field" className="block text-sm text-gray-400 mb-1">
+              Notes
+            </label>
             <textarea
+              id="amc-notes-field"
               value={form.notes}
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Additional contract notes..."
