@@ -37,6 +37,12 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockImplementation((role: string) => {
+    // Admin has permission; viewer does not
+    return Promise.resolve(role !== 'viewer');
+  }),
+}));
 
 vi.mock('../services/pick-optimizer.service.js', () => ({
   optimizePickPath: vi.fn().mockResolvedValue({ stops: [], totalDistance: 0 }),

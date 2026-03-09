@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import { buildScopeFilter, canAccessRecord } from './scope-filter.js';
 import type { JwtPayload } from './jwt.js';
 

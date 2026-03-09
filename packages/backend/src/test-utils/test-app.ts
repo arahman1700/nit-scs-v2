@@ -21,7 +21,7 @@ import jwt from 'jsonwebtoken';
 import { requestId } from '../middleware/request-id.js';
 import { errorHandler } from '../middleware/error-handler.js';
 import { _resetRateLimiterForTesting } from '../middleware/rate-limiter.js';
-import apiRoutes from '../routes/index.js';
+import { createApiRouter } from '../routes/index.js';
 
 // Dev fallback secret (matches config/env.ts)
 const DEV_JWT_SECRET = 'nit-scs-dev-only-jwt-secret-2026-do-not-use-in-production!';
@@ -44,7 +44,7 @@ export function createTestApp() {
 
   app.use(express.json({ limit: '10mb' }));
   app.use(requestId);
-  app.use('/api/v1', apiRoutes);
+  app.use('/api/v1', createApiRouter());
   app.use(errorHandler);
 
   return app;

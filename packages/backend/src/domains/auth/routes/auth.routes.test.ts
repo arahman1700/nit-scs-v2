@@ -5,6 +5,7 @@
  * Uses the dev JWT fallback secret so signTestToken() tokens pass verification.
  */
 
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ── Set env vars BEFORE any module is loaded (vi.hoisted runs first) ────
 
 vi.hoisted(() => {

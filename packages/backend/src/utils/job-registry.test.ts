@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { registerJob, getAllJobs, clearJobs, type ScheduledJob, type JobContext } from './job-registry.js';
 
 describe('job-registry', () => {

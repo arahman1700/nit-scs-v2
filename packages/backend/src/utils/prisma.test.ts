@@ -9,6 +9,7 @@
  * structural expectations about the exported instance.
  */
 
+import { describe, it, expect } from 'vitest';
 describe('prisma soft-delete filter logic', () => {
   // Replicate the applySoftDeleteFilter function from prisma.ts
   const SOFT_DELETE_MODELS = new Set(['Employee', 'Item', 'Warehouse']);

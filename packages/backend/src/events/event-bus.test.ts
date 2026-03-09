@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 vi.mock('../config/logger.js', () => ({ log: vi.fn() }));
 
 import { eventBus, type SystemEvent } from './event-bus.js';

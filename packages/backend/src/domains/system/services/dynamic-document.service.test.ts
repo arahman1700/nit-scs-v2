@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-mock.js';
 
 // ── Hoisted mocks ────────────────────────────────────────────────────────

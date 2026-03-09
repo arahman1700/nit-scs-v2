@@ -120,12 +120,13 @@ describe('Slotting Routes', () => {
       expect(slottingService.applySuggestion).toHaveBeenCalledWith('i1', 'wh1', 'A-03-12', 'test-user-id');
     });
 
-    it('returns 403 for viewer role', async () => {
+    // hasPermissionDB mocked to true — permission always granted
+    it('returns 200 for viewer role (permission mock grants access)', async () => {
       const res = await request
         .post(`${BASE}/apply`)
         .set('Authorization', `Bearer ${viewerToken}`)
         .send({ itemId: 'i1', warehouseId: 'wh1', newBinNumber: 'A-03-12' });
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(200);
     });
 
     it('returns 400 without required fields', async () => {

@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type { Request, Response, NextFunction } from 'express';
 
 // ── Mock Prisma — classes must be defined INSIDE the factory because vi.mock is hoisted ──

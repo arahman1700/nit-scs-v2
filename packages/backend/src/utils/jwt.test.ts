@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken, decodeToken } from './jwt.js';
 import { resetEnv } from '../config/env.js';
 import type { JwtPayload } from './jwt.js';

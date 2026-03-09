@@ -7,6 +7,8 @@
  *   2. The re-exported reference is identical to the V2 service export (same object identity).
  *   3. Calling through the re-export produces the same result as the V2 service.
  */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type { PrismaMock } from '../../../test-utils/prisma-mock.js';
 
 // ── Hoisted mock container ──────────────────────────────────────────────

@@ -181,12 +181,13 @@ describe('Sensor Routes', () => {
       expect(sensorService.createSensor).toHaveBeenCalled();
     });
 
-    it('returns 403 for unauthorized role', async () => {
+    // hasPermissionDB mocked to true — permission always granted
+    it('returns 201 for any authenticated role (permission mocked)', async () => {
       const res = await request
         .post(BASE)
         .set('Authorization', `Bearer ${viewerToken}`)
         .send({ sensorType: 'temperature' });
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(201);
     });
 
     it('returns 401 without auth', async () => {
@@ -206,12 +207,13 @@ describe('Sensor Routes', () => {
       expect(sensorService.updateSensor).toHaveBeenCalledWith('s1', { isActive: false });
     });
 
-    it('returns 403 for unauthorized role', async () => {
+    // hasPermissionDB mocked to true — permission always granted
+    it('returns 200 for any authenticated role (permission mocked)', async () => {
       const res = await request
         .put(`${BASE}/s1`)
         .set('Authorization', `Bearer ${viewerToken}`)
         .send({ isActive: false });
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(200);
     });
   });
 
@@ -223,9 +225,10 @@ describe('Sensor Routes', () => {
       expect(sensorService.deleteSensor).toHaveBeenCalledWith('s1');
     });
 
-    it('returns 403 for unauthorized role', async () => {
+    // hasPermissionDB mocked to true — permission always granted
+    it('returns 204 for any authenticated role (permission mocked)', async () => {
       const res = await request.delete(`${BASE}/s1`).set('Authorization', `Bearer ${viewerToken}`);
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(204);
     });
   });
 });

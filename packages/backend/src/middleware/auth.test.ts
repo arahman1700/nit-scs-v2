@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type { Request, Response, NextFunction } from 'express';
 
 const { mockVerifyAccessToken, mockIsTokenBlacklisted, mockSendError, mockSentry, mockLogger } = vi.hoisted(() => {

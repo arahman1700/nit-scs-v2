@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import type { PrismaMock } from '../../../test-utils/prisma-mock.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
 

@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import { formatGS1Barcode, generateBinLocationQR, generateItemLabel } from './barcode.service.js';
 
 describe('barcode.service', () => {

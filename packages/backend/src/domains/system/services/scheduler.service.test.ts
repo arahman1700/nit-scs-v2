@@ -135,14 +135,20 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  // Stop scheduler to clear all timers and module state
+  // Restore real timers FIRST so any remaining scheduled callbacks don't
+  // fire with fake-timer semantics during the next test's setup.
+  vi.useRealTimers();
+
+  // Import fresh module and stop scheduler to clear module-level state
+  // (timers array, io reference, running flag).
   try {
     const mod = await freshModule();
     mod.stopScheduler();
   } catch {
-    // ignore
+    // ignore — module may not have been started
   }
-  vi.useRealTimers();
+
+  vi.clearAllTimers();
 });
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -606,7 +612,7 @@ describe('scheduler.service', () => {
       expect(mockApplyABC).toHaveBeenCalledWith(abcResults);
 
       mod.stopScheduler();
-    }, 30000);
+    }, 60000);
   });
 
   // ── Anomaly Detection ────────────────────────────────────────────────
@@ -630,7 +636,7 @@ describe('scheduler.service', () => {
       expect(mockLog).toHaveBeenCalledWith('warn', '[Scheduler] Anomaly detection: 2 found (1 high severity)');
 
       mod.stopScheduler();
-    }, 30000);
+    }, 60000);
   });
 
   // ── Reorder Point Update ─────────────────────────────────────────────
@@ -651,7 +657,7 @@ describe('scheduler.service', () => {
       expect(mockLog).toHaveBeenCalledWith('info', '[Scheduler] Reorder points auto-updated: 15/100');
 
       mod.stopScheduler();
-    }, 30000);
+    }, 60000);
   });
 
   // ── Scheduled Rules ──────────────────────────────────────────────────

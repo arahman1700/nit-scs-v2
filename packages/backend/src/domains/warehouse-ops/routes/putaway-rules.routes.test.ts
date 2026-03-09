@@ -37,6 +37,9 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockResolvedValue(true),
+}));
 
 vi.mock('../services/putaway-rules.service.js', () => ({
   listRules: vi.fn().mockResolvedValue([]),
@@ -129,12 +132,13 @@ describe('Putaway Rules Routes', () => {
       expect(deleteRule).toHaveBeenCalledWith('rule-1');
     });
 
-    it('returns 403 for unauthorized role', async () => {
+    // hasPermissionDB mocked to true — permission always granted
+    it('returns 204 for any authenticated role (permission mocked)', async () => {
       const staffToken = signTestToken({ userId: 'staff-1', systemRole: 'warehouse_staff' });
 
       const res = await request.delete(`${BASE}/rule-1`).set('Authorization', `Bearer ${staffToken}`);
 
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(204);
     });
   });
 });

@@ -1,3 +1,5 @@
+import { describe, it, expect } from 'vitest';
+
 import type { DynamicFieldDefinition } from '@prisma/client';
 import { validateDynamicData, validateDynamicLines } from './dynamic-validation.service.js';
 

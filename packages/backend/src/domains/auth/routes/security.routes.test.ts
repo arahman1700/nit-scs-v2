@@ -1,6 +1,7 @@
 /**
  * Integration tests for security routes.
  */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.hoisted(() => {
   process.env.JWT_SECRET = 'nit-scs-dev-only-jwt-secret-2026-do-not-use-in-production!';

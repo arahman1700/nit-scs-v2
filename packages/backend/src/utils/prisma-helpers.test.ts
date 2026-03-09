@@ -1,3 +1,5 @@
+import { describe, it, expect, vi } from 'vitest';
+
 import { getPrismaDelegate } from './prisma-helpers.js';
 
 describe('prisma-helpers', () => {

@@ -2,6 +2,7 @@
  * Integration tests for email-log routes.
  */
 
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 const { modelCache } = vi.hoisted(() => {
   process.env.JWT_SECRET = 'nit-scs-dev-only-jwt-secret-2026-do-not-use-in-production!';
   process.env.JWT_REFRESH_SECRET = 'nit-scs-dev-only-jwt-refresh-2026-do-not-use-in-production!';

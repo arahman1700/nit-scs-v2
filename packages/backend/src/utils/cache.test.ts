@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 const { mockRedis, mockIsRedisAvailable, mockGetRedis } = vi.hoisted(() => ({
   mockRedis: {
     get: vi.fn(),

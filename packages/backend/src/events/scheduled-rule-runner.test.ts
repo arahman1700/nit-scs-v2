@@ -1,3 +1,5 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import type { PrismaMock } from '../test-utils/prisma-mock.js';
 
 const { mockPrisma } = vi.hoisted(() => {
