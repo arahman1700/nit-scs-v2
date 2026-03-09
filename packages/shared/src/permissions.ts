@@ -277,7 +277,7 @@ export function getMaxApprovalLevel(role: UserRole | string): number {
     case UserRole.LOGISTICS_COORDINATOR:
       return 2;
     case UserRole.WAREHOUSE_SUPERVISOR:
-      return 1; // SOW: WH Manager ≤ SAR 200K
+      return 3; // SOW: WH Manager ≤ SAR 200K (Level 3 maxAmount = 200K)
     case UserRole.WAREHOUSE_STAFF:
       return 1;
     case UserRole.QC_OFFICER:

@@ -68,7 +68,7 @@ export const DOC_PREFIXES: Record<string, string> = {
 
 // ── Approval Levels ──────────────────────────────────────────────────────
 
-// Multi-tier approval (aligned مع اختبارات الصلاحيات)
+// Multi-tier approval (SOW aligned: WH Manager ≤ SAR 200K threshold at Level 3)
 export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 1,
@@ -81,7 +81,7 @@ export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 2,
     label: 'Level 2 - Supply Chain Lead',
-    roleName: 'manager',
+    roleName: 'warehouse_supervisor',
     minAmount: 10_000,
     maxAmount: 50_000,
     slaHours: 12,
@@ -89,16 +89,16 @@ export const MI_APPROVAL_LEVELS: ApprovalLevel[] = [
   {
     level: 3,
     label: 'Level 3 - Supply Chain Manager',
-    roleName: 'manager',
+    roleName: 'warehouse_supervisor',
     minAmount: 50_000,
-    maxAmount: 100_000,
+    maxAmount: 200_000,
     slaHours: 24,
   },
   {
     level: 4,
     label: 'Level 4 - Operations Director',
     roleName: 'manager',
-    minAmount: 100_000,
+    minAmount: 200_000,
     maxAmount: 500_000,
     slaHours: 48,
   },

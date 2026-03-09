@@ -201,8 +201,8 @@ describe('getMaxApprovalLevel', () => {
     expect(getMaxApprovalLevel(UserRole.LOGISTICS_COORDINATOR)).toBe(2);
   });
 
-  it('warehouse_supervisor = 1', () => {
-    expect(getMaxApprovalLevel(UserRole.WAREHOUSE_SUPERVISOR)).toBe(1);
+  it('warehouse_supervisor = 3 (SOW: ≤ SAR 200K)', () => {
+    expect(getMaxApprovalLevel(UserRole.WAREHOUSE_SUPERVISOR)).toBe(3);
   });
 
   it('warehouse_staff = 1', () => {
@@ -232,12 +232,17 @@ describe('getRequiredApprovalLevel', () => {
       expect(level.level).toBe(2);
     });
 
-    it('50,000 - 100,000 → Level 3', () => {
+    it('50,000 - 200,000 → Level 3 (SOW 200K threshold)', () => {
       const level = getRequiredApprovalLevel('mi', 75_000);
       expect(level.level).toBe(3);
     });
 
-    it('100,000 - 500,000 → Level 4', () => {
+    it('150,000 still Level 3 (under SOW 200K)', () => {
+      const level = getRequiredApprovalLevel('mi', 150_000);
+      expect(level.level).toBe(3);
+    });
+
+    it('200,000 - 500,000 → Level 4', () => {
       const level = getRequiredApprovalLevel('mi', 250_000);
       expect(level.level).toBe(4);
     });

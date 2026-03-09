@@ -1,15 +1,15 @@
 # V2 Mission Progress
 
-## آخر تحديث: 2026-03-09 04:32
+## آخر تحديث: 2026-03-09 04:36
 
 ---
 
 ## RESUME POINT
-- المرحلة: Phase 6 — SOW Alignment
-- آخر ملف: packages/frontend/src/utils/type-helpers.ts
-- الحالة: Phase 5 مكتمل (type safety — 425 casts → 15 production casts)
-- التالي: Phase 6 — C9 approval thresholds alignment with SOW
-- الاختبارات: 3,992/3,992 passed (0 failures)
+- المرحلة: Phase 7 — Frontend Cleanup & Accessibility
+- آخر ملف: packages/shared/src/constants/index.ts
+- الحالة: Phase 6 مكتمل (SOW alignment — approval thresholds aligned with 200K)
+- التالي: Phase 7 — 67 old pages cleanup, 348/351 labels without htmlFor
+- الاختبارات: 3,993/3,993 passed (0 failures, +1 new boundary test)
 - آخر commit: (pending)
 
 ---
@@ -21,8 +21,8 @@
 |---------|-------|-------|--------|
 | Backend | 147 | 3,015 | ✅ ALL PASSED |
 | Frontend | 81 | 663 | ✅ ALL PASSED |
-| Shared | 5 | 314 | ✅ ALL PASSED |
-| **Total** | **233** | **3,992** | **✅ 0 failures** |
+| Shared | 5 | 315 | ✅ ALL PASSED |
+| **Total** | **233** | **3,993** | **✅ 0 failures** |
 
 ### Build
 | Package | Status | Notes |
@@ -42,7 +42,7 @@
 | C6 | Row-owner scope filtering | ✅ DONE |
 | C7 | 7 SOW roles | ✅ DONE |
 | C8 | 14 notification types | ✅ DONE |
-| C9 | Approval thresholds | ❌ MISALIGNED (5-tier vs SOW 200K) |
+| C9 | Approval thresholds | ✅ ALIGNED (Level 3 max = 200K, WH Supervisor maxLevel = 3) |
 
 ### Security Status
 | Issue | Status |
@@ -164,7 +164,18 @@
 - قرار: Centralized helper functions (toRows, extractRows, toRecord, getPrismaDelegate) instead of fixing each cast individually
   - السبب: Single point of truth for type assertions, easy to audit, all casts in utility files
   - البدائل: Fix each cast individually (more work, harder to maintain), add index signatures to all types (too invasive)
-### Phase 6: SOW Alignment — PENDING
+### Phase 6: SOW Alignment — ✅ DONE
+#### ما تم
+- MI Level 3 maxAmount: 100K → 200K (SOW 200K threshold aligned)
+- MI Level 4 minAmount: 100K → 200K (shifted up)
+- Levels 1-3 roleName changed to warehouse_supervisor (can approve up to 200K)
+- warehouse_supervisor maxApprovalLevel: 1 → 3 (covers up to 200K per SOW)
+- Added boundary test for 150K (Level 3 under SOW 200K)
+- All C1-C9 SOW gaps now resolved
+#### قرارات معمارية
+- قرار: Keep 5-tier system (exceeds SOW) but align the 200K boundary
+  - السبب: Multi-tier is more granular and configurable than SOW's single threshold
+  - البدائل: Simplify to 2-tier (0-200K, 200K+) — loses granularity, hurts audit trail
 ### Phase 7: Frontend Cleanup & Accessibility — PENDING
 ### Phase 8: Error Handling & Polish — PENDING
 ### Phase 9: Deep Inspection & File Cleanup — PENDING
