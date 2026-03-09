@@ -14,8 +14,14 @@ import {
   Eye,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { useSensorList, useSensorAlerts, useAcknowledgeAlert, useSensorReadings, useZoneHeatmap } from '@/api/hooks';
-import type { Sensor, SensorAlert, ZoneHeatmapEntry } from '@/api/hooks';
+import {
+  useSensorList,
+  useSensorAlerts,
+  useAcknowledgeAlert,
+  useSensorReadings,
+  useZoneHeatmap,
+} from '@/domains/warehouse-ops/hooks/useSensors';
+import type { Sensor, SensorAlert, ZoneHeatmapEntry } from '@/domains/warehouse-ops/hooks/useSensors';
 
 // ── Constants ──────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { RefreshCw, Search, Filter, BarChart3, Package, TrendingUp } from 'lucide-react';
-import { useAbcAnalysis, useAbcSummary, useRecalculateAbc } from '@/api/hooks';
+import { useAbcAnalysis, useAbcSummary, useRecalculateAbc } from '@/domains/inventory/hooks/useAbcAnalysis';
 import { toRecord } from '@/utils/type-helpers';
 
 const CLASS_COLORS = {

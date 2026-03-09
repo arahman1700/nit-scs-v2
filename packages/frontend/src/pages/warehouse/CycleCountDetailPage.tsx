@@ -19,7 +19,7 @@ import {
   useCompleteCycleCount,
   useApplyAdjustments,
   useCancelCycleCount,
-} from '@/api/hooks';
+} from '@/domains/inventory/hooks/useCycleCounts';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   scheduled: { bg: 'bg-blue-500/20', text: 'text-blue-400' },

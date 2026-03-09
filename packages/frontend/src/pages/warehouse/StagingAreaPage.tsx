@@ -475,7 +475,7 @@ export function StagingAreaPage() {
           <select value={warehouseId} onChange={e => setWarehouseId(e.target.value)} className="input-field">
             {warehouses.map(w => (
               <option key={w.id} value={w.id}>
-                {w.name}
+                {w.warehouseCode} - {w.warehouseName}
               </option>
             ))}
           </select>

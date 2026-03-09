@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, ClipboardList, Clock, CheckCircle2, XCircle, Play } from 'lucide-react';
-import { useCycleCountList, useCreateCycleCount, useWarehouses } from '@/api/hooks';
+import { useCycleCountList, useCreateCycleCount } from '@/domains/inventory/hooks/useCycleCounts';
+import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { toRows, toRecord } from '@/utils/type-helpers';
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {

@@ -9,10 +9,8 @@ import {
   useReceiveAsn,
   useCancelAsn,
   useAsnVariance,
-  useSuppliers,
-  useWarehouses,
-  useItems,
-} from '@/api/hooks';
+} from '@/domains/inbound/hooks/useAsn';
+import { useSuppliers, useWarehouses, useItems } from '@/domains/master-data/hooks/useMasterData';
 import { toRows, toRecord } from '@/utils/type-helpers';
 
 // ── Types ───────────────────────────────────────────────────────────────
