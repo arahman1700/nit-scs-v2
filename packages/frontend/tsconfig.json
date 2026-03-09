@@ -22,7 +22,6 @@
     "src/pages/warehouse/AsnPage.tsx",
     "src/pages/warehouse/CycleCountListPage.tsx",
     "src/pages/warehouse/CycleCountDetailPage.tsx",
-    "src/pages/warehouse/IntelligencePage.tsx",
     "src/pages/warehouse/SensorDashboard.tsx",
     "src/pages/warehouse/YardDashboard.tsx",
     "src/pages/warehouse/PackingStationPage.tsx",
@@ -44,7 +43,6 @@
     "src/pages/dashboards/DepreciationDashboard.tsx",
     "src/pages/admin/CustomDataSourcePage.tsx",
     "src/pages/admin/CustomFieldsPage.tsx",
-    "src/pages/admin/WorkflowTemplatesPage.tsx",
-    "src/modules/ai/AiInsightsPage.tsx"
+    "src/pages/admin/WorkflowTemplatesPage.tsx"
   ]
 }
