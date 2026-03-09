@@ -5,10 +5,10 @@
 ---
 
 ## RESUME POINT
-- المرحلة: Phase 8 — Error Handling & Polish
-- آخر ملف: packages/frontend/src/domains/auth/pages/LoginPage.tsx
-- الحالة: Phase 7 مكتمل (htmlFor accessibility — 305/352 labels, remaining 47 are wrapping/section labels)
-- التالي: Phase 8 — Error handling polish, then Phase 9-13
+- المرحلة: Phase 9 — Deep Inspection & File Cleanup
+- آخر ملف: packages/backend/src/domains/inbound/routes/inspection.routes.ts
+- الحالة: Phase 8 مكتمل (error handling — structured logging in all catch blocks)
+- التالي: Phase 9 — Dead files, unused exports, circular dependencies
 - الاختبارات: 3,993/3,993 passed (0 failures)
 - آخر commit: (pending)
 
@@ -186,7 +186,18 @@
 #### قرارات معمارية
 - قرار: Leave wrapping labels without htmlFor — W3C spec allows `<label><input/></label>` pattern
 - قرار: Keep 67 pages in `pages/` directory — moving to `domains/` would require updating 100+ imports and routes for no functional benefit. Pages work correctly from current location.
-### Phase 8: Error Handling & Polish — PENDING
+### Phase 8: Error Handling & Polish — ✅ DONE
+#### ما تم
+- barcode.routes.ts: 8 catch blocks now log errors via structured logger before sendError
+- inspection.routes.ts: 10 catch blocks now log errors via structured logger
+- upload.routes.ts: replaced console.warn with structured log('warn', ...)
+- env.ts console.error/warn retained — runs at startup before logger init, acceptable
+- Silent catches: confirmed 0 in production code (seed files use intentional .catch(() => null) for idempotency)
+- V1 names in event handlers: confirmed correct (Prisma model names = internal names per architecture)
+- DNS rebinding in SSRF: documented as known limitation — string-based validation is robust for enterprise internal use
+#### قرارات معمارية
+- قرار: Add logging to catch blocks instead of converting to next(err) — barcode/inspection routes return image/HTML content, not JSON. Error-handler middleware assumes JSON responses.
+- قرار: env.ts console.* calls are acceptable — logger is not initialized during env validation at startup
 ### Phase 9: Deep Inspection & File Cleanup — PENDING
 ### Phase 10: Test Expansion — PENDING
 ### Phase 11: Dynamic & Automation Verification — PENDING

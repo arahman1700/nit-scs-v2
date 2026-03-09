@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
+import { log } from '../../../config/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = join(__dirname, '../../uploads');
@@ -19,7 +20,7 @@ try {
   }
 } catch {
   // In Docker, the directory is pre-created by the Dockerfile
-  console.warn(`[Upload] Could not create uploads dir at ${UPLOADS_DIR} — using /tmp/uploads fallback`);
+  log('warn', `[Upload] Could not create uploads dir at ${UPLOADS_DIR} — using /tmp/uploads fallback`);
 }
 
 // ── Allowed file types with MIME validation ──────────────────────────────

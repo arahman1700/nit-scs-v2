@@ -5,6 +5,7 @@ import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { prisma } from '../../../utils/prisma.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
+import { log } from '../../../config/logger.js';
 import { formatGS1Barcode, generateBinLocationQR, generateItemLabel } from '../services/barcode.service.js';
 
 const router = Router();
@@ -45,6 +46,7 @@ router.get('/generate', async (req: Request, res: Response) => {
     res.send(png);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Barcode generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -83,6 +85,7 @@ router.get('/generate/gs1', async (req: Request, res: Response) => {
     res.send(png);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'GS1 barcode generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -125,6 +128,7 @@ router.get('/generate/bin-qr/:binCardId', async (req: Request, res: Response) =>
     res.send(png);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Bin QR generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -196,6 +200,7 @@ router.post('/print-labels', async (req: Request, res: Response) => {
     res.send(html);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Label generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -265,6 +270,7 @@ router.post('/print-labels/grn/:grnId', async (req: Request, res: Response) => {
     res.send(html);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'GRN label generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -361,6 +367,7 @@ router.post('/print-labels/bins', async (req: Request, res: Response) => {
     res.send(html);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Bin label generation failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -416,6 +423,7 @@ router.get('/lookup/bin/:code', async (req: Request, res: Response) => {
     sendSuccess(res, binCard);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Bin lookup failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });
@@ -445,6 +453,7 @@ router.get('/lookup/:code', async (req: Request, res: Response) => {
     sendSuccess(res, item);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Lookup failed';
+    log('error', `[Barcode] ${message}`, err);
     sendError(res, 500, message);
   }
 });

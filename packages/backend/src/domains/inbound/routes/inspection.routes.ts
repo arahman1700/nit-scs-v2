@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from '../../../utils/response.js';
+import { log } from '../../../config/logger.js';
 import * as aqlService from '../services/aql.service.js';
 import * as checklistService from '../services/inspection-checklist.service.js';
 import type { InspectionLevel } from '../services/aql.service.js';
@@ -44,6 +45,7 @@ router.get('/aql/calculate', (req, res) => {
     const result = aqlService.calculateSampleSize(lotSize, level, aqlPercent);
     sendSuccess(res, result);
   } catch (err) {
+    log('error', `[Inspection] ${(err as Error).message}`, err);
     sendError(res, 500, (err as Error).message);
   }
 });
@@ -57,6 +59,7 @@ router.get('/aql/table', (_req, res) => {
     const table = aqlService.getAqlTable();
     sendSuccess(res, table);
   } catch (err) {
+    log('error', `[Inspection] ${(err as Error).message}`, err);
     sendError(res, 500, (err as Error).message);
   }
 });
@@ -76,6 +79,7 @@ router.get('/checklists', async (req, res) => {
     const data = await checklistService.list({ category, isActive, search });
     sendSuccess(res, data);
   } catch (err) {
+    log('error', `[Inspection] ${(err as Error).message}`, err);
     sendError(res, 500, (err as Error).message);
   }
 });
@@ -90,6 +94,7 @@ router.get('/checklists/:id', async (req, res) => {
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -103,6 +108,7 @@ router.post('/checklists', async (req, res) => {
     const data = await checklistService.create(req.body);
     sendCreated(res, data);
   } catch (err) {
+    log('error', `[Inspection] ${(err as Error).message}`, err);
     sendError(res, 500, (err as Error).message);
   }
 });
@@ -117,6 +123,7 @@ router.put('/checklists/:id', async (req, res) => {
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -131,6 +138,7 @@ router.delete('/checklists/:id', async (req, res) => {
     sendNoContent(res);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -147,6 +155,7 @@ router.get('/checklists/:id/items', async (req, res) => {
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -161,6 +170,7 @@ router.post('/checklists/:id/items', async (req, res) => {
     sendCreated(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -175,6 +185,7 @@ router.put('/checklists/:checklistId/items/:itemId', async (req, res) => {
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -189,6 +200,7 @@ router.delete('/checklists/:checklistId/items/:itemId', async (req, res) => {
     sendNoContent(res);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
@@ -208,6 +220,7 @@ router.post('/checklists/:id/items/reorder', async (req, res) => {
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
+    log('error', `[Inspection] ${e.message}`, err);
     sendError(res, e.statusCode ?? 500, e.message);
   }
 });
