@@ -4,12 +4,26 @@
  */
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { createAuditLog } from '../../system/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const createCrossDockSchema = z.object({
+  warehouseId: z.string().uuid(),
+  itemId: z.string().uuid(),
+  sourceGrnId: z.string().uuid().optional(),
+  targetMiId: z.string().uuid().optional(),
+  targetWtId: z.string().uuid().optional(),
+  quantity: z.number().positive(),
+  status: z.enum(['identified', 'approved', 'in_progress', 'completed', 'cancelled']).optional(),
+});
 import {
   identifyOpportunities,
   createCrossDock,
@@ -125,6 +139,7 @@ router.post(
   '/',
   authenticate,
   requirePermission('warehouse_zone', 'create'),
+  validate(createCrossDockSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const record = await createCrossDock(req.body);

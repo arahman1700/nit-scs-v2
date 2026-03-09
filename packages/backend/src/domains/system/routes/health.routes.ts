@@ -1,6 +1,7 @@
-import type { Request, Response } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { getRedis, isRedisAvailable } from '../../../config/redis.js';
 import { prisma } from '../../../utils/prisma.js';
+import { authenticate } from '../../../middleware/auth.js';
 
 interface ComponentStatus {
   status: 'up' | 'down';
@@ -8,7 +9,7 @@ interface ComponentStatus {
   message?: string;
 }
 
-interface HealthResponse {
+interface DetailedHealthResponse {
   status: 'healthy' | 'degraded' | 'unhealthy';
   version: string;
   timestamp: string;
@@ -27,7 +28,20 @@ interface HealthResponse {
   };
 }
 
-export async function healthCheck(_req: Request, res: Response): Promise<void> {
+interface PublicHealthResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: string;
+}
+
+/**
+ * Compute overall health status by checking DB and Redis.
+ * Returns the overall status plus detailed component info.
+ */
+async function computeHealthStatus(): Promise<{
+  overallStatus: 'healthy' | 'degraded' | 'unhealthy';
+  dbStatus: ComponentStatus;
+  redisStatus: ComponentStatus;
+}> {
   let dbStatus: ComponentStatus;
   try {
     const dbStart = Date.now();
@@ -57,9 +71,6 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
     }
   }
 
-  const mem = process.memoryUsage();
-  const toMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
-
   const dbUp = dbStatus.status === 'up';
   const redisUp = redisStatus.status === 'up';
 
@@ -72,7 +83,49 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
     overallStatus = 'unhealthy';
   }
 
-  const response: HealthResponse = {
+  return { overallStatus, dbStatus, redisStatus };
+}
+
+/**
+ * Public health check endpoint.
+ * Returns only status and timestamp — no internal details.
+ */
+export async function healthCheck(_req: Request, res: Response): Promise<void> {
+  const { overallStatus } = await computeHealthStatus();
+
+  const response: PublicHealthResponse = {
+    status: overallStatus,
+    timestamp: new Date().toISOString(),
+  };
+
+  const httpStatus = overallStatus === 'unhealthy' ? 503 : 200;
+  res.status(httpStatus).json(response);
+}
+
+/**
+ * Detailed health check endpoint (admin-only).
+ * Returns full component status, memory usage, and uptime.
+ * Must be placed behind `authenticate` middleware.
+ */
+export async function detailedHealthCheck(req: Request, res: Response): Promise<void> {
+  // Only admin users can see detailed health info
+  if (req.user?.systemRole !== 'admin') {
+    const { overallStatus } = await computeHealthStatus();
+    const response: PublicHealthResponse = {
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+    };
+    const httpStatus = overallStatus === 'unhealthy' ? 503 : 200;
+    res.status(httpStatus).json(response);
+    return;
+  }
+
+  const { overallStatus, dbStatus, redisStatus } = await computeHealthStatus();
+
+  const mem = process.memoryUsage();
+  const toMB = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
+
+  const response: DetailedHealthResponse = {
     status: overallStatus,
     version: 'v1',
     timestamp: new Date().toISOString(),
@@ -94,3 +147,6 @@ export async function healthCheck(_req: Request, res: Response): Promise<void> {
   const httpStatus = overallStatus === 'unhealthy' ? 503 : 200;
   res.status(httpStatus).json(response);
 }
+
+/** Middleware chain for the authenticated detailed health endpoint */
+export const detailedHealthMiddleware = [authenticate as (req: Request, res: Response, next: NextFunction) => void];

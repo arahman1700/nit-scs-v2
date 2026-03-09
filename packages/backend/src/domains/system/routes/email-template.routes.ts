@@ -1,9 +1,30 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
 import { prisma } from '../../../utils/prisma.js';
 import { previewTemplate } from '../services/email.service.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const createEmailTemplateSchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(1),
+  subject: z.string().min(1),
+  bodyHtml: z.string().min(1),
+  variables: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+});
+
+const updateEmailTemplateSchema = z.object({
+  name: z.string().min(1).optional(),
+  subject: z.string().min(1).optional(),
+  bodyHtml: z.string().min(1).optional(),
+  variables: z.array(z.string()).optional(),
+  isActive: z.boolean().optional(),
+});
 
 const router = Router();
 
@@ -39,49 +60,55 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/email-templates — create a template
-router.post('/', requirePermission('email_template', 'create'), async (req, res, next) => {
-  try {
-    const { code, name, subject, bodyHtml, variables, isActive } = req.body;
-    if (!code || !name || !subject || !bodyHtml) {
-      sendError(res, 400, 'code, name, subject, and bodyHtml are required');
-      return;
+router.post(
+  '/',
+  requirePermission('email_template', 'create'),
+  validate(createEmailTemplateSchema),
+  async (req, res, next) => {
+    try {
+      const { code, name, subject, bodyHtml, variables, isActive } = req.body;
+      const template = await prisma.emailTemplate.create({
+        data: {
+          code,
+          name,
+          subject,
+          bodyHtml,
+          variables: variables || [],
+          isActive: isActive !== false,
+        },
+      });
+      sendCreated(res, template);
+    } catch (err) {
+      next(err);
     }
-    const template = await prisma.emailTemplate.create({
-      data: {
-        code,
-        name,
-        subject,
-        bodyHtml,
-        variables: variables || [],
-        isActive: isActive !== false,
-      },
-    });
-    sendCreated(res, template);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // PUT /api/email-templates/:id — update a template
-router.put('/:id', requirePermission('email_template', 'update'), async (req, res, next) => {
-  try {
-    const id = req.params.id as string;
-    const { name, subject, bodyHtml, variables, isActive } = req.body;
-    const template = await prisma.emailTemplate.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(subject !== undefined && { subject }),
-        ...(bodyHtml !== undefined && { bodyHtml }),
-        ...(variables !== undefined && { variables }),
-        ...(isActive !== undefined && { isActive }),
-      },
-    });
-    sendSuccess(res, template);
-  } catch (err) {
-    next(err);
-  }
-});
+router.put(
+  '/:id',
+  requirePermission('email_template', 'update'),
+  validate(updateEmailTemplateSchema),
+  async (req, res, next) => {
+    try {
+      const id = req.params.id as string;
+      const { name, subject, bodyHtml, variables, isActive } = req.body;
+      const template = await prisma.emailTemplate.update({
+        where: { id },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(subject !== undefined && { subject }),
+          ...(bodyHtml !== undefined && { bodyHtml }),
+          ...(variables !== undefined && { variables }),
+          ...(isActive !== undefined && { isActive }),
+        },
+      });
+      sendSuccess(res, template);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // DELETE /api/email-templates/:id — delete a template
 router.delete('/:id', requirePermission('email_template', 'delete'), async (req, res, next) => {

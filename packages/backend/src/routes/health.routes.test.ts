@@ -47,16 +47,17 @@ const app = createTestApp();
 const request = supertest(app);
 
 describe('Health Routes', () => {
-  it('GET /api/v1/health returns 200 with status info (no auth needed)', async () => {
+  it('GET /api/v1/health returns 200 with only status and timestamp (no internal details)', async () => {
     const res = await request.get('/api/v1/health');
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('status');
-    expect(res.body).toHaveProperty('version');
     expect(res.body).toHaveProperty('timestamp');
-    expect(res.body).toHaveProperty('uptime');
-    expect(res.body).toHaveProperty('components');
-    expect(res.body).toHaveProperty('memory');
+    // Should NOT expose internal details on public endpoint
+    expect(res.body).not.toHaveProperty('version');
+    expect(res.body).not.toHaveProperty('uptime');
+    expect(res.body).not.toHaveProperty('components');
+    expect(res.body).not.toHaveProperty('memory');
   });
 
   it('GET /api/v1/health returns degraded when Redis is down', async () => {

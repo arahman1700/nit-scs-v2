@@ -1,9 +1,55 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { prisma } from '../../../utils/prisma.js';
 import { authenticate } from '../../../middleware/auth.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const createDashboardSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  isPublic: z.boolean().optional(),
+  defaultForRole: z.string().optional(),
+});
+
+const updateDashboardSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  isPublic: z.boolean().optional(),
+  defaultForRole: z.string().nullable().optional(),
+});
+
+const createWidgetSchema = z.object({
+  widgetType: z.string().min(1),
+  title: z.string().min(1),
+  dataSource: z.string().min(1),
+  queryConfig: z.record(z.unknown()).optional(),
+  displayConfig: z.record(z.unknown()).optional(),
+  gridPosition: z.record(z.unknown()).optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+const updateWidgetSchema = z.object({
+  widgetType: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  dataSource: z.string().min(1).optional(),
+  queryConfig: z.record(z.unknown()).optional(),
+  displayConfig: z.record(z.unknown()).optional(),
+  gridPosition: z.record(z.unknown()).optional(),
+  sortOrder: z.number().int().optional(),
+});
+
+const layoutUpdateSchema = z.array(
+  z.object({
+    widgetId: z.string().min(1),
+    gridPosition: z.record(z.unknown()).optional(),
+    sortOrder: z.number().int().optional(),
+  }),
+);
 
 const router = Router();
 
@@ -35,15 +81,10 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST /api/dashboards — create dashboard ─────────────────────────────
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', validate(createDashboardSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const { name, description, isPublic, defaultForRole } = req.body;
-
-    if (!name || typeof name !== 'string') {
-      sendError(res, 400, 'name is required');
-      return;
-    }
 
     const dashboard = await prisma.dashboard.create({
       data: {
@@ -88,7 +129,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── PUT /api/dashboards/:id — update dashboard ─────────────────────────
 
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', validate(updateDashboardSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -147,15 +188,10 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
 
 // ── POST /api/dashboards/:id/widgets — add widget ──────────────────────
 
-router.post('/:id/widgets', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/widgets', validate(createWidgetSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dashboardId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { widgetType, title, dataSource, queryConfig, displayConfig, gridPosition, sortOrder } = req.body;
-
-    if (!widgetType || !title || !dataSource) {
-      sendError(res, 400, 'widgetType, title, and dataSource are required');
-      return;
-    }
 
     const dashboard = await prisma.dashboard.findUnique({ where: { id: dashboardId } });
     if (!dashboard) {
@@ -184,36 +220,40 @@ router.post('/:id/widgets', async (req: Request, res: Response, next: NextFuncti
 
 // ── PUT /api/dashboards/:id/widgets/:wid — update widget ───────────────
 
-router.put('/:id/widgets/:wid', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const wid = Array.isArray(req.params.wid) ? req.params.wid[0] : req.params.wid;
+router.put(
+  '/:id/widgets/:wid',
+  validate(updateWidgetSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const wid = Array.isArray(req.params.wid) ? req.params.wid[0] : req.params.wid;
 
-    const existing = await prisma.dashboardWidget.findUnique({ where: { id: wid } });
-    if (!existing) {
-      sendError(res, 404, 'Widget not found');
-      return;
+      const existing = await prisma.dashboardWidget.findUnique({ where: { id: wid } });
+      if (!existing) {
+        sendError(res, 404, 'Widget not found');
+        return;
+      }
+
+      const { widgetType, title, dataSource, queryConfig, displayConfig, gridPosition, sortOrder } = req.body;
+
+      const widget = await prisma.dashboardWidget.update({
+        where: { id: wid },
+        data: {
+          ...(widgetType !== undefined && { widgetType }),
+          ...(title !== undefined && { title }),
+          ...(dataSource !== undefined && { dataSource }),
+          ...(queryConfig !== undefined && { queryConfig }),
+          ...(displayConfig !== undefined && { displayConfig }),
+          ...(gridPosition !== undefined && { gridPosition }),
+          ...(sortOrder !== undefined && { sortOrder }),
+        },
+      });
+
+      sendSuccess(res, widget);
+    } catch (err) {
+      next(err);
     }
-
-    const { widgetType, title, dataSource, queryConfig, displayConfig, gridPosition, sortOrder } = req.body;
-
-    const widget = await prisma.dashboardWidget.update({
-      where: { id: wid },
-      data: {
-        ...(widgetType !== undefined && { widgetType }),
-        ...(title !== undefined && { title }),
-        ...(dataSource !== undefined && { dataSource }),
-        ...(queryConfig !== undefined && { queryConfig }),
-        ...(displayConfig !== undefined && { displayConfig }),
-        ...(gridPosition !== undefined && { gridPosition }),
-        ...(sortOrder !== undefined && { sortOrder }),
-      },
-    });
-
-    sendSuccess(res, widget);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // ── DELETE /api/dashboards/:id/widgets/:wid — delete widget ────────────
 
@@ -236,7 +276,7 @@ router.delete('/:id/widgets/:wid', async (req: Request, res: Response, next: Nex
 
 // ── PUT /api/dashboards/:id/layout — batch update widget positions ─────
 
-router.put('/:id/layout', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id/layout', validate(layoutUpdateSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dashboardId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const userId = req.user!.userId;
@@ -256,11 +296,6 @@ router.put('/:id/layout', async (req: Request, res: Response, next: NextFunction
       gridPosition?: Prisma.InputJsonValue;
       sortOrder?: number;
     }>;
-
-    if (!Array.isArray(items)) {
-      sendError(res, 400, 'Request body must be an array of widget layout updates');
-      return;
-    }
 
     await prisma.$transaction(
       items.map(item =>

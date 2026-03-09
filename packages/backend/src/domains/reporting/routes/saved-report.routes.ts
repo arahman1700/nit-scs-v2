@@ -1,10 +1,34 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import type { Prisma } from '@prisma/client';
+import { z } from 'zod';
 import { prisma } from '../../../utils/prisma.js';
 import { authenticate } from '../../../middleware/auth.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
 import { getDataSource } from '../services/widget-data.service.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const createSavedReportSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  dataSource: z.string().min(1),
+  columns: z.array(z.unknown()).optional(),
+  filters: z.record(z.unknown()).optional(),
+  visualization: z.string().optional(),
+  isPublic: z.boolean().optional(),
+});
+
+const updateSavedReportSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().nullable().optional(),
+  dataSource: z.string().min(1).optional(),
+  columns: z.array(z.unknown()).optional(),
+  filters: z.record(z.unknown()).optional(),
+  visualization: z.string().optional(),
+  isPublic: z.boolean().optional(),
+});
 
 const router = Router();
 
@@ -34,15 +58,10 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── POST /api/reports/saved — create saved report ───────────────────────
 
-router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', validate(createSavedReportSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const { name, description, dataSource, columns, filters, visualization, isPublic } = req.body;
-
-    if (!name || !dataSource) {
-      sendError(res, 400, 'name and dataSource are required');
-      return;
-    }
 
     const report = await prisma.savedReport.create({
       data: {
@@ -138,7 +157,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 
 // ── PUT /api/reports/saved/:id — update report ─────────────────────────
 
-router.put('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.put('/:id', validate(updateSavedReportSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;

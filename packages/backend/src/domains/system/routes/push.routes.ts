@@ -4,12 +4,24 @@
 
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requireRole } from '../../../middleware/rbac.js';
 import { rateLimiter } from '../../../middleware/rate-limiter.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError, sendCreated, sendNoContent } from '../../../utils/response.js';
 import * as pushService from '../services/push-notification.service.js';
 import { logger } from '../../../config/logger.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const pushSubscribeSchema = z.object({
+  endpoint: z.string().url(),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
+});
 
 const router = Router();
 
@@ -30,17 +42,10 @@ router.post(
   '/subscribe',
   authenticate,
   rateLimiter(10, 60_000),
+  validate(pushSubscribeSchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { endpoint, keys } = req.body as {
-        endpoint?: string;
-        keys?: { p256dh?: string; auth?: string };
-      };
-
-      if (!endpoint || !keys?.p256dh || !keys?.auth) {
-        sendError(res, 400, 'Missing required fields: endpoint, keys.p256dh, keys.auth');
-        return;
-      }
+      const { endpoint, keys } = req.body;
 
       const userAgent = req.headers['user-agent'];
       const subscription = await pushService.subscribe(

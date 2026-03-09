@@ -26,11 +26,50 @@
 
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { buildScopeFilter } from '../../../utils/scope-filter.js';
 import * as yardService from '../services/yard.service.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const createDockDoorSchema = z.object({
+  warehouseId: z.string().min(1),
+  doorNumber: z.string().min(1),
+  doorType: z.enum(['inbound', 'outbound', 'both']),
+  status: z.string().optional(),
+});
+
+const updateDockDoorSchema = z.object({
+  doorType: z.enum(['inbound', 'outbound', 'both']).optional(),
+  status: z.string().optional(),
+});
+
+const createAppointmentSchema = z.object({
+  warehouseId: z.string().min(1),
+  dockDoorId: z.string().optional(),
+  appointmentType: z.enum(['delivery', 'pickup', 'transfer']),
+  scheduledStart: z.string().min(1),
+  scheduledEnd: z.string().min(1),
+  carrierName: z.string().optional(),
+  driverName: z.string().optional(),
+  vehiclePlate: z.string().optional(),
+  referenceType: z.string().optional(),
+  referenceId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const truckCheckInSchema = z.object({
+  warehouseId: z.string().min(1),
+  vehiclePlate: z.string().min(1),
+  driverName: z.string().optional(),
+  carrierName: z.string().optional(),
+  purpose: z.enum(['delivery', 'pickup', 'transfer']),
+  notes: z.string().optional(),
+});
 
 const router = Router();
 
@@ -101,18 +140,9 @@ router.get('/dock-doors/:id', async (req: Request, res: Response, next: NextFunc
 });
 
 // POST /yard/dock-doors
-router.post('/dock-doors', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/dock-doors', validate(createDockDoorSchema), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { warehouseId, doorNumber, doorType, status } = req.body;
-    if (!warehouseId || !doorNumber || !doorType) {
-      return sendError(res, 400, 'warehouseId, doorNumber, and doorType are required');
-    }
-
-    const validTypes = ['inbound', 'outbound', 'both'];
-    if (!validTypes.includes(doorType)) {
-      return sendError(res, 400, `doorType must be one of: ${validTypes.join(', ')}`);
-    }
-
     const data = await yardService.createDockDoor({ warehouseId, doorNumber, doorType, status });
     sendCreated(res, data);
   } catch (err) {
@@ -121,15 +151,19 @@ router.post('/dock-doors', async (req: Request, res: Response, next: NextFunctio
 });
 
 // PUT /yard/dock-doors/:id
-router.put('/dock-doors/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { doorType, status } = req.body;
-    const data = await yardService.updateDockDoor(req.params.id as string, { doorType, status });
-    sendSuccess(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+router.put(
+  '/dock-doors/:id',
+  validate(updateDockDoorSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { doorType, status } = req.body;
+      const data = await yardService.updateDockDoor(req.params.id as string, { doorType, status });
+      sendSuccess(res, data);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // DELETE /yard/dock-doors/:id
 router.delete(
@@ -179,24 +213,18 @@ router.get('/appointments/:id', async (req: Request, res: Response, next: NextFu
 });
 
 // POST /yard/appointments
-router.post('/appointments', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { warehouseId, appointmentType, scheduledStart, scheduledEnd } = req.body;
-    if (!warehouseId || !appointmentType || !scheduledStart || !scheduledEnd) {
-      return sendError(res, 400, 'warehouseId, appointmentType, scheduledStart, and scheduledEnd are required');
+router.post(
+  '/appointments',
+  validate(createAppointmentSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await yardService.createAppointment(req.body);
+      sendCreated(res, data);
+    } catch (err) {
+      next(err);
     }
-
-    const validTypes = ['delivery', 'pickup', 'transfer'];
-    if (!validTypes.includes(appointmentType)) {
-      return sendError(res, 400, `appointmentType must be one of: ${validTypes.join(', ')}`);
-    }
-
-    const data = await yardService.createAppointment(req.body);
-    sendCreated(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // POST /yard/appointments/:id/check-in
 router.post('/appointments/:id/check-in', async (req: Request, res: Response, next: NextFunction) => {
@@ -251,24 +279,18 @@ router.get('/trucks', async (req: Request, res: Response, next: NextFunction) =>
 });
 
 // POST /yard/trucks/check-in
-router.post('/trucks/check-in', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { warehouseId, vehiclePlate, purpose } = req.body;
-    if (!warehouseId || !vehiclePlate || !purpose) {
-      return sendError(res, 400, 'warehouseId, vehiclePlate, and purpose are required');
+router.post(
+  '/trucks/check-in',
+  validate(truckCheckInSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await yardService.checkInTruck(req.body);
+      sendCreated(res, data);
+    } catch (err) {
+      next(err);
     }
-
-    const validPurposes = ['delivery', 'pickup', 'transfer'];
-    if (!validPurposes.includes(purpose)) {
-      return sendError(res, 400, `purpose must be one of: ${validPurposes.join(', ')}`);
-    }
-
-    const data = await yardService.checkInTruck(req.body);
-    sendCreated(res, data);
-  } catch (err) {
-    next(err);
-  }
-});
+  },
+);
 
 // POST /yard/trucks/:id/assign-dock
 router.post('/trucks/:id/assign-dock', async (req: Request, res: Response, next: NextFunction) => {

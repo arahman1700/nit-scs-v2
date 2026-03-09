@@ -7,7 +7,7 @@
 
 import { Router } from 'express';
 import { rateLimiter } from '../middleware/rate-limiter.js';
-import { healthCheck } from '../domains/system/routes/health.routes.js';
+import { healthCheck, detailedHealthCheck, detailedHealthMiddleware } from '../domains/system/routes/health.routes.js';
 
 // ── Domain Barrels ──────────────────────────────────────────────────────
 import { registerAuthRoutes } from '../domains/auth/index.js';
@@ -30,8 +30,11 @@ const router = Router();
 // ── Rate limiter (applied to all /api/v1 routes) ───────────────────────
 router.use(rateLimiter(500, 60_000));
 
-// ── Health Check (no auth required) ────────────────────────────────────
+// ── Health Check (public: minimal status only) ───────────────────────
 router.get('/health', healthCheck);
+
+// ── Detailed Health Check (authenticated admin only) ─────────────────
+router.get('/health/details', ...detailedHealthMiddleware, detailedHealthCheck);
 
 // ── Register all domains ───────────────────────────────────────────────
 registerAuthRoutes(router);

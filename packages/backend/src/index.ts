@@ -97,18 +97,20 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use(requestLogger);
 
-// ── Swagger / OpenAPI Docs ─────────────────────────────────────────────────
-app.use(
-  '/api/docs',
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'NIT SCS API Docs',
-  }),
-);
-app.get('/api/docs.json', (_req, res) => {
-  res.json(swaggerSpec);
-});
+// ── Swagger / OpenAPI Docs (disabled in production) ──────────────────────
+if (process.env.NODE_ENV !== 'production') {
+  app.use(
+    '/api/docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'NIT SCS API Docs',
+    }),
+  );
+  app.get('/api/docs.json', (_req, res) => {
+    res.json(swaggerSpec);
+  });
+}
 
 // ── API Routes (versioned) ────────────────────────────────────────────────
 // Rate limiter is applied inside apiRoutes (routes/index.ts) — not here,

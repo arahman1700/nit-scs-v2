@@ -6,8 +6,22 @@
 
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const roiCalculateSchema = z.object({
+  monthlyOrders: z.number().nonnegative().optional(),
+  warehouseWorkers: z.number().nonnegative().optional(),
+  avgPickTimeMinutes: z.number().nonnegative().optional(),
+  currentAccuracyPercent: z.number().min(0).max(100).optional(),
+  avgShippingCostPerOrder: z.number().nonnegative().optional(),
+  avgInventoryValue: z.number().nonnegative().optional(),
+  currentShrinkagePercent: z.number().min(0).max(100).optional(),
+});
 
 const router = Router();
 
@@ -48,7 +62,7 @@ interface RoiInput {
   currentShrinkagePercent?: number;
 }
 
-router.post('/calculate', (req: Request, res: Response, next: NextFunction) => {
+router.post('/calculate', validate(roiCalculateSchema), (req: Request, res: Response, next: NextFunction) => {
   try {
     const {
       monthlyOrders = 5000,
@@ -59,11 +73,6 @@ router.post('/calculate', (req: Request, res: Response, next: NextFunction) => {
       avgInventoryValue = 500_000,
       currentShrinkagePercent = 2,
     } = req.body as RoiInput;
-
-    // Validate ranges
-    if (monthlyOrders < 0 || warehouseWorkers < 0 || avgPickTimeMinutes < 0) {
-      return sendError(res, 400, 'Input values must be non-negative');
-    }
 
     // 1. Labor savings from pick time reduction (slotting + wave picking)
     const currentPickHoursMonthly = (monthlyOrders * avgPickTimeMinutes) / 60;

@@ -3,13 +3,50 @@
  * Mounted at /api/v1/inspections
  */
 import { Router } from 'express';
+import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
+import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from '../../../utils/response.js';
 import { log } from '../../../config/logger.js';
 import * as aqlService from '../services/aql.service.js';
 import * as checklistService from '../services/inspection-checklist.service.js';
 import type { InspectionLevel } from '../services/aql.service.js';
+
+// ── Zod Schemas ──────────────────────────────────────────────────────────────
+
+const checklistItemSchema = z.object({
+  description: z.string().min(1),
+  itemOrder: z.number().int().nonnegative(),
+  isMandatory: z.boolean().optional(),
+  inspectionType: z.string().optional(),
+});
+
+const createChecklistSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  isActive: z.boolean().optional(),
+  items: z.array(checklistItemSchema).optional(),
+});
+
+const updateChecklistSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+const updateChecklistItemSchema = z.object({
+  description: z.string().min(1).optional(),
+  itemOrder: z.number().int().nonnegative().optional(),
+  isMandatory: z.boolean().optional(),
+  inspectionType: z.string().optional(),
+});
+
+const reorderItemsSchema = z.object({
+  itemIds: z.array(z.string().uuid()).min(1),
+});
 
 const router = Router();
 
@@ -103,7 +140,7 @@ router.get('/checklists/:id', async (req, res) => {
  * POST /inspections/checklists
  * Create a new checklist (optionally with items).
  */
-router.post('/checklists', async (req, res) => {
+router.post('/checklists', validate(createChecklistSchema), async (req, res) => {
   try {
     const data = await checklistService.create(req.body);
     sendCreated(res, data);
@@ -117,9 +154,9 @@ router.post('/checklists', async (req, res) => {
  * PUT /inspections/checklists/:id
  * Update checklist metadata.
  */
-router.put('/checklists/:id', async (req, res) => {
+router.put('/checklists/:id', validate(updateChecklistSchema), async (req, res) => {
   try {
-    const data = await checklistService.update(req.params.id, req.body);
+    const data = await checklistService.update(req.params.id as string, req.body);
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
@@ -164,9 +201,9 @@ router.get('/checklists/:id/items', async (req, res) => {
  * POST /inspections/checklists/:id/items
  * Add a new item to a checklist.
  */
-router.post('/checklists/:id/items', async (req, res) => {
+router.post('/checklists/:id/items', validate(checklistItemSchema), async (req, res) => {
   try {
-    const data = await checklistService.addItem(req.params.id, req.body);
+    const data = await checklistService.addItem(req.params.id as string, req.body);
     sendCreated(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
@@ -179,9 +216,9 @@ router.post('/checklists/:id/items', async (req, res) => {
  * PUT /inspections/checklists/:checklistId/items/:itemId
  * Update a checklist item.
  */
-router.put('/checklists/:checklistId/items/:itemId', async (req, res) => {
+router.put('/checklists/:checklistId/items/:itemId', validate(updateChecklistItemSchema), async (req, res) => {
   try {
-    const data = await checklistService.updateItem(req.params.itemId, req.body);
+    const data = await checklistService.updateItem(req.params.itemId as string, req.body);
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
@@ -209,14 +246,10 @@ router.delete('/checklists/:checklistId/items/:itemId', async (req, res) => {
  * POST /inspections/checklists/:id/items/reorder
  * Reorder items in a checklist. Body: { itemIds: string[] }
  */
-router.post('/checklists/:id/items/reorder', async (req, res) => {
+router.post('/checklists/:id/items/reorder', validate(reorderItemsSchema), async (req, res) => {
   try {
-    const { itemIds } = req.body as { itemIds: string[] };
-    if (!Array.isArray(itemIds) || itemIds.length === 0) {
-      sendError(res, 400, 'itemIds must be a non-empty array of item UUIDs');
-      return;
-    }
-    const data = await checklistService.reorderItems(req.params.id, itemIds);
+    const { itemIds } = req.body;
+    const data = await checklistService.reorderItems(req.params.id as string, itemIds);
     sendSuccess(res, data);
   } catch (err: unknown) {
     const e = err as Error & { statusCode?: number };
