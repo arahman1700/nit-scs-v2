@@ -483,7 +483,7 @@ export const ShiftingMaterialDashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 mb-3">
                   <span className="px-2 py-1 bg-red-500/10 text-red-400 rounded text-xs">{row.sendProject}</span>
-                  <ArrowRightLeft size={14} className="text-gray-500" />
+                  <ArrowRightLeft size={14} className="text-gray-400" />
                   <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded text-xs">
                     {row.requestProject}
                   </span>
@@ -492,7 +492,7 @@ export const ShiftingMaterialDashboard: React.FC = () => {
                   <span>{row.requestedBy}</span>
                   <span>{row.issuedBy}</span>
                 </div>
-                <div className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <div className="text-xs text-gray-400 mt-2 flex items-center gap-1">
                   <Calendar size={12} />
                   {row.date}
                 </div>

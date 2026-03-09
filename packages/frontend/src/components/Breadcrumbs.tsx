@@ -35,7 +35,7 @@ export const Breadcrumbs: React.FC = memo(() => {
 
         return (
           <React.Fragment key={path}>
-            <ChevronRight size={12} className="text-gray-600 flex-shrink-0" />
+            <ChevronRight size={12} className="text-gray-400 flex-shrink-0" />
             {isLast ? (
               <span aria-current="page" className="text-white font-medium truncate max-w-[200px]">
                 {label}

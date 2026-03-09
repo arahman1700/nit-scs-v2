@@ -159,7 +159,7 @@ const CategoryCard: React.FC<{
         </div>
         <ArrowRight
           size={16}
-          className="text-gray-600 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
+          className="text-gray-400 group-hover:text-white group-hover:translate-x-1 transition-all duration-300"
         />
       </div>
       <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-nesma-secondary transition-colors">
@@ -167,8 +167,8 @@ const CategoryCard: React.FC<{
       </h3>
       <p className="text-sm text-gray-400 mb-3 line-clamp-2">{category.description}</p>
       <div className="flex items-center gap-2">
-        <BarChart3 size={14} className="text-gray-500" />
-        <span className="text-xs text-gray-500 font-medium">{category.reportCount} reports</span>
+        <BarChart3 size={14} className="text-gray-400" />
+        <span className="text-xs text-gray-400 font-medium">{category.reportCount} reports</span>
       </div>
     </button>
   );
@@ -210,7 +210,7 @@ const RecentReportCard: React.FC<{
         >
           <Star
             size={14}
-            className={isFavorite ? 'text-amber-400 fill-amber-400' : 'text-gray-600 hover:text-gray-400'}
+            className={isFavorite ? 'text-amber-400 fill-amber-400' : 'text-gray-400 hover:text-gray-400'}
           />
         </button>
       </div>
@@ -218,8 +218,8 @@ const RecentReportCard: React.FC<{
         {report.name}
       </h4>
       <div className="flex items-center gap-1.5 mt-2">
-        <Clock size={12} className="text-gray-600" />
-        <span className="text-[11px] text-gray-500">{new Date(report.accessedAt).toLocaleDateString()}</span>
+        <Clock size={12} className="text-gray-400" />
+        <span className="text-[11px] text-gray-400">{new Date(report.accessedAt).toLocaleDateString()}</span>
       </div>
     </div>
   );
@@ -246,7 +246,7 @@ const QuickStats: React.FC = () => {
               </div>
               <div>
                 <p className="text-xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.label}</p>
+                <p className="text-xs text-gray-400">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -331,20 +331,20 @@ export const ReportsHubPage: React.FC = () => {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search reports by name or category..."
           className="w-full pl-11 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl
-            text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-nesma-secondary/50
+            text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-nesma-secondary/50
             transition-colors"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/10 text-gray-500"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/10 text-gray-400"
             aria-label="Clear search"
           >
             <X size={14} />
@@ -410,7 +410,7 @@ export const ReportsHubPage: React.FC = () => {
         </div>
         {filteredCategories.length === 0 ? (
           <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-            <Search size={40} className="mx-auto mb-3 text-gray-600" />
+            <Search size={40} className="mx-auto mb-3 text-gray-400" />
             <p className="text-gray-400">No categories match your search</p>
             <button onClick={() => setSearchQuery('')} className="mt-3 text-sm text-nesma-secondary hover:underline">
               Clear search

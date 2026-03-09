@@ -140,7 +140,7 @@ const SidebarSubGroup: React.FC<{
   <div className="mt-1">
     {isOpen && (
       <div className="pl-6 pt-2 pb-1">
-        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">{group.label}</span>
+        <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{group.label}</span>
       </div>
     )}
     <div className="space-y-0.5">
@@ -178,11 +178,11 @@ const SidebarSection: React.FC<{
           aria-label={`${shouldExpand ? 'Collapse' : 'Expand'} ${section.section} section`}
           type="button"
         >
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">{section.section}</span>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">{section.section}</span>
           <div className="flex items-center gap-1.5">
             {/* Item count badge when collapsed */}
             {!shouldExpand && itemCount > 0 && (
-              <span className="text-[9px] font-semibold text-gray-600 bg-white/5 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+              <span className="text-[9px] font-semibold text-gray-400 bg-white/5 px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                 {itemCount}
               </span>
             )}
@@ -190,7 +190,7 @@ const SidebarSection: React.FC<{
             {!isAlwaysExpanded && (
               <ChevronRight
                 size={14}
-                className={`text-gray-500 transition-transform duration-300 ${shouldExpand ? 'rotate-90' : ''}`}
+                className={`text-gray-400 transition-transform duration-300 ${shouldExpand ? 'rotate-90' : ''}`}
               />
             )}
           </div>
@@ -299,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-white truncate">NIT SCS</div>
-              <div className="text-[10px] text-gray-500 tracking-wide">Supply Chain V2</div>
+              <div className="text-[10px] text-gray-400 tracking-wide">Supply Chain V2</div>
             </div>
           </div>
         ) : (
@@ -312,10 +312,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
       {/* ── Search Bar ── */}
       {isOpen && (
         <div className="px-3 pt-3 pb-1">
-          <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-500 text-[13px] cursor-pointer hover:bg-white/8 hover:border-white/15 transition-all">
+          <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 text-[13px] cursor-pointer hover:bg-white/8 hover:border-white/15 transition-all">
             <Search size={14} />
             <span>Search...</span>
-            <kbd className="ml-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-500">&#8984;K</kbd>
+            <kbd className="ml-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-400">&#8984;K</kbd>
           </div>
         </div>
       )}
@@ -343,7 +343,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[13px] font-medium text-white truncate">{userName || 'User'}</div>
-              <div className="text-[10px] text-gray-500 capitalize truncate">{roleLabel}</div>
+              <div className="text-[10px] text-gray-400 capitalize truncate">{roleLabel}</div>
             </div>
           </div>
         ) : (

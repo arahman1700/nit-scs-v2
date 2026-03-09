@@ -220,14 +220,14 @@ export const CrossDockDashboard: React.FC = () => {
       {/* KPI Cards */}
       {statsLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpiCards.map(kpi => (
             <div key={kpi.label} className="glass-card rounded-2xl p-5 border border-white/10">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-gray-500 uppercase tracking-wider">{kpi.label}</span>
+                <span className="text-xs text-gray-400 uppercase tracking-wider">{kpi.label}</span>
                 <div className={`w-8 h-8 rounded-lg ${kpi.bg} flex items-center justify-center ${kpi.color}`}>
                   {kpi.icon}
                 </div>
@@ -246,7 +246,7 @@ export const CrossDockDashboard: React.FC = () => {
               <TrendingUp className="w-5 h-5 text-teal-400" />
             </div>
             <div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">Items Bypassed</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">Items Bypassed</div>
               <div className="text-xl font-bold text-white">{stats.totalItemsBypassed}</div>
             </div>
           </div>
@@ -255,7 +255,7 @@ export const CrossDockDashboard: React.FC = () => {
               <BarChart3 className="w-5 h-5 text-red-400" />
             </div>
             <div>
-              <div className="text-xs text-gray-500 uppercase tracking-wider">Cancelled</div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider">Cancelled</div>
               <div className="text-xl font-bold text-white">{stats.totalCancelled}</div>
             </div>
           </div>
@@ -333,7 +333,7 @@ function OpportunitiesTab({ opportunities, loading, noWarehouse, onCreateCrossDo
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -341,7 +341,7 @@ function OpportunitiesTab({ opportunities, loading, noWarehouse, onCreateCrossDo
   if (opportunities.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-        <Package className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+        <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
         <p className="text-gray-400 text-sm">
           No cross-dock opportunities found. Opportunities appear when a pending GRN has items matching a pending MI or
           WT.
@@ -362,10 +362,10 @@ function OpportunitiesTab({ opportunities, loading, noWarehouse, onCreateCrossDo
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm font-semibold text-white">{opp.itemCode}</span>
-                <ChevronRight className="w-3 h-3 text-gray-600" />
+                <ChevronRight className="w-3 h-3 text-gray-400" />
                 <span className="text-sm text-gray-400 truncate">{opp.itemDescription}</span>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
+              <div className="text-xs text-gray-400 mt-1">
                 Source GRN: <span className="text-gray-300">{opp.sourceGrnNumber}</span>
                 <span className="mx-2">|</span>
                 Available: <span className="text-gray-300">{opp.grnQuantity}</span>
@@ -383,7 +383,7 @@ function OpportunitiesTab({ opportunities, loading, noWarehouse, onCreateCrossDo
                       {target.type}
                     </span>
                     <span className="text-gray-300">{target.documentNumber}</span>
-                    <span className="text-gray-500">needs {target.quantityNeeded}</span>
+                    <span className="text-gray-400">needs {target.quantityNeeded}</span>
                   </div>
                 ))}
               </div>
@@ -392,7 +392,7 @@ function OpportunitiesTab({ opportunities, loading, noWarehouse, onCreateCrossDo
             {/* Right: Suggested qty + create button */}
             <div className="flex flex-col items-end gap-2 shrink-0">
               <div className="text-right">
-                <div className="text-xs text-gray-500">Suggested Qty</div>
+                <div className="text-xs text-gray-400">Suggested Qty</div>
                 <div className="text-lg font-bold text-white">{opp.suggestedQuantity}</div>
               </div>
               <button
@@ -441,7 +441,7 @@ function ActiveTab({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -449,7 +449,7 @@ function ActiveTab({
   if (records.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-        <ArrowRightLeft className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+        <ArrowRightLeft className="w-12 h-12 text-gray-400 mx-auto mb-3" />
         <p className="text-gray-400 text-sm">No active cross-docks. Create one from the Opportunities tab.</p>
       </div>
     );
@@ -465,7 +465,7 @@ function ActiveTab({
               {/* Left: Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-1">
-                  <span className="text-xs text-gray-500 font-mono">{record.id.slice(0, 8)}...</span>
+                  <span className="text-xs text-gray-400 font-mono">{record.id.slice(0, 8)}...</span>
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.bg} ${sc.text}`}
                   >
@@ -476,7 +476,7 @@ function ActiveTab({
                 <div className="text-sm font-medium text-white mt-1">
                   {record.item?.itemCode ?? '--'} - {record.item?.itemDescription ?? 'Unknown item'}
                 </div>
-                <div className="flex items-center gap-4 mt-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-4 mt-1.5 text-xs text-gray-400">
                   <span>
                     Warehouse: <span className="text-gray-300">{record.warehouse?.warehouseCode ?? '--'}</span>
                   </span>
@@ -552,7 +552,7 @@ function HistoryTab({ records, loading }: HistoryTabProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -560,7 +560,7 @@ function HistoryTab({ records, loading }: HistoryTabProps) {
   if (records.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-        <CheckCircle2 className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+        <CheckCircle2 className="w-12 h-12 text-gray-400 mx-auto mb-3" />
         <p className="text-gray-400 text-sm">No completed cross-docks yet.</p>
       </div>
     );
@@ -571,15 +571,15 @@ function HistoryTab({ records, loading }: HistoryTabProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10 bg-white/5">
-            <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wider font-medium">Item</th>
-            <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wider font-medium">
+            <th className="text-left px-5 py-3 text-xs text-gray-400 uppercase tracking-wider font-medium">Item</th>
+            <th className="text-left px-5 py-3 text-xs text-gray-400 uppercase tracking-wider font-medium">
               Warehouse
             </th>
-            <th className="text-right px-5 py-3 text-xs text-gray-500 uppercase tracking-wider font-medium">
+            <th className="text-right px-5 py-3 text-xs text-gray-400 uppercase tracking-wider font-medium">
               Quantity
             </th>
-            <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wider font-medium">Status</th>
-            <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wider font-medium">
+            <th className="text-left px-5 py-3 text-xs text-gray-400 uppercase tracking-wider font-medium">Status</th>
+            <th className="text-left px-5 py-3 text-xs text-gray-400 uppercase tracking-wider font-medium">
               Completed
             </th>
           </tr>
@@ -591,7 +591,7 @@ function HistoryTab({ records, loading }: HistoryTabProps) {
               <tr key={record.id} className="hover:bg-white/5 transition-colors">
                 <td className="px-5 py-3">
                   <div className="text-white font-medium">{record.item?.itemCode ?? '--'}</div>
-                  <div className="text-xs text-gray-500 mt-0.5 truncate max-w-[200px]">
+                  <div className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">
                     {record.item?.itemDescription ?? ''}
                   </div>
                 </td>

@@ -15,7 +15,7 @@ const LazySla = React.lazy(() =>
 );
 
 const SuspenseFallback = (
-  <div className="glass-card p-12 rounded-xl text-center text-gray-500 animate-pulse">Loading...</div>
+  <div className="glass-card p-12 rounded-xl text-center text-gray-400 animate-pulse">Loading...</div>
 );
 
 export const ShippingSectionPage: React.FC = () => {
@@ -126,7 +126,7 @@ export const ShippingSectionPage: React.FC = () => {
                   })}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm text-center py-8">No shipments yet</p>
+                <p className="text-gray-400 text-sm text-center py-8">No shipments yet</p>
               )}
             </div>
           </div>
@@ -145,7 +145,7 @@ export const ShippingSectionPage: React.FC = () => {
         ),
         customs: (
           <div className="glass-card rounded-2xl p-8 text-center">
-            <Anchor className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+            <Anchor className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <h4 className="text-white font-medium mb-2">Customs Clearance</h4>
             <p className="text-gray-400 text-sm mb-4">
               Track customs documentation and clearance status for incoming shipments.

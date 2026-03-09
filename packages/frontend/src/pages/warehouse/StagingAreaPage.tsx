@@ -120,8 +120,8 @@ const OccupancyBar: React.FC<{ zone: StagingOccupancy }> = ({ zone }) => {
         />
       </div>
       <div className="flex justify-between mt-1">
-        <span className="text-[10px] text-gray-500">{zone.stagedCount} items staged</span>
-        <span className="text-[10px] text-gray-500">{pct}%</span>
+        <span className="text-[10px] text-gray-400">{zone.stagedCount} items staged</span>
+        <span className="text-[10px] text-gray-400">{pct}%</span>
       </div>
     </div>
   );
@@ -208,7 +208,7 @@ const AlertRow: React.FC<{ assignment: StagingAssignment }> = ({ assignment }) =
         </div>
         <div className="text-right">
           <span className="text-sm font-bold text-red-400">{overText}</span>
-          <div className="text-[10px] text-gray-500">max {assignment.maxDwellHours ?? 24}h</div>
+          <div className="text-[10px] text-gray-400">max {assignment.maxDwellHours ?? 24}h</div>
         </div>
       </div>
     </div>
@@ -544,9 +544,9 @@ export function StagingAreaPage() {
             <h2 className="text-lg font-semibold text-white mb-4">Zone Occupancy</h2>
             {occupancy.length === 0 ? (
               <div className="glass-card rounded-2xl p-8 text-center">
-                <Layers size={32} className="text-gray-500 mx-auto mb-2" />
+                <Layers size={32} className="text-gray-400 mx-auto mb-2" />
                 <p className="text-sm text-gray-400">No staging zones configured for this warehouse.</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   Create zones with type "staging_inbound" or "staging_outbound".
                 </p>
               </div>
@@ -569,7 +569,7 @@ export function StagingAreaPage() {
           </h2>
           {inboundItems.length === 0 ? (
             <div className="glass-card rounded-2xl p-8 text-center">
-              <ArrowDownCircle size={32} className="text-gray-500 mx-auto mb-2" />
+              <ArrowDownCircle size={32} className="text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-400">No inbound items currently staged.</p>
             </div>
           ) : (
@@ -590,7 +590,7 @@ export function StagingAreaPage() {
           </h2>
           {outboundItems.length === 0 ? (
             <div className="glass-card rounded-2xl p-8 text-center">
-              <ArrowUpCircle size={32} className="text-gray-500 mx-auto mb-2" />
+              <ArrowUpCircle size={32} className="text-gray-400 mx-auto mb-2" />
               <p className="text-sm text-gray-400">No outbound items currently staged.</p>
             </div>
           ) : (

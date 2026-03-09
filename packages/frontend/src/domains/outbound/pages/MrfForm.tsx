@@ -88,7 +88,7 @@ export const MrfForm: React.FC = () => {
         <p className="text-gray-400 mb-2">
           MR <span className="text-nesma-secondary font-medium">{documentNumber}</span>
         </p>
-        <p className="text-gray-500 text-sm mb-6">Will convert to MI upon approval. Approval: {approvalLevel.label}</p>
+        <p className="text-gray-400 text-sm mb-6">Will convert to MI upon approval. Approval: {approvalLevel.label}</p>
         <div className="flex gap-4">
           <button
             onClick={() => {
@@ -120,7 +120,7 @@ export const MrfForm: React.FC = () => {
         >
           Dashboard
         </span>
-        <span className="text-gray-600">/</span>
+        <span className="text-gray-400">/</span>
         <span className="text-white font-medium">Material Request</span>
       </div>
 
@@ -241,7 +241,7 @@ export const MrfForm: React.FC = () => {
                 </div>
                 <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-400">
                 Upon approval, this MR will auto-convert to an MI (Material Issuance)
               </p>
             </div>

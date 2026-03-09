@@ -159,7 +159,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             </div>
           </div>
 
-          <p className="text-gray-600 text-xs">{t.copyright}</p>
+          <p className="text-gray-400 text-xs">{t.copyright}</p>
         </div>
       </div>
 
@@ -259,7 +259,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           {/* Demo Accounts — only in development */}
           {import.meta.env.DEV && (
             <div className="mt-10 pt-8 border-t border-white/10">
-              <p className="text-xs text-gray-500 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
+              <p className="text-xs text-gray-400 mb-4 font-medium uppercase tracking-wider">{t.demo}</p>
               <div className="grid grid-cols-2 gap-2">
                 {demoAccounts.map(account => (
                   <button
@@ -274,7 +274,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                     <span className="text-xs font-medium text-gray-300 group-hover:text-white block">
                       {account.label}
                     </span>
-                    <span className="text-[10px] text-gray-500">{account.email}</span>
+                    <span className="text-[10px] text-gray-400">{account.email}</span>
                   </button>
                 ))}
               </div>
@@ -283,7 +283,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           {/* Powered by Idaratech */}
           <div className="mt-8 pt-6 border-t border-white/5 flex flex-col items-center gap-2 group">
-            <span className="text-[10px] text-gray-500 tracking-[0.2em] uppercase idaratech-spark">Powered by</span>
+            <span className="text-[10px] text-gray-400 tracking-[0.2em] uppercase idaratech-spark">Powered by</span>
             <div className="relative">
               <div className="absolute inset-0 -m-6 rounded-2xl bg-gradient-to-r from-nesma-primary/5 via-nesma-secondary/10 to-nesma-primary/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
               <IdaratechLogo className="w-56 relative z-10 idaratech-glow" />

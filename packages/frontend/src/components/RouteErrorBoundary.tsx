@@ -48,7 +48,7 @@ export class RouteErrorBoundary extends React.Component<RouteErrorBoundaryProps,
             <AlertTriangle size={24} />
           </div>
           <h2 className="text-lg font-semibold text-white mb-1">Something went wrong</h2>
-          {this.props.label && <p className="text-gray-500 text-xs mb-2">{this.props.label}</p>}
+          {this.props.label && <p className="text-gray-400 text-xs mb-2">{this.props.label}</p>}
           <p className="text-gray-400 text-sm mb-5">{this.state.error?.message || 'An unexpected error occurred'}</p>
           <button
             onClick={this.handleReset}

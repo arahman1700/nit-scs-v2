@@ -48,7 +48,7 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
         </button>
       </div>
 
-      {filters.length === 0 && <p className="text-xs text-gray-500">No filters applied</p>}
+      {filters.length === 0 && <p className="text-xs text-gray-400">No filters applied</p>}
 
       <div className="space-y-2">
         {filters.map((filter, i) => (
@@ -88,13 +88,13 @@ export const FilterBuilder: React.FC<FilterBuilderProps> = ({ columns, filters, 
               onChange={e => updateFilter(i, 'value', e.target.value)}
               placeholder="Value..."
               className="flex-1 px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm
-                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none"
+                placeholder:text-gray-400 focus:border-nesma-secondary/50 focus:outline-none"
             />
 
             {/* Remove */}
             <button
               onClick={() => removeFilter(i)}
-              className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
             >
               <Trash2 size={14} />
             </button>

@@ -44,7 +44,7 @@ export const ActivityWidget: React.FC<ActivityWidgetProps> = ({ widget }) => {
   const items = (data?.data as ActivityItem[] | undefined) ?? [];
 
   if (items.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No recent activity</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No recent activity</div>;
   }
 
   return (
@@ -61,7 +61,7 @@ export const ActivityWidget: React.FC<ActivityWidgetProps> = ({ widget }) => {
                 <span className="text-white font-medium">{item.user || 'System'}</span> {item.action} {item.entity}
               </p>
               {item.timestamp && (
-                <p className="text-xs text-gray-500 mt-0.5">{new Date(item.timestamp).toLocaleString()}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{new Date(item.timestamp).toLocaleString()}</p>
               )}
             </div>
           </div>

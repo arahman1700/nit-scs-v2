@@ -182,7 +182,7 @@ const AuditDetailModal: React.FC<AuditDetailModalProps> = ({ auditId, onClose })
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           ) : !audit ? (
             <p className="text-center text-gray-400 py-12">Audit not found.</p>
@@ -228,21 +228,21 @@ const AuditDetailModal: React.FC<AuditDetailModalProps> = ({ auditId, onClose })
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Checklist Items</h4>
                 {checklistItems.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">No checklist items found.</p>
+                  <p className="text-sm text-gray-400 text-center py-8">No checklist items found.</p>
                 ) : (
                   checklistItems.map((item: ComplianceChecklistItem, idx: number) => {
                     const current = getResponseForItem(item.id);
                     return (
                       <div key={item.id} className="bg-white/5 rounded-xl border border-white/10 p-4">
                         <div className="flex items-start gap-3">
-                          <span className="text-xs text-gray-500 font-mono w-6 text-right mt-0.5 flex-shrink-0">
+                          <span className="text-xs text-gray-400 font-mono w-6 text-right mt-0.5 flex-shrink-0">
                             {item.itemNumber ?? idx + 1}.
                           </span>
                           <div className="flex-1 space-y-3">
                             <div className="flex items-start justify-between gap-4">
                               <p className="text-sm text-white">{item.question}</p>
                               {item.weight > 1 && (
-                                <span className="text-[10px] text-gray-500 flex-shrink-0">Weight: {item.weight}</span>
+                                <span className="text-[10px] text-gray-400 flex-shrink-0">Weight: {item.weight}</span>
                               )}
                             </div>
 
@@ -408,10 +408,10 @@ const ChecklistsTab: React.FC = () => {
       ) : checklists.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <ClipboardCheck size={28} className="text-gray-600" />
+            <ClipboardCheck size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-400">No compliance checklists found</p>
-          <p className="text-xs text-gray-500 mt-1">Checklists will appear here once created</p>
+          <p className="text-xs text-gray-400 mt-1">Checklists will appear here once created</p>
         </div>
       ) : (
         <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
@@ -534,10 +534,10 @@ const AuditsTab: React.FC = () => {
       ) : filtered.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <ClipboardCheck size={28} className="text-gray-600" />
+            <ClipboardCheck size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-400">No audits found</p>
-          <p className="text-xs text-gray-500 mt-1">Compliance audits will appear here once scheduled</p>
+          <p className="text-xs text-gray-400 mt-1">Compliance audits will appear here once scheduled</p>
         </div>
       ) : (
         <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">
@@ -588,7 +588,7 @@ const AuditsTab: React.FC = () => {
                             {audit.overallScore}%
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-500">--</span>
+                          <span className="text-xs text-gray-400">--</span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-center">

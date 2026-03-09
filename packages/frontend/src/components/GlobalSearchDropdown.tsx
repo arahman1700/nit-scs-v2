@@ -177,9 +177,9 @@ export const GlobalSearchDropdown: React.FC<GlobalSearchDropdownProps> = ({
         return (
           <div key={type}>
             <div className="flex items-center gap-2 px-4 py-2 border-b border-white/5">
-              <Icon size={12} className="text-gray-500" />
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</span>
-              <span className="text-[10px] text-gray-600">{items.length}</span>
+              <Icon size={12} className="text-gray-400" />
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</span>
+              <span className="text-[10px] text-gray-400">{items.length}</span>
             </div>
             {items.map(item => {
               const idx = flatIndex++;
@@ -206,7 +206,7 @@ export const GlobalSearchDropdown: React.FC<GlobalSearchDropdownProps> = ({
                     </div>
                     <p className="text-xs text-gray-400 truncate mt-0.5">{item.summary}</p>
                   </div>
-                  <span className="text-[10px] text-gray-500 shrink-0">{formatDate(item.createdAt)}</span>
+                  <span className="text-[10px] text-gray-400 shrink-0">{formatDate(item.createdAt)}</span>
                 </div>
               );
             })}

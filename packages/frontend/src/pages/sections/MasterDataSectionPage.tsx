@@ -56,7 +56,7 @@ function ResourceCard({ label, icon: Icon, count, loading, link, color }: Resour
         <div className={`p-3 rounded-lg ${color} text-white`}>
           <Icon size={22} />
         </div>
-        <ArrowRight size={16} className="text-gray-500 group-hover:text-nesma-secondary transition-colors" />
+        <ArrowRight size={16} className="text-gray-400 group-hover:text-nesma-secondary transition-colors" />
       </div>
       <p className="text-2xl font-bold text-white mb-1">
         {loading ? (
@@ -225,7 +225,7 @@ export const MasterDataSectionPage: React.FC = () => {
             ))}
             {suppliersData.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">
+                <td colSpan={4} className="p-8 text-center text-gray-400">
                   No suppliers found
                 </td>
               </tr>
@@ -265,7 +265,7 @@ export const MasterDataSectionPage: React.FC = () => {
             ))}
             {itemsData.length === 0 && (
               <tr>
-                <td colSpan={3} className="p-8 text-center text-gray-500">
+                <td colSpan={3} className="p-8 text-center text-gray-400">
                   No items found
                 </td>
               </tr>
@@ -311,7 +311,7 @@ export const MasterDataSectionPage: React.FC = () => {
             ))}
             {projectsData.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-500">
+                <td colSpan={5} className="p-8 text-center text-gray-400">
                   No projects found
                 </td>
               </tr>
@@ -353,7 +353,7 @@ export const MasterDataSectionPage: React.FC = () => {
             ))}
             {employeesData.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">
+                <td colSpan={4} className="p-8 text-center text-gray-400">
                   No employees found
                 </td>
               </tr>
@@ -393,7 +393,7 @@ export const MasterDataSectionPage: React.FC = () => {
             ))}
             {warehousesData.length === 0 && (
               <tr>
-                <td colSpan={3} className="p-8 text-center text-gray-500">
+                <td colSpan={3} className="p-8 text-center text-gray-400">
                   No warehouses found
                 </td>
               </tr>
@@ -443,7 +443,7 @@ export const MasterDataSectionPage: React.FC = () => {
                 ))}
                 {fleetData.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-400">
                       No fleet records
                     </td>
                   </tr>
@@ -481,7 +481,7 @@ export const MasterDataSectionPage: React.FC = () => {
                 ))}
                 {generatorsData.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-400">
                       No generators found
                     </td>
                   </tr>

@@ -130,11 +130,11 @@ export function AiChatWidget() {
               className="w-full text-left glass-card rounded-xl p-3 hover:bg-white/10 transition-all"
             >
               <p className="text-sm text-white truncate">{conv.title || 'Untitled'}</p>
-              <p className="text-xs text-gray-500">{conv._count?.messages ?? 0} messages</p>
+              <p className="text-xs text-gray-400">{conv._count?.messages ?? 0} messages</p>
             </button>
           ))}
           {conversations.length === 0 && (
-            <p className="text-gray-500 text-sm text-center pt-10">No conversations yet</p>
+            <p className="text-gray-400 text-sm text-center pt-10">No conversations yet</p>
           )}
         </div>
       ) : (
@@ -142,9 +142,9 @@ export function AiChatWidget() {
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {allMessages.length === 0 && (
               <div className="text-center pt-10">
-                <MessageCircle size={32} className="text-gray-600 mx-auto mb-3" />
-                <p className="text-sm text-gray-500">Ask me anything about your supply chain data.</p>
-                <p className="text-xs text-gray-600 mt-2">e.g., "How many GRNs were created this month?"</p>
+                <MessageCircle size={32} className="text-gray-400 mx-auto mb-3" />
+                <p className="text-sm text-gray-400">Ask me anything about your supply chain data.</p>
+                <p className="text-xs text-gray-400 mt-2">e.g., "How many GRNs were created this month?"</p>
               </div>
             )}
             {allMessages.map(msg => (
@@ -157,13 +157,13 @@ export function AiChatWidget() {
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                   {msg.generatedQuery && (
                     <details className="mt-2">
-                      <summary className="text-xs text-gray-500 cursor-pointer">SQL Query</summary>
+                      <summary className="text-xs text-gray-400 cursor-pointer">SQL Query</summary>
                       <pre className="text-xs bg-black/30 rounded p-2 mt-1 overflow-x-auto">{msg.generatedQuery}</pre>
                     </details>
                   )}
                   {msg.resultData != null && (
                     <details className="mt-2">
-                      <summary className="text-xs text-gray-500 cursor-pointer">Raw Data</summary>
+                      <summary className="text-xs text-gray-400 cursor-pointer">Raw Data</summary>
                       <pre className="text-xs bg-black/30 rounded p-2 mt-1 max-h-32 overflow-auto">
                         {JSON.stringify(msg.resultData, null, 2)}
                       </pre>

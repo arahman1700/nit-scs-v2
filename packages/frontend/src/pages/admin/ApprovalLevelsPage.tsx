@@ -152,7 +152,7 @@ export const ApprovalLevelsPage: React.FC = () => {
             </select>
             <ChevronDown
               size={16}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
             />
           </div>
         </div>
@@ -181,7 +181,7 @@ export const ApprovalLevelsPage: React.FC = () => {
                 chainPreview.data.data as { steps: Array<{ level: number; approverRole: string; slaHours: number }> }
               ).steps.map((step, i) => (
                 <React.Fragment key={step.level}>
-                  {i > 0 && <span className="text-gray-600">→</span>}
+                  {i > 0 && <span className="text-gray-400">→</span>}
                   <span className="text-xs bg-nesma-primary/20 text-nesma-secondary px-2 py-1 rounded border border-nesma-primary/30">
                     L{step.level}: {getRoleLabel(step.approverRole)} ({step.slaHours}h)
                   </span>
@@ -204,7 +204,7 @@ export const ApprovalLevelsPage: React.FC = () => {
             <GitBranch size={18} className="text-nesma-secondary" />
             <div>
               <h3 className="text-sm font-bold text-white">{selectedLabel}</h3>
-              <p className="text-xs text-gray-500">{filteredWorkflows.length} level(s) configured</p>
+              <p className="text-xs text-gray-400">{filteredWorkflows.length} level(s) configured</p>
             </div>
           </div>
           <button
@@ -242,7 +242,7 @@ export const ApprovalLevelsPage: React.FC = () => {
             <tbody className="divide-y divide-white/5">
               {isLoading && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="p-8 text-center text-gray-400">
                     Loading...
                   </td>
                 </tr>
@@ -414,8 +414,8 @@ export const ApprovalLevelsPage: React.FC = () => {
 
               {!isLoading && filteredWorkflows.length === 0 && !showAddRow && (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
-                    <GitBranch size={24} className="mx-auto mb-2 text-gray-600" />
+                  <td colSpan={6} className="p-8 text-center text-gray-400">
+                    <GitBranch size={24} className="mx-auto mb-2 text-gray-400" />
                     <p>No approval levels configured for {selectedLabel}</p>
                     <button
                       onClick={() => setShowAddRow(true)}

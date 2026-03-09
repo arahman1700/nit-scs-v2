@@ -97,26 +97,26 @@ const CompletenessCard: React.FC<{ shipmentId: string }> = ({ shipmentId }) => {
       <div className="grid grid-cols-4 gap-2 mb-4">
         <div className="text-center p-2 bg-white/5 rounded-lg border border-white/10">
           <div className="text-lg font-bold text-white">{completeness.total}</div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Total</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider">Total</div>
         </div>
         <div className="text-center p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
           <div className="text-lg font-bold text-emerald-400">{completeness.verified}</div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Verified</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider">Verified</div>
         </div>
         <div className="text-center p-2 bg-white/5 rounded-lg border border-white/10">
           <div className="text-lg font-bold text-gray-300">{completeness.pending}</div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Pending</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider">Pending</div>
         </div>
         <div className="text-center p-2 bg-red-500/5 rounded-lg border border-red-500/10">
           <div className="text-lg font-bold text-red-400">{completeness.rejected}</div>
-          <div className="text-[10px] text-gray-500 uppercase tracking-wider">Rejected</div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider">Rejected</div>
         </div>
       </div>
 
       {/* Required documents checklist */}
       {completeness.requiredDocuments.length > 0 && (
         <div className="space-y-1.5">
-          <h4 className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-2">Required Documents</h4>
+          <h4 className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">Required Documents</h4>
           {completeness.requiredDocuments.map((doc, idx) => (
             <div key={idx} className="flex items-center justify-between px-3 py-2 bg-white/[0.03] rounded-lg">
               <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ const DocumentDetailModal: React.FC<DocumentDetailModalProps> = ({ documentId, o
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           ) : !doc ? (
             <p className="text-center text-gray-400 py-12">Document not found.</p>
@@ -457,10 +457,10 @@ export const CustomsDocumentsPage: React.FC = () => {
       {!shipmentFilter ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <FileText size={28} className="text-gray-600" />
+            <FileText size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-400">Enter a Shipment ID to view documents</p>
-          <p className="text-xs text-gray-500 mt-1">Filter by shipment to see associated customs documents</p>
+          <p className="text-xs text-gray-400 mt-1">Filter by shipment to see associated customs documents</p>
         </div>
       ) : isLoading ? (
         <div className="space-y-3">
@@ -471,10 +471,10 @@ export const CustomsDocumentsPage: React.FC = () => {
       ) : filtered.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <FileText size={28} className="text-gray-600" />
+            <FileText size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-400">No customs documents found</p>
-          <p className="text-xs text-gray-500 mt-1">No documents match the current filters</p>
+          <p className="text-xs text-gray-400 mt-1">No documents match the current filters</p>
         </div>
       ) : (
         <div className="glass-card rounded-2xl border border-white/10 overflow-hidden">

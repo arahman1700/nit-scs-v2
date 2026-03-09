@@ -77,7 +77,7 @@ export const Pagination: React.FC<PaginationProps> = memo(
               page === -1 ? (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="w-8 h-8 flex items-center justify-center text-gray-500 text-xs"
+                  className="w-8 h-8 flex items-center justify-center text-gray-400 text-xs"
                 >
                   ...
                 </span>

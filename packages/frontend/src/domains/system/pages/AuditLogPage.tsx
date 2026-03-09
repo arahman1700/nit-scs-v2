@@ -153,21 +153,21 @@ export const AuditLogPage: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-white font-medium">{log.userName}</span>
-                        <span className="text-gray-500">performed</span>
+                        <span className="text-gray-400">performed</span>
                         <span className="text-nesma-secondary font-medium">{log.action}</span>
-                        <span className="text-gray-500">on</span>
+                        <span className="text-gray-400">on</span>
                         <span className="text-gray-300">{log.entityType}</span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-400 mt-1">
                         {log.entityId} {log.entityName && `\u2014 ${log.entityName}`}
                       </p>
                       {log.changes && log.changes.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {log.changes.map((change, i) => (
                             <div key={i} className="flex items-center gap-2 text-xs">
-                              <span className="text-gray-500">{change.field}:</span>
+                              <span className="text-gray-400">{change.field}:</span>
                               <span className="text-red-400 line-through">{String(change.oldValue)}</span>
-                              <ChevronRight size={12} className="text-gray-600" />
+                              <ChevronRight size={12} className="text-gray-400" />
                               <span className="text-emerald-400">{String(change.newValue)}</span>
                             </div>
                           ))}
@@ -175,12 +175,12 @@ export const AuditLogPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">{formatRelativeTime(log.timestamp)}</span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap">{formatRelativeTime(log.timestamp)}</span>
                 </div>
               </div>
             ))}
             {logs.length === 0 && (
-              <div className="px-6 py-12 text-center text-gray-500">
+              <div className="px-6 py-12 text-center text-gray-400">
                 <FileText size={32} className="mx-auto mb-2 opacity-50" />
                 <p>No audit log entries found</p>
               </div>

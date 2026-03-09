@@ -150,13 +150,13 @@ export const FormWizard: React.FC<FormWizardProps> = ({
                           ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
                           : isCurrent
                             ? 'bg-nesma-primary text-white shadow-lg shadow-nesma-primary/30'
-                            : 'bg-white/10 text-gray-500'
+                            : 'bg-white/10 text-gray-400'
                       }`}
                     >
                       {isCompleted ? (
                         <Check size={18} />
                       ) : StepIcon ? (
-                        <StepIcon size={18} className={isCurrent ? 'text-white' : 'text-gray-500'} />
+                        <StepIcon size={18} className={isCurrent ? 'text-white' : 'text-gray-400'} />
                       ) : (
                         idx + 1
                       )}
@@ -165,7 +165,7 @@ export const FormWizard: React.FC<FormWizardProps> = ({
                   {/* Label - hidden on mobile */}
                   <span
                     className={`hidden md:block text-xs transition-all duration-300 max-w-[100px] text-center leading-tight ${
-                      isCurrent ? 'text-white font-medium' : isCompleted ? 'text-emerald-400' : 'text-gray-500'
+                      isCurrent ? 'text-white font-medium' : isCompleted ? 'text-emerald-400' : 'text-gray-400'
                     }`}
                   >
                     {step.label}
@@ -227,7 +227,7 @@ export const FormWizard: React.FC<FormWizardProps> = ({
 
         {/* Step counter + Next/Submit */}
         <div className="flex items-center gap-4">
-          <span className="hidden md:block text-xs text-gray-500">
+          <span className="hidden md:block text-xs text-gray-400">
             Step {currentStep + 1} of {steps.length}
           </span>
 

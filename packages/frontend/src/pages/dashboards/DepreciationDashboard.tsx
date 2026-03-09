@@ -19,7 +19,7 @@ export const DepreciationDashboard: React.FC = () => {
               </div>
               <p className="text-xs text-gray-400">Total Asset Value</p>
             </div>
-            <p className="text-2xl font-bold text-gray-500">&mdash;</p>
+            <p className="text-2xl font-bold text-gray-400">&mdash;</p>
           </div>
 
           <div className="glass-card p-4 rounded-xl">
@@ -29,7 +29,7 @@ export const DepreciationDashboard: React.FC = () => {
               </div>
               <p className="text-xs text-gray-400">Accumulated Depreciation</p>
             </div>
-            <p className="text-2xl font-bold text-gray-500">&mdash;</p>
+            <p className="text-2xl font-bold text-gray-400">&mdash;</p>
           </div>
 
           <div className="glass-card p-4 rounded-xl">
@@ -39,7 +39,7 @@ export const DepreciationDashboard: React.FC = () => {
               </div>
               <p className="text-xs text-gray-400">Net Book Value</p>
             </div>
-            <p className="text-2xl font-bold text-gray-500">&mdash;</p>
+            <p className="text-2xl font-bold text-gray-400">&mdash;</p>
           </div>
 
           <div className="glass-card p-4 rounded-xl">
@@ -49,7 +49,7 @@ export const DepreciationDashboard: React.FC = () => {
               </div>
               <p className="text-xs text-gray-400">Monthly Depreciation</p>
             </div>
-            <p className="text-2xl font-bold text-gray-500">&mdash;</p>
+            <p className="text-2xl font-bold text-gray-400">&mdash;</p>
           </div>
         </div>
 
@@ -88,10 +88,10 @@ export const DepreciationDashboard: React.FC = () => {
               </thead>
               <tbody className="text-white">
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-gray-500">
-                    <TrendingDown className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+                  <td colSpan={7} className="py-16 text-center text-gray-400">
+                    <TrendingDown className="w-10 h-10 mx-auto mb-3 text-gray-400" />
                     <p className="text-sm">No depreciation entries yet</p>
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-400 mt-1">
                       Entries will appear once the Fixed Assets module is connected.
                     </p>
                   </td>

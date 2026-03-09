@@ -36,7 +36,7 @@ export const StatusCountWidget: React.FC<StatusCountWidgetProps> = ({ widget }) 
   const items = (data?.data as { name: string; value: number }[] | undefined) ?? [];
 
   if (items.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No data available</div>;
   }
 
   const total = items.reduce((sum, item) => sum + (item.value || 0), 0);

@@ -190,7 +190,7 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedIds, entit
         {result && (
           <span className="text-xs whitespace-nowrap ml-2">
             {result.succeeded > 0 && <span className="text-emerald-400">{result.succeeded} succeeded</span>}
-            {result.succeeded > 0 && result.failed > 0 && <span className="text-gray-500"> / </span>}
+            {result.succeeded > 0 && result.failed > 0 && <span className="text-gray-400"> / </span>}
             {result.failed > 0 && <span className="text-red-400">{result.failed} failed</span>}
           </span>
         )}

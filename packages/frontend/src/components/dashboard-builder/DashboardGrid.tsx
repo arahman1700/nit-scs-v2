@@ -52,7 +52,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
 
   if (sorted.length === 0 && !editMode) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="flex items-center justify-center h-64 text-gray-400">
         No widgets added yet. Enter edit mode to add widgets.
       </div>
     );

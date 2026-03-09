@@ -60,7 +60,7 @@ export const DynamicTypeListPage: React.FC = () => {
       ) : (
         Object.entries(grouped).map(([category, categoryTypes]) => (
           <div key={category}>
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3">{category}</h2>
+            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">{category}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categoryTypes.map(type => (
                 <div
@@ -75,17 +75,17 @@ export const DynamicTypeListPage: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-white font-semibold">{type.name}</h3>
-                        <p className="text-xs text-gray-500 font-mono">{type.code}</p>
+                        <p className="text-xs text-gray-400 font-mono">{type.code}</p>
                       </div>
                     </div>
                     {type.isActive ? (
                       <ToggleRight size={20} className="text-emerald-400" />
                     ) : (
-                      <ToggleLeft size={20} className="text-gray-500" />
+                      <ToggleLeft size={20} className="text-gray-400" />
                     )}
                   </div>
                   {type.description && <p className="text-sm text-gray-400 mb-3 line-clamp-2">{type.description}</p>}
-                  <div className="flex items-center justify-between text-xs text-gray-500 mt-4 pt-3 border-t border-white/5">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mt-4 pt-3 border-t border-white/5">
                     <span>{type._count?.fields ?? 0} fields</span>
                     <span>{type._count?.documents ?? 0} documents</span>
                     <span>v{type.version}</span>
@@ -99,7 +99,7 @@ export const DynamicTypeListPage: React.FC = () => {
 
       {!isLoading && types.length === 0 && (
         <div className="glass-card rounded-2xl p-12 text-center">
-          <FileType2 size={48} className="mx-auto text-gray-600 mb-4" />
+          <FileType2 size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-white mb-2">No Document Types Yet</h3>
           <p className="text-sm text-gray-400 mb-6">Create your first custom document type to get started</p>
           <button onClick={() => navigate('/admin/dynamic-types/new')} className="btn-primary">

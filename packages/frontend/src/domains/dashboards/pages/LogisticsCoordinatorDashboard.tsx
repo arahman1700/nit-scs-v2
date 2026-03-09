@@ -192,7 +192,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-16">No job order data</p>
+              <p className="text-gray-400 text-sm text-center py-16">No job order data</p>
             )}
           </div>
           <div className="glass-card rounded-2xl p-6 border border-white/10">
@@ -200,15 +200,15 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                 <p className="text-3xl font-bold text-emerald-400">{slaFlat.onTrack}%</p>
-                <p className="text-xs text-gray-500 mt-1">On Track</p>
+                <p className="text-xs text-gray-400 mt-1">On Track</p>
               </div>
               <div className="text-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
                 <p className="text-3xl font-bold text-amber-400">{slaFlat.atRisk}%</p>
-                <p className="text-xs text-gray-500 mt-1">At Risk</p>
+                <p className="text-xs text-gray-400 mt-1">At Risk</p>
               </div>
               <div className="text-center p-4 bg-red-500/10 rounded-xl border border-red-500/20">
                 <p className="text-3xl font-bold text-red-400">{slaFlat.overdue}%</p>
-                <p className="text-xs text-gray-500 mt-1">Overdue</p>
+                <p className="text-xs text-gray-400 mt-1">Overdue</p>
               </div>
             </div>
           </div>
@@ -219,7 +219,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
       {activeTab === 'jobs' && (
         <div className="space-y-4">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -252,7 +252,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
                 ))}
                 {filteredJOs.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                       No job orders
                     </td>
                   </tr>
@@ -290,7 +290,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               ))}
               {allShipments.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No shipments
                   </td>
                 </tr>
@@ -327,7 +327,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               ))}
               {allGPs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No gate passes
                   </td>
                 </tr>
@@ -364,7 +364,7 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
               ))}
               {allMrrvs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No GRNs
                   </td>
                 </tr>

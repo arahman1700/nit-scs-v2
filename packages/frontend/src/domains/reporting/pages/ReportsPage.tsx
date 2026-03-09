@@ -91,9 +91,9 @@ const KpiCard: React.FC<{
   sub?: string;
 }> = ({ label, value, color, sub }) => (
   <div className="glass-card rounded-xl p-5 border border-white/10">
-    <p className="text-xs text-gray-500 uppercase tracking-wider">{label}</p>
+    <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
     <p className={`text-2xl font-bold mt-1 ${color || 'text-white'}`}>{value}</p>
-    {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
+    {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
   </div>
 );
 
@@ -112,7 +112,7 @@ const DataTable: React.FC<{ columns: string[]; rows: Record<string, unknown>[] }
       <thead>
         <tr className="border-b border-white/10">
           {columns.map(col => (
-            <th key={col} className="text-left text-xs text-gray-500 uppercase tracking-wider py-3 px-3">
+            <th key={col} className="text-left text-xs text-gray-400 uppercase tracking-wider py-3 px-3">
               {col}
             </th>
           ))}
@@ -121,7 +121,7 @@ const DataTable: React.FC<{ columns: string[]; rows: Record<string, unknown>[] }
       <tbody>
         {rows.length === 0 ? (
           <tr>
-            <td colSpan={columns.length} className="text-center text-gray-500 py-8">
+            <td colSpan={columns.length} className="text-center text-gray-400 py-8">
               No data available. Click "Generate Report" to load data.
             </td>
           </tr>
@@ -530,7 +530,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="reportDateFrom" className="text-xs text-gray-500 uppercase tracking-wider">
+            <label htmlFor="reportDateFrom" className="text-xs text-gray-400 uppercase tracking-wider">
               From
             </label>
             <input
@@ -543,7 +543,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="reportDateTo" className="text-xs text-gray-500 uppercase tracking-wider">
+            <label htmlFor="reportDateTo" className="text-xs text-gray-400 uppercase tracking-wider">
               To
             </label>
             <input
@@ -556,7 +556,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="reportProject" className="text-xs text-gray-500 uppercase tracking-wider">
+            <label htmlFor="reportProject" className="text-xs text-gray-400 uppercase tracking-wider">
               Project
             </label>
             <select
@@ -577,7 +577,7 @@ export const ReportsPage: React.FC = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label htmlFor="reportWarehouse" className="text-xs text-gray-500 uppercase tracking-wider">
+            <label htmlFor="reportWarehouse" className="text-xs text-gray-400 uppercase tracking-wider">
               Warehouse
             </label>
             <select

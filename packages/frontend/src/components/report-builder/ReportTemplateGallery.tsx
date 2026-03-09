@@ -68,7 +68,7 @@ export const ReportTemplateGallery: React.FC<ReportTemplateGalleryProps> = ({ on
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-white">Report Templates</h2>
-        <span className="text-xs text-gray-500">{templates.length} templates</span>
+        <span className="text-xs text-gray-400">{templates.length} templates</span>
       </div>
 
       {/* Category filter pills */}
@@ -130,7 +130,7 @@ export const ReportTemplateGallery: React.FC<ReportTemplateGalleryProps> = ({ on
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-8 text-gray-500 text-sm">No templates in this category.</div>
+        <div className="text-center py-8 text-gray-400 text-sm">No templates in this category.</div>
       )}
     </div>
   );

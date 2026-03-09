@@ -185,7 +185,7 @@ export const MaterialSectionPage: React.FC = () => {
                   ))}
                   {grnRows.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center text-gray-500 py-8">
+                      <td colSpan={5} className="text-center text-gray-400 py-8">
                         No receipts
                       </td>
                     </tr>
@@ -288,10 +288,10 @@ export const MaterialSectionPage: React.FC = () => {
             <div className="flex items-center gap-3">
               <Package className="w-5 h-5 text-nesma-secondary" />
               <h3 className="text-white font-semibold">Non-Moving Materials</h3>
-              <span className="text-xs text-gray-500">Items with no movement beyond threshold</span>
+              <span className="text-xs text-gray-400">Items with no movement beyond threshold</span>
             </div>
             <div className="glass-card rounded-2xl p-8 text-center">
-              <Package className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+              <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
               <h4 className="text-white font-medium mb-2">Non-Moving Analysis</h4>
               <p className="text-gray-400 text-sm mb-4">
                 Identifies materials with no receipt or issuance activity exceeding the configured threshold period
@@ -300,15 +300,15 @@ export const MaterialSectionPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-6">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-amber-400">0</p>
-                  <p className="text-gray-500 text-xs">90+ Days</p>
+                  <p className="text-gray-400 text-xs">90+ Days</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-orange-400">0</p>
-                  <p className="text-gray-500 text-xs">180+ Days</p>
+                  <p className="text-gray-400 text-xs">180+ Days</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-red-400">0</p>
-                  <p className="text-gray-500 text-xs">365+ Days</p>
+                  <p className="text-gray-400 text-xs">365+ Days</p>
                 </div>
               </div>
             </div>

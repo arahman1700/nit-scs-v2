@@ -397,7 +397,7 @@ export function CustomDataSourcePage() {
                   <p className="text-white font-medium">{src.name}</p>
                   <p className="text-sm text-gray-400">
                     {src.entityType} &middot; {src.aggregation} &middot; {src.outputType}
-                    <span className="text-gray-500 ml-2">({src.sourceKey})</span>
+                    <span className="text-gray-400 ml-2">({src.sourceKey})</span>
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

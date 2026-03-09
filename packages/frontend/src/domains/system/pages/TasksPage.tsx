@@ -79,7 +79,7 @@ const TaskCard: React.FC<{ task: Task; isDragOverlay?: boolean }> = ({ task, isD
         <h4 className="font-semibold text-gray-100 text-sm leading-snug line-clamp-2 group-hover:text-nesma-secondary transition-colors flex-1">
           {task.title}
         </h4>
-        <GripVertical size={14} className="text-gray-600 flex-shrink-0 ml-2 mt-0.5" />
+        <GripVertical size={14} className="text-gray-400 flex-shrink-0 ml-2 mt-0.5" />
       </div>
 
       <div className="flex items-center gap-2 mb-3">
@@ -94,11 +94,11 @@ const TaskCard: React.FC<{ task: Task; isDragOverlay?: boolean }> = ({ task, isD
             <span className="truncate max-w-[120px]">{task.assignee.fullName}</span>
           </div>
         ) : (
-          <span className="text-[10px] text-gray-600">Unassigned</span>
+          <span className="text-[10px] text-gray-400">Unassigned</span>
         )}
 
         {task.dueDate && (
-          <div className="flex items-center gap-1 text-[10px] text-gray-500">
+          <div className="flex items-center gap-1 text-[10px] text-gray-400">
             <Calendar size={10} />
             <span>{new Date(task.dueDate).toLocaleDateString()}</span>
           </div>
@@ -141,7 +141,7 @@ const KanbanColumn: React.FC<{
 
         {tasks.length === 0 && (
           <div
-            className={`h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl min-h-[120px] transition-colors ${isOver ? 'border-nesma-secondary/40 text-nesma-secondary' : 'border-white/5 text-gray-600'}`}
+            className={`h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl min-h-[120px] transition-colors ${isOver ? 'border-nesma-secondary/40 text-nesma-secondary' : 'border-white/5 text-gray-400'}`}
           >
             <span className="text-xs opacity-50 font-medium">Drop tasks here</span>
           </div>
@@ -220,7 +220,7 @@ const CreateTaskModal: React.FC<{
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-white">Create New Task</h2>
-            <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-1">
               <X size={18} />
             </button>
           </div>
@@ -664,8 +664,8 @@ export const TasksPage: React.FC = () => {
                 ) : (
                   <tr>
                     <td colSpan={6} className="py-12 text-center">
-                      <ClipboardList size={40} className="mx-auto text-gray-600 mb-3" />
-                      <p className="text-gray-500 text-sm">No tasks found</p>
+                      <ClipboardList size={40} className="mx-auto text-gray-400 mb-3" />
+                      <p className="text-gray-400 text-sm">No tasks found</p>
                     </td>
                   </tr>
                 )}

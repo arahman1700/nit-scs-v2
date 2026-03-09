@@ -87,7 +87,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white truncate">{uploadedFile.name}</p>
-              <p className="text-xs text-gray-500">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
+              <p className="text-xs text-gray-400">{(uploadedFile.size / 1024).toFixed(1)} KB</p>
             </div>
             {!disabled && (
               <button
@@ -137,7 +137,7 @@ export const FormField: React.FC<FormFieldProps> = ({
             <span className="block text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
               {isUploading ? 'Uploading...' : 'Drop files here or click to browse'}
             </span>
-            <span className="text-xs text-gray-500 mt-1 block">PDF, PNG, JPG, Excel, Word, CSV -- Max 10MB</span>
+            <span className="text-xs text-gray-400 mt-1 block">PDF, PNG, JPG, Excel, Word, CSV -- Max 10MB</span>
             {uploadError && <span className="text-xs text-red-400 mt-2 block">{uploadError}</span>}
           </label>
         )

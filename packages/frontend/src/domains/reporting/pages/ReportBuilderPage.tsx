@@ -125,7 +125,7 @@ export const ReportBuilderPage: React.FC = () => {
   function renderPreview() {
     if (!reportResult) {
       return (
-        <div className="flex items-center justify-center h-full text-gray-500">
+        <div className="flex items-center justify-center h-full text-gray-400">
           <div className="text-center">
             <FileBarChart size={48} className="mx-auto mb-3 opacity-30" />
             <p>Configure and run your report to see results</p>
@@ -161,7 +161,7 @@ export const ReportBuilderPage: React.FC = () => {
               ))}
             </tbody>
           </table>
-          <div className="text-xs text-gray-500 mt-3 px-3">{reportResult.totalCount} total results</div>
+          <div className="text-xs text-gray-400 mt-3 px-3">{reportResult.totalCount} total results</div>
         </div>
       );
     }
@@ -236,7 +236,7 @@ export const ReportBuilderPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-white">Report Builder</h1>
-            <p className="text-xs text-gray-500">Create custom reports with filters and visualizations</p>
+            <p className="text-xs text-gray-400">Create custom reports with filters and visualizations</p>
           </div>
         </div>
 
@@ -346,7 +346,7 @@ export const ReportBuilderPage: React.FC = () => {
               placeholder="Report name..."
               autoFocus
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none mb-4"
+                placeholder:text-gray-400 focus:border-nesma-secondary/50 focus:outline-none mb-4"
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
             />
             <div className="flex justify-end gap-3">

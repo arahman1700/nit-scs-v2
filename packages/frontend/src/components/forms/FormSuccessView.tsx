@@ -40,7 +40,7 @@ export const FormSuccessView: React.FC<FormSuccessViewProps> = ({
         <div className="glass-card px-6 py-3 rounded-xl mb-6">
           <span className="text-gray-400 text-sm">Total Value: </span>
           <span className="text-nesma-secondary font-bold text-xl">{totalValue.toLocaleString()} SAR</span>
-          <span className="text-gray-500 text-xs block mt-1">{approvalInfo.level}</span>
+          <span className="text-gray-400 text-xs block mt-1">{approvalInfo.level}</span>
         </div>
       )}
       <div className="flex gap-4">

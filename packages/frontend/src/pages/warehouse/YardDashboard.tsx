@@ -137,7 +137,7 @@ const ScheduleModal: React.FC<{
       <div className="glass-card rounded-2xl p-6 w-full max-w-lg border border-white/10 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold text-white">Schedule Appointment</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -312,7 +312,7 @@ const CheckInTruckModal: React.FC<{
       <div className="glass-card rounded-2xl p-6 w-full max-w-md border border-white/10">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold text-white">Check-in Truck</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -560,7 +560,7 @@ export const YardDashboard: React.FC = () => {
 
       {!selectedWarehouse && (
         <div className="glass-card rounded-2xl p-12 text-center border border-white/5">
-          <MapPin className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-400">Select a warehouse to view yard status</p>
         </div>
       )}
@@ -575,7 +575,7 @@ export const YardDashboard: React.FC = () => {
               Dock Doors
             </h2>
             {dockDoors.length === 0 ? (
-              <p className="text-sm text-gray-500">No dock doors configured for this warehouse.</p>
+              <p className="text-sm text-gray-400">No dock doors configured for this warehouse.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {dockDoors.map(door => {
@@ -603,7 +603,7 @@ export const YardDashboard: React.FC = () => {
                         </div>
                       )}
                       {door.status === 'maintenance' && (
-                        <Wrench className="absolute top-3 right-3 w-3.5 h-3.5 text-gray-500" />
+                        <Wrench className="absolute top-3 right-3 w-3.5 h-3.5 text-gray-400" />
                       )}
                     </div>
                   );
@@ -626,7 +626,7 @@ export const YardDashboard: React.FC = () => {
                 )}
               </h2>
               {upcomingAppts.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4">No upcoming appointments today.</p>
+                <p className="text-sm text-gray-400 py-4">No upcoming appointments today.</p>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {upcomingAppts.map(appt => {
@@ -649,8 +649,8 @@ export const YardDashboard: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-gray-400 capitalize">{appt.appointmentType}</span>
-                            {appt.carrierName && <span className="text-xs text-gray-500">| {appt.carrierName}</span>}
-                            {appt.vehiclePlate && <span className="text-xs text-gray-500">| {appt.vehiclePlate}</span>}
+                            {appt.carrierName && <span className="text-xs text-gray-400">| {appt.carrierName}</span>}
+                            {appt.vehiclePlate && <span className="text-xs text-gray-400">| {appt.vehiclePlate}</span>}
                           </div>
                         </div>
                         <div className="flex items-center gap-1 ml-2">
@@ -659,6 +659,7 @@ export const YardDashboard: React.FC = () => {
                               onClick={() => checkInAppt.mutate(appt.id)}
                               className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
                               title="Check In"
+                              aria-label="Check in"
                             >
                               <LogIn className="w-3.5 h-3.5" />
                             </button>
@@ -668,6 +669,7 @@ export const YardDashboard: React.FC = () => {
                               onClick={() => completeAppt.mutate(appt.id)}
                               className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
                               title="Complete"
+                              aria-label="Complete"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                             </button>
@@ -677,6 +679,7 @@ export const YardDashboard: React.FC = () => {
                               onClick={() => cancelAppt.mutate(appt.id)}
                               className="p-1.5 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
                               title="Cancel"
+                              aria-label="Cancel"
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
@@ -701,7 +704,7 @@ export const YardDashboard: React.FC = () => {
                 )}
               </h2>
               {activeTrucks.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4">No trucks currently in the yard.</p>
+                <p className="text-sm text-gray-400 py-4">No trucks currently in the yard.</p>
               ) : (
                 <div className="space-y-3 max-h-80 overflow-y-auto">
                   {activeTrucks.map(truck => {
@@ -721,10 +724,10 @@ export const YardDashboard: React.FC = () => {
                             </span>
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <Clock className="w-3 h-3 text-gray-500" />
+                            <Clock className="w-3 h-3 text-gray-400" />
                             <span className="text-xs text-gray-400">{getDuration(truck.checkInAt)}</span>
-                            <span className="text-xs text-gray-500 capitalize">| {truck.purpose}</span>
-                            {truck.driverName && <span className="text-xs text-gray-500">| {truck.driverName}</span>}
+                            <span className="text-xs text-gray-400 capitalize">| {truck.purpose}</span>
+                            {truck.driverName && <span className="text-xs text-gray-400">| {truck.driverName}</span>}
                             {truck.dockDoor && (
                               <span className="text-xs text-amber-400">| Dock #{truck.dockDoor.doorNumber}</span>
                             )}
@@ -741,6 +744,7 @@ export const YardDashboard: React.FC = () => {
                               }}
                               className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-colors"
                               title="Assign Dock"
+                              aria-label="Assign dock"
                             >
                               <MapPin className="w-3.5 h-3.5" />
                             </button>
@@ -749,6 +753,7 @@ export const YardDashboard: React.FC = () => {
                             onClick={() => checkOutTruck.mutate(truck.id)}
                             className="p-1.5 rounded-lg bg-gray-500/20 text-gray-400 hover:bg-gray-500/30 transition-colors"
                             title="Check Out"
+                            aria-label="Check out"
                           >
                             <LogOut className="w-3.5 h-3.5" />
                           </button>
@@ -768,7 +773,7 @@ export const YardDashboard: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-white/5">
           <h2 className="text-lg font-semibold text-white mb-4">Today's Appointments</h2>
           {todayAppointments.length === 0 ? (
-            <p className="text-sm text-gray-500 py-8 text-center">No appointments scheduled for today.</p>
+            <p className="text-sm text-gray-400 py-8 text-center">No appointments scheduled for today.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -843,7 +848,7 @@ export const YardDashboard: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-white/5">
           <h2 className="text-lg font-semibold text-white mb-4">Active Trucks in Yard</h2>
           {activeTrucks.length === 0 ? (
-            <p className="text-sm text-gray-500 py-8 text-center">No trucks currently in the yard.</p>
+            <p className="text-sm text-gray-400 py-8 text-center">No trucks currently in the yard.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -1008,7 +1013,7 @@ export const YardDashboard: React.FC = () => {
                   });
 
               if (chartData.length === 0) {
-                return <p className="text-sm text-gray-500 py-8 text-center">No dock door data available.</p>;
+                return <p className="text-sm text-gray-400 py-8 text-center">No dock door data available.</p>;
               }
 
               return (

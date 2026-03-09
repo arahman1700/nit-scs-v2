@@ -162,7 +162,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               {v}
               <button
                 onClick={() => onVariablesChange(variables.filter((_, idx) => idx !== i))}
-                className="text-gray-500 hover:text-red-400"
+                className="text-gray-400 hover:text-red-400"
               >
                 x
               </button>
@@ -173,7 +173,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               const name = prompt('Variable name (without braces):');
               if (name) addVariable(name.trim());
             }}
-            className="text-xs px-2 py-1 rounded-lg bg-white/5 text-gray-500 hover:text-white transition-colors flex items-center gap-1"
+            className="text-xs px-2 py-1 rounded-lg bg-white/5 text-gray-400 hover:text-white transition-colors flex items-center gap-1"
           >
             <Plus size={10} /> Add
           </button>

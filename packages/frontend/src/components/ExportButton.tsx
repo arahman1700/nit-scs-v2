@@ -96,7 +96,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
                   </div>
                   <div>
                     <p className="font-medium">Export PDF</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">Download as PDF document</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Download as PDF document</p>
                   </div>
                 </button>
                 <div className="mx-4 h-px bg-white/5" />
@@ -115,7 +115,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
                   </div>
                   <div>
                     <p className="font-medium">Export CSV</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
+                    <p className="text-[10px] text-gray-400 mt-0.5">
                       {rowCount !== undefined ? `${rowCount} row${rowCount !== 1 ? 's' : ''}` : 'Spreadsheet format'}
                     </p>
                   </div>
@@ -133,7 +133,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
               </div>
               <div>
                 <p className="font-medium">Print</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">Browser print dialog</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Browser print dialog</p>
               </div>
             </button>
           </div>

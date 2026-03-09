@@ -119,7 +119,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({ category, onClick }) => {
         {/* Arrow */}
         <ChevronRight
           size={20}
-          className="text-gray-600 group-hover:text-nesma-secondary group-hover:translate-x-1 transition-all duration-300 shrink-0 mt-1"
+          className="text-gray-400 group-hover:text-nesma-secondary group-hover:translate-x-1 transition-all duration-300 shrink-0 mt-1"
         />
       </div>
     </button>
@@ -176,7 +176,7 @@ export const AdminSettingsHub: React.FC = () => {
 
       {/* Footer hint */}
       <div className="glass-card rounded-2xl p-4">
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-gray-400 text-center">
           Changes to system settings may require a page refresh to take effect across all users. Critical changes are
           logged in the audit trail.
         </p>

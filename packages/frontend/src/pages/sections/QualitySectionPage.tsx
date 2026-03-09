@@ -177,7 +177,7 @@ export const QualitySectionPage: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-12">No return data yet</p>
+              <p className="text-gray-400 text-sm text-center py-12">No return data yet</p>
             )}
           </div>
 
@@ -205,7 +205,7 @@ export const QualitySectionPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-12">No inspections queued</p>
+              <p className="text-gray-400 text-sm text-center py-12">No inspections queued</p>
             )}
           </div>
         </div>
@@ -268,7 +268,7 @@ export const QualitySectionPage: React.FC = () => {
             })}
             {mrvData.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500">
+                <td colSpan={6} className="p-8 text-center text-gray-400">
                   No return records found
                 </td>
               </tr>
@@ -292,7 +292,7 @@ export const QualitySectionPage: React.FC = () => {
       <RouteErrorBoundary label="Inspections">
         <Suspense
           fallback={
-            <div className="glass-card p-12 rounded-xl text-center text-gray-500 animate-pulse">
+            <div className="glass-card p-12 rounded-xl text-center text-gray-400 animate-pulse">
               Loading inspections...
             </div>
           }
@@ -333,7 +333,7 @@ export const QualitySectionPage: React.FC = () => {
             })}
             {osdData.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500">
+                <td colSpan={6} className="p-8 text-center text-gray-400">
                   No DR reports found
                 </td>
               </tr>

@@ -164,7 +164,7 @@ const BottomSheet: React.FC<{
           >
             {sections.map((section, sIdx) => (
               <div key={sIdx} className="mb-4">
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em] px-1 mb-2">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em] px-1 mb-2">
                   {section.section}
                 </div>
 
@@ -195,7 +195,7 @@ const BottomSheet: React.FC<{
                 {/* Sub-groups */}
                 {section.children?.map((group, gIdx) => (
                   <div key={gIdx} className="mt-2">
-                    <div className="text-[10px] font-semibold text-gray-500 px-1 mb-1.5">{group.label}</div>
+                    <div className="text-[10px] font-semibold text-gray-400 px-1 mb-1.5">{group.label}</div>
                     <div className="grid grid-cols-3 gap-2">
                       {group.items.map((item, iIdx) => {
                         const Icon = getIcon(item.icon);
@@ -297,7 +297,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ navLinks, onMoreClic
                   key={idx}
                   onClick={handleMoreClick}
                   className={`flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative transition-colors duration-200 ${
-                    active ? 'text-nesma-secondary' : 'text-gray-500'
+                    active ? 'text-nesma-secondary' : 'text-gray-400'
                   }`}
                   aria-label="More navigation options"
                 >
@@ -319,7 +319,7 @@ export const MobileTabBar: React.FC<MobileTabBarProps> = ({ navLinks, onMoreClic
                 key={idx}
                 to={tab.path || basePath}
                 className={`flex flex-col items-center justify-center flex-1 min-w-0 py-1 relative transition-colors duration-200 ${
-                  active ? 'text-nesma-secondary' : 'text-gray-500'
+                  active ? 'text-nesma-secondary' : 'text-gray-400'
                 }`}
               >
                 {active && (

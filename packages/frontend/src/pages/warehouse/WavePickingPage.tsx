@@ -148,14 +148,14 @@ export const WavePickingPage: React.FC = () => {
 
         {detailLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
           </div>
         ) : (
           <>
             {/* Summary cards */}
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
               <div className="glass-card rounded-2xl p-4 border border-white/10">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Status</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Status</div>
                 {waveDetail && (
                   <span
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_CONFIG[waveDetail.status]?.bg ?? ''} ${STATUS_CONFIG[waveDetail.status]?.text ?? ''}`}
@@ -166,18 +166,18 @@ export const WavePickingPage: React.FC = () => {
                 )}
               </div>
               <div className="glass-card rounded-2xl p-4 border border-white/10">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Items</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Items</div>
                 <div className="text-2xl font-bold text-white">{stops.length}</div>
               </div>
               <div className="glass-card rounded-2xl p-4 border border-white/10">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Distance</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Distance</div>
                 <div className="text-2xl font-bold text-white">
                   {waveDetail?.pickPath?.totalDistance ?? 0}{' '}
                   <span className="text-sm font-normal text-gray-400">units</span>
                 </div>
               </div>
               <div className="glass-card rounded-2xl p-4 border border-white/10">
-                <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Est. Time</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Est. Time</div>
                 <div className="text-2xl font-bold text-white">
                   {waveDetail?.pickPath?.estimatedMinutes ?? 0}{' '}
                   <span className="text-sm font-normal text-gray-400">min</span>
@@ -192,7 +192,7 @@ export const WavePickingPage: React.FC = () => {
                   <div className="px-5 py-3 bg-white/5 border-b border-white/10 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-nesma-primary" />
                     <span className="text-sm font-semibold text-white">Zone {zone}</span>
-                    <span className="text-xs text-gray-500 ml-auto">{zoneStops.length} item(s)</span>
+                    <span className="text-xs text-gray-400 ml-auto">{zoneStops.length} item(s)</span>
                   </div>
                   <div className="divide-y divide-white/5">
                     {zoneStops.map(stop => (
@@ -204,13 +204,13 @@ export const WavePickingPage: React.FC = () => {
                           <div className="text-sm font-medium text-white truncate">
                             {stop.itemCode} - {stop.itemName}
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
+                          <div className="text-xs text-gray-400 mt-0.5">
                             Bin: {stop.binNumber} (Aisle {stop.aisle}, Shelf {stop.shelf})
                           </div>
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-sm font-semibold text-white">{stop.quantity}</div>
-                          <div className="text-xs text-gray-500">qty</div>
+                          <div className="text-xs text-gray-400">qty</div>
                         </div>
                       </div>
                     ))}
@@ -219,7 +219,7 @@ export const WavePickingPage: React.FC = () => {
               ))}
 
               {stops.length === 0 && (
-                <div className="text-center py-12 text-gray-500 text-sm">No pick stops found for this wave.</div>
+                <div className="text-center py-12 text-gray-400 text-sm">No pick stops found for this wave.</div>
               )}
             </div>
           </>
@@ -301,11 +301,11 @@ export const WavePickingPage: React.FC = () => {
       {/* Wave cards */}
       {wavesLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
       ) : displayedWaves.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-          <Waves className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+          <Waves className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">
             {activeTab === 'active'
               ? 'No active waves. Create a new wave to start picking.'
@@ -324,7 +324,7 @@ export const WavePickingPage: React.FC = () => {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <span className="text-xs text-gray-500 font-mono">{wave.id.slice(0, 8)}...</span>
+                    <span className="text-xs text-gray-400 font-mono">{wave.id.slice(0, 8)}...</span>
                     <div className="flex items-center gap-2 mt-1">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${sc.bg} ${sc.text}`}
@@ -334,34 +334,34 @@ export const WavePickingPage: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-nesma-primary transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-nesma-primary transition-colors" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mt-4">
                   <div>
-                    <div className="text-xs text-gray-500">MIs</div>
+                    <div className="text-xs text-gray-400">MIs</div>
                     <div className="text-lg font-semibold text-white">{wave.miIds.length}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500">Items</div>
+                    <div className="text-xs text-gray-400">Items</div>
                     <div className="text-lg font-semibold text-white">{wave.itemCount}</div>
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500">Qty</div>
+                    <div className="text-xs text-gray-400">Qty</div>
                     <div className="text-lg font-semibold text-white">{Math.round(wave.totalQuantity)}</div>
                   </div>
                 </div>
 
                 {wave.pickPath && (
                   <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5">
-                    <Route className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-xs text-gray-500">
+                    <Route className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs text-gray-400">
                       {wave.pickPath.totalDistance} dist / ~{wave.pickPath.estimatedMinutes} min
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 mt-3 text-xs text-gray-400">
                   <Clock className="w-3 h-3" />
                   {formatDate(wave.createdAt)}
                 </div>
@@ -489,10 +489,10 @@ function CreateWaveModal({ warehouses, onClose, defaultWarehouse }: CreateWaveMo
 
               {miLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 </div>
               ) : mis.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 text-sm">
+                <div className="text-center py-8 text-gray-400 text-sm">
                   No approved MIs available for this warehouse.
                 </div>
               ) : (
@@ -514,7 +514,7 @@ function CreateWaveModal({ warehouses, onClose, defaultWarehouse }: CreateWaveMo
                       />
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-white">{mi.mirvNumber}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">
+                        <div className="text-xs text-gray-400 mt-0.5">
                           {mi.project?.name ?? 'No project'} - {new Date(mi.requestDate).toLocaleDateString('en-GB')}
                         </div>
                       </div>

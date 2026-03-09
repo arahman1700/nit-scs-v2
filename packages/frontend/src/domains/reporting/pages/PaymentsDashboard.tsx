@@ -240,7 +240,7 @@ export const PaymentsDashboard: React.FC = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">No supplier data available</div>
+              <div className="flex items-center justify-center h-full text-gray-400">No supplier data available</div>
             )}
           </div>
         </div>
@@ -266,7 +266,7 @@ export const PaymentsDashboard: React.FC = () => {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">No project data available</div>
+              <div className="flex items-center justify-center h-full text-gray-400">No project data available</div>
             )}
           </div>
         </div>
@@ -313,7 +313,7 @@ export const PaymentsDashboard: React.FC = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                  <td colSpan={6} className="py-8 text-center text-gray-400">
                     No invoiced job orders found
                   </td>
                 </tr>

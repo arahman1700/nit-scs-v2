@@ -218,7 +218,7 @@ export function PutAwayRulesPage() {
                   className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-mono text-gray-500 w-6">{i + 1}.</span>
+                    <span className="text-sm font-mono text-gray-400 w-6">{i + 1}.</span>
                     <div>
                       <span className="text-white font-medium">{s.zoneCode}</span>
                       <span className="text-gray-400 ml-2 text-sm">{s.zoneName}</span>
@@ -234,7 +234,7 @@ export function PutAwayRulesPage() {
           )}
 
           {testItemId && testWarehouseId && !suggestionsLoading && suggestions.length === 0 && (
-            <p className="text-gray-500 text-sm">No zones available for this combination.</p>
+            <p className="text-gray-400 text-sm">No zones available for this combination.</p>
           )}
         </div>
       )}
@@ -278,7 +278,7 @@ export function PutAwayRulesPage() {
                         Yes
                       </span>
                     ) : (
-                      <span className="text-gray-500">No</span>
+                      <span className="text-gray-400">No</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-gray-300">{rule.maxWeight != null ? `${rule.maxWeight} kg` : '-'}</td>

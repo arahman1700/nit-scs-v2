@@ -65,10 +65,10 @@ export const PushNotificationToggle: React.FC = () => {
   if (!supported) {
     return (
       <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/5">
-        <BellOff size={16} className="text-gray-500 flex-shrink-0" />
+        <BellOff size={16} className="text-gray-400 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-gray-400">Push Notifications</p>
-          <p className="text-[10px] text-gray-600">Not supported in this browser</p>
+          <p className="text-[10px] text-gray-400">Not supported in this browser</p>
         </div>
       </div>
     );
@@ -81,7 +81,7 @@ export const PushNotificationToggle: React.FC = () => {
         <BellOff size={16} className="text-red-400 flex-shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-red-400">Push Notifications</p>
-          <p className="text-[10px] text-gray-500">Blocked by browser. Enable in browser settings.</p>
+          <p className="text-[10px] text-gray-400">Blocked by browser. Enable in browser settings.</p>
         </div>
       </div>
     );
@@ -99,12 +99,12 @@ export const PushNotificationToggle: React.FC = () => {
       ) : subscribed ? (
         <BellRing size={16} className="text-nesma-secondary flex-shrink-0" />
       ) : (
-        <BellOff size={16} className="text-gray-500 flex-shrink-0 group-hover:text-gray-300 transition-colors" />
+        <BellOff size={16} className="text-gray-400 flex-shrink-0 group-hover:text-gray-300 transition-colors" />
       )}
 
       <div className="flex-1 min-w-0 text-left">
         <p className="text-xs font-medium text-gray-300">Push Notifications</p>
-        <p className="text-[10px] text-gray-500">{loading ? 'Updating...' : subscribed ? 'Enabled' : 'Disabled'}</p>
+        <p className="text-[10px] text-gray-400">{loading ? 'Updating...' : subscribed ? 'Enabled' : 'Disabled'}</p>
       </div>
 
       {/* Toggle Switch */}

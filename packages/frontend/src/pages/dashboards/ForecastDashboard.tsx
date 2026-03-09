@@ -333,7 +333,7 @@ export const ForecastDashboard: React.FC = () => {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
+                <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
                   No demand data available for the selected warehouse
                 </div>
               )}
@@ -381,7 +381,7 @@ export const ForecastDashboard: React.FC = () => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="py-12 text-center text-gray-500">
+                          <td colSpan={3} className="py-12 text-center text-gray-400">
                             No reorder alerts - stock levels are healthy
                           </td>
                         </tr>
@@ -417,7 +417,7 @@ export const ForecastDashboard: React.FC = () => {
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
+                  <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
                     No demand data available
                   </div>
                 )}
@@ -429,7 +429,7 @@ export const ForecastDashboard: React.FC = () => {
               <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
                 <ThermometerSun className="w-5 h-5 text-cyan-400" />
                 <h3 className="font-bold text-lg text-white">Seasonal Demand Patterns</h3>
-                <span className="ml-auto text-xs text-gray-500">Index: &lt;1 = below avg, &gt;1 = above avg</span>
+                <span className="ml-auto text-xs text-gray-400">Index: &lt;1 = below avg, &gt;1 = above avg</span>
               </div>
 
               {heatmapItems.length > 0 ? (
@@ -451,7 +451,7 @@ export const ForecastDashboard: React.FC = () => {
                         <tr key={pattern.itemId} className="hover:bg-white/5">
                           <td className="py-2 pr-4">
                             <p className="font-mono text-nesma-secondary text-xs">{pattern.itemCode}</p>
-                            <p className="text-gray-500 text-[10px] truncate max-w-[140px]">{pattern.itemName}</p>
+                            <p className="text-gray-400 text-[10px] truncate max-w-[140px]">{pattern.itemName}</p>
                           </td>
                           {pattern.seasonalIndices.map(si => (
                             <td key={si.month} className="py-2 px-1 text-center">
@@ -470,7 +470,7 @@ export const ForecastDashboard: React.FC = () => {
                                   ? 'text-amber-400'
                                   : pattern.seasonalityStrength > 0.3
                                     ? 'text-cyan-400'
-                                    : 'text-gray-500'
+                                    : 'text-gray-400'
                               }`}
                             >
                               {(pattern.seasonalityStrength * 100).toFixed(0)}%
@@ -483,7 +483,7 @@ export const ForecastDashboard: React.FC = () => {
 
                   {/* Legend */}
                   <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
-                    <span className="text-[10px] text-gray-500">Low</span>
+                    <span className="text-[10px] text-gray-400">Low</span>
                     <div className="flex gap-1">
                       {[
                         'bg-blue-900/60',
@@ -497,11 +497,11 @@ export const ForecastDashboard: React.FC = () => {
                         <div key={i} className={`w-6 h-3 rounded ${c}`} />
                       ))}
                     </div>
-                    <span className="text-[10px] text-gray-500">High</span>
+                    <span className="text-[10px] text-gray-400">High</span>
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-32 text-gray-500 text-sm">
+                <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
                   {seasonalLoading
                     ? 'Computing seasonal patterns...'
                     : 'Not enough data for seasonal analysis (6+ months required)'}
@@ -514,7 +514,7 @@ export const ForecastDashboard: React.FC = () => {
         {/* ── No warehouse selected ───────────────────────────────────────── */}
         {!isLoading && !warehouseId && (
           <div className="glass-card rounded-2xl p-10 text-center border border-white/10">
-            <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+            <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-white mb-2">Select a Warehouse</h3>
             <p className="text-gray-400 text-sm">
               Choose a warehouse from the dropdown above to view demand forecasts, reorder alerts, and seasonal

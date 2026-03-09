@@ -200,7 +200,7 @@ export default function BarcodeScanner({
                 </p>
               )}
               {!isStarting && !scannedCode && (
-                <p className="text-center text-xs text-gray-500">Point the camera at a barcode or QR code</p>
+                <p className="text-center text-xs text-gray-400">Point the camera at a barcode or QR code</p>
               )}
             </>
           )}
@@ -262,19 +262,19 @@ export default function BarcodeScanner({
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     {Boolean(lookupData.barcode) && (
                       <div>
-                        <span className="text-xs text-gray-500">Barcode</span>
+                        <span className="text-xs text-gray-400">Barcode</span>
                         <p className="text-white font-mono">{String(lookupData.barcode)}</p>
                       </div>
                     )}
                     {Boolean(lookupData.itemCategory) && (
                       <div>
-                        <span className="text-xs text-gray-500">Category</span>
+                        <span className="text-xs text-gray-400">Category</span>
                         <p className="text-white">{String(lookupData.itemCategory)}</p>
                       </div>
                     )}
                     {Boolean(lookupData.unitPrice) && (
                       <div>
-                        <span className="text-xs text-gray-500">Unit Price</span>
+                        <span className="text-xs text-gray-400">Unit Price</span>
                         <p className="text-white">{Number(lookupData.unitPrice).toLocaleString()} SAR</p>
                       </div>
                     )}

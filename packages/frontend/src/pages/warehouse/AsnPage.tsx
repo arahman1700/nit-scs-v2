@@ -149,7 +149,7 @@ export const AsnPage: React.FC = () => {
       {/* Search */}
       <div className="glass-card rounded-2xl p-4">
         <form onSubmit={handleSearch} className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchInput}
@@ -188,7 +188,7 @@ export const AsnPage: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
                     <Package className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     No ASNs found in this status.
                   </td>
@@ -232,7 +232,7 @@ export const AsnPage: React.FC = () => {
 
         {meta && meta.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               Showing {(meta.page - 1) * meta.pageSize + 1}
               {' - '}
               {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}
@@ -402,7 +402,7 @@ const AsnDetail: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack })
         <div className="glass-card rounded-2xl p-4">
           <p className="text-xs text-gray-400 mb-1">Warehouse</p>
           <p className="text-white font-medium">{asn.warehouse?.warehouseName || '-'}</p>
-          <p className="text-xs text-gray-500">{asn.warehouse?.warehouseCode}</p>
+          <p className="text-xs text-gray-400">{asn.warehouse?.warehouseCode}</p>
         </div>
         <div className="glass-card rounded-2xl p-4">
           <p className="text-xs text-gray-400 mb-1">Expected Arrival</p>
@@ -427,8 +427,8 @@ const AsnDetail: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack })
         <div className="glass-card rounded-2xl p-4">
           <p className="text-xs text-gray-400 mb-1">Shipping Info</p>
           <p className="text-white font-medium">{asn.carrierName || 'N/A'}</p>
-          {asn.trackingNumber && <p className="text-xs text-gray-500">Tracking: {asn.trackingNumber}</p>}
-          {asn.purchaseOrderRef && <p className="text-xs text-gray-500">PO: {asn.purchaseOrderRef}</p>}
+          {asn.trackingNumber && <p className="text-xs text-gray-400">Tracking: {asn.trackingNumber}</p>}
+          {asn.purchaseOrderRef && <p className="text-xs text-gray-400">PO: {asn.purchaseOrderRef}</p>}
         </div>
       </div>
 
@@ -460,7 +460,7 @@ const AsnDetail: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack })
             <tbody>
               {(asn.lines || []).map((line, idx) => (
                 <tr key={line.id} className="border-b border-white/5">
-                  <td className="py-3 px-3 text-gray-500">{idx + 1}</td>
+                  <td className="py-3 px-3 text-gray-400">{idx + 1}</td>
                   <td className="py-3 px-3 text-white font-mono text-xs">{line.item?.itemCode}</td>
                   <td className="py-3 px-3 text-gray-300">{line.item?.itemDescription}</td>
                   <td className="py-3 px-3 text-right text-gray-300">{Number(line.qtyExpected).toLocaleString()}</td>
@@ -521,7 +521,7 @@ const VarianceModal: React.FC<{ asnId: string; onClose: () => void }> = ({ asnId
       <div className="glass-card rounded-2xl p-6 w-full max-w-3xl border border-white/10 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Variance Report</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -676,7 +676,7 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       <div className="glass-card rounded-2xl p-6 w-full max-w-2xl border border-white/10 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Create Advance Shipping Notice</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -845,6 +845,7 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       type="button"
                       onClick={() => removeLine(idx)}
                       className="mt-1 text-red-400 hover:text-red-300"
+                      aria-label="Remove line item"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

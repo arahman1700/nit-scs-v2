@@ -104,7 +104,7 @@ export const ExpiryAlertsPage: React.FC = () => {
           <p className="text-sm text-gray-400 mt-1">
             Lot-tracked inventory approaching expiry dates
             {meta?.asOf && (
-              <span className="text-gray-500 ml-2">(as of {new Date(meta.asOf).toLocaleDateString()})</span>
+              <span className="text-gray-400 ml-2">(as of {new Date(meta.asOf).toLocaleDateString()})</span>
             )}
           </p>
         </div>
@@ -186,7 +186,7 @@ export const ExpiryAlertsPage: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-red-500/20 text-center">
           <AlertTriangle size={32} className="text-red-400 mx-auto mb-3" />
           <p className="text-red-400 font-medium">Failed to load expiry data</p>
-          <p className="text-gray-500 text-sm mt-1">Check your connection and try again</p>
+          <p className="text-gray-400 text-sm mt-1">Check your connection and try again</p>
           <button
             onClick={() => refetch()}
             className="mt-4 px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-all"
@@ -228,7 +228,7 @@ export const ExpiryAlertsPage: React.FC = () => {
 
           {groups.length === 0 ? (
             <div className="glass-card rounded-2xl p-10 text-center border border-white/10">
-              <Package size={40} className="mx-auto mb-4 text-gray-600" />
+              <Package size={40} className="mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-semibold text-white mb-2">No Expiry Alerts</h3>
               <p className="text-gray-400 text-sm">No items are expiring within the next {daysAhead} days.</p>
             </div>
@@ -275,7 +275,7 @@ export const ExpiryAlertsPage: React.FC = () => {
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-lg font-bold text-white">{group.totalQty.toLocaleString()}</p>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-wider">
                           {group.lots.length} lot{group.lots.length !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -308,7 +308,7 @@ export const ExpiryAlertsPage: React.FC = () => {
                                     <td className="px-5 py-3 font-mono text-white text-xs">{lot.lotNumber || '--'}</td>
                                     <td className="px-5 py-3">
                                       <span className="flex items-center gap-1.5 text-gray-300">
-                                        <Calendar size={13} className="text-gray-500" />
+                                        <Calendar size={13} className="text-gray-400" />
                                         {formatDate(lot.expiryDate)}
                                       </span>
                                     </td>
@@ -320,7 +320,7 @@ export const ExpiryAlertsPage: React.FC = () => {
                                           {days <= 0 ? 'Expired' : `${days}d`}
                                         </span>
                                       ) : (
-                                        <span className="text-gray-500 text-xs">--</span>
+                                        <span className="text-gray-400 text-xs">--</span>
                                       )}
                                     </td>
                                     <td className="px-5 py-3 text-right font-mono text-white font-medium">

@@ -49,13 +49,13 @@ const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
       {/* Card Header — item name + delete */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 text-gray-500 text-xs font-medium shrink-0">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 text-gray-400 text-xs font-medium shrink-0">
             {index + 1}
           </div>
           {readOnly ? (
             <div className="min-w-0">
               <p className="text-sm font-semibold text-white truncate">{item.itemName || 'Unnamed Item'}</p>
-              {item.itemCode && <p className="text-[10px] font-mono text-gray-500">{item.itemCode}</p>}
+              {item.itemCode && <p className="text-[10px] font-mono text-gray-400">{item.itemCode}</p>}
             </div>
           ) : (
             <div className="min-w-0 flex-1 space-y-1">
@@ -92,7 +92,7 @@ const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
       <div className="grid grid-cols-3 gap-2">
         {/* Quantity */}
         <div>
-          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Qty</label>
+          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Qty</label>
           {readOnly ? (
             <span className="text-sm text-white font-medium">{item.quantity}</span>
           ) : (
@@ -109,7 +109,7 @@ const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
 
         {/* Unit */}
         <div>
-          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Unit</label>
+          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Unit</label>
           {readOnly ? (
             <span className="text-sm text-gray-400">{item.unit}</span>
           ) : (
@@ -129,7 +129,7 @@ const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
 
         {/* Unit Price */}
         <div>
-          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Price</label>
+          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Price</label>
           {readOnly ? (
             <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
           ) : (
@@ -198,7 +198,7 @@ const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
 
         {/* Total amount */}
         <div className="flex items-center gap-1.5">
-          <Package size={14} className="text-gray-500" />
+          <Package size={14} className="text-gray-400" />
           <span className="text-sm text-nesma-secondary font-bold">{item.totalPrice.toLocaleString()} SAR</span>
         </div>
       </div>
@@ -466,18 +466,18 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                     </span>
                     <div>
                       <span className="text-sm text-gray-200 group-hover:text-white">{name}</span>
-                      <span className="text-xs text-gray-500 block">{code}</span>
+                      <span className="text-xs text-gray-400 block">{code}</span>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="text-sm text-nesma-secondary font-medium">{price?.toLocaleString()} SAR</span>
-                    <span className="text-xs text-gray-500 block">/{unitLabel}</span>
+                    <span className="text-xs text-gray-400 block">/{unitLabel}</span>
                   </div>
                 </button>
               );
             })}
             {filteredCatalog.length === 0 && (
-              <div className="text-center py-6 text-gray-500 text-sm">No results found</div>
+              <div className="text-center py-6 text-gray-400 text-sm">No results found</div>
             )}
           </div>
         </div>
@@ -580,7 +580,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
               <tbody className="divide-y divide-white/5">
                 {items.map((item, idx) => (
                   <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="py-3 px-2 text-gray-500 text-sm">{idx + 1}</td>
+                    <td className="py-3 px-2 text-gray-400 text-sm">{idx + 1}</td>
                     <td className="py-3 px-2">
                       {readOnly ? (
                         <span className="text-xs font-mono text-gray-400">{item.itemCode}</span>
@@ -680,7 +680,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                             );
                           })()
                         ) : (
-                          <span className="text-xs text-gray-600">--</span>
+                          <span className="text-xs text-gray-400">--</span>
                         )}
                       </td>
                     )}
@@ -720,7 +720,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                           type="button"
                           onClick={() => removeItem(item.id)}
                           aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
-                          className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
+                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -755,8 +755,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
         </>
       ) : (
         <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center">
-          <div className="text-gray-500 mb-2">No items added yet</div>
-          <div className="text-xs text-gray-600">
+          <div className="text-gray-400 mb-2">No items added yet</div>
+          <div className="text-xs text-gray-400">
             Use the buttons above to add items from catalog, manually, or by scanning
           </div>
         </div>

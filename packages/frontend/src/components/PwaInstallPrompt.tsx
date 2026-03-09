@@ -221,7 +221,7 @@ export const PwaInstallPrompt: React.FC = () => {
               <span className="text-white/10">|</span>
               <button
                 onClick={handleNeverShow}
-                className="text-sm text-gray-500 hover:text-gray-300 transition-colors py-2"
+                className="text-sm text-gray-400 hover:text-gray-300 transition-colors py-2"
               >
                 Don't show again
               </button>

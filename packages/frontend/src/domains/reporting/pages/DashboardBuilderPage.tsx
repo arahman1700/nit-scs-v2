@@ -123,7 +123,7 @@ export const DashboardBuilderPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-white">Dashboard Builder</h1>
-            <p className="text-xs text-gray-500">Create custom dashboards with drag-and-drop widgets</p>
+            <p className="text-xs text-gray-400">Create custom dashboards with drag-and-drop widgets</p>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export const DashboardBuilderPage: React.FC = () => {
                       ${d.id === selectedId ? 'text-nesma-secondary' : 'text-gray-300'}`}
                   >
                     {d.name}
-                    {d.isDefault && <span className="ml-2 text-xs text-gray-500">(default)</span>}
+                    {d.isDefault && <span className="ml-2 text-xs text-gray-400">(default)</span>}
                   </button>
                 ))}
                 <div className="border-t border-white/10 mt-1 pt-1">
@@ -222,7 +222,7 @@ export const DashboardBuilderPage: React.FC = () => {
               placeholder="Dashboard name..."
               autoFocus
               className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white
-                placeholder:text-gray-600 focus:border-nesma-secondary/50 focus:outline-none mb-4"
+                placeholder:text-gray-400 focus:border-nesma-secondary/50 focus:outline-none mb-4"
               onKeyDown={e => e.key === 'Enter' && handleCreateDashboard()}
             />
             <div className="flex justify-end gap-3">
@@ -260,7 +260,7 @@ export const DashboardBuilderPage: React.FC = () => {
               ))}
             </div>
           ) : !selectedId ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
               <LayoutDashboard size={48} className="mb-4 opacity-30" />
               <p className="text-lg mb-2">No dashboard selected</p>
               <button

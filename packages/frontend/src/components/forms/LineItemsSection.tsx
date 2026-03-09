@@ -39,7 +39,7 @@ export const LineItemsSection: React.FC<LineItemsSectionProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <span className="text-xs text-gray-500 block">Total Value</span>
+            <span className="text-xs text-gray-400 block">Total Value</span>
             <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
           </div>
         </div>

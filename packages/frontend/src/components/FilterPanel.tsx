@@ -120,7 +120,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                     onChange={e => onChange(`${filter.key}_from`, e.target.value)}
                     className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:border-nesma-secondary/50 outline-none transition-all"
                   />
-                  <span className="text-gray-500 text-xs font-medium">to</span>
+                  <span className="text-gray-400 text-xs font-medium">to</span>
                   <input
                     type="date"
                     value={values[`${filter.key}_to`] || ''}

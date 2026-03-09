@@ -191,7 +191,7 @@ export const SiteEngineerDashboard: React.FC = () => {
                   <span className={`text-[10px] px-2 py-0.5 rounded ${statusBadge(r.status)}`}>{r.status}</span>
                 </div>
               ))}
-              {allRequests.length === 0 && <p className="text-gray-500 text-sm text-center py-8">No requests yet</p>}
+              {allRequests.length === 0 && <p className="text-gray-400 text-sm text-center py-8">No requests yet</p>}
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@ export const SiteEngineerDashboard: React.FC = () => {
       {activeTab === 'my-requests' && (
         <div className="space-y-4">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -276,7 +276,7 @@ export const SiteEngineerDashboard: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-white">{r.title}</td>
                     <td className="px-4 py-3 text-sm text-gray-300">{r.value > 0 ? formatCurrency(r.value) : '-'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{r.date}</td>
+                    <td className="px-4 py-3 text-sm text-gray-400">{r.date}</td>
                     <td className="px-4 py-3">
                       <span className={`text-[10px] px-2 py-0.5 rounded ${statusBadge(r.status)}`}>{r.status}</span>
                     </td>
@@ -284,7 +284,7 @@ export const SiteEngineerDashboard: React.FC = () => {
                 ))}
                 {allRequests.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                       No requests
                     </td>
                   </tr>
@@ -304,19 +304,19 @@ export const SiteEngineerDashboard: React.FC = () => {
                 <h3 className="text-xl font-bold text-white mb-4">{displayStr(myProject)}</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-xs text-gray-500">Client</p>
+                    <p className="text-xs text-gray-400">Client</p>
                     <p className="text-sm text-white mt-1">{myProject.client}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Manager</p>
+                    <p className="text-xs text-gray-400">Manager</p>
                     <p className="text-sm text-white mt-1">{myProject.manager}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Status</p>
+                    <p className="text-xs text-gray-400">Status</p>
                     <p className="text-sm text-emerald-400 mt-1">{myProject.status}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Region</p>
+                    <p className="text-xs text-gray-400">Region</p>
                     <p className="text-sm text-white mt-1">{myProject.regionId || '-'}</p>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ export const SiteEngineerDashboard: React.FC = () => {
             </>
           ) : (
             <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-              <p className="text-gray-500">No project assigned</p>
+              <p className="text-gray-400">No project assigned</p>
             </div>
           )}
         </div>
@@ -360,7 +360,7 @@ export const SiteEngineerDashboard: React.FC = () => {
               ))}
               {inventoryItems.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No inventory data
                   </td>
                 </tr>

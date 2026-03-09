@@ -40,7 +40,7 @@ export const EmailLogsPage: React.FC = () => {
           <Mail size={20} className="text-blue-400" />
           Email Delivery Logs
         </h2>
-        <p className="text-sm text-gray-500 mt-0.5">Track email delivery status from workflow-triggered emails.</p>
+        <p className="text-sm text-gray-400 mt-0.5">Track email delivery status from workflow-triggered emails.</p>
       </div>
 
       {/* Stats row */}
@@ -55,7 +55,7 @@ export const EmailLogsPage: React.FC = () => {
           ].map(s => (
             <div key={s.label} className="bg-white/[0.03] rounded-xl border border-white/5 p-3 text-center">
               <div className={`text-xl font-bold ${s.color}`}>{s.value}</div>
-              <div className="text-[10px] text-gray-500 uppercase tracking-wide mt-0.5">{s.label}</div>
+              <div className="text-[10px] text-gray-400 uppercase tracking-wide mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
@@ -78,7 +78,7 @@ export const EmailLogsPage: React.FC = () => {
           <option value="bounced">Bounced</option>
           <option value="failed">Failed</option>
         </select>
-        <span className="text-xs text-gray-500 flex items-center gap-1">
+        <span className="text-xs text-gray-400 flex items-center gap-1">
           <BarChart3 size={12} /> Page {page}
         </span>
       </div>

@@ -97,7 +97,7 @@ export function DynamicLineItemsTable({
                       <button
                         type="button"
                         onClick={() => removeRow(rowIdx)}
-                        className="p-1.5 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-all"
+                        className="p-1.5 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-all"
                         aria-label={`Remove row ${rowIdx + 1}`}
                       >
                         <Trash2 size={16} />

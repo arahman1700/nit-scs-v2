@@ -122,7 +122,7 @@ export const AmcPage: React.FC = () => {
       {/* Search */}
       <div className="glass-card rounded-2xl p-4">
         <form onSubmit={handleSearch} className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchInput}
@@ -161,7 +161,7 @@ export const AmcPage: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
                     <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     No contracts found.
                   </td>
@@ -200,7 +200,7 @@ export const AmcPage: React.FC = () => {
 
         {meta && meta.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               Showing {(meta.page - 1) * meta.pageSize + 1}
               {' - '}
               {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}
@@ -314,7 +314,7 @@ const AmcDetailModal: React.FC<{ id: string; onClose: () => void }> = ({ id, onC
                 </div>
                 <p className="text-white font-medium">{amc.supplier?.supplierName || '-'}</p>
                 {amc.supplier?.supplierCode && (
-                  <p className="text-xs text-gray-500 mt-0.5">{amc.supplier.supplierCode}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{amc.supplier.supplierCode}</p>
                 )}
               </div>
               <div className="bg-white/5 rounded-xl p-4">

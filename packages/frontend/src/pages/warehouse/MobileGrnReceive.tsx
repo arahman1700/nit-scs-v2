@@ -115,7 +115,7 @@ export function MobileGrnReceive() {
                   ? 'bg-nesma-secondary text-white'
                   : i < stepIndex
                     ? 'bg-emerald-600 text-white'
-                    : 'bg-white/10 text-gray-500'
+                    : 'bg-white/10 text-gray-400'
               }`}
             >
               {i < stepIndex ? <CheckCircle2 size={16} /> : i + 1}
@@ -177,7 +177,7 @@ export function MobileGrnReceive() {
               </div>
             ) : grnList.length === 0 ? (
               <div className="glass-card rounded-2xl p-6 text-center border border-white/10">
-                <AlertCircle size={32} className="text-gray-500 mx-auto mb-2" />
+                <AlertCircle size={32} className="text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-400 text-sm">No approved GRNs available for receiving</p>
               </div>
             ) : (

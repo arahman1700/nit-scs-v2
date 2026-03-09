@@ -203,7 +203,7 @@ export const InventoryDashboard: React.FC = () => {
           <p className="text-sm text-gray-400 mt-1">
             Real-time inventory levels across all warehouses
             {meta?.total != null && (
-              <span className="text-gray-500 ml-2">({meta.total.toLocaleString()} total items)</span>
+              <span className="text-gray-400 ml-2">({meta.total.toLocaleString()} total items)</span>
             )}
           </p>
         </div>
@@ -314,7 +314,7 @@ export const InventoryDashboard: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-red-500/20 text-center">
           <AlertCircle size={32} className="text-red-400 mx-auto mb-3" />
           <p className="text-red-400 font-medium">Failed to load inventory data</p>
-          <p className="text-gray-500 text-sm mt-1">Check your connection and try again</p>
+          <p className="text-gray-400 text-sm mt-1">Check your connection and try again</p>
           <button
             onClick={() => inventoryQuery.refetch()}
             className="mt-4 px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-all"
@@ -425,8 +425,8 @@ export const InventoryDashboard: React.FC = () => {
                 <tbody className="divide-y divide-white/5 text-sm text-gray-300">
                   {filteredData.length === 0 ? (
                     <tr>
-                      <td colSpan={11} className="px-4 py-12 text-center text-gray-500">
-                        <Package size={32} className="mx-auto mb-3 text-gray-600" />
+                      <td colSpan={11} className="px-4 py-12 text-center text-gray-400">
+                        <Package size={32} className="mx-auto mb-3 text-gray-400" />
                         <p>No inventory records found</p>
                         {searchQuery && <p className="text-xs mt-1">Try adjusting your search or filters</p>}
                       </td>
@@ -436,7 +436,7 @@ export const InventoryDashboard: React.FC = () => {
                       const status = getStockStatus(row.available, row.minLevel);
                       return (
                         <tr key={row.id} className="hover:bg-white/5 transition-colors">
-                          <td className="px-4 py-3 text-gray-500">{(page - 1) * pageSize + idx + 1}</td>
+                          <td className="px-4 py-3 text-gray-400">{(page - 1) * pageSize + idx + 1}</td>
                           <td className="px-4 py-3 font-mono text-white text-xs">{row.itemCode}</td>
                           <td className="px-4 py-3 max-w-xs truncate" title={row.description}>
                             {row.description}
@@ -486,8 +486,8 @@ export const InventoryDashboard: React.FC = () => {
           {!isLoading && viewMode === 'grid' && (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredData.length === 0 ? (
-                <div className="col-span-full text-center py-12 text-gray-500">
-                  <Package size={32} className="mx-auto mb-3 text-gray-600" />
+                <div className="col-span-full text-center py-12 text-gray-400">
+                  <Package size={32} className="mx-auto mb-3 text-gray-400" />
                   <p>No inventory records found</p>
                 </div>
               ) : (
@@ -509,11 +509,11 @@ export const InventoryDashboard: React.FC = () => {
                       <p className="text-gray-400 text-xs mb-3 font-mono">{row.itemCode}</p>
                       <div className="flex justify-between items-end">
                         <div>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <p className="text-xs text-gray-400 flex items-center gap-1">
                             <MapPin size={10} />
                             {row.warehouseName}
                           </p>
-                          <p className="text-xs text-gray-500 mt-0.5">Reserved: {row.qtyReserved.toLocaleString()}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">Reserved: {row.qtyReserved.toLocaleString()}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold text-white">{row.available.toLocaleString()}</p>
@@ -621,7 +621,7 @@ export const InventoryDashboard: React.FC = () => {
                 </div>
               </div>
               {selectedItem.lastMovementDate && (
-                <div className="text-xs text-gray-500 text-center pt-2">
+                <div className="text-xs text-gray-400 text-center pt-2">
                   Last movement: {new Date(selectedItem.lastMovementDate).toLocaleDateString()}
                 </div>
               )}

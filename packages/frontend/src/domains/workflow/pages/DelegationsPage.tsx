@@ -232,9 +232,9 @@ export const DelegationsPage: React.FC = () => {
         </div>
       ) : delegations.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center">
-          <ArrowRightLeft size={40} className="mx-auto text-gray-600 mb-4" />
+          <ArrowRightLeft size={40} className="mx-auto text-gray-400 mb-4" />
           <p className="text-gray-400">No delegation rules configured</p>
-          <p className="text-xs text-gray-500 mt-1">Click "New Delegation" to create one</p>
+          <p className="text-xs text-gray-400 mt-1">Click "New Delegation" to create one</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -276,7 +276,7 @@ export const DelegationsPage: React.FC = () => {
                       {!d.isActive && !expired && <span className="text-amber-400">Inactive</span>}
                       {d.isActive && !expired && <span className="text-green-400">Active</span>}
                     </div>
-                    {d.notes && <p className="text-xs text-gray-500 mt-2">{d.notes}</p>}
+                    {d.notes && <p className="text-xs text-gray-400 mt-2">{d.notes}</p>}
                   </div>
 
                   {/* Actions */}

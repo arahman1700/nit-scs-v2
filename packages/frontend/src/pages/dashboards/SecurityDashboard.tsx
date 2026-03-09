@@ -67,7 +67,7 @@ function LoadingSkeleton() {
 function SuspiciousIpsList({ ips }: { ips: string[] }) {
   if (ips.length === 0) {
     return (
-      <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+      <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
         <CheckCircle size={18} />
         <span className="text-sm">No suspicious IPs detected</span>
       </div>
@@ -128,7 +128,7 @@ export const SecurityDashboard: React.FC = () => {
             <p className="text-sm text-gray-400 mt-1">Login activity and account security overview (last 24 hours)</p>
           </div>
           {isFetching && !isLoading && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
               <Loader2 size={14} className="animate-spin" />
               Refreshing...
             </div>
@@ -177,7 +177,7 @@ export const SecurityDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Active Users</p>
-                    <p className="text-xs text-gray-500">Last 24 hours</p>
+                    <p className="text-xs text-gray-400">Last 24 hours</p>
                   </div>
                 </div>
                 <span className="text-lg font-bold text-white">{data.activeUsers24h}</span>
@@ -190,7 +190,7 @@ export const SecurityDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Failed Login Attempts</p>
-                    <p className="text-xs text-gray-500">Last 24 hours</p>
+                    <p className="text-xs text-gray-400">Last 24 hours</p>
                   </div>
                 </div>
                 <span className={`text-lg font-bold ${data.failedAttempts24h > 0 ? 'text-red-400' : 'text-white'}`}>
@@ -205,7 +205,7 @@ export const SecurityDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Locked Accounts</p>
-                    <p className="text-xs text-gray-500">Currently locked</p>
+                    <p className="text-xs text-gray-400">Currently locked</p>
                   </div>
                 </div>
                 <span className={`text-lg font-bold ${data.lockedAccounts > 0 ? 'text-amber-400' : 'text-white'}`}>
@@ -220,7 +220,7 @@ export const SecurityDashboard: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-sm text-white font-medium">Login Success Rate</p>
-                    <p className="text-xs text-gray-500">Calculated from 24h data</p>
+                    <p className="text-xs text-gray-400">Calculated from 24h data</p>
                   </div>
                 </div>
                 <span className={`text-lg font-bold ${successRate >= 90 ? 'text-emerald-400' : 'text-amber-400'}`}>

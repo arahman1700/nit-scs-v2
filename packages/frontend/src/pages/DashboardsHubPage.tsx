@@ -304,19 +304,19 @@ const DashboardCard: React.FC<{
           >
             <Star
               size={14}
-              className={isPinned ? 'text-amber-400 fill-amber-400' : 'text-gray-600 hover:text-gray-400'}
+              className={isPinned ? 'text-amber-400 fill-amber-400' : 'text-gray-400 hover:text-gray-400'}
             />
           </button>
         </div>
-        <p className="text-xs text-gray-500 line-clamp-2 mb-3">{dashboard.description}</p>
+        <p className="text-xs text-gray-400 line-clamp-2 mb-3">{dashboard.description}</p>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <Clock size={11} className="text-gray-600" />
-            <span className="text-[11px] text-gray-600">{dashboard.lastUpdated}</span>
+            <Clock size={11} className="text-gray-400" />
+            <span className="text-[11px] text-gray-400">{dashboard.lastUpdated}</span>
           </div>
           <ArrowRight
             size={14}
-            className="text-gray-600 group-hover:text-nesma-secondary group-hover:translate-x-0.5 transition-all"
+            className="text-gray-400 group-hover:text-nesma-secondary group-hover:translate-x-0.5 transition-all"
           />
         </div>
       </div>
@@ -342,7 +342,7 @@ const CategoryFilterChip: React.FC<{
     >
       <Icon size={14} />
       {category.label}
-      <span className={`text-xs ${isActive ? 'text-white/70' : 'text-gray-600'}`}>{category.dashboardCount}</span>
+      <span className={`text-xs ${isActive ? 'text-white/70' : 'text-gray-400'}`}>{category.dashboardCount}</span>
     </button>
   );
 };
@@ -373,7 +373,7 @@ const DashboardStats: React.FC<{ pinnedCount: number }> = ({ pinnedCount }) => {
               </div>
               <div>
                 <p className="text-xl font-bold text-white">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.label}</p>
+                <p className="text-xs text-gray-400">{stat.label}</p>
               </div>
             </div>
           </div>
@@ -465,20 +465,20 @@ export const DashboardsHubPage: React.FC = () => {
 
       {/* Search Bar */}
       <div className="relative">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search dashboards..."
           className="w-full pl-11 pr-10 py-3 bg-white/5 border border-white/10 rounded-xl
-            text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-nesma-secondary/50
+            text-sm text-white placeholder:text-gray-400 focus:outline-none focus:border-nesma-secondary/50
             transition-colors"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/10 text-gray-500"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md hover:bg-white/10 text-gray-400"
             aria-label="Clear search"
           >
             <X size={14} />
@@ -548,7 +548,7 @@ export const DashboardsHubPage: React.FC = () => {
       {/* Dashboard Grid */}
       {filteredDashboards.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-          <Search size={40} className="mx-auto mb-3 text-gray-600" />
+          <Search size={40} className="mx-auto mb-3 text-gray-400" />
           <p className="text-gray-400 mb-2">No dashboards match your criteria</p>
           <button
             onClick={() => {

@@ -261,20 +261,20 @@ export const RolesPage: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm font-bold text-white">{role}</p>
-                <p className="text-[10px] text-gray-500">{total} permissions</p>
+                <p className="text-[10px] text-gray-400">{total} permissions</p>
               </div>
             </div>
             <div className="flex gap-1 mt-2 flex-wrap">
               {resources.slice(0, 5).map(r => (
                 <span
                   key={r}
-                  className="text-[8px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-500"
+                  className="text-[8px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-400"
                 >
                   {RESOURCE_LABELS[r] || r}
                 </span>
               ))}
               {resources.length > 5 && (
-                <span className="text-[8px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-500">
+                <span className="text-[8px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-gray-400">
                   +{resources.length - 5}
                 </span>
               )}
@@ -288,7 +288,7 @@ export const RolesPage: React.FC = () => {
         <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white">Permission Matrix</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-400 mt-0.5">
               {editMode
                 ? 'Click cells to toggle permissions — Admin row is locked'
                 : 'Read-only view of current permissions'}
@@ -367,7 +367,7 @@ export const RolesPage: React.FC = () => {
                                 {has ? (
                                   <Check size={10} className="text-emerald-400" />
                                 ) : (
-                                  <X size={8} className="text-gray-600" />
+                                  <X size={8} className="text-gray-400" />
                                 )}
                               </button>
                             );
@@ -382,7 +382,7 @@ export const RolesPage: React.FC = () => {
           </table>
         </div>
 
-        <div className="p-3 border-t border-white/10 bg-white/5 flex items-center gap-4 text-[10px] text-gray-500">
+        <div className="p-3 border-t border-white/10 bg-white/5 flex items-center gap-4 text-[10px] text-gray-400">
           <span className="flex items-center gap-1">
             <span className="w-3 h-3 rounded bg-emerald-500/20 inline-flex items-center justify-center">
               <Check size={8} className="text-emerald-400" />

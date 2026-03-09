@@ -72,7 +72,7 @@ export const CycleCountDetailPage: React.FC = () => {
   }
 
   if (!cycleCount) {
-    return <div className="text-center py-16 text-gray-500">Cycle count not found.</div>;
+    return <div className="text-center py-16 text-gray-400">Cycle count not found.</div>;
   }
 
   const statusCfg = STATUS_COLORS[cycleCount.status] || STATUS_COLORS.scheduled;
@@ -165,7 +165,7 @@ export const CycleCountDetailPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <div className="glass-card rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-gray-500" />
+            <Clock className="w-4 h-4 text-gray-400" />
             <span className="text-xs text-gray-400">Scheduled</span>
           </div>
           <div className="text-sm text-white">
@@ -178,7 +178,7 @@ export const CycleCountDetailPage: React.FC = () => {
         </div>
         <div className="glass-card rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Package className="w-4 h-4 text-gray-500" />
+            <Package className="w-4 h-4 text-gray-400" />
             <span className="text-xs text-gray-400">Total Lines</span>
           </div>
           <div className="text-sm text-white font-semibold">{lines.length}</div>
@@ -219,7 +219,7 @@ export const CycleCountDetailPage: React.FC = () => {
         <h2 className="text-lg font-semibold text-white mb-4">Count Lines</h2>
 
         {lines.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">
+          <div className="py-8 text-center text-gray-400">
             <ListChecks className="w-8 h-8 mx-auto mb-2 opacity-50" />
             No lines yet. Generate lines to populate the count.
           </div>
@@ -260,7 +260,7 @@ export const CycleCountDetailPage: React.FC = () => {
                         {line.item?.abcClass ? (
                           <span className="text-xs font-semibold text-gray-300">{line.item.abcClass}</span>
                         ) : (
-                          <span className="text-xs text-gray-600">-</span>
+                          <span className="text-xs text-gray-400">-</span>
                         )}
                       </td>
                       {cycleCount.status !== 'in_progress' && (
@@ -291,7 +291,7 @@ export const CycleCountDetailPage: React.FC = () => {
                           {line.status === 'pending' ? (
                             <CountInputCell cycleCountId={id!} line={line} />
                           ) : (
-                            <span className="text-xs text-gray-500">Done</span>
+                            <span className="text-xs text-gray-400">Done</span>
                           )}
                         </td>
                       )}

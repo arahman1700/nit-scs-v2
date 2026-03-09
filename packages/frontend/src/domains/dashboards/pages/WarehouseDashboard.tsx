@@ -252,7 +252,7 @@ export const WarehouseDashboard: React.FC = () => {
               </h3>
               <div className="space-y-3">
                 {mrrvData.length === 0 && (
-                  <p className="text-sm text-gray-500 text-center py-4">No GRN records found</p>
+                  <p className="text-sm text-gray-400 text-center py-4">No GRN records found</p>
                 )}
                 {mrrvData.slice(0, 3).map(mrrv => (
                   <div
@@ -268,7 +268,7 @@ export const WarehouseDashboard: React.FC = () => {
                         <p className="text-sm font-bold text-gray-200 group-hover:text-white">
                           {(mrrv.mrrvNumber as string) || (mrrv.id as string)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-400">
                           {displayStr(mrrv.supplier)} &bull; {fmtDate(mrrv.receiveDate)}
                         </p>
                       </div>
@@ -294,7 +294,7 @@ export const WarehouseDashboard: React.FC = () => {
                 </button>
               </h3>
               <div className="space-y-3">
-                {mirvData.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No MI records found</p>}
+                {mirvData.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No MI records found</p>}
                 {mirvData.slice(0, 3).map(mirv => (
                   <div
                     key={mirv.id as string}
@@ -309,7 +309,7 @@ export const WarehouseDashboard: React.FC = () => {
                         <p className="text-sm font-bold text-gray-200 group-hover:text-white">
                           {(mirv.mirvNumber as string) || (mirv.id as string)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-400">
                           {displayStr(mirv.project)} &bull; {displayStr(mirv.requestedBy)}
                         </p>
                       </div>
@@ -341,7 +341,7 @@ export const WarehouseDashboard: React.FC = () => {
                   >
                     <div>
                       <p className="text-sm font-medium text-gray-200">{item.name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-400">
                         {item.code} &bull; {displayStr(item.warehouse)}
                       </p>
                     </div>
@@ -349,7 +349,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <p className={`text-lg font-bold ${item.quantity === 0 ? 'text-red-400' : 'text-amber-400'}`}>
                         {item.quantity}
                       </p>
-                      <p className="text-[10px] text-gray-500">Min: {item.minLevel}</p>
+                      <p className="text-[10px] text-gray-400">Min: {item.minLevel}</p>
                     </div>
                   </div>
                 ))}
@@ -394,7 +394,7 @@ export const WarehouseDashboard: React.FC = () => {
                 className="glass-card p-4 rounded-xl text-center hover:bg-white/5 transition-all cursor-pointer"
               >
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
-                <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -419,7 +419,7 @@ export const WarehouseDashboard: React.FC = () => {
                 <tbody className="divide-y divide-white/5 text-sm">
                   {mrrvData.length === 0 && !isLoading && (
                     <tr>
-                      <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={9} className="px-6 py-12 text-center text-gray-400">
                         No GRN records found
                       </td>
                     </tr>
@@ -446,7 +446,7 @@ export const WarehouseDashboard: React.FC = () => {
                             </span>
                           )
                         ) : (
-                          <span className="text-gray-600 text-xs">N/A</span>
+                          <span className="text-gray-400 text-xs">N/A</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -455,7 +455,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <td className="px-6 py-4">
                         <button
                           onClick={() => navigate(`/admin/forms/mrrv/${mrrv.id}`)}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Eye size={16} />
                         </button>
@@ -505,7 +505,7 @@ export const WarehouseDashboard: React.FC = () => {
                 className="glass-card p-4 rounded-xl text-center hover:bg-white/5 transition-all cursor-pointer"
               >
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
-                <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
@@ -531,7 +531,7 @@ export const WarehouseDashboard: React.FC = () => {
                 <tbody className="divide-y divide-white/5 text-sm">
                   {mirvData.length === 0 && !isLoading && (
                     <tr>
-                      <td colSpan={10} className="px-6 py-12 text-center text-gray-500">
+                      <td colSpan={10} className="px-6 py-12 text-center text-gray-400">
                         No MI records found
                       </td>
                     </tr>
@@ -558,7 +558,7 @@ export const WarehouseDashboard: React.FC = () => {
                             Emergency
                           </span>
                         ) : (
-                          <span className="text-gray-500 text-xs">Normal</span>
+                          <span className="text-gray-400 text-xs">Normal</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -567,7 +567,7 @@ export const WarehouseDashboard: React.FC = () => {
                             <CheckCircle size={12} /> Yes
                           </span>
                         ) : (
-                          <span className="text-gray-600 text-xs">-</span>
+                          <span className="text-gray-400 text-xs">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
@@ -576,7 +576,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <td className="px-6 py-4">
                         <button
                           onClick={() => navigate(`/admin/forms/mirv/${mirv.id}`)}
-                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-500 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-nesma-secondary opacity-0 group-hover:opacity-100 transition-all"
                         >
                           <Eye size={16} />
                         </button>
@@ -625,15 +625,15 @@ export const WarehouseDashboard: React.FC = () => {
                 className="glass-card p-4 rounded-xl text-center hover:bg-white/5 transition-all cursor-pointer"
               >
                 <p className={`text-2xl font-bold ${stat.color}`}>{stat.count}</p>
-                <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                <p className="text-xs text-gray-400 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* MRN Cards */}
           {mrvData.length === 0 && !isLoading && (
-            <div className="text-center py-12 text-gray-500">
-              <Undo2 size={32} className="mx-auto mb-3 text-gray-600" />
+            <div className="text-center py-12 text-gray-400">
+              <Undo2 size={32} className="mx-auto mb-3 text-gray-400" />
               <p>No MRN records found</p>
             </div>
           )}
@@ -654,24 +654,24 @@ export const WarehouseDashboard: React.FC = () => {
                   </div>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-xs text-gray-500 block">Return Type</span>
+                      <span className="text-xs text-gray-400 block">Return Type</span>
                       <span className={`text-sm font-medium ${returnInfo.color}`}>{returnInfo.label}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500 block">Project</span>
+                      <span className="text-xs text-gray-400 block">Project</span>
                       <span className="text-sm text-gray-200">{displayStr(mrv.project)}</span>
                     </div>
                     <div>
-                      <span className="text-xs text-gray-500 block">Warehouse</span>
+                      <span className="text-xs text-gray-400 block">Warehouse</span>
                       <span className="text-sm text-gray-300">{displayStr(mrv.toWarehouse)}</span>
                     </div>
                     <div className="pt-3 border-t border-white/10">
-                      <span className="text-xs text-gray-500 block">Reason</span>
+                      <span className="text-xs text-gray-400 block">Reason</span>
                       <span className="text-sm text-gray-400">{(mrv.reason as string) || '-'}</span>
                     </div>
                   </div>
                   <div className="mt-4 pt-3 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-xs text-gray-500">{fmtDate(mrv.returnDate)}</span>
+                    <span className="text-xs text-gray-400">{fmtDate(mrv.returnDate)}</span>
                     <button className="text-xs text-nesma-secondary hover:text-white flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                       Details <ChevronRight size={12} />
                     </button>
@@ -725,7 +725,7 @@ export const WarehouseDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5 text-sm">
                 {filteredInventory.length === 0 && !isLoading && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan={8} className="px-6 py-12 text-center text-gray-400">
                       No inventory records found
                     </td>
                   </tr>
@@ -739,7 +739,7 @@ export const WarehouseDashboard: React.FC = () => {
                       <td className="px-6 py-4 text-gray-400">{displayStr(item.warehouse)}</td>
                       <td className="px-6 py-4 font-bold text-nesma-secondary">{item.quantity.toLocaleString()}</td>
                       <td className="px-6 py-4 text-gray-400">{item.reserved}</td>
-                      <td className="px-6 py-4 text-gray-500">{item.minLevel}</td>
+                      <td className="px-6 py-4 text-gray-400">{item.minLevel}</td>
                       <td className="px-6 py-4 text-gray-400 font-mono text-xs">{item.location}</td>
                       <td className="px-6 py-4">
                         {isLow ? (

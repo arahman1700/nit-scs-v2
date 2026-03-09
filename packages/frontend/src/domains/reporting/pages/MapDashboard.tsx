@@ -281,7 +281,7 @@ export const MapDashboard: React.FC = () => {
               <span className="text-sm">Loading locations...</span>
             </div>
           ) : filteredLocations.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 text-sm">No geolocated assets found</div>
+            <div className="text-center py-12 text-gray-400 text-sm">No geolocated assets found</div>
           ) : (
             filteredLocations.map(loc => (
               <div
@@ -311,7 +311,7 @@ export const MapDashboard: React.FC = () => {
                         {loc.type}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 truncate">
+                    <div className="flex items-center gap-1 mt-1 text-xs text-gray-400 truncate">
                       <Navigation size={10} />
                       <span>
                         {loc.lat.toFixed(2)}, {loc.lng.toFixed(2)}
@@ -324,7 +324,7 @@ export const MapDashboard: React.FC = () => {
           )}
         </div>
 
-        <div className="p-4 border-t border-white/10 text-xs text-gray-500 text-center bg-black/20">
+        <div className="p-4 border-t border-white/10 text-xs text-gray-400 text-center bg-black/20">
           {isLoading
             ? 'Loading...'
             : `${filteredLocations.length} location${filteredLocations.length !== 1 ? 's' : ''} in Kingdom`}

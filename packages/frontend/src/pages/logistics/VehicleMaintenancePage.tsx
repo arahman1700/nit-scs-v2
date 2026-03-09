@@ -161,7 +161,7 @@ export const VehicleMaintenancePage: React.FC = () => {
       {/* Search */}
       <div className="glass-card rounded-2xl p-4">
         <form onSubmit={handleSearch} className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchInput}
@@ -198,7 +198,7 @@ export const VehicleMaintenancePage: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-gray-500">
+                  <td colSpan={5} className="py-8 text-center text-gray-400">
                     <Truck className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     No maintenance records found.
                   </td>
@@ -218,11 +218,11 @@ export const VehicleMaintenancePage: React.FC = () => {
                             {item.vehicle?.plateNumber || item.vehiclePlateNumber || '-'}
                           </span>
                           {item.vehicle?.vehicleType && (
-                            <span className="text-xs text-gray-500 ml-2">{item.vehicle.vehicleType}</span>
+                            <span className="text-xs text-gray-400 ml-2">{item.vehicle.vehicleType}</span>
                           )}
                         </div>
                         {item.vehicle?.make && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-400">
                             {item.vehicle.make} {item.vehicle.model || ''}
                           </p>
                         )}
@@ -248,7 +248,7 @@ export const VehicleMaintenancePage: React.FC = () => {
 
         {meta && meta.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               Showing {(meta.page - 1) * meta.pageSize + 1}
               {' - '}
               {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}
@@ -373,7 +373,7 @@ const MaintenanceDetailModal: React.FC<{ id: string; onClose: () => void }> = ({
                   {record.vehicle?.plateNumber || record.vehiclePlateNumber || '-'}
                 </p>
                 {record.vehicle && (
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="text-xs text-gray-400 mt-0.5">
                     {record.vehicle.vehicleType}
                     {record.vehicle.make && ` - ${record.vehicle.make}`}
                     {record.vehicle.model && ` ${record.vehicle.model}`}

@@ -58,7 +58,7 @@ export const WorkflowListPage: React.FC = () => {
             <Zap size={20} className="text-amber-400" />
             Workflow Automation
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-400 mt-0.5">
             Create event-driven rules to automate emails, notifications, and status changes.
           </p>
         </div>
@@ -115,8 +115,8 @@ export const WorkflowListPage: React.FC = () => {
 
       {/* Empty state */}
       {!isLoading && workflows.length === 0 && (
-        <div className="text-center py-16 text-gray-500">
-          <Zap size={40} className="mx-auto mb-3 text-gray-600" />
+        <div className="text-center py-16 text-gray-400">
+          <Zap size={40} className="mx-auto mb-3 text-gray-400" />
           <p className="text-sm">No workflows yet. Create one to start automating.</p>
         </div>
       )}
@@ -137,7 +137,7 @@ export const WorkflowListPage: React.FC = () => {
               {/* Info */}
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-white">{wf.name}</h3>
-                <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
                   {wf.entityType && (
                     <span className="px-1.5 py-0.5 rounded bg-white/10 font-mono">{wf.entityType}</span>
                   )}

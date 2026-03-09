@@ -130,7 +130,7 @@ const ErrorBanner: React.FC<{ message: string }> = ({ message }) => (
       <AlertTriangle size={20} className="text-red-400" />
       <div>
         <p className="text-sm text-red-400 font-medium">Failed to load dashboard data</p>
-        <p className="text-xs text-gray-500 mt-0.5">{message}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{message}</p>
       </div>
     </div>
   </div>
@@ -433,7 +433,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
             <div className="h-72 w-full">
               {inventoryData.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   No inventory movement data yet
                 </div>
               ) : (
@@ -490,7 +490,7 @@ export const AdminDashboard: React.FC = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center text-gray-500 h-full">No active jobs</div>
+                <div className="flex items-center justify-center text-gray-400 h-full">No active jobs</div>
               )}
             </div>
           </div>
@@ -651,7 +651,7 @@ export const AdminDashboard: React.FC = () => {
             </table>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm text-center py-4">No project data available</p>
+          <p className="text-gray-400 text-sm text-center py-4">No project data available</p>
         )}
       </div>
 
@@ -702,7 +702,7 @@ export const AdminDashboard: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-gray-500 text-sm">
+                    <td colSpan={4} className="py-8 text-center text-gray-400 text-sm">
                       No recent activity
                     </td>
                   </tr>

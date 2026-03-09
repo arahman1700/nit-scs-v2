@@ -133,7 +133,7 @@ export function OperationsDashboard() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-10">No inventory data</p>
+              <p className="text-gray-400 text-sm text-center py-10">No inventory data</p>
             )}
           </div>
 
@@ -173,7 +173,7 @@ export function OperationsDashboard() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-10">No active documents</p>
+              <p className="text-gray-400 text-sm text-center py-10">No active documents</p>
             )}
           </div>
         </div>
@@ -209,7 +209,7 @@ export function OperationsDashboard() {
                   <tr key={w.warehouseId} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3">
                       <div className="text-sm font-medium text-white">{w.warehouseName}</div>
-                      <div className="text-xs text-gray-500">{w.warehouseCode}</div>
+                      <div className="text-xs text-gray-400">{w.warehouseCode}</div>
                     </td>
                     <td className="px-4 py-3 text-sm text-white text-center">{w.itemCount}</td>
                     <td className="px-4 py-3 text-sm text-white text-center">
@@ -222,7 +222,7 @@ export function OperationsDashboard() {
                 ))}
                 {data.inventory.warehouses.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-10 text-center text-gray-500 text-sm">
+                    <td colSpan={4} className="px-4 py-10 text-center text-gray-400 text-sm">
                       No warehouse data available
                     </td>
                   </tr>
@@ -250,14 +250,14 @@ export function OperationsDashboard() {
                   </span>
                   <span className="text-sm text-white capitalize truncate">{item.action.replace(/_/g, ' ')}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
+                <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
                   <span className="truncate max-w-[120px]">{item.performedBy?.fullName ?? 'System'}</span>
                   <span>{new Date(item.performedAt).toLocaleDateString()}</span>
                 </div>
               </div>
             ))}
             {data.recentActivity.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">No recent activity</p>
+              <p className="text-gray-400 text-sm text-center py-4">No recent activity</p>
             )}
           </div>
         </div>

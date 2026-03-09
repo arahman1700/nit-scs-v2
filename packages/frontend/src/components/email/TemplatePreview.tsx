@@ -45,7 +45,7 @@ export const TemplatePreview: React.FC<TemplatePreviewProps> = ({ templateId, va
         <div className="grid grid-cols-2 gap-2">
           {variables.map(v => (
             <div key={v}>
-              <label htmlFor={`sampleVar-${v}`} className="text-[10px] text-gray-500 uppercase">
+              <label htmlFor={`sampleVar-${v}`} className="text-[10px] text-gray-400 uppercase">
                 {v}
               </label>
               <input

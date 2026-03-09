@@ -92,7 +92,7 @@ export const EmployeeSectionPage: React.FC = () => {
                 ))}
                 {employeesData.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-8 text-center text-gray-500">
+                    <td colSpan={4} className="p-8 text-center text-gray-400">
                       No employees found
                     </td>
                   </tr>
@@ -113,14 +113,14 @@ export const EmployeeSectionPage: React.FC = () => {
         ),
         departments: (
           <div className="glass-card rounded-2xl p-8 text-center">
-            <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+            <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <h4 className="text-white font-medium mb-2">Departments</h4>
             <p className="text-gray-400 text-sm">Manage organizational departments and team structures.</p>
           </div>
         ),
         'org-chart': (
           <div className="glass-card rounded-2xl p-8 text-center">
-            <Network className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+            <Network className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <h4 className="text-white font-medium mb-2">Organization Chart</h4>
             <p className="text-gray-400 text-sm">Visual hierarchy of reporting structures and team organization.</p>
           </div>

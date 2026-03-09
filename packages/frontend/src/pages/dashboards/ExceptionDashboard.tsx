@@ -49,11 +49,11 @@ function KpiCard({
     <div className="glass-card rounded-2xl p-4 border border-white/10">
       <div className="flex items-center gap-2 mb-2">
         <div className={`p-2 rounded-xl ${isZero ? 'bg-white/5' : colorClass}`}>
-          <Icon size={18} className={isZero ? 'text-gray-500' : 'text-white'} />
+          <Icon size={18} className={isZero ? 'text-gray-400' : 'text-white'} />
         </div>
         <span className="text-xs text-gray-400 leading-tight">{label}</span>
       </div>
-      <div className={`text-2xl font-bold ${isZero ? 'text-gray-500' : 'text-white'}`}>{count}</div>
+      <div className={`text-2xl font-bold ${isZero ? 'text-gray-400' : 'text-white'}`}>{count}</div>
     </div>
   );
 }
@@ -83,7 +83,7 @@ function CollapsibleSection({
           {count > 0 ? (
             <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-red-500/20 text-red-400">{count}</span>
           ) : (
-            <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-white/10 text-gray-500">0</span>
+            <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-white/10 text-gray-400">0</span>
           )}
         </div>
         <Toggle size={16} className="text-gray-400" />
@@ -95,7 +95,7 @@ function CollapsibleSection({
 
 function EmptyState() {
   return (
-    <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+    <div className="flex items-center justify-center gap-2 py-8 text-gray-400">
       <CheckCircle size={18} />
       <span className="text-sm">No exceptions</span>
     </div>
@@ -356,7 +356,7 @@ export const ExceptionDashboard: React.FC = () => {
             <p className="text-sm text-gray-400 mt-1">Items requiring attention across all operations</p>
           </div>
           {isFetching && !isLoading && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
               <Loader2 size={14} className="animate-spin" />
               Refreshing...
             </div>

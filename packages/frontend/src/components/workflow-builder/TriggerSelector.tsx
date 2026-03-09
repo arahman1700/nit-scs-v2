@@ -27,7 +27,7 @@ export const TriggerSelector: React.FC<TriggerSelectorProps> = ({ value, onChang
         ))}
       </select>
       {value && EVENT_DESCRIPTIONS[value as SystemEventType] && (
-        <p className="text-xs text-gray-500 mt-1">{EVENT_DESCRIPTIONS[value as SystemEventType]}</p>
+        <p className="text-xs text-gray-400 mt-1">{EVENT_DESCRIPTIONS[value as SystemEventType]}</p>
       )}
     </div>
   );

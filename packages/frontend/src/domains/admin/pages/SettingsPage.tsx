@@ -160,7 +160,7 @@ export const SettingsPage: React.FC = () => {
                     </span>
                     <span className="text-sm text-gray-300">{level.label}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
                     <span>
                       {level.minAmount.toLocaleString()} -{' '}
                       {level.maxAmount === Infinity ? '500K+' : level.maxAmount.toLocaleString()} SAR
@@ -187,7 +187,7 @@ export const SettingsPage: React.FC = () => {
                     </span>
                     <span className="text-sm text-gray-300">{level.label}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex items-center gap-4 text-xs text-gray-400">
                     <span>
                       {level.minAmount.toLocaleString()} -{' '}
                       {level.maxAmount === Infinity ? '100K+' : level.maxAmount.toLocaleString()} SAR
@@ -213,7 +213,7 @@ export const SettingsPage: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {docTypes.map(type => (
               <div key={type} className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wider">{type.toUpperCase()}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider">{type.toUpperCase()}</p>
                 <p className="text-sm font-mono text-nesma-secondary mt-1">{previewNextNumber(type)}</p>
               </div>
             ))}

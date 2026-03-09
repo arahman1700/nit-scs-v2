@@ -160,7 +160,7 @@ export const InventorySectionPage: React.FC = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-gray-500 text-sm">No category data</p>
+                  <p className="text-gray-400 text-sm">No category data</p>
                 )}
               </div>
               <div className="glass-card p-6 rounded-xl">
@@ -174,7 +174,7 @@ export const InventorySectionPage: React.FC = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-500 text-sm col-span-2">No low stock items</p>
+                    <p className="text-gray-400 text-sm col-span-2">No low stock items</p>
                   )}
                 </div>
               </div>
@@ -215,7 +215,7 @@ export const InventorySectionPage: React.FC = () => {
                   ))}
                   {inventoryRows.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="text-center text-gray-500 py-8">
+                      <td colSpan={5} className="text-center text-gray-400 py-8">
                         No items
                       </td>
                     </tr>
@@ -258,7 +258,7 @@ export const InventorySectionPage: React.FC = () => {
                   ))}
                   {warehouseRows.length === 0 && (
                     <tr>
-                      <td colSpan={4} className="text-center text-gray-500 py-8">
+                      <td colSpan={4} className="text-center text-gray-400 py-8">
                         No warehouses
                       </td>
                     </tr>
@@ -307,7 +307,7 @@ export const InventorySectionPage: React.FC = () => {
                     ))}
                     {gatePassRows.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center text-gray-500 py-8">
+                        <td colSpan={4} className="text-center text-gray-400 py-8">
                           No gate passes
                         </td>
                       </tr>
@@ -353,7 +353,7 @@ export const InventorySectionPage: React.FC = () => {
                     ))}
                     {stockTransferRows.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="text-center text-gray-500 py-8">
+                        <td colSpan={4} className="text-center text-gray-400 py-8">
                           No transfers
                         </td>
                       </tr>

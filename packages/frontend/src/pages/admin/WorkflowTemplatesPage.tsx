@@ -128,7 +128,7 @@ export function WorkflowTemplatesPage() {
                 <div className="flex items-center justify-between">
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : template.id)}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-300 transition-all"
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-300 transition-all"
                   >
                     {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     {template.template.rules.length} rule{template.template.rules.length !== 1 ? 's' : ''}
@@ -165,7 +165,7 @@ export function WorkflowTemplatesPage() {
                     {template.template.rules.map((rule, idx) => (
                       <div key={idx} className="bg-black/20 rounded-lg p-3">
                         <p className="text-sm text-white">{rule.name}</p>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-400 mt-1">
                           Trigger: <span className="text-gray-400">{rule.triggerEvent}</span>
                           &nbsp;&middot;&nbsp; Actions: <span className="text-gray-400">{rule.actions.length}</span>
                         </p>

@@ -107,7 +107,7 @@ export const SectionLandingPage: React.FC<SectionLandingPageProps> = ({
       <div className="min-h-[400px]">
         <RouteErrorBoundary key={activeTab} label={tabs.find(t => t.key === activeTab)?.label}>
           {children[activeTab] || (
-            <div className="glass-card p-12 rounded-xl text-center text-gray-500">Select a tab to view content</div>
+            <div className="glass-card p-12 rounded-xl text-center text-gray-400">Select a tab to view content</div>
           )}
         </RouteErrorBoundary>
       </div>

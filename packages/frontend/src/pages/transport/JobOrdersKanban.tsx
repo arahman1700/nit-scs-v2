@@ -128,7 +128,7 @@ const JobCard: React.FC<{ job: JobOrder; borderColor: string; isDragOverlay?: bo
           <span className="text-[10px] px-2 py-0.5 rounded bg-black/30 text-gray-400 font-mono tracking-wider border border-white/5">
             {job.id}
           </span>
-          <button className="text-gray-500 hover:text-white transition-opacity">
+          <button className="text-gray-400 hover:text-white transition-opacity">
             <MoreHorizontal size={16} />
           </button>
         </div>
@@ -208,7 +208,7 @@ const KanbanColumn: React.FC<{
 
         {jobs.length === 0 && (
           <div
-            className={`h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl min-h-[150px] transition-colors ${isOver ? 'border-nesma-secondary/40 text-nesma-secondary' : 'border-white/5 text-gray-600'}`}
+            className={`h-full flex flex-col items-center justify-center border-2 border-dashed rounded-xl min-h-[150px] transition-colors ${isOver ? 'border-nesma-secondary/40 text-nesma-secondary' : 'border-white/5 text-gray-400'}`}
           >
             <span className="text-xs opacity-50 font-medium">Drop items here</span>
           </div>

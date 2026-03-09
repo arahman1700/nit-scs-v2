@@ -27,7 +27,7 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
 
   const rows = (data?.data as Record<string, unknown>[] | undefined) ?? [];
   if (rows.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No data available</div>;
   }
 
   const columns = Object.keys(rows[0]);
@@ -93,7 +93,7 @@ export const TableWidget: React.FC<TableWidgetProps> = ({ widget }) => {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2 text-xs text-gray-500">
+        <div className="flex items-center justify-between pt-2 text-xs text-gray-400">
           <span>
             {page * PAGE_SIZE + 1}-{Math.min((page + 1) * PAGE_SIZE, sorted.length)} of {sorted.length}
           </span>

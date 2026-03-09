@@ -116,7 +116,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
                     >
                       <Star
                         size={12}
-                        className={view.isDefault ? 'text-nesma-gold fill-nesma-gold' : 'text-gray-500'}
+                        className={view.isDefault ? 'text-nesma-gold fill-nesma-gold' : 'text-gray-400'}
                       />
                     </button>
                     <button
@@ -124,7 +124,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
                       className="p-1 rounded hover:bg-white/10 transition-colors"
                       aria-label="Delete view"
                     >
-                      <Trash2 size={12} className="text-gray-500 hover:text-red-400" />
+                      <Trash2 size={12} className="text-gray-400 hover:text-red-400" />
                     </button>
                   </div>
                 </div>

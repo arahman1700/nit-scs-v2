@@ -192,7 +192,7 @@ export function PackingStationPage() {
 
       {!selectedWarehouse ? (
         <div className="glass-card rounded-2xl p-12 text-center">
-          <Package size={48} className="text-gray-500 mx-auto mb-4" />
+          <Package size={48} className="text-gray-400 mx-auto mb-4" />
           <p className="text-gray-400">Select a warehouse to view the packing queue</p>
         </div>
       ) : (
@@ -230,10 +230,10 @@ export function PackingStationPage() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-white">{mi.mirvNumber}</span>
-                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Approved</span>
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Approved</span>
                       </div>
                       <p className="text-xs text-gray-400">{mi.project?.projectName}</p>
-                      <p className="text-xs text-gray-500 mt-1">{mi.mirvLines?.length ?? 0} items</p>
+                      <p className="text-xs text-gray-400 mt-1">{mi.mirvLines?.length ?? 0} items</p>
                     </button>
                   ))}
                 </div>
@@ -245,9 +245,9 @@ export function PackingStationPage() {
           <div className="w-2/3">
             {!activeSessionId ? (
               <div className="glass-card rounded-2xl p-12 text-center">
-                <ScanLine size={48} className="text-gray-500 mx-auto mb-4" />
+                <ScanLine size={48} className="text-gray-400 mx-auto mb-4" />
                 <p className="text-lg text-gray-400">Select an MI from the queue to start packing</p>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-400 mt-2">
                   Click on any approved MI in the queue to create a new packing session
                 </p>
               </div>
@@ -296,7 +296,7 @@ export function PackingStationPage() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       {/* Item + Barcode */}
                       <div className="col-span-2">
-                        <label htmlFor="packing-item-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-item-field" className="text-xs text-gray-400 mb-1 block">
                           Item
                         </label>
                         <div className="flex gap-2">
@@ -319,11 +319,11 @@ export function PackingStationPage() {
 
                       {/* Qty */}
                       <div>
-                        <label htmlFor="packing-qty-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-qty-field" className="text-xs text-gray-400 mb-1 block">
                           Qty Packed
                         </label>
                         <div className="relative">
-                          <Hash size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                          <Hash size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             id="packing-qty-field"
                             type="number"
@@ -337,7 +337,7 @@ export function PackingStationPage() {
 
                       {/* Container Type */}
                       <div>
-                        <label htmlFor="packing-container-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-container-field" className="text-xs text-gray-400 mb-1 block">
                           Container
                         </label>
                         <select
@@ -356,7 +356,7 @@ export function PackingStationPage() {
 
                       {/* Container Label */}
                       <div>
-                        <label htmlFor="packing-container-label-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-container-label-field" className="text-xs text-gray-400 mb-1 block">
                           Container Label
                         </label>
                         <input
@@ -370,11 +370,11 @@ export function PackingStationPage() {
 
                       {/* Weight */}
                       <div>
-                        <label htmlFor="packing-weight-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-weight-field" className="text-xs text-gray-400 mb-1 block">
                           Weight (kg)
                         </label>
                         <div className="relative">
-                          <Scale size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                          <Scale size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             id="packing-weight-field"
                             type="number"
@@ -389,11 +389,11 @@ export function PackingStationPage() {
 
                       {/* Volume */}
                       <div>
-                        <label htmlFor="packing-volume-field" className="text-xs text-gray-500 mb-1 block">
+                        <label htmlFor="packing-volume-field" className="text-xs text-gray-400 mb-1 block">
                           Volume (m3)
                         </label>
                         <div className="relative">
-                          <Ruler size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                          <Ruler size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                           <input
                             id="packing-volume-field"
                             type="number"
@@ -420,7 +420,7 @@ export function PackingStationPage() {
                     </div>
 
                     {lineForm.scannedBarcode && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-400 mt-2">
                         Barcode: <span className="text-nesma-secondary">{lineForm.scannedBarcode}</span>
                       </p>
                     )}
@@ -433,12 +433,12 @@ export function PackingStationPage() {
                     Packed Lines ({session.lines?.length ?? 0})
                   </h3>
                   {!session.lines || session.lines.length === 0 ? (
-                    <p className="text-center text-gray-500 py-6 text-sm">No lines packed yet</p>
+                    <p className="text-center text-gray-400 py-6 text-sm">No lines packed yet</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
-                          <tr className="text-gray-500 text-xs uppercase tracking-wider border-b border-white/10">
+                          <tr className="text-gray-400 text-xs uppercase tracking-wider border-b border-white/10">
                             <th className="text-left py-2 px-3">#</th>
                             <th className="text-left py-2 px-3">Item</th>
                             <th className="text-right py-2 px-3">Qty</th>
@@ -451,10 +451,10 @@ export function PackingStationPage() {
                         <tbody>
                           {session.lines.map((line, idx) => (
                             <tr key={line.id} className="border-b border-white/5 hover:bg-white/5 transition-all">
-                              <td className="py-2 px-3 text-gray-500">{idx + 1}</td>
+                              <td className="py-2 px-3 text-gray-400">{idx + 1}</td>
                               <td className="py-2 px-3 text-white">
                                 <div className="text-white">{line.item?.itemCode}</div>
-                                <div className="text-xs text-gray-500">{line.item?.itemDescription}</div>
+                                <div className="text-xs text-gray-400">{line.item?.itemDescription}</div>
                               </td>
                               <td className="py-2 px-3 text-right text-white">{line.qtyPacked}</td>
                               <td className="py-2 px-3">

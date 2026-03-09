@@ -141,10 +141,10 @@ export const NotificationCenter: React.FC = () => {
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-6">
                 <div className="p-4 rounded-full bg-white/5 mb-4">
-                  <Bell size={28} className="text-gray-500" />
+                  <Bell size={28} className="text-gray-400" />
                 </div>
                 <p className="text-sm font-medium text-gray-400">No notifications</p>
-                <p className="text-xs text-gray-600 mt-1">You're all caught up</p>
+                <p className="text-xs text-gray-400 mt-1">You're all caught up</p>
               </div>
             ) : (
               <>
@@ -152,7 +152,7 @@ export const NotificationCenter: React.FC = () => {
                 {unreadNotifications.length > 0 && (
                   <div>
                     <div className="px-5 py-2 bg-white/[0.02]">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">New</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">New</p>
                     </div>
                     {unreadNotifications.map(notification => (
                       <NotificationItem
@@ -168,7 +168,7 @@ export const NotificationCenter: React.FC = () => {
                 {readNotifications.length > 0 && (
                   <div>
                     <div className="px-5 py-2 bg-white/[0.02]">
-                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Earlier</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Earlier</p>
                     </div>
                     {readNotifications.map(notification => (
                       <NotificationItem
@@ -222,8 +222,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ notification, onCli
             <span className="w-2 h-2 rounded-full bg-nesma-secondary flex-shrink-0 shadow-[0_0_6px_rgba(128,209,233,0.6)]" />
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{notification.message}</p>
-        <p className="text-[10px] text-gray-600 mt-1.5">{formatRelativeTime(notification.createdAt)}</p>
+        <p className="text-xs text-gray-400 mt-0.5 line-clamp-2">{notification.message}</p>
+        <p className="text-[10px] text-gray-400 mt-1.5">{formatRelativeTime(notification.createdAt)}</p>
       </div>
     </button>
   );

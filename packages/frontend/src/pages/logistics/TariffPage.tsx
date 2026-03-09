@@ -277,7 +277,7 @@ const RatesTab: React.FC<{
     {/* Toolbar */}
     <div className="flex flex-col sm:flex-row gap-3 justify-between">
       <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           placeholder="Search HS code, description, country..."
@@ -316,14 +316,14 @@ const RatesTab: React.FC<{
             {isLoading ? (
               <tr>
                 <td colSpan={9} className="py-16 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto" />
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
                 </td>
               </tr>
             ) : rates.length === 0 ? (
               <tr>
                 <td colSpan={9} className="py-16 text-center">
-                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-                  <p className="text-sm text-gray-500">No tariff rates found</p>
+                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm text-gray-400">No tariff rates found</p>
                 </td>
               </tr>
             ) : (
@@ -478,7 +478,7 @@ const CalculatorTab: React.FC<{
             <h3 className="font-bold text-sm text-white flex items-center gap-3">
               <span className="w-1 h-5 bg-nesma-secondary rounded-full" />
               Line-by-Line Breakdown
-              <span className="text-xs text-gray-500 font-normal ml-1">
+              <span className="text-xs text-gray-400 font-normal ml-1">
                 ({result.lineBreakdown.length} line{result.lineBreakdown.length !== 1 ? 's' : ''})
               </span>
             </h3>

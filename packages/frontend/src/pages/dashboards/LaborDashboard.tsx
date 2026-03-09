@@ -46,7 +46,7 @@ function WorkerRow({ worker, rank }: { worker: WorkerProductivity; rank: number 
       <td className="px-4 py-3 text-sm text-gray-400">{rank}</td>
       <td className="px-4 py-3">
         <div className="text-sm font-medium text-white">{worker.fullName}</div>
-        <div className="text-xs text-gray-500 capitalize">{worker.role.replace(/_/g, ' ')}</div>
+        <div className="text-xs text-gray-400 capitalize">{worker.role.replace(/_/g, ' ')}</div>
       </td>
       <td className="px-4 py-3 text-sm text-white text-center">{worker.metrics.grnsProcessed}</td>
       <td className="px-4 py-3 text-sm text-white text-center">{worker.metrics.misIssued}</td>
@@ -160,7 +160,7 @@ function StandardsTab() {
                 <tr key={taskType} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="px-4 py-3">
                     <div className="text-sm font-medium text-white">{label}</div>
-                    <div className="text-xs text-gray-500">{taskType}</div>
+                    <div className="text-xs text-gray-400">{taskType}</div>
                   </td>
                   <td className="px-4 py-3">
                     {isEditing ? (
@@ -419,7 +419,7 @@ function PerformanceTab() {
               ))}
               {report.workers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500 text-sm">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-400 text-sm">
                     No worker activity in this period
                   </td>
                 </tr>
@@ -662,7 +662,7 @@ export function LaborDashboard() {
                         ))}
                         {data.workers.length === 0 && (
                           <tr>
-                            <td colSpan={8} className="px-4 py-10 text-center text-gray-500 text-sm">
+                            <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
                               No worker activity in this period
                             </td>
                           </tr>

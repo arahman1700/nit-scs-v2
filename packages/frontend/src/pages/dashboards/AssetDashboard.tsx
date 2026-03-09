@@ -147,13 +147,13 @@ export const AssetDashboard: React.FC = () => {
                     >
                       <div>
                         <p className="text-sm font-medium text-gray-200">{String(row.formNumber ?? row.id ?? '--')}</p>
-                        <p className="text-xs text-gray-500">{String(row.description ?? row.materialType ?? '--')}</p>
+                        <p className="text-xs text-gray-400">{String(row.description ?? row.materialType ?? '--')}</p>
                       </div>
                       <StatusBadge status={String(row.status ?? 'Draft')} />
                     </div>
                   ))}
                   {surplusRows.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">No surplus records</p>
+                    <p className="text-sm text-gray-400 text-center py-4">No surplus records</p>
                   )}
                 </div>
               </div>
@@ -177,14 +177,14 @@ export const AssetDashboard: React.FC = () => {
                     >
                       <div>
                         <p className="text-sm font-medium text-gray-200">{String(row.formNumber ?? row.id ?? '--')}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-400">
                           {String(row.materialType ?? '--')} -- {String(row.condition ?? '--')}
                         </p>
                       </div>
                       <StatusBadge status={String(row.status ?? 'Draft')} />
                     </div>
                   ))}
-                  {scrapRows.length === 0 && <p className="text-sm text-gray-500 text-center py-4">No scrap records</p>}
+                  {scrapRows.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No scrap records</p>}
                 </div>
               </div>
             </div>
@@ -225,7 +225,7 @@ export const AssetDashboard: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-gray-500">
+                      <td colSpan={5} className="py-12 text-center text-gray-400">
                         No surplus items found
                       </td>
                     </tr>
@@ -272,7 +272,7 @@ export const AssetDashboard: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-500">
+                      <td colSpan={6} className="py-12 text-center text-gray-400">
                         No scrap reports found
                       </td>
                     </tr>
@@ -317,7 +317,7 @@ export const AssetDashboard: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-gray-500">
+                      <td colSpan={5} className="py-12 text-center text-gray-400">
                         No tools found
                       </td>
                     </tr>

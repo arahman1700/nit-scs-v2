@@ -120,7 +120,7 @@ export const DynamicDocumentListPage: React.FC = () => {
           </div>
         ) : documents.length === 0 ? (
           <div className="p-12 text-center">
-            <FileText size={48} className="mx-auto text-gray-600 mb-4" />
+            <FileText size={48} className="mx-auto text-gray-400 mb-4" />
             <p className="text-gray-400">No documents found</p>
           </div>
         ) : (

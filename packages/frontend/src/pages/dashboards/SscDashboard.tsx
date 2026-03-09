@@ -141,7 +141,7 @@ export const SscDashboard: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-gray-500">
+                    <td colSpan={5} className="py-12 text-center text-gray-400">
                       No SSC bids found
                     </td>
                   </tr>

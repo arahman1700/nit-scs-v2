@@ -59,7 +59,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
               >
                 {job.priority}
               </span>
-              <button className="text-gray-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <button className="text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreHorizontal size={16} />
               </button>
             </div>
@@ -70,20 +70,20 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
 
           <div className="space-y-2 border-t border-white/5 pt-3">
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Truck size={14} className="text-gray-500" />
+              <Truck size={14} className="text-gray-400" />
               <span>{(job.joType ?? '').replace('_', ' ')}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              <User size={14} className="text-gray-500" />
+              <User size={14} className="text-gray-400" />
               <span>{displayStr(toRecord(job).requestedBy) || job.requester || '-'}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
-              <Calendar size={14} className="text-gray-500" />
+              <Calendar size={14} className="text-gray-400" />
               <span>{job.date}</span>
             </div>
             {job.project && (
               <div className="flex items-center gap-2 text-xs text-gray-400">
-                <MapPin size={14} className="text-gray-500" />
+                <MapPin size={14} className="text-gray-400" />
                 <span>{displayStr(job.project)}</span>
               </div>
             )}
@@ -104,7 +104,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
         </div>
       ))}
       {jobs.length === 0 && (
-        <div className="text-center py-12 flex flex-col items-center justify-center text-gray-600 border-2 border-dashed border-white/5 rounded-xl">
+        <div className="text-center py-12 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-white/5 rounded-xl">
           <Truck size={32} className="mb-2 opacity-30" />
           <span className="text-sm opacity-50">No Jobs</span>
         </div>
@@ -296,7 +296,7 @@ export const TransportDashboard: React.FC = () => {
                       <div>
                         <span className="text-sm text-gray-200 font-medium">{item.name}</span>
                         {item.driver && (
-                          <span className="text-xs text-gray-500 block mt-0.5">Driver: {item.driver}</span>
+                          <span className="text-xs text-gray-400 block mt-0.5">Driver: {item.driver}</span>
                         )}
                       </div>
                     </td>
@@ -385,7 +385,7 @@ export const TransportDashboard: React.FC = () => {
                       </div>
                       <div>
                         <span className="text-sm text-gray-200">{emp.fullName}</span>
-                        <span className="text-xs text-gray-500 block">{emp.role}</span>
+                        <span className="text-xs text-gray-400 block">{emp.role}</span>
                       </div>
                     </div>
                     <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -483,14 +483,14 @@ export const TransportDashboard: React.FC = () => {
                     <h4 className="text-sm font-bold text-gray-200 group-hover:text-white transition-colors leading-tight">
                       {displayStr(supplier) || '-'}
                     </h4>
-                    <span className="text-xs text-gray-500 font-mono">{String(supplier.id)}</span>
+                    <span className="text-xs text-gray-400 font-mono">{String(supplier.id)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2 pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <MapPin size={14} className="text-gray-500" />
+                  <MapPin size={14} className="text-gray-400" />
                   <span>{displayStr(supplier.city) || '-'}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -503,7 +503,7 @@ export const TransportDashboard: React.FC = () => {
                   >
                     {supplier.status === 'Active' ? 'Active' : String(supplier.status || '-')}
                   </span>
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider">
                     {Array.isArray(supplier.types)
                       ? (supplier.types as string[]).join(', ')
                       : String(supplier.type || '-').replace('_', ' ')}
@@ -515,7 +515,7 @@ export const TransportDashboard: React.FC = () => {
         </div>
 
         {filteredSuppliers.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-400">
             <Users size={48} className="mx-auto mb-3 opacity-30" />
             <p className="text-sm">No suppliers found</p>
           </div>

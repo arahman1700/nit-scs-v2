@@ -174,7 +174,7 @@ export function ApprovalWorkflowPage() {
       {/* Empty state */}
       {!isLoading && grouped.length === 0 && (
         <div className="glass-card rounded-2xl p-12 text-center">
-          <Shield size={32} className="mx-auto mb-3 text-gray-600" />
+          <Shield size={32} className="mx-auto mb-3 text-gray-400" />
           <p className="text-gray-400">No approval workflows configured yet.</p>
           <button onClick={() => handleOpenAdd()} className="text-nesma-secondary text-sm hover:underline mt-2">
             Create the first level
@@ -203,7 +203,7 @@ export function ApprovalWorkflowPage() {
           <div className="flex items-center gap-2 flex-wrap">
             {group.levels.map((level, i) => (
               <React.Fragment key={level.id}>
-                {i > 0 && <span className="text-gray-600">&rarr;</span>}
+                {i > 0 && <span className="text-gray-400">&rarr;</span>}
                 <span className="text-xs bg-nesma-primary/20 text-nesma-secondary px-3 py-1.5 rounded-lg border border-nesma-primary/30">
                   L{i + 1}: {getRoleLabel(level.approverRole)} ({level.slaHours}h)
                 </span>
@@ -223,7 +223,7 @@ export function ApprovalWorkflowPage() {
                   <div className="text-sm">
                     <span className="text-gray-400">Range: </span>
                     <span className="text-white">{formatAmount(Number(wf.minAmount))}</span>
-                    <span className="text-gray-500 mx-1">&ndash;</span>
+                    <span className="text-gray-400 mx-1">&ndash;</span>
                     <span className="text-gray-300">{formatAmount(wf.maxAmount)}</span>
                   </div>
                   <span className="text-xs bg-nesma-primary/20 text-nesma-secondary px-2 py-1 rounded border border-nesma-primary/30">

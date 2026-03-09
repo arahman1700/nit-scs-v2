@@ -97,7 +97,7 @@ export const CycleCountListPage: React.FC = () => {
       <div className="glass-card rounded-2xl p-4">
         <div className="flex items-center gap-3">
           <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={searchInput}
@@ -107,7 +107,7 @@ export const CycleCountListPage: React.FC = () => {
             />
           </form>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <select
               value={statusFilter}
               onChange={e => {
@@ -154,7 +154,7 @@ export const CycleCountListPage: React.FC = () => {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-gray-500">
+                  <td colSpan={7} className="py-8 text-center text-gray-400">
                     <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-50" />
                     No cycle counts found. Create one to get started.
                   </td>
@@ -199,7 +199,7 @@ export const CycleCountListPage: React.FC = () => {
         {/* Pagination */}
         {meta && meta.totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               Showing {(meta.page - 1) * meta.pageSize + 1}
               {' - '}
               {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total}

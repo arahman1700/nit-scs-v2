@@ -97,7 +97,7 @@ export const CustomsForm: React.FC = () => {
         >
           Dashboard
         </span>
-        <span className="text-gray-600">/</span>
+        <span className="text-gray-400">/</span>
         <span className="text-white font-medium">Customs Clearance</span>
       </div>
 
@@ -236,16 +236,16 @@ export const CustomsForm: React.FC = () => {
 
           {/* Status Flow */}
           <div className="glass-card rounded-xl p-4 border border-white/10 bg-gradient-to-r from-white/5 to-transparent">
-            <p className="text-xs text-gray-500 mb-2">Status Flow</p>
+            <p className="text-xs text-gray-400 mb-2">Status Flow</p>
             <div className="flex items-center gap-2 text-xs flex-wrap">
               {['Submitted', 'Under Review', 'Additional Docs Required', 'Cleared', 'Released'].map((s, i, arr) => (
                 <React.Fragment key={s}>
                   <span
-                    className={`px-2 py-1 rounded ${i === 0 ? 'bg-nesma-secondary/20 text-nesma-secondary border border-nesma-secondary/30' : 'bg-white/5 text-gray-500 border border-white/10'}`}
+                    className={`px-2 py-1 rounded ${i === 0 ? 'bg-nesma-secondary/20 text-nesma-secondary border border-nesma-secondary/30' : 'bg-white/5 text-gray-400 border border-white/10'}`}
                   >
                     {s}
                   </span>
-                  {i < arr.length - 1 && <span className="text-gray-600">→</span>}
+                  {i < arr.length - 1 && <span className="text-gray-400">→</span>}
                 </React.Fragment>
               ))}
             </div>

@@ -160,7 +160,7 @@ export const QCOfficerDashboard: React.FC = () => {
                 >
                   <div>
                     <p className="text-sm text-white">{String(r.id).slice(0, 12)}</p>
-                    <p className="text-xs text-gray-500">GRN: {String(r.mrrvId || '-').slice(0, 12)}</p>
+                    <p className="text-xs text-gray-400">GRN: {String(r.mrrvId || '-').slice(0, 12)}</p>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
                     {String(r.status)}
@@ -168,7 +168,7 @@ export const QCOfficerDashboard: React.FC = () => {
                 </div>
               ))}
               {openInspections.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-8">No pending inspections</p>
+                <p className="text-gray-400 text-sm text-center py-8">No pending inspections</p>
               )}
             </div>
           </div>
@@ -203,7 +203,7 @@ export const QCOfficerDashboard: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-16">No DR data</p>
+              <p className="text-gray-400 text-sm text-center py-16">No DR data</p>
             )}
           </div>
         </div>
@@ -213,7 +213,7 @@ export const QCOfficerDashboard: React.FC = () => {
       {activeTab === 'inspections' && (
         <div className="space-y-4">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -252,7 +252,7 @@ export const QCOfficerDashboard: React.FC = () => {
                 ))}
                 {filteredRfims.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                       No inspections found
                     </td>
                   </tr>
@@ -290,7 +290,7 @@ export const QCOfficerDashboard: React.FC = () => {
               ))}
               {allOsds.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No DR reports
                   </td>
                 </tr>
@@ -332,7 +332,7 @@ export const QCOfficerDashboard: React.FC = () => {
               ))}
               {allMrrvs.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-gray-400">
                     No incoming materials
                   </td>
                 </tr>

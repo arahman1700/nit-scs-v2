@@ -38,7 +38,7 @@ export const ChartWidget: React.FC<ChartWidgetProps> = ({ widget }) => {
   const chartType = (widget.displayConfig?.chartType as string) || 'bar';
 
   if (chartData.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No data available</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No data available</div>;
   }
 
   // Infer keys from data

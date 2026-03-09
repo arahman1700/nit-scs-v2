@@ -102,20 +102,23 @@ const FieldOptionsEditor: React.FC<FieldOptionsEditorProps> = ({ options: initia
               <button
                 onClick={() => handleMove(idx, -1)}
                 disabled={idx === 0}
-                className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30"
+                className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30"
+                aria-label="Move option up"
               >
                 <ChevronUp size={14} />
               </button>
               <button
                 onClick={() => handleMove(idx, 1)}
                 disabled={idx === opts.length - 1}
-                className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30"
+                className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30"
+                aria-label="Move option down"
               >
                 <ChevronDown size={14} />
               </button>
               <button
                 onClick={() => handleRemove(idx)}
-                className="p-1 rounded hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+                className="p-1 rounded hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                aria-label="Remove option"
               >
                 <Trash2 size={14} />
               </button>
@@ -194,7 +197,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showNumber && (
             <>
               <div>
-                <label htmlFor="validation-min-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-min-field" className="block text-xs text-gray-400 mb-1">
                   Min
                 </label>
                 <input
@@ -207,7 +210,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label htmlFor="validation-max-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-max-field" className="block text-xs text-gray-400 mb-1">
                   Max
                 </label>
                 <input
@@ -224,7 +227,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showText && (
             <>
               <div>
-                <label htmlFor="validation-min-length-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-min-length-field" className="block text-xs text-gray-400 mb-1">
                   Min Length
                 </label>
                 <input
@@ -237,7 +240,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label htmlFor="validation-max-length-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-max-length-field" className="block text-xs text-gray-400 mb-1">
                   Max Length
                 </label>
                 <input
@@ -254,7 +257,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           {showDate && (
             <>
               <div>
-                <label htmlFor="validation-min-date-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-min-date-field" className="block text-xs text-gray-400 mb-1">
                   Min Date
                 </label>
                 <input
@@ -267,7 +270,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
                 />
               </div>
               <div>
-                <label htmlFor="validation-max-date-field" className="block text-xs text-gray-500 mb-1">
+                <label htmlFor="validation-max-date-field" className="block text-xs text-gray-400 mb-1">
                   Max Date
                 </label>
                 <input
@@ -283,7 +286,7 @@ const ValidationRulesPanel: React.FC<ValidationRulesPanelProps> = ({ fieldType, 
           )}
           {showPattern && (
             <div className="col-span-2">
-              <label htmlFor="validation-pattern-field" className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="validation-pattern-field" className="block text-xs text-gray-400 mb-1">
                 Pattern (regex)
               </label>
               <div className="flex gap-2">
@@ -360,7 +363,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
         <div className="mt-2 space-y-3">
           {/* Conditional Display */}
           <div>
-            <label htmlFor={`cond-depends-on-${field.id}`} className="block text-xs text-gray-500 mb-1">
+            <label htmlFor={`cond-depends-on-${field.id}`} className="block text-xs text-gray-400 mb-1">
               Conditional Display
             </label>
             <div className="flex gap-2">
@@ -403,7 +406,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
           <div className="grid grid-cols-2 gap-3">
             {/* Section Name */}
             <div>
-              <label htmlFor={`section-${field.id}`} className="block text-xs text-gray-500 mb-1">
+              <label htmlFor={`section-${field.id}`} className="block text-xs text-gray-400 mb-1">
                 Section
               </label>
               <input
@@ -423,7 +426,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({ field, siblingField
 
             {/* Column Span */}
             <div>
-              <label htmlFor={`col-span-${field.id}`} className="block text-xs text-gray-500 mb-1">
+              <label htmlFor={`col-span-${field.id}`} className="block text-xs text-gray-400 mb-1">
                 Column Span
               </label>
               <select
@@ -587,6 +590,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
           <button
             onClick={() => navigate('/admin/dynamic-types')}
             className="p-2 rounded-lg hover:bg-white/10 text-gray-400"
+            aria-label="Go back"
           >
             <ArrowLeft size={20} />
           </button>
@@ -716,7 +720,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                   <button
                     onClick={() => handleMoveField(idx, 'up')}
                     disabled={idx === 0}
-                    className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30 transition-colors"
+                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 transition-colors"
                     aria-label="Move field up"
                   >
                     <ChevronUp size={16} />
@@ -724,7 +728,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                   <button
                     onClick={() => handleMoveField(idx, 'down')}
                     disabled={idx === (docType?.fields?.length ?? 0) - 1}
-                    className="p-1 rounded hover:bg-white/10 text-gray-500 disabled:opacity-30 transition-colors"
+                    className="p-1 rounded hover:bg-white/10 text-gray-400 disabled:opacity-30 transition-colors"
                     aria-label="Move field down"
                   >
                     <ChevronDown size={16} />
@@ -733,7 +737,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                 <div className="flex-1">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
-                      <label htmlFor={`field-key-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                      <label htmlFor={`field-key-${field.id}`} className="block text-xs text-gray-400 mb-1">
                         Key
                       </label>
                       <input
@@ -746,7 +750,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor={`field-label-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                      <label htmlFor={`field-label-${field.id}`} className="block text-xs text-gray-400 mb-1">
                         Label
                       </label>
                       <input
@@ -757,7 +761,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label htmlFor={`field-type-${field.id}`} className="block text-xs text-gray-500 mb-1">
+                      <label htmlFor={`field-type-${field.id}`} className="block text-xs text-gray-400 mb-1">
                         Type
                       </label>
                       <select
@@ -800,7 +804,8 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                       </label>
                       <button
                         onClick={() => handleDeleteField(field.id)}
-                        className="p-2 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors ml-auto"
+                        className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors ml-auto"
+                        aria-label="Delete field"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -914,7 +919,8 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                       const statuses = form.statusFlow.statuses.filter((_, i) => i !== idx);
                       setForm(f => ({ ...f, statusFlow: { ...f.statusFlow, statuses } }));
                     }}
-                    className="p-2 rounded-lg hover:bg-red-500/20 text-gray-500 hover:text-red-400"
+                    className="p-2 rounded-lg hover:bg-red-500/20 text-gray-400 hover:text-red-400"
+                    aria-label="Remove status"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -925,12 +931,12 @@ export const DynamicTypeBuilderPage: React.FC = () => {
 
           <div>
             <label className="text-sm font-medium text-gray-300 mb-3 block">Transitions</label>
-            <p className="text-xs text-gray-500 mb-3">Define which statuses can transition to which</p>
+            <p className="text-xs text-gray-400 mb-3">Define which statuses can transition to which</p>
             <div className="space-y-2">
               {form.statusFlow.statuses.map(status => (
                 <div key={status.key} className="flex items-center gap-3">
                   <span className="w-32 text-sm text-gray-300 font-medium">{status.label}</span>
-                  <span className="text-gray-500">→</span>
+                  <span className="text-gray-400">→</span>
                   <div className="flex-1 flex flex-wrap gap-2">
                     {form.statusFlow.statuses
                       .filter(s => s.key !== status.key)
@@ -950,7 +956,7 @@ export const DynamicTypeBuilderPage: React.FC = () => {
                             className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                               isAllowed
                                 ? 'bg-nesma-secondary/20 text-nesma-secondary border border-nesma-secondary/30'
-                                : 'bg-white/5 text-gray-500 border border-white/10 hover:border-white/20'
+                                : 'bg-white/5 text-gray-400 border border-white/10 hover:border-white/20'
                             }`}
                           >
                             {target.label}

@@ -43,7 +43,7 @@ const LazyKanban = React.lazy(() =>
 );
 
 const SuspenseFallback = (
-  <div className="glass-card p-12 rounded-xl text-center text-gray-500 animate-pulse">Loading...</div>
+  <div className="glass-card p-12 rounded-xl text-center text-gray-400 animate-pulse">Loading...</div>
 );
 
 export const EquipmentSectionPage: React.FC = () => {
@@ -181,7 +181,7 @@ export const EquipmentSectionPage: React.FC = () => {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-sm text-center py-12">No job order data yet</p>
+              <p className="text-gray-400 text-sm text-center py-12">No job order data yet</p>
             )}
           </div>
 
@@ -210,7 +210,7 @@ export const EquipmentSectionPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center py-12 text-gray-500">
+              <div className="flex flex-col items-center py-12 text-gray-400">
                 <ShieldCheck size={32} className="mb-2 text-emerald-400" />
                 <p className="text-sm">No overdue jobs</p>
               </div>
@@ -283,7 +283,7 @@ export const EquipmentSectionPage: React.FC = () => {
             })}
             {joData.length === 0 && (
               <tr>
-                <td colSpan={7} className="p-8 text-center text-gray-500">
+                <td colSpan={7} className="p-8 text-center text-gray-400">
                   No job orders found
                 </td>
               </tr>
@@ -334,7 +334,7 @@ export const EquipmentSectionPage: React.FC = () => {
             ))}
             {fleetData.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-500">
+                <td colSpan={6} className="p-8 text-center text-gray-400">
                   No fleet records found
                 </td>
               </tr>
@@ -381,7 +381,7 @@ export const EquipmentSectionPage: React.FC = () => {
             ))}
             {generatorsData.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500">
+                <td colSpan={4} className="p-8 text-center text-gray-400">
                   No generators found
                 </td>
               </tr>

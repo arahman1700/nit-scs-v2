@@ -137,7 +137,7 @@ function ZoneHeatmap({ suggestions }: { suggestions: SlottingSuggestion[] }) {
   }, [suggestions]);
 
   if (zoneData.length === 0) {
-    return <div className="text-center py-8 text-gray-500 text-sm">No zone data available.</div>;
+    return <div className="text-center py-8 text-gray-400 text-sm">No zone data available.</div>;
   }
 
   const maxCount = Math.max(...zoneData.map(z => z.count), 1);
@@ -157,11 +157,11 @@ function ZoneHeatmap({ suggestions }: { suggestions: SlottingSuggestion[] }) {
             className={`${color} rounded-lg p-3 text-center border border-white/5 transition-all hover:scale-105`}
             title={`Zone ${z.zone}, Aisle ${z.aisle}: ${z.count} items to move`}
           >
-            <div className="text-[10px] font-bold text-gray-500 uppercase">
+            <div className="text-[10px] font-bold text-gray-400 uppercase">
               {z.zone}-{String(z.aisle).padStart(2, '0')}
             </div>
             <div className="text-sm font-semibold text-white mt-1">{z.count}</div>
-            <div className="text-[10px] text-gray-500">moves</div>
+            <div className="text-[10px] text-gray-400">moves</div>
           </div>
         );
       })}
@@ -334,12 +334,12 @@ export const SlottingPage: React.FC = () => {
 
       {!selectedWarehouse ? (
         <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-          <Layers className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+          <Layers className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Select a warehouse to analyze its bin slotting efficiency.</p>
         </div>
       ) : isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
       ) : (
         <>
@@ -353,11 +353,11 @@ export const SlottingPage: React.FC = () => {
                     <div className="w-9 h-9 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                       <Gauge className="w-4.5 h-4.5 text-emerald-400" />
                     </div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Current Efficiency</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Current Efficiency</div>
                   </div>
                   <div className="text-3xl font-bold text-white">
                     {analysis?.currentEfficiency ?? 0}
-                    <span className="text-lg font-normal text-gray-500">%</span>
+                    <span className="text-lg font-normal text-gray-400">%</span>
                   </div>
                 </div>
 
@@ -366,11 +366,11 @@ export const SlottingPage: React.FC = () => {
                     <div className="w-9 h-9 rounded-lg bg-blue-500/20 flex items-center justify-center">
                       <TrendingUp className="w-4.5 h-4.5 text-blue-400" />
                     </div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Projected Efficiency</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Projected Efficiency</div>
                   </div>
                   <div className="text-3xl font-bold text-white">
                     {analysis?.projectedEfficiency ?? 0}
-                    <span className="text-lg font-normal text-gray-500">%</span>
+                    <span className="text-lg font-normal text-gray-400">%</span>
                   </div>
                 </div>
 
@@ -379,7 +379,7 @@ export const SlottingPage: React.FC = () => {
                     <div className="w-9 h-9 rounded-lg bg-amber-500/20 flex items-center justify-center">
                       <Lightbulb className="w-4.5 h-4.5 text-amber-400" />
                     </div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Suggestions</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Suggestions</div>
                   </div>
                   <div className="text-3xl font-bold text-white">{suggestions.length}</div>
                 </div>
@@ -389,11 +389,11 @@ export const SlottingPage: React.FC = () => {
                     <div className="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center">
                       <Clock className="w-4.5 h-4.5 text-purple-400" />
                     </div>
-                    <div className="text-xs text-gray-500 uppercase tracking-wider">Est. Time Saved</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wider">Est. Time Saved</div>
                   </div>
                   <div className="text-3xl font-bold text-white">
                     {analysis?.estimatedTimeSavingMinutes ?? 0}
-                    <span className="text-lg font-normal text-gray-500"> min/mo</span>
+                    <span className="text-lg font-normal text-gray-400"> min/mo</span>
                   </div>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export const SlottingPage: React.FC = () => {
                     <h2 className="text-sm font-semibold text-white">Top 20 Items by Pick Frequency</h2>
                   </div>
                   {top20Frequencies.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500 text-sm">No pick frequency data available.</div>
+                    <div className="text-center py-12 text-gray-400 text-sm">No pick frequency data available.</div>
                   ) : (
                     <ResponsiveContainer width="100%" height={300}>
                       <BarChart data={top20Frequencies} margin={{ top: 5, right: 20, bottom: 60, left: 0 }}>
@@ -454,7 +454,7 @@ export const SlottingPage: React.FC = () => {
             <>
               {aiSummaryLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 </div>
               ) : aiSummary ? (
                 <>
@@ -465,11 +465,11 @@ export const SlottingPage: React.FC = () => {
                         <div className="w-9 h-9 rounded-lg bg-pink-500/20 flex items-center justify-center">
                           <Brain className="w-4.5 h-4.5 text-pink-400" />
                         </div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider">AI Confidence</div>
+                        <div className="text-xs text-gray-400 uppercase tracking-wider">AI Confidence</div>
                       </div>
                       <div className="text-3xl font-bold text-white">
                         {aiSummary.aiConfidence}
-                        <span className="text-lg font-normal text-gray-500">%</span>
+                        <span className="text-lg font-normal text-gray-400">%</span>
                       </div>
                     </div>
 
@@ -478,7 +478,7 @@ export const SlottingPage: React.FC = () => {
                         <div className="w-9 h-9 rounded-lg bg-cyan-500/20 flex items-center justify-center">
                           <Link2 className="w-4.5 h-4.5 text-cyan-400" />
                         </div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider">Co-Picked Pairs</div>
+                        <div className="text-xs text-gray-400 uppercase tracking-wider">Co-Picked Pairs</div>
                       </div>
                       <div className="text-3xl font-bold text-white">{aiSummary.coLocation.pairs.length}</div>
                     </div>
@@ -488,7 +488,7 @@ export const SlottingPage: React.FC = () => {
                         <div className="w-9 h-9 rounded-lg bg-orange-500/20 flex items-center justify-center">
                           <CalendarRange className="w-4.5 h-4.5 text-orange-400" />
                         </div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider">Seasonal Alerts</div>
+                        <div className="text-xs text-gray-400 uppercase tracking-wider">Seasonal Alerts</div>
                       </div>
                       <div className="text-3xl font-bold text-white">{aiSummary.seasonal.seasonalAlertCount}</div>
                     </div>
@@ -498,7 +498,7 @@ export const SlottingPage: React.FC = () => {
                         <div className="w-9 h-9 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                           <Lightbulb className="w-4.5 h-4.5 text-emerald-400" />
                         </div>
-                        <div className="text-xs text-gray-500 uppercase tracking-wider">Recommendations</div>
+                        <div className="text-xs text-gray-400 uppercase tracking-wider">Recommendations</div>
                       </div>
                       <div className="text-3xl font-bold text-white">{aiSummary.topRecommendations.length}</div>
                     </div>
@@ -534,15 +534,15 @@ export const SlottingPage: React.FC = () => {
                     <div className="flex items-center gap-4 mb-4 text-[10px]">
                       <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-red-500/30" />
-                        <span className="text-gray-500">Overloaded</span>
+                        <span className="text-gray-400">Overloaded</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-emerald-500/20" />
-                        <span className="text-gray-500">Optimal</span>
+                        <span className="text-gray-400">Optimal</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="w-3 h-3 rounded bg-blue-500/20" />
-                        <span className="text-gray-500">Underutilized</span>
+                        <span className="text-gray-400">Underutilized</span>
                       </div>
                     </div>
                     <ZoneHeatmap suggestions={suggestions} />
@@ -550,7 +550,7 @@ export const SlottingPage: React.FC = () => {
                 </>
               ) : (
                 <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-                  <Brain className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                  <Brain className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-400 text-sm">No AI analysis data available yet.</p>
                 </div>
               )}
@@ -562,7 +562,7 @@ export const SlottingPage: React.FC = () => {
             <>
               {coLocationLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 </div>
               ) : coLocation && coLocation.pairs.length > 0 ? (
                 <>
@@ -572,7 +572,7 @@ export const SlottingPage: React.FC = () => {
                         <Link2 className="w-4 h-4 text-cyan-400" />
                         <h2 className="text-sm font-semibold text-white">Co-Picked Item Pairs</h2>
                       </div>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400">
                         Potential time saving: {coLocation.potentialTimeSavingMinutes} min/mo
                       </span>
                     </div>
@@ -583,25 +583,25 @@ export const SlottingPage: React.FC = () => {
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-white/10">
-                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                            <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-3">
                               Item A
                             </th>
-                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                            <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                               Item B
                             </th>
-                            <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                            <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                               Co-Picks
                             </th>
-                            <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                            <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                               Bin A
                             </th>
-                            <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                            <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                               Bin B
                             </th>
-                            <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                            <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                               Distance
                             </th>
-                            <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                            <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-3">
                               Suggestion
                             </th>
                           </tr>
@@ -611,11 +611,11 @@ export const SlottingPage: React.FC = () => {
                             <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                               <td className="px-5 py-3">
                                 <div className="text-sm font-medium text-white">{pair.itemA.code}</div>
-                                <div className="text-xs text-gray-500 truncate max-w-[150px]">{pair.itemA.name}</div>
+                                <div className="text-xs text-gray-400 truncate max-w-[150px]">{pair.itemA.name}</div>
                               </td>
                               <td className="px-3 py-3">
                                 <div className="text-sm font-medium text-white">{pair.itemB.code}</div>
-                                <div className="text-xs text-gray-500 truncate max-w-[150px]">{pair.itemB.name}</div>
+                                <div className="text-xs text-gray-400 truncate max-w-[150px]">{pair.itemB.name}</div>
                               </td>
                               <td className="px-3 py-3 text-center">
                                 <span className="text-sm font-semibold text-white">{pair.coOccurrences}</span>
@@ -649,7 +649,7 @@ export const SlottingPage: React.FC = () => {
                 </>
               ) : (
                 <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-                  <Link2 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                  <Link2 className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-400 text-sm">
                     No co-location data available. Items need to be co-picked at least {3} times.
                   </p>
@@ -663,7 +663,7 @@ export const SlottingPage: React.FC = () => {
             <>
               {seasonalLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 </div>
               ) : seasonal && seasonal.items.length > 0 ? (
                 <>
@@ -700,12 +700,12 @@ export const SlottingPage: React.FC = () => {
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mb-2">{item.itemName}</p>
+                            <p className="text-xs text-gray-400 mb-2">{item.itemName}</p>
                             <p className="text-xs text-amber-400">{item.recommendation}</p>
                           </div>
                           <div className="text-right shrink-0">
                             <div className="text-xl font-bold text-white">{item.seasonalityIndex}x</div>
-                            <div className="text-[10px] text-gray-500">seasonality</div>
+                            <div className="text-[10px] text-gray-400">seasonality</div>
                             <div className="text-xs text-gray-400 mt-1">Peak: {item.peakMonth}</div>
                           </div>
                         </div>
@@ -734,7 +734,7 @@ export const SlottingPage: React.FC = () => {
                 </>
               ) : (
                 <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-                  <CalendarRange className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                  <CalendarRange className="w-10 h-10 text-gray-400 mx-auto mb-3" />
                   <p className="text-gray-400 text-sm">
                     No seasonal patterns detected. Need at least 3 months of MI data.
                   </p>
@@ -769,7 +769,7 @@ function SuggestionsTable({
       </div>
 
       {suggestions.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 text-sm">
+        <div className="text-center py-12 text-gray-400 text-sm">
           <CheckCircle2 className="w-10 h-10 text-emerald-500/40 mx-auto mb-3" />
           All items are optimally slotted. No moves needed.
         </div>
@@ -778,27 +778,27 @@ function SuggestionsTable({
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/10">
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Item</th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-3">Item</th>
+                <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   ABC
                 </th>
-                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-right text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   Picks/Mo
                 </th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   Current Bin
                 </th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-1 py-3"> </th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-1 py-3"> </th>
+                <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   Suggested Bin
                 </th>
-                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-left text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   Reason
                 </th>
-                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-3 py-3">
+                <th className="text-right text-xs font-medium text-gray-400 uppercase tracking-wider px-3 py-3">
                   Priority
                 </th>
-                <th className="text-center text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                <th className="text-center text-xs font-medium text-gray-400 uppercase tracking-wider px-5 py-3">
                   Action
                 </th>
               </tr>
@@ -812,7 +812,7 @@ function SuggestionsTable({
                   <tr key={s.itemId} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-5 py-3">
                       <div className="text-sm font-medium text-white">{s.itemCode}</div>
-                      <div className="text-xs text-gray-500 mt-0.5 max-w-[200px] truncate">{s.itemName}</div>
+                      <div className="text-xs text-gray-400 mt-0.5 max-w-[200px] truncate">{s.itemName}</div>
                     </td>
                     <td className="px-3 py-3 text-center">
                       <span
@@ -830,7 +830,7 @@ function SuggestionsTable({
                       </span>
                     </td>
                     <td className="px-1 py-3 text-center">
-                      <ArrowRight className="w-3.5 h-3.5 text-gray-600 mx-auto" />
+                      <ArrowRight className="w-3.5 h-3.5 text-gray-400 mx-auto" />
                     </td>
                     <td className="px-3 py-3 text-center">
                       <span className="inline-block px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-mono">

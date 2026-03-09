@@ -144,17 +144,17 @@ const AqlCalculatorTab: React.FC = () => {
             <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
               <div className="text-3xl font-bold text-nesma-secondary">{result.sampleSize}</div>
               <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider">Sample Size</div>
-              <div className="text-xs text-gray-500 mt-0.5">units to inspect</div>
+              <div className="text-xs text-gray-400 mt-0.5">units to inspect</div>
             </div>
             <div className="text-center p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
               <div className="text-3xl font-bold text-emerald-400">{result.acceptNumber}</div>
               <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider">Accept Number</div>
-              <div className="text-xs text-gray-500 mt-0.5">max defects to accept lot</div>
+              <div className="text-xs text-gray-400 mt-0.5">max defects to accept lot</div>
             </div>
             <div className="text-center p-4 bg-red-500/5 rounded-xl border border-red-500/20">
               <div className="text-3xl font-bold text-red-400">{result.rejectNumber}</div>
               <div className="text-xs text-gray-400 mt-1 uppercase tracking-wider">Reject Number</div>
-              <div className="text-xs text-gray-500 mt-0.5">defects that reject lot</div>
+              <div className="text-xs text-gray-400 mt-0.5">defects that reject lot</div>
             </div>
           </div>
           <div className="mt-4 p-3 bg-blue-500/5 rounded-lg border border-blue-500/10 flex items-start gap-2">
@@ -446,15 +446,15 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
                     <button
                       onClick={() => moveItem(idx, 'up')}
                       disabled={idx === 0}
-                      className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30 transition-colors"
+                      className="p-0.5 text-gray-400 hover:text-white disabled:opacity-30 transition-colors"
                     >
                       <ChevronUp size={12} />
                     </button>
-                    <GripVertical size={14} className="text-gray-600" />
+                    <GripVertical size={14} className="text-gray-400" />
                     <button
                       onClick={() => moveItem(idx, 'down')}
                       disabled={idx === items.length - 1}
-                      className="p-0.5 text-gray-500 hover:text-white disabled:opacity-30 transition-colors"
+                      className="p-0.5 text-gray-400 hover:text-white disabled:opacity-30 transition-colors"
                     >
                       <ChevronDown size={12} />
                     </button>
@@ -484,7 +484,7 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
                       <button
                         onClick={() => updateItemField(idx, 'isMandatory', !item.isMandatory)}
                         className={`flex items-center gap-1.5 text-xs ${
-                          item.isMandatory ? 'text-amber-400' : 'text-gray-500'
+                          item.isMandatory ? 'text-amber-400' : 'text-gray-400'
                         }`}
                       >
                         {item.isMandatory ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -496,14 +496,14 @@ const ChecklistFormModal: React.FC<ChecklistFormProps> = ({ checklist, onClose }
                   {/* Remove */}
                   <button
                     onClick={() => removeItem(idx)}
-                    className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
               {items.length === 0 && (
-                <p className="text-center text-gray-500 text-sm py-8">
+                <p className="text-center text-gray-400 text-sm py-8">
                   No items yet. Click &quot;Add Item&quot; to add inspection steps.
                 </p>
               )}
@@ -612,10 +612,10 @@ const ChecklistsTab: React.FC = () => {
       ) : checklists.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 text-center">
           <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-            <ClipboardList size={28} className="text-gray-600" />
+            <ClipboardList size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-400">No checklists found</p>
-          <p className="text-xs text-gray-500 mt-1">Create your first inspection checklist to get started</p>
+          <p className="text-xs text-gray-400 mt-1">Create your first inspection checklist to get started</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -645,16 +645,16 @@ const ChecklistsTab: React.FC = () => {
                     >
                       {cl.category ?? 'general'}
                     </span>
-                    <span className="text-xs text-gray-500">{cl._count?.items ?? 0} items</span>
+                    <span className="text-xs text-gray-400">{cl._count?.items ?? 0} items</span>
                   </div>
-                  {cl.description && <p className="text-xs text-gray-500 mt-1">{cl.description}</p>}
+                  {cl.description && <p className="text-xs text-gray-400 mt-1">{cl.description}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Active toggle */}
                   <button
                     onClick={() => handleToggleActive(cl)}
                     className={`p-1.5 rounded-lg transition-colors ${
-                      cl.isActive ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-gray-500 hover:bg-white/5'
+                      cl.isActive ? 'text-emerald-400 hover:bg-emerald-500/10' : 'text-gray-400 hover:bg-white/5'
                     }`}
                     title={cl.isActive ? 'Active (click to deactivate)' : 'Inactive (click to activate)'}
                   >
@@ -690,7 +690,7 @@ const ChecklistsTab: React.FC = () => {
                     <div className="space-y-2">
                       {expandedChecklist.items.map((item, idx) => (
                         <div key={item.id} className="flex items-center gap-3 p-2.5 bg-white/5 rounded-lg">
-                          <span className="text-xs text-gray-500 font-mono w-6 text-right">{idx + 1}.</span>
+                          <span className="text-xs text-gray-400 font-mono w-6 text-right">{idx + 1}.</span>
                           <span className="flex-1 text-sm text-gray-300">{item.description}</span>
                           <span
                             className={`text-[10px] px-2 py-0.5 rounded-full border ${
@@ -710,7 +710,7 @@ const ChecklistsTab: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 text-center py-4">No items in this checklist</p>
+                    <p className="text-sm text-gray-400 text-center py-4">No items in this checklist</p>
                   )}
                 </div>
               )}

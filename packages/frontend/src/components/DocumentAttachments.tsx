@@ -148,11 +148,11 @@ export const DocumentAttachments: React.FC<DocumentAttachmentsProps> = ({
               </div>
             ) : (
               <>
-                <Upload size={24} className="mx-auto text-gray-500 mb-2" />
+                <Upload size={24} className="mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-400">
                   Drop files here or <span className="text-nesma-secondary">click to browse</span>
                 </p>
-                <p className="text-[10px] text-gray-500 mt-1">PDF, images, Excel, Word, CSV, TXT, ZIP (max 10MB)</p>
+                <p className="text-[10px] text-gray-400 mt-1">PDF, images, Excel, Word, CSV, TXT, ZIP (max 10MB)</p>
               </>
             )}
           </div>
@@ -170,7 +170,7 @@ export const DocumentAttachments: React.FC<DocumentAttachmentsProps> = ({
                 <Loader2 size={20} className="text-gray-400 animate-spin" />
               </div>
             ) : attachments.length === 0 ? (
-              <div className="text-center py-6 text-gray-500 text-sm">No attachments yet.</div>
+              <div className="text-center py-6 text-gray-400 text-sm">No attachments yet.</div>
             ) : (
               <div className="divide-y divide-white/5">
                 {attachments.map(att => {
@@ -185,7 +185,7 @@ export const DocumentAttachments: React.FC<DocumentAttachmentsProps> = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{att.originalName}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                        <div className="flex items-center gap-2 text-[10px] text-gray-400">
                           <span>{formatFileSize(att.fileSize)}</span>
                           {att.uploadedBy && (
                             <>
@@ -230,7 +230,7 @@ export const DocumentAttachments: React.FC<DocumentAttachmentsProps> = ({
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
-                              className="p-1 text-gray-500 hover:text-white transition-colors"
+                              className="p-1 text-gray-400 hover:text-white transition-colors"
                             >
                               <X size={12} />
                             </button>

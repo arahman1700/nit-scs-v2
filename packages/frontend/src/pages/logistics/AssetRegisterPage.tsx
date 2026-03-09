@@ -313,7 +313,7 @@ export const AssetRegisterPage: React.FC = () => {
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="text"
           placeholder="Search asset tag, description, category..."
@@ -343,14 +343,14 @@ export const AssetRegisterPage: React.FC = () => {
               {assetsLoading ? (
                 <tr>
                   <td colSpan={8} className="py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400 mx-auto" />
                   </td>
                 </tr>
               ) : filteredAssets.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-16 text-center">
-                    <Archive className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-                    <p className="text-sm text-gray-500">No assets found</p>
+                    <Archive className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm text-gray-400">No assets found</p>
                   </td>
                 </tr>
               ) : (
@@ -572,7 +572,7 @@ export const AssetRegisterPage: React.FC = () => {
         <ModalShell title="Asset Details" onClose={closeModal} wide>
           {detailLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           ) : selectedAsset ? (
             <>
@@ -610,7 +610,7 @@ export const AssetRegisterPage: React.FC = () => {
 
                 {selectedAsset.notes && (
                   <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Notes</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">Notes</span>
                     <p className="text-sm text-gray-300 mt-1">{selectedAsset.notes}</p>
                   </div>
                 )}
@@ -644,7 +644,7 @@ export const AssetRegisterPage: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="py-16 text-center text-sm text-gray-500">Asset not found</div>
+            <div className="py-16 text-center text-sm text-gray-400">Asset not found</div>
           )}
         </ModalShell>
       )}
@@ -835,7 +835,7 @@ const ModalShell: React.FC<{
 
 const DetailField: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div>
-    <span className="text-xs text-gray-500 uppercase tracking-wider">{label}</span>
+    <span className="text-xs text-gray-400 uppercase tracking-wider">{label}</span>
     <p className="text-sm text-white mt-0.5">{value}</p>
   </div>
 );

@@ -164,7 +164,7 @@ export const RouteOptimizerPage: React.FC = () => {
               <span className="w-1 h-5 bg-nesma-secondary rounded-full" />
               Pending Transport JOs
               {availableJOs.length > 0 && (
-                <span className="text-xs text-gray-500 font-normal ml-1">
+                <span className="text-xs text-gray-400 font-normal ml-1">
                   ({selectedJoIds.size} of {availableJOs.length} selected)
                 </span>
               )}
@@ -195,11 +195,11 @@ export const RouteOptimizerPage: React.FC = () => {
 
           {josLoading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           ) : availableJOs.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">
-              <Truck className="w-12 h-12 mx-auto mb-3 text-gray-600" />
+            <div className="text-center py-16 text-gray-400 text-sm">
+              <Truck className="w-12 h-12 mx-auto mb-3 text-gray-400" />
               No pending transport JOs with project locations for this warehouse.
             </div>
           ) : (
@@ -230,12 +230,12 @@ export const RouteOptimizerPage: React.FC = () => {
                         {jo.status}
                       </span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5 truncate">
+                    <div className="text-xs text-gray-400 mt-0.5 truncate">
                       {jo.projectCode} - {jo.projectName}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                    <div className="text-xs text-gray-400 flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {jo.latitude?.toFixed(4)}, {jo.longitude?.toFixed(4)}
                     </div>
@@ -346,7 +346,7 @@ export const RouteOptimizerPage: React.FC = () => {
               <h3 className="font-bold text-sm text-white flex items-center gap-3">
                 <span className="w-1 h-5 bg-nesma-secondary rounded-full" />
                 Optimized Route
-                <span className="text-xs text-gray-500 font-normal ml-1">({optimizedRoute.stops.length} stops)</span>
+                <span className="text-xs text-gray-400 font-normal ml-1">({optimizedRoute.stops.length} stops)</span>
               </h3>
             </div>
 
@@ -364,7 +364,7 @@ export const RouteOptimizerPage: React.FC = () => {
                   <div className="pt-2 pb-4">
                     <div className="text-sm font-medium text-emerald-400">Origin</div>
                     <div className="text-sm text-white mt-0.5">{optimizedRoute.origin.name}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-gray-400 mt-0.5">
                       {optimizedRoute.origin.latitude.toFixed(5)}, {optimizedRoute.origin.longitude.toFixed(5)}
                     </div>
                   </div>
@@ -386,7 +386,7 @@ export const RouteOptimizerPage: React.FC = () => {
                           <span className="text-sm font-medium text-white truncate">{stop.name}</span>
                         </div>
                         <div className="flex items-center gap-4 mt-1">
-                          <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
                             <ChevronRight className="w-3 h-3" />
                             {stop.distanceFromPrev} km from prev
                           </span>
@@ -395,7 +395,7 @@ export const RouteOptimizerPage: React.FC = () => {
                             {stop.cumulativeDistance} km total
                           </span>
                         </div>
-                        <div className="text-xs text-gray-500 mt-0.5">
+                        <div className="text-xs text-gray-400 mt-0.5">
                           {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}
                         </div>
                       </div>
@@ -412,7 +412,7 @@ export const RouteOptimizerPage: React.FC = () => {
                   </div>
                   <div className="pt-2">
                     <div className="text-sm font-medium text-red-400">End of Route</div>
-                    <div className="text-xs text-gray-500 mt-0.5">Total: {optimizedRoute.totalDistanceKm} km</div>
+                    <div className="text-xs text-gray-400 mt-0.5">Total: {optimizedRoute.totalDistanceKm} km</div>
                   </div>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export const RouteOptimizerPage: React.FC = () => {
                         <span className="text-sm text-white font-mono font-medium">{stop.cumulativeDistance}</span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <span className="text-xs text-gray-500 font-mono">
+                        <span className="text-xs text-gray-400 font-mono">
                           {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}
                         </span>
                       </td>

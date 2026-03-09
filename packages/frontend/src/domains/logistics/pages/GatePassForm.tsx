@@ -119,7 +119,7 @@ export const GatePassForm: React.FC = () => {
         >
           Dashboard
         </span>
-        <span className="text-gray-600">/</span>
+        <span className="text-gray-400">/</span>
         <span className="text-white font-medium">Gate Pass</span>
       </div>
 
@@ -132,7 +132,7 @@ export const GatePassForm: React.FC = () => {
                 <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
                   {nextNumber}
                 </span>
-                <span className="text-xs text-gray-500">Auto-generated on submit</span>
+                <span className="text-xs text-gray-400">Auto-generated on submit</span>
               </div>
             </div>
             <div className="h-14 w-14 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">

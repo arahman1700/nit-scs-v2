@@ -117,7 +117,7 @@ export const RoiCalculatorPage: React.FC = () => {
                     [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:shadow-nesma-primary/30
                     [&::-webkit-slider-thumb]:cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-gray-600 mt-1">
+                <div className="flex justify-between text-[10px] text-gray-400 mt-1">
                   <span>{formatNumber(s.min, s.unit)}</span>
                   <span>{formatNumber(s.max, s.unit)}</span>
                 </div>
@@ -139,7 +139,7 @@ export const RoiCalculatorPage: React.FC = () => {
         <div className="space-y-4">
           {!result ? (
             <div className="glass-card rounded-2xl p-12 border border-white/10 text-center h-full flex flex-col items-center justify-center">
-              <ArrowRight className="w-10 h-10 text-gray-600 mb-3" />
+              <ArrowRight className="w-10 h-10 text-gray-400 mb-3" />
               <p className="text-gray-400 text-sm">Adjust the sliders and click Calculate to see your estimated ROI.</p>
             </div>
           ) : (
@@ -149,18 +149,18 @@ export const RoiCalculatorPage: React.FC = () => {
                 <div className="glass-card rounded-2xl p-5 border border-white/10">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">Annual Savings</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">Annual Savings</span>
                   </div>
                   <div className="text-3xl font-bold text-emerald-400">{formatCurrency(result.annualSavings)}</div>
                 </div>
                 <div className="glass-card rounded-2xl p-5 border border-white/10">
                   <div className="flex items-center gap-2 mb-2">
                     <Clock className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs text-gray-500 uppercase tracking-wider">ROI Payback</span>
+                    <span className="text-xs text-gray-400 uppercase tracking-wider">ROI Payback</span>
                   </div>
                   <div className="text-3xl font-bold text-blue-400">
                     {result.roiMonths}
-                    <span className="text-lg font-normal text-gray-500"> mo</span>
+                    <span className="text-lg font-normal text-gray-400"> mo</span>
                   </div>
                 </div>
               </div>
@@ -170,34 +170,34 @@ export const RoiCalculatorPage: React.FC = () => {
                 <div className="glass-card rounded-2xl p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign className="w-3.5 h-3.5 text-nesma-secondary" />
-                    <span className="text-xs text-gray-500">Monthly Savings</span>
+                    <span className="text-xs text-gray-400">Monthly Savings</span>
                   </div>
                   <div className="text-xl font-bold text-white">{formatCurrency(result.totalMonthlySavings)}</div>
                 </div>
                 <div className="glass-card rounded-2xl p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
                     <Clock className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="text-xs text-gray-500">Time Saved/Mo</span>
+                    <span className="text-xs text-gray-400">Time Saved/Mo</span>
                   </div>
                   <div className="text-xl font-bold text-white">
                     {result.timeSavingsHoursMonthly.toFixed(0)}
-                    <span className="text-sm font-normal text-gray-500"> hrs</span>
+                    <span className="text-sm font-normal text-gray-400"> hrs</span>
                   </div>
                 </div>
                 <div className="glass-card rounded-2xl p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
                     <Target className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="text-xs text-gray-500">Accuracy Boost</span>
+                    <span className="text-xs text-gray-400">Accuracy Boost</span>
                   </div>
                   <div className="text-xl font-bold text-white">
                     +{result.accuracyImprovement}
-                    <span className="text-sm font-normal text-gray-500"> pp</span>
+                    <span className="text-sm font-normal text-gray-400"> pp</span>
                   </div>
                 </div>
                 <div className="glass-card rounded-2xl p-4 border border-white/10">
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingDown className="w-3.5 h-3.5 text-red-400" />
-                    <span className="text-xs text-gray-500">Shrinkage Saved</span>
+                    <span className="text-xs text-gray-400">Shrinkage Saved</span>
                   </div>
                   <div className="text-xl font-bold text-white">{formatCurrency(result.shrinkageReduction)}/mo</div>
                 </div>

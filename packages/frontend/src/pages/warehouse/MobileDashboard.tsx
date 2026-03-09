@@ -125,7 +125,7 @@ export function MobileDashboard() {
           <div className="space-y-2">
             {recentTransactions.map(tx => (
               <div key={tx.id} className="flex items-center gap-3 bg-white/5 rounded-xl p-3">
-                <Clock size={14} className="text-gray-500 shrink-0" />
+                <Clock size={14} className="text-gray-400 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-white truncate">{tx.type}</div>
                   <div className="text-xs text-gray-400">

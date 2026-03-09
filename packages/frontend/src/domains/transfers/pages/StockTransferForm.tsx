@@ -116,7 +116,7 @@ export const StockTransferForm: React.FC = () => {
         >
           Dashboard
         </span>
-        <span className="text-gray-600">/</span>
+        <span className="text-gray-400">/</span>
         <span className="text-white font-medium">Stock Transfer</span>
       </div>
 

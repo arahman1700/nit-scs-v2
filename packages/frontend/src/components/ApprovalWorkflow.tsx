@@ -78,7 +78,7 @@ const StepDot: React.FC<{ step: ApprovalStep; compact: boolean }> = ({ step, com
   if (step.status === 'skipped') {
     return (
       <div className={`${dotSize} rounded-full bg-white/5 border-2 border-white/20 flex items-center justify-center`}>
-        <span className="text-gray-500 text-xs font-bold">--</span>
+        <span className="text-gray-400 text-xs font-bold">--</span>
       </div>
     );
   }
@@ -173,7 +173,7 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
                       ? 'text-emerald-400'
                       : step.status === 'rejected'
                         ? 'text-red-400'
-                        : 'text-gray-500'
+                        : 'text-gray-400'
                 }`}
               >
                 {step.label}
@@ -188,7 +188,7 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
 
               {/* Timestamp */}
               {step.timestamp && (
-                <span className="text-[10px] text-gray-600 mt-0.5">{formatRelativeTime(step.timestamp)}</span>
+                <span className="text-[10px] text-gray-400 mt-0.5">{formatRelativeTime(step.timestamp)}</span>
               )}
 
               {/* SLA timer (only for current step) */}
@@ -196,7 +196,7 @@ export const ApprovalWorkflow: React.FC<ApprovalWorkflowProps> = ({ chain, compa
 
               {/* Comments */}
               {step.comments && (
-                <div className="mt-1.5 text-[10px] text-gray-500 italic text-center line-clamp-2 max-w-[120px]">
+                <div className="mt-1.5 text-[10px] text-gray-400 italic text-center line-clamp-2 max-w-[120px]">
                   "{step.comments}"
                 </div>
               )}

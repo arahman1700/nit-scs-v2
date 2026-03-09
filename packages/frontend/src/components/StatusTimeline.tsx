@@ -70,7 +70,7 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
           <span className="w-1 h-6 bg-nesma-secondary rounded-full shadow-[0_0_8px_rgba(128,209,233,0.6)]" />
           Status History
         </h3>
-        <div className="text-center py-8 text-gray-500 text-sm">No status history available</div>
+        <div className="text-center py-8 text-gray-400 text-sm">No status history available</div>
       </div>
     );
   }
@@ -109,13 +109,13 @@ export const StatusTimeline: React.FC<StatusTimelineProps> = ({ history }) => {
                     {entry.status}
                   </span>
 
-                  {entry.action && <span className="text-xs text-gray-500 font-medium">{entry.action}</span>}
+                  {entry.action && <span className="text-xs text-gray-400 font-medium">{entry.action}</span>}
                 </div>
 
                 <div className="flex items-center gap-2 mt-1.5">
                   <span className="text-sm text-gray-200 font-medium">{entry.userName}</span>
-                  <span className="text-gray-600">-</span>
-                  <span className="text-xs text-gray-500" title={formatDate(entry.timestamp)}>
+                  <span className="text-gray-400">-</span>
+                  <span className="text-xs text-gray-400" title={formatDate(entry.timestamp)}>
                     {formatRelativeTime(entry.timestamp)}
                   </span>
                 </div>

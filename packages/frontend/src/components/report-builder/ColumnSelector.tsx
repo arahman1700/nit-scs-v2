@@ -45,7 +45,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ dataSource, sele
   }
 
   if (!dataSource) {
-    return <div className="text-sm text-gray-500">Select a data source first</div>;
+    return <div className="text-sm text-gray-400">Select a data source first</div>;
   }
 
   return (
@@ -58,7 +58,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({ dataSource, sele
           <button onClick={selectAll} className="text-nesma-secondary hover:underline">
             All
           </button>
-          <button onClick={clearAll} className="text-gray-500 hover:text-gray-300">
+          <button onClick={clearAll} className="text-gray-400 hover:text-gray-300">
             None
           </button>
         </div>

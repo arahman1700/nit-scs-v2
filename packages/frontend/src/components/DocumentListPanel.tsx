@@ -102,7 +102,7 @@ export const DocumentListPanel: React.FC<DocumentListPanelProps> = ({
         <div className="flex items-center gap-3">
           <Icon className="w-5 h-5 text-nesma-secondary" />
           <h3 className="text-white font-semibold">{title}</h3>
-          <span className="text-xs text-gray-500">({rows.length} records)</span>
+          <span className="text-xs text-gray-400">({rows.length} records)</span>
         </div>
         <div className="flex items-center gap-3">
           {entityType && (

@@ -145,7 +145,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose }) => {
                 className={`${inputClass} file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-nesma-primary file:text-white file:cursor-pointer`}
               />
               {selectedFile && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-400">
                   {selectedFile.name} - {formatFileSize(selectedFile.size)}
                 </p>
               )}
@@ -346,7 +346,7 @@ export const DocumentsPage: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={search}
@@ -376,9 +376,9 @@ export const DocumentsPage: React.FC = () => {
 
       {filtered.length === 0 && (
         <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-          <FolderOpen size={48} className="mx-auto text-gray-600 mb-4" />
+          <FolderOpen size={48} className="mx-auto text-gray-400 mb-4" />
           <p className="text-gray-400 text-sm font-medium">No documents found</p>
-          <p className="text-gray-600 text-xs mt-1">
+          <p className="text-gray-400 text-xs mt-1">
             {search ? 'Try adjusting your search or filter' : 'Upload your first document to get started'}
           </p>
         </div>
@@ -404,7 +404,7 @@ export const DocumentsPage: React.FC = () => {
                         e.stopPropagation();
                         setDeleteTarget({ id: doc.id, title: doc.title });
                       }}
-                      className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                      className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                     >
                       <Trash2 size={14} />
                     </button>
@@ -420,7 +420,7 @@ export const DocumentsPage: React.FC = () => {
                     {doc.category}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center justify-between text-xs text-gray-400">
                   <span>{formatFileSize(doc.fileSize)}</span>
                   <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
                 </div>
@@ -479,7 +479,7 @@ export const DocumentsPage: React.FC = () => {
                           {canUpload && (
                             <button
                               onClick={() => setDeleteTarget({ id: doc.id, title: doc.title })}
-                              className="p-2 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                              className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                               title="Delete"
                             >
                               <Trash2 size={16} />

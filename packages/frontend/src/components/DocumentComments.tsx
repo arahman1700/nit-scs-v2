@@ -167,7 +167,7 @@ export const DocumentComments: React.FC<DocumentCommentsProps> = ({
                   }}
                 />
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[10px] text-gray-500">Ctrl+Enter to submit</span>
+                  <span className="text-[10px] text-gray-400">Ctrl+Enter to submit</span>
                   <button
                     type="submit"
                     disabled={!newComment.trim() || createMutation.isPending}
@@ -188,7 +188,7 @@ export const DocumentComments: React.FC<DocumentCommentsProps> = ({
                 <Loader2 size={20} className="text-gray-400 animate-spin" />
               </div>
             ) : comments.length === 0 ? (
-              <div className="text-center py-8 text-gray-500 text-sm">No comments yet. Be the first to comment.</div>
+              <div className="text-center py-8 text-gray-400 text-sm">No comments yet. Be the first to comment.</div>
             ) : (
               <div className="divide-y divide-white/5">
                 {comments.map(comment => (
@@ -206,11 +206,11 @@ export const DocumentComments: React.FC<DocumentCommentsProps> = ({
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-sm font-medium text-white truncate">{comment.author.fullName}</span>
                           {comment.author.department && (
-                            <span className="text-[10px] text-gray-500 bg-white/5 px-1.5 py-0.5 rounded">
+                            <span className="text-[10px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded">
                               {comment.author.department}
                             </span>
                           )}
-                          <span className="text-[10px] text-gray-500 ml-auto flex-shrink-0">
+                          <span className="text-[10px] text-gray-400 ml-auto flex-shrink-0">
                             {formatTime(comment.createdAt)}
                           </span>
                         </div>
@@ -301,7 +301,7 @@ export const DocumentComments: React.FC<DocumentCommentsProps> = ({
               >
                 Previous
               </button>
-              <span className="text-[10px] text-gray-500">
+              <span className="text-[10px] text-gray-400">
                 {page} / {meta.totalPages}
               </span>
               <button

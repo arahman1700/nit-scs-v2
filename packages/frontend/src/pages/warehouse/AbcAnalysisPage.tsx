@@ -99,7 +99,7 @@ export const AbcAnalysisPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-400">Class A Items</span>
             </div>
             <div className="text-2xl font-bold text-emerald-400">{summary.classA.count}</div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-400 mt-1">
               {summary.classA.percentOfItems}% of items | {summary.classA.percentOfValue}% of value
             </div>
             <div className="text-sm text-gray-400 mt-2">{formatCurrency(summary.classA.totalValue)}</div>
@@ -114,7 +114,7 @@ export const AbcAnalysisPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-400">Class B Items</span>
             </div>
             <div className="text-2xl font-bold text-amber-400">{summary.classB.count}</div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-400 mt-1">
               {summary.classB.percentOfItems}% of items | {summary.classB.percentOfValue}% of value
             </div>
             <div className="text-sm text-gray-400 mt-2">{formatCurrency(summary.classB.totalValue)}</div>
@@ -129,7 +129,7 @@ export const AbcAnalysisPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-400">Class C Items</span>
             </div>
             <div className="text-2xl font-bold text-blue-400">{summary.classC.count}</div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-400 mt-1">
               {summary.classC.percentOfItems}% of items | {summary.classC.percentOfValue}% of value
             </div>
             <div className="text-sm text-gray-400 mt-2">{formatCurrency(summary.classC.totalValue)}</div>
@@ -144,7 +144,7 @@ export const AbcAnalysisPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-400">Total</span>
             </div>
             <div className="text-2xl font-bold text-white">{summary.totalItems}</div>
-            <div className="text-xs text-gray-500 mt-1">Classified items</div>
+            <div className="text-xs text-gray-400 mt-1">Classified items</div>
             <div className="text-sm text-gray-400 mt-2">{formatCurrency(summary.totalValue)}</div>
           </div>
         </div>
@@ -184,10 +184,10 @@ export const AbcAnalysisPage: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-[280px] text-gray-500">No data available</div>
+            <div className="flex items-center justify-center h-[280px] text-gray-400">No data available</div>
           )}
           {summary?.lastCalculatedAt && (
-            <p className="text-xs text-gray-500 text-center mt-2">
+            <p className="text-xs text-gray-400 text-center mt-2">
               Last calculated:{' '}
               {new Date(summary.lastCalculatedAt).toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -207,7 +207,7 @@ export const AbcAnalysisPage: React.FC = () => {
             <div className="flex items-center gap-3">
               {/* Search */}
               <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   value={searchInput}
@@ -219,7 +219,7 @@ export const AbcAnalysisPage: React.FC = () => {
 
               {/* Filter by class */}
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <select
                   value={filterClass}
                   onChange={e => {
@@ -262,7 +262,7 @@ export const AbcAnalysisPage: React.FC = () => {
                   ))
                 ) : items.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-500">
+                    <td colSpan={5} className="py-8 text-center text-gray-400">
                       No items found. Run a recalculation to classify inventory.
                     </td>
                   </tr>
@@ -295,7 +295,7 @@ export const AbcAnalysisPage: React.FC = () => {
           {/* Pagination */}
           {meta && meta.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-400">
                 Showing {(meta.page - 1) * meta.pageSize + 1}
                 {' - '}
                 {Math.min(meta.page * meta.pageSize, meta.total)} of {meta.total} items

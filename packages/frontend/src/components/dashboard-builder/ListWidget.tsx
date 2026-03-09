@@ -22,7 +22,7 @@ export const ListWidget: React.FC<ListWidgetProps> = ({ widget }) => {
   const items = (data?.data as Record<string, unknown>[] | undefined) ?? [];
 
   if (items.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500 text-sm">No items</div>;
+    return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No items</div>;
   }
 
   // Use first two keys as primary label + secondary
@@ -39,7 +39,7 @@ export const ListWidget: React.FC<ListWidgetProps> = ({ widget }) => {
         >
           <span className="text-sm text-gray-200 truncate">{String(item[primaryKey] ?? '')}</span>
           {secondaryKey && (
-            <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{String(item[secondaryKey] ?? '')}</span>
+            <span className="text-xs text-gray-400 flex-shrink-0 ml-2">{String(item[secondaryKey] ?? '')}</span>
           )}
         </li>
       ))}

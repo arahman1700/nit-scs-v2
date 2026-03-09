@@ -271,10 +271,10 @@ export const RfimList: React.FC = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-400">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center">
-                        <FileCheck size={24} className="text-gray-600" />
+                        <FileCheck size={24} className="text-gray-400" />
                       </div>
                       <p>No inspection requests found matching your filters</p>
                     </div>
@@ -286,7 +286,7 @@ export const RfimList: React.FC = () => {
         </div>
 
         {/* Footer/Pagination */}
-        <div className="p-4 border-t border-white/10 flex justify-between items-center bg-white/5 text-xs text-gray-500">
+        <div className="p-4 border-t border-white/10 flex justify-between items-center bg-white/5 text-xs text-gray-400">
           <span>Showing {filteredData.length} records</span>
           <span>QC Module v1.0</span>
         </div>
@@ -327,7 +327,7 @@ export const RfimList: React.FC = () => {
                   <span className="text-xs text-gray-400 uppercase tracking-wider">Current Status</span>
                   <div className="flex items-center gap-3">
                     <InspectionStatusBadge status={selectedItem.status} />
-                    <span className="text-gray-500">•</span>
+                    <span className="text-gray-400">•</span>
                     <PriorityBadge priority={selectedItem.priority} />
                   </div>
                 </div>
@@ -340,13 +340,13 @@ export const RfimList: React.FC = () => {
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1 block">
                       Inspection Type
                     </span>
                     <p className="text-white text-lg">{selectedItem.inspectionType}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1 block">
                       Assigned Inspector
                     </span>
                     <div className="flex items-center gap-3 mt-2">
@@ -360,13 +360,13 @@ export const RfimList: React.FC = () => {
 
                 <div className="space-y-6">
                   <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1 block">
                       Form Number
                     </span>
                     <p className="text-gray-300 font-mono">{selectedItem.formNumber || 'N/A'}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-1 block">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1 block">
                       Inspector Notes
                     </span>
                     <p className="text-gray-300 text-sm leading-relaxed bg-black/20 p-3 rounded-lg border border-white/5 min-h-[80px]">

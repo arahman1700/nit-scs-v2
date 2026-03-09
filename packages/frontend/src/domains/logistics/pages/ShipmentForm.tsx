@@ -122,7 +122,7 @@ export const ShipmentForm: React.FC = () => {
         >
           Dashboard
         </span>
-        <span className="text-gray-600">/</span>
+        <span className="text-gray-400">/</span>
         <span className="text-white font-medium">New Shipment</span>
       </div>
 
@@ -310,7 +310,7 @@ export const ShipmentForm: React.FC = () => {
                   <tbody className="divide-y divide-white/5">
                     {shipmentLines.map((line, idx) => (
                       <tr key={line.id} className="hover:bg-white/5 group">
-                        <td className="py-3 px-2 text-gray-500 text-sm">{idx + 1}</td>
+                        <td className="py-3 px-2 text-gray-400 text-sm">{idx + 1}</td>
                         <td className="py-3 px-2">
                           <input
                             type="text"
@@ -358,7 +358,7 @@ export const ShipmentForm: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => removeLine(line.id)}
-                            className="p-1.5 text-gray-500 hover:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                            className="p-1.5 text-gray-400 hover:text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                           >
                             <Trash2 size={14} />
                           </button>

@@ -58,7 +58,7 @@ export const RuleCard: React.FC<RuleCardProps> = ({ rule, onEdit, onToggle, onDe
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-gray-400">P{rule.priority}</span>
           </div>
 
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <Zap size={10} className="text-amber-400" />
               {eventDesc}

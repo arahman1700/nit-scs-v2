@@ -101,7 +101,7 @@ export const WorkflowBuilderPage: React.FC = () => {
         </button>
         <div>
           <h2 className="text-lg font-bold text-white">{workflow?.name || 'Workflow Builder'}</h2>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-gray-400">
             {rules.length} rule{rules.length !== 1 ? 's' : ''} configured
           </p>
         </div>
@@ -114,7 +114,7 @@ export const WorkflowBuilderPage: React.FC = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab ? 'bg-white/10 text-white' : 'text-gray-500 hover:text-white'
+              activeTab === tab ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
             }`}
           >
             {tab === 'rules' ? 'Rules' : 'Execution Logs'}
@@ -182,7 +182,7 @@ export const WorkflowBuilderPage: React.FC = () => {
                   <div className="w-6 h-6 border-2 border-nesma-secondary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : rules.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 text-sm">
+                <div className="text-center py-12 text-gray-400 text-sm">
                   No rules yet. Add your first rule to start automating.
                 </div>
               ) : (

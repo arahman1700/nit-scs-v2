@@ -105,7 +105,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
               </optgroup>
             ))}
         </select>
-        {selectedMeasureObj && <p className="text-xs text-gray-500 mt-1">{selectedMeasureObj.description}</p>}
+        {selectedMeasureObj && <p className="text-xs text-gray-400 mt-1">{selectedMeasureObj.description}</p>}
       </div>
 
       {/* Step 2: Pick Dimensions */}
@@ -115,7 +115,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
             2. Slice by Dimensions (optional)
           </label>
           {compatibleDimensions.length === 0 ? (
-            <p className="text-sm text-gray-500">No compatible dimensions</p>
+            <p className="text-sm text-gray-400">No compatible dimensions</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {compatibleDimensions.map(d => (
@@ -145,7 +145,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
           </label>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex-1">
-              <label htmlFor="semanticStartDate" className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="semanticStartDate" className="block text-xs text-gray-400 mb-1">
                 <Calendar size={12} className="inline mr-1" />
                 Start Date
               </label>
@@ -159,7 +159,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
               />
             </div>
             <div className="flex-1">
-              <label htmlFor="semanticEndDate" className="block text-xs text-gray-500 mb-1">
+              <label htmlFor="semanticEndDate" className="block text-xs text-gray-400 mb-1">
                 <Calendar size={12} className="inline mr-1" />
                 End Date
               </label>
@@ -237,7 +237,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
                       </tbody>
                     </table>
                     {(resultData as unknown[]).length > 20 && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className="text-xs text-gray-400 mt-2">
                         Showing 20 of {(resultData as unknown[]).length} rows
                       </p>
                     )}
@@ -249,7 +249,7 @@ export const SemanticQueryBuilder: React.FC<SemanticQueryBuilderProps> = ({ onSa
             )}
 
             {!queryMutation.isPending && !queryMutation.isError && !queryMutation.isSuccess && (
-              <p className="text-sm text-gray-500 text-center py-3">Select a measure to see results</p>
+              <p className="text-sm text-gray-400 text-center py-3">Select a measure to see results</p>
             )}
           </div>
         </div>

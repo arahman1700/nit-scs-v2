@@ -276,7 +276,7 @@ export const DynamicDocumentFormPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-400">{entry.performedBy?.fullName}</p>
-                    <p className="text-xs text-gray-500">{new Date(entry.performedAt).toLocaleString()}</p>
+                    <p className="text-xs text-gray-400">{new Date(entry.performedAt).toLocaleString()}</p>
                   </div>
                 </div>
               ))}

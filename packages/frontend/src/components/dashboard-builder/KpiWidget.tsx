@@ -38,7 +38,7 @@ export const KpiWidget: React.FC<KpiWidgetProps> = ({ widget }) => {
         {typeof value === 'number' ? value.toLocaleString() : value}
       </span>
       <span className="text-sm text-gray-400 mt-1">{label}</span>
-      {result?.trend && <span className="text-xs text-gray-500 mt-1">{result.trend}</span>}
+      {result?.trend && <span className="text-xs text-gray-400 mt-1">{result.trend}</span>}
     </div>
   );
 };

@@ -183,14 +183,14 @@ export const ScrapForm: React.FC = () => {
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  existingDoc.siteManagerApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-500'
+                  existingDoc.siteManagerApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-400'
                 }`}
               >
                 <CheckCircle className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm font-medium text-white">Site Manager</p>
-                <p className={`text-xs ${existingDoc.siteManagerApproved ? 'text-emerald-400' : 'text-gray-500'}`}>
+                <p className={`text-xs ${existingDoc.siteManagerApproved ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {existingDoc.siteManagerApproved ? 'Approved' : 'Pending'}
                 </p>
               </div>
@@ -214,14 +214,14 @@ export const ScrapForm: React.FC = () => {
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  existingDoc.qcApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-500'
+                  existingDoc.qcApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-400'
                 }`}
               >
                 <CheckCircle className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm font-medium text-white">QC Officer</p>
-                <p className={`text-xs ${existingDoc.qcApproved ? 'text-emerald-400' : 'text-gray-500'}`}>
+                <p className={`text-xs ${existingDoc.qcApproved ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {existingDoc.qcApproved ? 'Approved' : 'Pending'}
                 </p>
               </div>
@@ -247,14 +247,14 @@ export const ScrapForm: React.FC = () => {
             >
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  existingDoc.storekeeperApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-500'
+                  existingDoc.storekeeperApproved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-gray-400'
                 }`}
               >
                 <CheckCircle className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-sm font-medium text-white">Storekeeper</p>
-                <p className={`text-xs ${existingDoc.storekeeperApproved ? 'text-emerald-400' : 'text-gray-500'}`}>
+                <p className={`text-xs ${existingDoc.storekeeperApproved ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {existingDoc.storekeeperApproved ? 'Approved' : 'Pending'}
                 </p>
               </div>
@@ -460,7 +460,7 @@ export const ScrapForm: React.FC = () => {
           <span className="block text-sm text-gray-300 group-hover:text-white transition-colors">
             {uploadMutation.isPending ? 'Uploading...' : 'Click to add photo'}
           </span>
-          <span className="text-xs text-gray-500 mt-1 block">JPG, PNG -- Max 10MB</span>
+          <span className="text-xs text-gray-400 mt-1 block">JPG, PNG -- Max 10MB</span>
         </label>
 
         {photos.length > 0 && photos.length < 3 && (

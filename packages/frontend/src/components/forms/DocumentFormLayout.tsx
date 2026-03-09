@@ -62,7 +62,7 @@ export const DocumentFormLayout: React.FC<DocumentFormLayoutProps> = ({
                 <span className="text-xs font-mono bg-nesma-secondary/10 text-nesma-secondary border border-nesma-secondary/30 px-2 py-1 rounded">
                   {documentNumber}
                 </span>
-                <span className="text-[10px] text-gray-500">{subtitle}</span>
+                <span className="text-[10px] text-gray-400">{subtitle}</span>
                 {isEditMode && docStatus && (
                   <span
                     className={`text-xs px-2 py-1 rounded border ${isEditable ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'}`}

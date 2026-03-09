@@ -204,7 +204,7 @@ export const CostAllocationPage: React.FC = () => {
         <div className="glass-card rounded-2xl p-6 border border-red-500/20 text-center">
           <AlertTriangle size={32} className="text-red-400 mx-auto mb-3" />
           <p className="text-red-400 font-medium">Failed to load cost allocation data</p>
-          <p className="text-gray-500 text-sm mt-1">Check your connection and try again</p>
+          <p className="text-gray-400 text-sm mt-1">Check your connection and try again</p>
           <button
             onClick={() => refetchSummary()}
             className="mt-4 px-4 py-2 bg-nesma-primary text-white rounded-lg text-sm hover:bg-nesma-primary/80 transition-all"
@@ -288,7 +288,7 @@ export const CostAllocationPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-400">
                 {projects.length} project{projects.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -316,8 +316,8 @@ export const CostAllocationPage: React.FC = () => {
                 <tbody className="divide-y divide-white/5 text-gray-300">
                   {projects.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                        <DollarSign size={32} className="mx-auto mb-3 text-gray-600" />
+                      <td colSpan={8} className="px-4 py-12 text-center text-gray-400">
+                        <DollarSign size={32} className="mx-auto mb-3 text-gray-400" />
                         <p>No cost allocation data found</p>
                         <p className="text-xs mt-1">Try adjusting the date range</p>
                       </td>
@@ -329,10 +329,10 @@ export const CostAllocationPage: React.FC = () => {
                         onClick={() => setSelectedProjectId(project.projectId)}
                         className="hover:bg-white/5 transition-colors cursor-pointer"
                       >
-                        <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                        <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
                         <td className="px-4 py-3">
                           <p className="text-white font-medium">{project.projectName}</p>
-                          <p className="text-xs text-gray-500 font-mono">{project.projectCode}</p>
+                          <p className="text-xs text-gray-400 font-mono">{project.projectCode}</p>
                         </td>
                         {CATEGORY_CONFIGS.map(cat => (
                           <td key={cat.key} className="px-4 py-3 text-right font-mono text-xs">
@@ -384,7 +384,7 @@ export const CostAllocationPage: React.FC = () => {
                         {formatCurrency(catData?.totalValue ?? 0)}
                       </p>
                       <p className="text-xs text-gray-400">{cat.label}</p>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-[10px] text-gray-400">
                         {catData?.count ?? 0} transaction{(catData?.count ?? 0) !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -426,7 +426,7 @@ export const CostAllocationPage: React.FC = () => {
                         <span className="text-sm text-gray-300">{cat.label}</span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm font-mono text-white">{formatCurrency(value)}</span>
-                          <span className="text-xs text-gray-500 w-12 text-right">{pct.toFixed(1)}%</span>
+                          <span className="text-xs text-gray-400 w-12 text-right">{pct.toFixed(1)}%</span>
                         </div>
                       </div>
                       <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
@@ -456,7 +456,7 @@ export const CostAllocationPage: React.FC = () => {
       {/* ── No data (no project selected, no summary) ──────────────────── */}
       {!isLoading && !summaryError && !selectedProjectId && !summaryData && (
         <div className="glass-card rounded-2xl p-10 text-center border border-white/10">
-          <DollarSign size={40} className="mx-auto mb-4 text-gray-600" />
+          <DollarSign size={40} className="mx-auto mb-4 text-gray-400" />
           <h3 className="text-lg font-semibold text-white mb-2">No Data Available</h3>
           <p className="text-gray-400 text-sm">Cost allocation data will appear once transactions are recorded.</p>
         </div>

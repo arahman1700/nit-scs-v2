@@ -48,7 +48,7 @@ export const EmailLogTable: React.FC<EmailLogTableProps> = ({ logs, isLoading })
   }
 
   if (logs.length === 0) {
-    return <div className="text-center py-12 text-gray-500 text-sm">No emails sent yet.</div>;
+    return <div className="text-center py-12 text-gray-400 text-sm">No emails sent yet.</div>;
   }
 
   return (
@@ -56,12 +56,12 @@ export const EmailLogTable: React.FC<EmailLogTableProps> = ({ logs, isLoading })
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Status</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Template</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">To</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Subject</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Sent</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Error</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Status</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Template</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">To</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Subject</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Sent</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Error</th>
           </tr>
         </thead>
         <tbody>
@@ -89,7 +89,7 @@ export const EmailLogTable: React.FC<EmailLogTableProps> = ({ logs, isLoading })
                 </td>
                 <td className="py-3 px-3">
                   <span
-                    className="text-gray-500 text-xs"
+                    className="text-gray-400 text-xs"
                     title={log.sentAt ? new Date(log.sentAt).toLocaleString() : ''}
                   >
                     {log.sentAt ? timeAgo(log.sentAt) : '-'}
@@ -102,7 +102,7 @@ export const EmailLogTable: React.FC<EmailLogTableProps> = ({ logs, isLoading })
                       {log.error.length > 40 ? log.error.substring(0, 40) + '...' : log.error}
                     </span>
                   ) : (
-                    <span className="text-gray-600 text-xs">-</span>
+                    <span className="text-gray-400 text-xs">-</span>
                   )}
                 </td>
               </tr>

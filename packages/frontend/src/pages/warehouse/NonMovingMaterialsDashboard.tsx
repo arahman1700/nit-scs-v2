@@ -518,7 +518,7 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
               <tbody className="divide-y divide-white/5 text-sm text-gray-300">
                 {filteredData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-white/5 transition-colors">
-                    <td className="px-4 py-3 text-gray-500">{row.sn}</td>
+                    <td className="px-4 py-3 text-gray-400">{row.sn}</td>
                     <td className="px-4 py-3">
                       <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded text-xs">{row.warehouse}</span>
                     </td>
@@ -531,7 +531,7 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
                         {row.project}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate" title={row.remarks}>
+                    <td className="px-4 py-3 text-xs text-gray-400 max-w-xs truncate" title={row.remarks}>
                       {row.remarks}
                     </td>
                   </tr>
@@ -566,7 +566,7 @@ export const NonMovingMaterialsDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-white/10">
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <p className="text-xs text-gray-400 flex items-center gap-1">
                     <Clock size={12} />
                     {row.remarks}
                   </p>

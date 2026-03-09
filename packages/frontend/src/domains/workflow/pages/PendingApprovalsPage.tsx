@@ -75,7 +75,7 @@ const ApprovalCard: React.FC<{
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-white">{docTypeLabel(group.documentType)}</div>
-            <div className="text-xs text-gray-500 font-mono truncate">{group.documentId.slice(0, 8)}...</div>
+            <div className="text-xs text-gray-400 font-mono truncate">{group.documentId.slice(0, 8)}...</div>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
@@ -116,7 +116,7 @@ const ApprovalCard: React.FC<{
       )}
 
       {/* Created timestamp */}
-      <div className="mt-3 text-[10px] text-gray-600">
+      <div className="mt-3 text-[10px] text-gray-400">
         Created{' '}
         {new Date(group.createdAt).toLocaleDateString('en-US', {
           month: 'short',
@@ -186,7 +186,7 @@ const ApprovalCard: React.FC<{
                 setShowActions(false);
                 setComments('');
               }}
-              className="px-3 py-2 text-gray-500 hover:text-gray-300 text-sm transition-all"
+              className="px-3 py-2 text-gray-400 hover:text-gray-300 text-sm transition-all"
             >
               Cancel
             </button>

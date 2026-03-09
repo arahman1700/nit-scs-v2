@@ -228,7 +228,7 @@ export const FeaturesShowcasePage: React.FC = () => {
       <div className="glass-card rounded-2xl p-4 border border-white/10 space-y-4">
         {/* Search bar */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
@@ -270,14 +270,14 @@ export const FeaturesShowcasePage: React.FC = () => {
       </div>
 
       {/* Results count */}
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-gray-400">
         Showing {filtered.length} of {FEATURES_CATALOG.length} features
       </div>
 
       {/* Features Grid */}
       {filtered.length === 0 ? (
         <div className="glass-card rounded-2xl p-12 border border-white/10 text-center">
-          <Search className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <Search className="w-10 h-10 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">No features match your search criteria.</p>
         </div>
       ) : (

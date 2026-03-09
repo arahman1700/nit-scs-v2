@@ -190,7 +190,7 @@ function KpiDashboardCard({ item }: KpiDashboardCardProps) {
 
       {/* Target bar */}
       <div className="flex items-center gap-2">
-        <Target size={12} className="text-gray-500 flex-shrink-0" />
+        <Target size={12} className="text-gray-400 flex-shrink-0" />
         <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
@@ -364,7 +364,7 @@ export function KpiDashboard() {
                         <h3 className="text-sm font-semibold text-white group-hover:text-nesma-secondary transition-colors">
                           {meta.label}
                         </h3>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">
                           {entries.length} indicators
                         </p>
                       </div>

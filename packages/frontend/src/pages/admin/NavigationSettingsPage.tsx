@@ -132,7 +132,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({
             {section.section}
           </button>
 
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-400">
             {section.items.filter(i => i.visible).length}/{section.items.length} items
           </span>
         </div>
@@ -141,7 +141,7 @@ const SectionEditor: React.FC<SectionEditorProps> = ({
         <button
           onClick={onToggleSection}
           className={`p-2 rounded-lg transition-all ${
-            section.visible ? 'hover:bg-white/10 text-nesma-secondary' : 'hover:bg-white/10 text-gray-600'
+            section.visible ? 'hover:bg-white/10 text-nesma-secondary' : 'hover:bg-white/10 text-gray-400'
           }`}
           aria-label={section.visible ? 'Hide section' : 'Show section'}
         >
@@ -161,16 +161,16 @@ const SectionEditor: React.FC<SectionEditorProps> = ({
             >
               <div className="flex items-center gap-3">
                 <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                <span className={`text-sm ${item.visible ? 'text-gray-300' : 'text-gray-500 line-through'}`}>
+                <span className={`text-sm ${item.visible ? 'text-gray-300' : 'text-gray-400 line-through'}`}>
                   {item.label}
                 </span>
-                <span className="text-[10px] text-gray-600 font-mono">{item.path}</span>
+                <span className="text-[10px] text-gray-400 font-mono">{item.path}</span>
               </div>
 
               <button
                 onClick={() => onToggleItem(itemIdx)}
                 className={`p-1.5 rounded-lg transition-all ${
-                  item.visible ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-white/10 text-gray-600'
+                  item.visible ? 'hover:bg-white/10 text-gray-400' : 'hover:bg-white/10 text-gray-400'
                 }`}
                 aria-label={item.visible ? 'Hide item' : 'Show item'}
               >
@@ -198,14 +198,14 @@ const PreviewPanel: React.FC<PreviewPanelProps> = ({ config }) => {
       <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-4">Sidebar Preview</h3>
 
       <div className="space-y-4">
-        {visibleSections.length === 0 && <p className="text-sm text-gray-500 text-center py-6">No visible sections</p>}
+        {visibleSections.length === 0 && <p className="text-sm text-gray-400 text-center py-6">No visible sections</p>}
         {visibleSections.map(section => {
           const visibleItems = section.items.filter(i => i.visible);
           if (visibleItems.length === 0) return null;
 
           return (
             <div key={section.section}>
-              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 px-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-2">
                 {section.section}
               </p>
               <div className="space-y-0.5">
@@ -369,7 +369,7 @@ export const NavigationSettingsPage: React.FC = () => {
         <div className="xl:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-white">Sections & Items</h2>
-            <span className="text-xs text-gray-500">{currentConfig.length} sections</span>
+            <span className="text-xs text-gray-400">{currentConfig.length} sections</span>
           </div>
 
           {currentConfig.map((section, idx) => (

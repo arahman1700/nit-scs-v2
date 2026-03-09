@@ -696,7 +696,7 @@ export const AdminResourceList: React.FC = () => {
       {query.isError && (
         <div className="glass-card p-6 rounded-xl border border-red-500/20 bg-red-500/5">
           <p className="text-sm text-red-400">Failed to load data. Please try again.</p>
-          <p className="text-xs text-gray-500 mt-1">{(query.error as Error)?.message}</p>
+          <p className="text-xs text-gray-400 mt-1">{(query.error as Error)?.message}</p>
         </div>
       )}
 
@@ -725,6 +725,7 @@ export const AdminResourceList: React.FC = () => {
                   onClick={() => setScannerOpen(true)}
                   className="flex items-center gap-2 px-3 py-2 bg-nesma-primary/20 text-nesma-secondary border border-nesma-primary/30 rounded-lg text-sm hover:bg-nesma-primary/30 transition-all"
                   title="Scan Barcode"
+                  aria-label="Scan barcode"
                 >
                   <ScanLine size={16} />
                 </button>
@@ -776,6 +777,7 @@ export const AdminResourceList: React.FC = () => {
                   }}
                   className="p-1 rounded hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
                   title="Clear selection"
+                  aria-label="Clear selection"
                 >
                   <X size={14} />
                 </button>
@@ -829,7 +831,7 @@ export const AdminResourceList: React.FC = () => {
                             <p className="text-white font-medium text-sm truncate group-hover:text-nesma-secondary transition-colors">
                               {titleCol ? renderCellValue(titleCol, row) : '-'}
                             </p>
-                            <p className="text-gray-500 text-xs font-mono mt-0.5">
+                            <p className="text-gray-400 text-xs font-mono mt-0.5">
                               {primaryCol ? (row[primaryCol.key] as string) || '-' : '-'}
                             </p>
                           </div>
@@ -838,7 +840,7 @@ export const AdminResourceList: React.FC = () => {
                         <div className="space-y-1.5 pt-3 border-t border-white/5">
                           {restCols.slice(0, 4).map((col, cIdx) => (
                             <div key={cIdx} className="flex items-center justify-between text-xs">
-                              <span className="text-gray-500">{col.label}</span>
+                              <span className="text-gray-400">{col.label}</span>
                               <span className="text-gray-300 truncate ml-2 max-w-[60%] text-right">
                                 {renderCellValue(col, row)}
                               </span>
@@ -887,6 +889,7 @@ export const AdminResourceList: React.FC = () => {
                           onClick={toggleSelectAll}
                           className="text-gray-400 hover:text-nesma-secondary transition-colors"
                           title={allSelected ? 'Deselect all' : 'Select all'}
+                          aria-label={allSelected ? 'Deselect all' : 'Select all'}
                         >
                           {allSelected ? <CheckSquare size={16} /> : <Square size={16} />}
                         </button>
@@ -927,6 +930,7 @@ export const AdminResourceList: React.FC = () => {
                                   if (rowId) toggleSelect(rowId);
                                 }}
                                 className="text-gray-400 hover:text-nesma-secondary transition-colors"
+                                aria-label={isRowSelected ? 'Deselect row' : 'Select row'}
                               >
                                 {isRowSelected ? (
                                   <CheckSquare size={16} className="text-nesma-secondary" />

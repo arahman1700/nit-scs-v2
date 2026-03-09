@@ -355,7 +355,7 @@ export const ManagerDashboard: React.FC = () => {
               ].map(item => (
                 <div key={item.label} className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
                   <p className={`text-3xl font-bold ${item.color}`}>{item.count}</p>
-                  <p className="text-xs text-gray-500 mt-1">{item.label}</p>
+                  <p className="text-xs text-gray-400 mt-1">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -375,19 +375,19 @@ export const ManagerDashboard: React.FC = () => {
                       ? `${(crossDept.inventory.totalInventoryValue / 1_000_000).toFixed(1)}M`
                       : `${(crossDept.inventory.totalInventoryValue / 1_000).toFixed(0)}K`}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Inventory Value (SAR)</p>
+                  <p className="text-xs text-gray-400 mt-1">Inventory Value (SAR)</p>
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
                   <p className="text-2xl font-bold text-amber-400">{crossDept.inventory.lowStockAlerts}</p>
-                  <p className="text-xs text-gray-500 mt-1">Low Stock Alerts</p>
+                  <p className="text-xs text-gray-400 mt-1">Low Stock Alerts</p>
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
                   <p className="text-2xl font-bold text-red-400">{crossDept.inventory.blockedLots}</p>
-                  <p className="text-xs text-gray-500 mt-1">Blocked Lots</p>
+                  <p className="text-xs text-gray-400 mt-1">Blocked Lots</p>
                 </div>
                 <div className="text-center p-4 bg-white/5 rounded-xl border border-white/10">
                   <p className="text-2xl font-bold text-emerald-400">{crossDept.inventory.warehouses.length}</p>
-                  <p className="text-xs text-gray-500 mt-1">Active Warehouses</p>
+                  <p className="text-xs text-gray-400 mt-1">Active Warehouses</p>
                 </div>
               </div>
 
@@ -400,7 +400,7 @@ export const ManagerDashboard: React.FC = () => {
                     className="px-3 py-2 bg-white/5 rounded-lg border border-white/5 text-center min-w-[70px]"
                   >
                     <p className="text-lg font-bold text-white">{counts.total}</p>
-                    <p className="text-[10px] text-gray-500 uppercase">{docType}</p>
+                    <p className="text-[10px] text-gray-400 uppercase">{docType}</p>
                   </div>
                 ))}
               </div>
@@ -421,14 +421,14 @@ export const ManagerDashboard: React.FC = () => {
                     </span>
                     <span className="text-sm text-white">{item.title}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <div className="flex items-center gap-3 text-xs text-gray-400">
                     {item.value > 0 && <span>{formatCurrency(item.value)}</span>}
                     <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">{item.status}</span>
                   </div>
                 </div>
               ))}
               {allPendingItems.length === 0 && (
-                <p className="text-gray-500 text-sm text-center py-8">No pending items</p>
+                <p className="text-gray-400 text-sm text-center py-8">No pending items</p>
               )}
             </div>
           </div>
@@ -440,7 +440,7 @@ export const ManagerDashboard: React.FC = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -472,7 +472,7 @@ export const ManagerDashboard: React.FC = () => {
                     <td className="px-4 py-3 text-sm text-gray-300">
                       {item.value > 0 ? formatCurrency(item.value) : '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">{item.date}</td>
+                    <td className="px-4 py-3 text-sm text-gray-400">{item.date}</td>
                     <td className="px-4 py-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
                         {item.status}
@@ -482,7 +482,7 @@ export const ManagerDashboard: React.FC = () => {
                 ))}
                 {allPendingItems.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                       No pending approvals
                     </td>
                   </tr>
@@ -499,7 +499,7 @@ export const ManagerDashboard: React.FC = () => {
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex-1 min-w-[200px] relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 value={docSearch}
                 onChange={e => {
@@ -540,7 +540,7 @@ export const ManagerDashboard: React.FC = () => {
                 </option>
               ))}
             </select>
-            <span className="text-xs text-gray-500">{filteredDocs.length} documents</span>
+            <span className="text-xs text-gray-400">{filteredDocs.length} documents</span>
           </div>
 
           {/* Table */}
@@ -583,7 +583,7 @@ export const ManagerDashboard: React.FC = () => {
                 ))}
                 {paginatedDocs.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                    <td colSpan={5} className="px-4 py-12 text-center text-gray-400">
                       No documents found
                     </td>
                   </tr>
@@ -594,7 +594,7 @@ export const ManagerDashboard: React.FC = () => {
             {/* Pagination */}
             {docPageCount > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   Page {docPage} of {docPageCount}
                 </span>
                 <div className="flex items-center gap-2">
@@ -624,7 +624,7 @@ export const ManagerDashboard: React.FC = () => {
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="glass-card rounded-xl p-5 border border-white/10">
-              <p className="text-xs text-gray-500 uppercase">Total Projects</p>
+              <p className="text-xs text-gray-400 uppercase">Total Projects</p>
               <p className="text-2xl font-bold text-white mt-1">{allProjects.length}</p>
             </div>
             <div className="glass-card rounded-xl p-5 border border-emerald-500/20 bg-emerald-500/5">
@@ -632,7 +632,7 @@ export const ManagerDashboard: React.FC = () => {
               <p className="text-2xl font-bold text-emerald-400 mt-1">{activeProjects.length}</p>
             </div>
             <div className="glass-card rounded-xl p-5 border border-white/10">
-              <p className="text-xs text-gray-500 uppercase">On Hold / Completed</p>
+              <p className="text-xs text-gray-400 uppercase">On Hold / Completed</p>
               <p className="text-2xl font-bold text-gray-400 mt-1">{allProjects.length - activeProjects.length}</p>
             </div>
           </div>

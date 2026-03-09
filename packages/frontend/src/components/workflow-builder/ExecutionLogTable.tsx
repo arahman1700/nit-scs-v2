@@ -19,7 +19,7 @@ interface ExecutionLogTableProps {
 
 function StatusIcon({ log }: { log: ExecutionLog }) {
   if (log.error) return <XCircle size={16} className="text-red-400" />;
-  if (!log.matched) return <Clock size={16} className="text-gray-500" />;
+  if (!log.matched) return <Clock size={16} className="text-gray-400" />;
   const anyFailed = log.actionsRun.some(a => !a.success);
   if (anyFailed) return <AlertTriangle size={16} className="text-amber-400" />;
   return <CheckCircle size={16} className="text-emerald-400" />;
@@ -53,7 +53,7 @@ export const ExecutionLogTable: React.FC<ExecutionLogTableProps> = ({ logs, isLo
 
   if (logs.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500 text-sm">
+      <div className="text-center py-12 text-gray-400 text-sm">
         No execution logs yet. Trigger an event to see results.
       </div>
     );
@@ -64,12 +64,12 @@ export const ExecutionLogTable: React.FC<ExecutionLogTableProps> = ({ logs, isLo
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/10">
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Status</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Event</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Matched</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Actions</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">Time</th>
-            <th className="text-left text-xs text-gray-500 uppercase tracking-wide py-3 px-3">When</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Status</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Event</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Matched</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Actions</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">Time</th>
+            <th className="text-left text-xs text-gray-400 uppercase tracking-wide py-3 px-3">When</th>
           </tr>
         </thead>
         <tbody>
@@ -82,7 +82,7 @@ export const ExecutionLogTable: React.FC<ExecutionLogTableProps> = ({ logs, isLo
                 <span className="text-white/80 font-mono text-xs">{log.triggerEvent}</span>
               </td>
               <td className="py-3 px-3">
-                <span className={`text-xs font-bold ${log.matched ? 'text-emerald-400' : 'text-gray-600'}`}>
+                <span className={`text-xs font-bold ${log.matched ? 'text-emerald-400' : 'text-gray-400'}`}>
                   {log.matched ? 'YES' : 'NO'}
                 </span>
               </td>
@@ -102,14 +102,14 @@ export const ExecutionLogTable: React.FC<ExecutionLogTableProps> = ({ logs, isLo
                     ))}
                   </div>
                 ) : (
-                  <span className="text-gray-600 text-xs">-</span>
+                  <span className="text-gray-400 text-xs">-</span>
                 )}
               </td>
               <td className="py-3 px-3">
                 <span className="text-gray-400 text-xs font-mono">{formatTime(log.executionTimeMs)}</span>
               </td>
               <td className="py-3 px-3">
-                <span className="text-gray-500 text-xs" title={new Date(log.createdAt).toLocaleString()}>
+                <span className="text-gray-400 text-xs" title={new Date(log.createdAt).toLocaleString()}>
                   {timeAgo(log.createdAt)}
                 </span>
               </td>

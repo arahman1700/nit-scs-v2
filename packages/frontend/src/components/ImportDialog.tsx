@@ -158,7 +158,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
                 <p className="text-white font-medium mb-1">
                   {previewMutation.isPending ? 'Parsing file...' : 'Click to upload or drag & drop'}
                 </p>
-                <p className="text-xs text-gray-500">Supports .xlsx, .xls, .csv (max 10MB, 5000 rows)</p>
+                <p className="text-xs text-gray-400">Supports .xlsx, .xls, .csv (max 10MB, 5000 rows)</p>
               </div>
               {previewMutation.isError && (
                 <div className="mt-4 flex items-center gap-2 text-sm text-red-400">
@@ -194,9 +194,9 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
                         <div className="flex-1 min-w-0">
                           <span className="text-sm text-white">{field.label}</span>
                           {field.required && <span className="text-red-400 ml-1 text-xs">*</span>}
-                          <span className="text-[10px] text-gray-500 ml-2 font-mono">{field.dbField}</span>
+                          <span className="text-[10px] text-gray-400 ml-2 font-mono">{field.dbField}</span>
                         </div>
-                        <ArrowRight size={14} className="text-gray-500 flex-shrink-0" />
+                        <ArrowRight size={14} className="text-gray-400 flex-shrink-0" />
                         <select
                           value={mappedHeader}
                           onChange={e => {
@@ -241,7 +241,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
                     <tbody className="divide-y divide-white/5">
                       {preview.sampleRows.map((row, idx) => (
                         <tr key={idx}>
-                          <td className="px-3 py-2 text-gray-500">{idx + 1}</td>
+                          <td className="px-3 py-2 text-gray-400">{idx + 1}</td>
                           {preview.headers.slice(0, 8).map(h => (
                             <td key={h} className="px-3 py-2 text-gray-300 truncate max-w-[120px]">
                               {String(row[h] ?? '')}
@@ -261,7 +261,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
             <div className="flex flex-col items-center justify-center py-16">
               <Loader2 size={40} className="text-nesma-secondary animate-spin mb-4" />
               <p className="text-white font-medium">Importing records...</p>
-              <p className="text-xs text-gray-500 mt-1">This may take a moment</p>
+              <p className="text-xs text-gray-400 mt-1">This may take a moment</p>
             </div>
           )}
 
@@ -281,7 +281,7 @@ export const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, ent
                 )}
                 <div className="flex-1 p-4 rounded-xl bg-white/5 border border-white/10 text-center">
                   <div className="text-2xl font-bold text-gray-300">{resultData.total}</div>
-                  <div className="text-xs text-gray-500">Total</div>
+                  <div className="text-xs text-gray-400">Total</div>
                 </div>
               </div>
 

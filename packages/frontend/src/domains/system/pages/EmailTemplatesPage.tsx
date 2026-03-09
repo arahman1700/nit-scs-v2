@@ -57,7 +57,7 @@ export const EmailTemplatesPage: React.FC = () => {
             <Mail size={20} className="text-blue-400" />
             Email Templates
           </h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage Handlebars email templates used by workflow rules.</p>
+          <p className="text-sm text-gray-400 mt-0.5">Manage Handlebars email templates used by workflow rules.</p>
         </div>
         <button
           onClick={() =>
@@ -136,7 +136,7 @@ export const EmailTemplatesPage: React.FC = () => {
         <div className="bg-white/[0.02] rounded-2xl border border-white/10 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-bold text-white">Preview: {previewTemplate.name}</h3>
-            <button onClick={() => setPreviewId(null)} className="text-xs text-gray-500 hover:text-white">
+            <button onClick={() => setPreviewId(null)} className="text-xs text-gray-400 hover:text-white">
               Close
             </button>
           </div>
@@ -155,8 +155,8 @@ export const EmailTemplatesPage: React.FC = () => {
       {!isLoading && !editing && (
         <div className="space-y-2">
           {templates.length === 0 ? (
-            <div className="text-center py-16 text-gray-500 text-sm">
-              <Mail size={40} className="mx-auto mb-3 text-gray-600" />
+            <div className="text-center py-16 text-gray-400 text-sm">
+              <Mail size={40} className="mx-auto mb-3 text-gray-400" />
               No email templates yet.
             </div>
           ) : (
@@ -173,7 +173,7 @@ export const EmailTemplatesPage: React.FC = () => {
                         {tpl.code}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{tpl.subject}</p>
+                    <p className="text-xs text-gray-400 truncate">{tpl.subject}</p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button

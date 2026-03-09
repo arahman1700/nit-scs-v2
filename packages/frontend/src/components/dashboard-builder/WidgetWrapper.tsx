@@ -60,7 +60,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, onUpdate, 
               <button
                 {...attributes}
                 {...listeners}
-                className="cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-300 flex-shrink-0"
+                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-300 flex-shrink-0"
               >
                 <GripVertical size={16} />
               </button>
@@ -90,7 +90,7 @@ export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, onUpdate, 
           {Renderer ? (
             <Renderer widget={widget} />
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               Unknown widget type: {widget.widgetType}
             </div>
           )}

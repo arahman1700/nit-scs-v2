@@ -233,9 +233,9 @@ const SensorGrid: React.FC<{
   if (sensors.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-12 text-center">
-        <Radio className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <Radio className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-400">No sensors registered yet</p>
-        <p className="text-gray-500 text-sm mt-1">Sensors will appear here once registered via the API</p>
+        <p className="text-gray-400 text-sm mt-1">Sensors will appear here once registered via the API</p>
       </div>
     );
   }
@@ -286,7 +286,7 @@ const SensorCard: React.FC<{
           </div>
           <div>
             <p className="text-sm font-medium text-white">{sensor.sensorCode}</p>
-            <p className="text-xs text-gray-500 capitalize">{sensor.sensorType}</p>
+            <p className="text-xs text-gray-400 capitalize">{sensor.sensorType}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -309,13 +309,13 @@ const SensorCard: React.FC<{
           {sensor.lastValue !== null ? Number(sensor.lastValue).toFixed(1) : '--'}
           <span className="text-sm font-normal text-gray-400 ml-1">{sensor.unit}</span>
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">{formatTimeAgo(sensor.lastReadingAt)}</p>
+        <p className="text-xs text-gray-400 mt-0.5">{formatTimeAgo(sensor.lastReadingAt)}</p>
       </div>
 
       {/* Threshold Range Bar */}
       {(sensor.minThreshold !== null || sensor.maxThreshold !== null) && (
         <div className="mb-3">
-          <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div className="flex justify-between text-xs text-gray-400 mb-1">
             <span>{sensor.minThreshold !== null ? Number(sensor.minThreshold) : '--'}</span>
             <span>Threshold Range</span>
             <span>{sensor.maxThreshold !== null ? Number(sensor.maxThreshold) : '--'}</span>
@@ -375,11 +375,11 @@ const SensorCard: React.FC<{
 
       {/* Zone */}
       {sensor.zone && (
-        <p className="text-xs text-gray-500 mt-2 truncate">
+        <p className="text-xs text-gray-400 mt-2 truncate">
           {sensor.zone.zoneName} ({sensor.zone.zoneCode})
         </p>
       )}
-      {sensor.location && <p className="text-xs text-gray-600 truncate">{sensor.location}</p>}
+      {sensor.location && <p className="text-xs text-gray-400 truncate">{sensor.location}</p>}
 
       {/* Hover Eye */}
       <div className="flex justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -395,9 +395,9 @@ const ZoneHeatmapGrid: React.FC<{ zones: ZoneHeatmapEntry[] }> = ({ zones }) => 
   if (zones.length === 0) {
     return (
       <div className="glass-card rounded-2xl p-12 text-center">
-        <Thermometer className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+        <Thermometer className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-400">No zone data available</p>
-        <p className="text-gray-500 text-sm mt-1">Assign sensors to warehouse zones to see the heatmap</p>
+        <p className="text-gray-400 text-sm mt-1">Assign sensors to warehouse zones to see the heatmap</p>
       </div>
     );
   }
@@ -510,10 +510,10 @@ const AlertsPanel: React.FC<{ alerts: SensorAlert[]; isLoading: boolean }> = ({ 
             <div className="flex-1 min-w-0">
               <p className="text-sm text-white font-medium">{alert.message}</p>
               <div className="flex items-center gap-3 mt-1">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-gray-400">
                   {alert.sensor?.sensorCode} &middot; {alert.sensor?.location ?? 'N/A'}
                 </span>
-                <span className="text-xs text-gray-600">{new Date(alert.createdAt).toLocaleString()}</span>
+                <span className="text-xs text-gray-400">{new Date(alert.createdAt).toLocaleString()}</span>
               </div>
             </div>
             <button
@@ -691,7 +691,7 @@ const SensorDetailModal: React.FC<{
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="h-48 flex items-center justify-center text-gray-500 text-sm">
+              <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
                 No readings recorded in the last 7 days
               </div>
             )}
