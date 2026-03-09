@@ -123,7 +123,6 @@ export const FormWizard: React.FC<FormWizardProps> = ({
           {steps.map((step, idx) => {
             const isCompleted = completedSteps.has(idx);
             const isCurrent = idx === currentStep;
-            const _isFuture = idx > currentStep && !isCompleted;
             const StepIcon = step.icon;
 
             return (
