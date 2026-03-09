@@ -71,8 +71,9 @@ describe('LineItemsTable', () => {
     render(<LineItemsTable items={[baseItem]} onItemsChange={mockOnChange} />);
 
     expect(screen.getByText(/1 item/)).toBeInTheDocument();
-    // In edit mode, item name is in an input, not plain text
-    expect(screen.getByDisplayValue('Steel Pipe')).toBeInTheDocument();
+    // In edit mode, item name is in an input (renders in both desktop table and mobile cards)
+    const inputs = screen.getAllByDisplayValue('Steel Pipe');
+    expect(inputs.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows total value summary', () => {
@@ -90,8 +91,9 @@ describe('LineItemsTable', () => {
     ];
     render(<LineItemsTable items={items} onItemsChange={mockOnChange} />);
 
-    // Total should be 250 + 100 = 350 (toLocaleString may add formatting)
-    expect(screen.getByText(/350/)).toBeInTheDocument();
+    // Total should be 250 + 100 = 350 (renders in both desktop table and mobile cards)
+    const totals = screen.getAllByText(/350/);
+    expect(totals.length).toBeGreaterThanOrEqual(1);
   });
 
   it('adds a blank item when Add Manual button is clicked', async () => {
@@ -116,9 +118,11 @@ describe('LineItemsTable', () => {
     render(<LineItemsTable items={[baseItem]} onItemsChange={mockOnChange} showStockAvailability />);
 
     // MAT-001 has 100 on hand, 10 reserved = 90 available
-    // The component renders the number, and "Available" column header
-    expect(screen.getByText('Available')).toBeInTheDocument();
-    expect(screen.getByText('90')).toBeInTheDocument();
+    // Renders in both desktop table and mobile cards
+    const availableHeaders = screen.getAllByText('Available');
+    expect(availableHeaders.length).toBeGreaterThanOrEqual(1);
+    const stockCounts = screen.getAllByText('90');
+    expect(stockCounts.length).toBeGreaterThanOrEqual(1);
   });
 
   it('shows condition column when enabled', () => {
