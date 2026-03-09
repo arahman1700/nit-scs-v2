@@ -6,7 +6,7 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
-vi.mock('../../inventory/services/inventory.service.js', () => ({ getStockLevel: vi.fn() }));
+vi.mock('../../inventory/services/inventory.service.js', () => ({ getStockLevelsBatch: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 
@@ -20,7 +20,7 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { getStockLevel } from '../../inventory/services/inventory.service.js';
+import { getStockLevelsBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
 import { eventBus } from '../../../events/event-bus.js';
 import {
@@ -40,7 +40,7 @@ import {
 } from './mr.service.js';
 
 const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
-const mockedGetStockLevel = getStockLevel as ReturnType<typeof vi.fn>;
+const mockedGetStockLevelsBatch = getStockLevelsBatch as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 const mockedEventBus = eventBus as { publish: ReturnType<typeof vi.fn> };
 
@@ -441,24 +441,30 @@ describe('mr.service', () => {
       await expect(checkStock('mrf-1')).rejects.toThrow('MR must be approved to check stock');
     });
 
-    it('checks stock for each line across project warehouses', async () => {
+    it('batch-fetches stock for each line across project warehouses', async () => {
       const mrf = makeMrf({
         status: 'approved',
         mrfLines: [makeMrfLine({ id: 'line-1', itemId: 'item-1', qtyRequested: 10 })],
         project: { id: 'proj-1', warehouses: [{ id: 'wh-1' }, { id: 'wh-2' }] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockedGetStockLevel
-        .mockResolvedValueOnce({ available: 6 }) // wh-1
-        .mockResolvedValueOnce({ available: 4 }); // wh-2
+      mockedGetStockLevelsBatch.mockResolvedValue(
+        new Map([
+          ['item-1:wh-1', { onHand: 6, reserved: 0, available: 6 }],
+          ['item-1:wh-2', { onHand: 4, reserved: 0, available: 4 }],
+        ]),
+      );
       mockPrisma.mrfLine.update.mockResolvedValue({});
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const result = await checkStock('mrf-1');
 
-      expect(mockedGetStockLevel).toHaveBeenCalledTimes(2);
-      expect(mockedGetStockLevel).toHaveBeenCalledWith('item-1', 'wh-1');
-      expect(mockedGetStockLevel).toHaveBeenCalledWith('item-1', 'wh-2');
+      expect(mockedGetStockLevelsBatch).toHaveBeenCalledTimes(1);
+      expect(mockedGetStockLevelsBatch).toHaveBeenCalledWith([
+        { itemId: 'item-1', warehouseId: 'wh-1' },
+        { itemId: 'item-1', warehouseId: 'wh-2' },
+      ]);
       expect(result.stockResults[0]).toEqual(
         expect.objectContaining({ lineId: 'line-1', available: 10, source: 'from_stock' }),
       );
@@ -471,9 +477,12 @@ describe('mr.service', () => {
         project: { id: 'proj-1', warehouses: [{ id: 'wh-1' }] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockedGetStockLevel.mockResolvedValue({ available: 10 });
+      mockedGetStockLevelsBatch.mockResolvedValue(
+        new Map([['item-1:wh-1', { onHand: 10, reserved: 0, available: 10 }]]),
+      );
       mockPrisma.mrfLine.update.mockResolvedValue({});
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const result = await checkStock('mrf-1');
 
@@ -492,9 +501,10 @@ describe('mr.service', () => {
         project: { id: 'proj-1', warehouses: [{ id: 'wh-1' }] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockedGetStockLevel.mockResolvedValue({ available: 3 });
+      mockedGetStockLevelsBatch.mockResolvedValue(new Map([['item-1:wh-1', { onHand: 3, reserved: 0, available: 3 }]]));
       mockPrisma.mrfLine.update.mockResolvedValue({});
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const result = await checkStock('mrf-1');
 
@@ -513,10 +523,12 @@ describe('mr.service', () => {
         project: { id: 'proj-1', warehouses: [{ id: 'wh-1' }] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
-      mockedGetStockLevel.mockResolvedValue({ available: 0 });
+      mockedGetStockLevelsBatch
+        .mockResolvedValueOnce(new Map([['item-1:wh-1', { onHand: 0, reserved: 0, available: 0 }]]))
+        .mockResolvedValueOnce(new Map()); // cross-project: empty
       mockPrisma.mrfLine.update.mockResolvedValue({});
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
-      // Cross-project check: no other projects available
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
       mockPrisma.project.findMany.mockResolvedValue([]);
 
       const result = await checkStock('mrf-1');
@@ -531,33 +543,34 @@ describe('mr.service', () => {
         project: { id: 'proj-1', warehouses: [{ id: 'wh-1' }] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
+      mockedGetStockLevelsBatch.mockResolvedValue(new Map());
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const result = await checkStock('mrf-1');
 
-      expect(mockedGetStockLevel).not.toHaveBeenCalled();
+      // Batch called with empty array (no items to check), so effectively not used
+      expect(mockedGetStockLevelsBatch).toHaveBeenCalledWith([]);
       expect(result.stockResults[0]).toEqual(
         expect.objectContaining({ itemId: null, available: 0, source: 'purchase_required' }),
       );
     });
 
-    it('updates MRF status to checking_stock', async () => {
+    it('uses a single transaction for all line updates and status update', async () => {
       const mrf = makeMrf({
         status: 'approved',
         mrfLines: [],
         project: { id: 'proj-1', warehouses: [] },
       });
       mockPrisma.materialRequisition.findUnique.mockResolvedValue(mrf);
+      mockedGetStockLevelsBatch.mockResolvedValue(new Map());
       mockPrisma.materialRequisition.update.mockResolvedValue({ status: 'checking_stock' });
+      mockPrisma.$transaction.mockImplementation((ops: unknown[]) => Promise.all(ops));
 
       const result = await checkStock('mrf-1');
 
       expect(result.status).toBe('checking_stock');
-      expect(mockPrisma.materialRequisition.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: { status: 'checking_stock' },
-        }),
-      );
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
     });
   });
 

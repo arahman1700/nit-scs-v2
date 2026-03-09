@@ -1,15 +1,15 @@
 # V2 Mission Progress
 
-## آخر تحديث: 2026-03-09 01:15
+## آخر تحديث: 2026-03-09 03:58
 
 ---
 
 ## RESUME POINT
-- المرحلة: Phase 4 — N+1 & Performance
-- آخر ملف: packages/backend/src/domains/system/services/bulk.service.ts
-- الحالة: Phase 3 مكتمل (V1/V2 unification — 6 service pairs unified, frontend migrated)
-- التالي: Phase 4 — MR/MRF checkStock() N+1 queries fix
-- الاختبارات: 3,988/3,988 passed (0 failures, 172 deleted redundant V1 tests)
+- المرحلة: Phase 5 — Type Safety
+- آخر ملف: packages/backend/src/domains/outbound/services/mr.service.ts
+- الحالة: Phase 4 مكتمل (N+1 fix — checkStock() batched, getStockLevelsBatch added)
+- التالي: Phase 5 — 227 `as unknown as` casts reduction
+- الاختبارات: 3,992/3,992 passed (0 failures, +4 new batch tests)
 - آخر commit: (pending)
 
 ---
@@ -19,10 +19,10 @@
 ### Tests
 | Package | Files | Tests | Status |
 |---------|-------|-------|--------|
-| Backend | 147 | 3,011 | ✅ ALL PASSED |
+| Backend | 147 | 3,015 | ✅ ALL PASSED |
 | Frontend | 81 | 663 | ✅ ALL PASSED |
 | Shared | 5 | 314 | ✅ ALL PASSED |
-| **Total** | **233** | **3,988** | **✅ 0 failures** |
+| **Total** | **233** | **3,992** | **✅ 0 failures** |
 
 ### Build
 | Package | Status | Notes |
@@ -70,7 +70,7 @@
 | Severity | Count | Status |
 |----------|-------|--------|
 | Critical | 3 | ✅ Done |
-| High | 10 | ⚠️ 2 Pending (9-10) |
+| High | 10 | ⚠️ 1 Pending (10) |
 | Medium | 5 | ❌ Pending |
 | Resolved | 20 | ✅ Done |
 
@@ -133,7 +133,19 @@
   - السبب: أقل كود، backward compatible، تلقائي لكل المستهلكين
   - البدائل: Import-and-delegate (أكثر boilerplate بلا فائدة)
 - V1 route paths preserved as aliases — backward compatibility per MISSION requirements
-### Phase 4: N+1 & Performance — PENDING
+### Phase 4: N+1 & Performance — ✅ DONE
+#### ما تم
+- Added `getStockLevelsBatch()` to inventory.service.ts — single query for multiple (itemId, warehouseId) pairs
+- Refactored `checkStock()` in mr.service.ts to use batch queries instead of N+1 loops
+  - Primary check: N×W individual queries → 1 batch query
+  - Cross-project check: N×P×W individual queries → 1 batch query
+  - Line updates: N individual writes → 1 atomic $transaction
+- Added 4 new tests for getStockLevelsBatch (empty input, multi-pair, missing pairs, deduplication)
+- Updated 7 existing checkStock tests to verify batch API
+#### قرارات معمارية
+- قرار: Batch findMany with OR clause instead of Promise.all of findUnique calls
+  - السبب: Single round-trip to DB, uses existing composite unique index, deduplicates pairs automatically
+  - البدائل: Promise.all (still N queries in parallel — fewer round-trips but high DB load)
 ### Phase 5: Type Safety — PENDING
 ### Phase 6: SOW Alignment — PENDING
 ### Phase 7: Frontend Cleanup & Accessibility — PENDING

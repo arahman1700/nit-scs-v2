@@ -837,6 +837,51 @@ export async function getStockLevel(itemId: string, warehouseId: string): Promis
 }
 
 /**
+ * Batch-fetch stock levels for multiple (itemId, warehouseId) pairs in a single query.
+ * Returns a Map keyed by "itemId:warehouseId" → StockLevel.
+ * Pairs not found in the database return { onHand: 0, reserved: 0, available: 0 }.
+ */
+export async function getStockLevelsBatch(
+  pairs: Array<{ itemId: string; warehouseId: string }>,
+): Promise<Map<string, StockLevel>> {
+  const result = new Map<string, StockLevel>();
+  if (pairs.length === 0) return result;
+
+  // Deduplicate pairs
+  const uniqueKeys = new Set<string>();
+  const uniquePairs: Array<{ itemId: string; warehouseId: string }> = [];
+  for (const p of pairs) {
+    const key = `${p.itemId}:${p.warehouseId}`;
+    if (!uniqueKeys.has(key)) {
+      uniqueKeys.add(key);
+      uniquePairs.push(p);
+    }
+  }
+
+  const levels = await prisma.inventoryLevel.findMany({
+    where: {
+      OR: uniquePairs.map(p => ({
+        itemId: p.itemId,
+        warehouseId: p.warehouseId,
+      })),
+    },
+  });
+
+  // Index results by composite key
+  for (const level of levels) {
+    const onHand = Number(level.qtyOnHand);
+    const reserved = Number(level.qtyReserved);
+    result.set(`${level.itemId}:${level.warehouseId}`, {
+      onHand,
+      reserved,
+      available: onHand - reserved,
+    });
+  }
+
+  return result;
+}
+
+/**
  * Get stock levels for a single item across ALL warehouses.
  * Used by the cross-department dashboard.
  */

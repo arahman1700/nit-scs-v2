@@ -5,7 +5,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { getStockLevel } from '../../inventory/services/inventory.service.js';
+import { getStockLevelsBatch } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
@@ -196,6 +196,15 @@ export async function checkStock(id: string) {
   if (!mr) throw new NotFoundError('MR', id);
   if (mr.status !== 'approved') throw new BusinessRuleError('MR must be approved to check stock');
 
+  const projectWarehouses = mr.project?.warehouses ?? [];
+  const linesWithItems = mr.mrfLines.filter(l => l.itemId);
+
+  // Batch-fetch all stock levels in a single query (eliminates N×W individual queries)
+  const stockPairs = linesWithItems.flatMap(line =>
+    projectWarehouses.map(wh => ({ itemId: line.itemId!, warehouseId: wh.id })),
+  );
+  const stockMap = await getStockLevelsBatch(stockPairs);
+
   const stockResults: Array<{
     lineId: string;
     itemId: string | null;
@@ -204,6 +213,9 @@ export async function checkStock(id: string) {
     otherProjectId?: string;
   }> = [];
 
+  // Collect line updates for batch execution
+  const lineUpdates: Array<{ lineId: string; source: string; qtyFromStock: number; qtyFromPurchase: number }> = [];
+
   for (const line of mr.mrfLines) {
     if (!line.itemId) {
       stockResults.push({ lineId: line.id, itemId: null, available: 0, source: 'purchase_required' });
@@ -211,22 +223,19 @@ export async function checkStock(id: string) {
     }
 
     let totalAvailable = 0;
-    const projectWarehouses = mr.project?.warehouses ?? [];
     for (const wh of projectWarehouses) {
-      const stock = await getStockLevel(line.itemId, wh.id);
-      totalAvailable += stock.available;
+      const stock = stockMap.get(`${line.itemId}:${wh.id}`);
+      totalAvailable += stock?.available ?? 0;
     }
 
     const qtyNeeded = Number(line.qtyRequested);
     const source = totalAvailable >= qtyNeeded ? 'from_stock' : totalAvailable > 0 ? 'both' : 'purchase_required';
 
-    await prisma.mrfLine.update({
-      where: { id: line.id },
-      data: {
-        source,
-        qtyFromStock: Math.min(totalAvailable, qtyNeeded),
-        qtyFromPurchase: Math.max(0, qtyNeeded - totalAvailable),
-      },
+    lineUpdates.push({
+      lineId: line.id,
+      source,
+      qtyFromStock: Math.min(totalAvailable, qtyNeeded),
+      qtyFromPurchase: Math.max(0, qtyNeeded - totalAvailable),
     });
 
     stockResults.push({ lineId: line.id, itemId: line.itemId, available: totalAvailable, source });
@@ -242,14 +251,21 @@ export async function checkStock(id: string) {
       select: { id: true, warehouses: { select: { id: true } } },
     });
 
+    // Batch-fetch cross-project stock levels (eliminates N×P×W queries)
+    const itemIdsToCheck = stockResults.filter(r => r.itemId).map(r => r.itemId!);
+    const crossProjectPairs = itemIdsToCheck.flatMap(itemId =>
+      otherProjects.flatMap(proj => proj.warehouses.map(wh => ({ itemId, warehouseId: wh.id }))),
+    );
+    const crossStockMap = await getStockLevelsBatch(crossProjectPairs);
+
     for (const result of stockResults) {
       if (!result.itemId) continue;
 
       for (const project of otherProjects) {
         let otherAvailable = 0;
         for (const wh of project.warehouses) {
-          const stock = await getStockLevel(result.itemId, wh.id);
-          otherAvailable += stock.available;
+          const stock = crossStockMap.get(`${result.itemId}:${wh.id}`);
+          otherAvailable += stock?.available ?? 0;
         }
 
         if (otherAvailable > 0) {
@@ -257,22 +273,33 @@ export async function checkStock(id: string) {
           result.otherProjectId = project.id;
           suggestImsf = true;
 
-          await prisma.mrfLine.update({
-            where: { id: result.lineId },
-            data: { source: 'available_other_project' },
-          });
-          break; // found stock in another project for this line
+          // Update the corresponding lineUpdate entry
+          const lineUpdate = lineUpdates.find(u => u.lineId === result.lineId);
+          if (lineUpdate) lineUpdate.source = 'available_other_project';
+          break;
         }
       }
     }
   }
 
-  const updated = await prisma.materialRequisition.update({
-    where: { id: mr.id },
-    data: { status: 'checking_stock' },
-  });
+  // Batch all DB writes in a single transaction (line updates + status update)
+  const updated = await prisma.$transaction([
+    ...lineUpdates.map(u =>
+      prisma.mrfLine.update({
+        where: { id: u.lineId },
+        data: { source: u.source, qtyFromStock: u.qtyFromStock, qtyFromPurchase: u.qtyFromPurchase },
+      }),
+    ),
+    prisma.materialRequisition.update({
+      where: { id: mr.id },
+      data: { status: 'checking_stock' },
+    }),
+  ]);
 
-  return { id: mr.id, status: updated.status, stockResults, suggestImsf };
+  // Last element in the transaction array is the MR update
+  const mrUpdate = updated[updated.length - 1] as { status: string };
+
+  return { id: mr.id, status: mrUpdate.status, stockResults, suggestImsf };
 }
 
 export async function convertToImsf(id: string, userId: string, receiverProjectId: string) {

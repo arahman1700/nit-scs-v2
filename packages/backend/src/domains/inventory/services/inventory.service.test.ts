@@ -20,6 +20,7 @@ import {
   consumeReservation,
   deductStock,
   getStockLevel,
+  getStockLevelsBatch,
 } from './inventory.service.js';
 
 const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
@@ -619,6 +620,85 @@ describe('inventory.service', () => {
       );
 
       expect(mockPrisma.inventoryLevel.updateMany).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  // ─── getStockLevelsBatch ────────────────────────────────────────────
+
+  describe('getStockLevelsBatch', () => {
+    it('returns an empty Map for empty input', async () => {
+      const result = await getStockLevelsBatch([]);
+
+      expect(result).toBeInstanceOf(Map);
+      expect(result.size).toBe(0);
+      expect(mockPrisma.inventoryLevel.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns stock levels for multiple item/warehouse pairs in a single query', async () => {
+      mockPrisma.inventoryLevel.findMany.mockResolvedValue([
+        makeLevelRow({ itemId: 'item-1', warehouseId: 'wh-1', qtyOnHand: 100, qtyReserved: 20 }),
+        makeLevelRow({ itemId: 'item-2', warehouseId: 'wh-2', qtyOnHand: 50, qtyReserved: 10 }),
+      ]);
+
+      const result = await getStockLevelsBatch([
+        { itemId: 'item-1', warehouseId: 'wh-1' },
+        { itemId: 'item-2', warehouseId: 'wh-2' },
+      ]);
+
+      expect(result).toBeInstanceOf(Map);
+      expect(result.size).toBe(2);
+      expect(result.get('item-1:wh-1')).toEqual({ onHand: 100, reserved: 20, available: 80 });
+      expect(result.get('item-2:wh-2')).toEqual({ onHand: 50, reserved: 10, available: 40 });
+
+      // Should use a single findMany call with OR clause
+      expect(mockPrisma.inventoryLevel.findMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.inventoryLevel.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [
+            { itemId: 'item-1', warehouseId: 'wh-1' },
+            { itemId: 'item-2', warehouseId: 'wh-2' },
+          ],
+        },
+      });
+    });
+
+    it('returns { onHand: 0, reserved: 0, available: 0 } for pairs not found in the DB', async () => {
+      // DB returns only one of the two requested pairs
+      mockPrisma.inventoryLevel.findMany.mockResolvedValue([
+        makeLevelRow({ itemId: 'item-1', warehouseId: 'wh-1', qtyOnHand: 60, qtyReserved: 5 }),
+      ]);
+
+      const result = await getStockLevelsBatch([
+        { itemId: 'item-1', warehouseId: 'wh-1' },
+        { itemId: 'item-missing', warehouseId: 'wh-missing' },
+      ]);
+
+      expect(result.get('item-1:wh-1')).toEqual({ onHand: 60, reserved: 5, available: 55 });
+      // Missing pair should not be in the map (Map.get returns undefined)
+      expect(result.has('item-missing:wh-missing')).toBe(false);
+      expect(result.get('item-missing:wh-missing')).toBeUndefined();
+    });
+
+    it('deduplicates input pairs', async () => {
+      mockPrisma.inventoryLevel.findMany.mockResolvedValue([
+        makeLevelRow({ itemId: 'item-1', warehouseId: 'wh-1', qtyOnHand: 30, qtyReserved: 0 }),
+      ]);
+
+      const result = await getStockLevelsBatch([
+        { itemId: 'item-1', warehouseId: 'wh-1' },
+        { itemId: 'item-1', warehouseId: 'wh-1' }, // duplicate
+        { itemId: 'item-1', warehouseId: 'wh-1' }, // duplicate
+      ]);
+
+      expect(result.size).toBe(1);
+      expect(result.get('item-1:wh-1')).toEqual({ onHand: 30, reserved: 0, available: 30 });
+
+      // findMany should receive only the deduplicated pair
+      expect(mockPrisma.inventoryLevel.findMany).toHaveBeenCalledWith({
+        where: {
+          OR: [{ itemId: 'item-1', warehouseId: 'wh-1' }],
+        },
+      });
     });
   });
 });
