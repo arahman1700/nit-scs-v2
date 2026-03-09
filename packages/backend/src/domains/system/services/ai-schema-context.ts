@@ -228,6 +228,29 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     return { valid: false, reason: 'LIMIT must not exceed 1000.' };
   }
 
+  // Block access to sensitive columns (password hashes, tokens, secrets)
+  const sensitiveColumns = [
+    'password_hash',
+    'passwordhash',
+    'refresh_token',
+    'refreshtoken',
+    'secret',
+    'api_key',
+    'apikey',
+    'access_token',
+    'accesstoken',
+    'hashed_password',
+    'hashedpassword',
+    'token',
+    'salt',
+  ];
+  for (const col of sensitiveColumns) {
+    const colRegex = new RegExp(`\\b${col}\\b`, 'i');
+    if (colRegex.test(sql)) {
+      return { valid: false, reason: `Access to sensitive column not allowed: ${col}` };
+    }
+  }
+
   // Extract table names from FROM and JOIN clauses
   const fromMatch = sql.match(/\bfrom\s+(\w+)/gi) ?? [];
   const joinMatch = sql.match(/\bjoin\s+(\w+)/gi) ?? [];

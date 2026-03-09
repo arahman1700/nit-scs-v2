@@ -183,9 +183,18 @@ export function validateCustomFieldValues(
           });
         }
         if (rules?.pattern) {
-          const regex = new RegExp(rules.pattern);
-          if (!regex.test(str)) {
-            errors.push({ field: def.fieldKey, message: `${def.label} format is invalid` });
+          // Limit pattern & input length to mitigate ReDoS from admin-defined regex
+          const safePattern = rules.pattern.length <= 500;
+          const safeInput = str.length <= 10_000;
+          if (safePattern && safeInput) {
+            try {
+              const regex = new RegExp(rules.pattern);
+              if (!regex.test(str)) {
+                errors.push({ field: def.fieldKey, message: `${def.label} format is invalid` });
+              }
+            } catch {
+              errors.push({ field: def.fieldKey, message: `${def.label} has an invalid validation pattern` });
+            }
           }
         }
         break;

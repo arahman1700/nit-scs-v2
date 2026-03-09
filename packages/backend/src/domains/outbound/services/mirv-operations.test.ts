@@ -2,11 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-mock.js';
 
 // ── Hoisted mock container ──────────────────────────────────────────────
-const { mockPrisma, mockGenerateDocNumber, mockConsumeReservationBatch, mockReleaseReservation } = vi.hoisted(() => ({
+const {
+  mockPrisma,
+  mockGenerateDocNumber,
+  mockConsumeReservationBatch,
+  mockReleaseReservation,
+  mockReleaseReservationBatch,
+} = vi.hoisted(() => ({
   mockPrisma: {} as PrismaMock,
   mockGenerateDocNumber: vi.fn(),
   mockConsumeReservationBatch: vi.fn(),
   mockReleaseReservation: vi.fn(),
+  mockReleaseReservationBatch: vi.fn(),
 }));
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
@@ -14,6 +21,7 @@ vi.mock('../../system/services/document-number.service.js', () => ({ generateDoc
 vi.mock('../../inventory/services/inventory.service.js', () => ({
   consumeReservationBatch: mockConsumeReservationBatch,
   releaseReservation: mockReleaseReservation,
+  releaseReservationBatch: mockReleaseReservationBatch,
 }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
@@ -580,9 +588,14 @@ describe('cancelMirv', () => {
 
     expect(result.wasReserved).toBe(true);
     expect(result.warehouseId).toBe('wh-001');
-    expect(mockReleaseReservation).toHaveBeenCalledTimes(2);
-    expect(mockReleaseReservation).toHaveBeenCalledWith('item-001', 'wh-001', 10);
-    expect(mockReleaseReservation).toHaveBeenCalledWith('item-002', 'wh-001', 5);
+    expect(mockReleaseReservationBatch).toHaveBeenCalledTimes(1);
+    expect(mockReleaseReservationBatch).toHaveBeenCalledWith(
+      [
+        { itemId: 'item-001', warehouseId: 'wh-001', qty: 10 },
+        { itemId: 'item-002', warehouseId: 'wh-001', qty: 5 },
+      ],
+      expect.anything(),
+    );
     expect(mockPrisma.mirv.update).toHaveBeenCalledWith({
       where: { id: 'mirv-001' },
       data: { status: 'cancelled', reservationStatus: 'released' },
@@ -601,7 +614,7 @@ describe('cancelMirv', () => {
     const result = await cancelMirv(tx(), 'mirv-001');
 
     expect(result.wasReserved).toBe(false);
-    expect(mockReleaseReservation).not.toHaveBeenCalled();
+    expect(mockReleaseReservationBatch).not.toHaveBeenCalled();
   });
 
   it('should cancel a partially_issued MIRV', async () => {
@@ -651,7 +664,10 @@ describe('cancelMirv', () => {
 
     await cancelMirv(tx(), 'mirv-001');
 
-    expect(mockReleaseReservation).toHaveBeenCalledWith('item-001', 'wh-001', 20);
+    expect(mockReleaseReservationBatch).toHaveBeenCalledWith(
+      [{ itemId: 'item-001', warehouseId: 'wh-001', qty: 20 }],
+      expect.anything(),
+    );
   });
 
   it('should throw NotFoundError when MIRV does not exist', async () => {

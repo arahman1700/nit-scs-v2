@@ -8,7 +8,7 @@ import type { Prisma, PrismaClient } from '@prisma/client';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import {
   consumeReservationBatch,
-  releaseReservation,
+  releaseReservationBatch,
   type TxClient,
 } from '../../inventory/services/inventory.service.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
@@ -218,9 +218,14 @@ export async function cancelMirv(tx: TxClient | PrismaClient, mirvId: string) {
   }
 
   if (mirv.reservationStatus === 'reserved') {
-    for (const line of mirv.mirvLines) {
-      await releaseReservation(line.itemId, mirv.warehouseId, Number(line.qtyApproved ?? line.qtyRequested));
-    }
+    await releaseReservationBatch(
+      mirv.mirvLines.map(line => ({
+        itemId: line.itemId,
+        warehouseId: mirv.warehouseId,
+        qty: Number(line.qtyApproved ?? line.qtyRequested),
+      })),
+      tx as TxClient,
+    );
   }
 
   const updated = await tx.mirv.update({

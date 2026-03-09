@@ -24,6 +24,7 @@ vi.mock('../../inventory/services/inventory.service.js', () => ({
   reserveStockBatch: vi.fn(),
   consumeReservationBatch: vi.fn(),
   releaseReservation: vi.fn(),
+  releaseReservationBatch: vi.fn(),
 }));
 vi.mock('../../../config/logger.js', () => ({
   log: vi.fn(),

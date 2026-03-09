@@ -16,6 +16,7 @@ vi.mock('../../inventory/services/inventory.service.js', () => ({
   reserveStockBatch: vi.fn(),
   consumeReservationBatch: vi.fn(),
   releaseReservation: vi.fn(),
+  releaseReservationBatch: vi.fn(),
 }));
 vi.mock('../../../config/logger.js', () => ({
   log: vi.fn(),
@@ -36,6 +37,7 @@ import {
   reserveStockBatch,
   consumeReservationBatch,
   releaseReservation,
+  releaseReservationBatch,
 } from '../../inventory/services/inventory.service.js';
 import { assertTransition } from '@nit-scs-v2/shared';
 
@@ -45,6 +47,7 @@ const mockedProcessApproval = processApproval as ReturnType<typeof vi.fn>;
 const mockedReserveStockBatch = reserveStockBatch as ReturnType<typeof vi.fn>;
 const mockedConsumeReservationBatch = consumeReservationBatch as ReturnType<typeof vi.fn>;
 const mockedReleaseReservation = releaseReservation as ReturnType<typeof vi.fn>;
+const mockedReleaseReservationBatch = releaseReservationBatch as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 
 describe('mi.service', () => {
@@ -476,13 +479,16 @@ describe('mi.service', () => {
         mirvLines: [{ id: 'line-1', itemId: 'item-1', qtyApproved: 10, qtyRequested: 10 }],
       };
       mockPrisma.mirv.findUnique.mockResolvedValue(mirv);
-      mockedReleaseReservation.mockResolvedValue(undefined);
+      mockedReleaseReservationBatch.mockResolvedValue(undefined);
       mockPrisma.mirv.update.mockResolvedValue({ ...mirv, status: 'cancelled' });
 
       const result = await cancel('mirv-1');
 
       expect(result.wasReserved).toBe(true);
-      expect(mockedReleaseReservation).toHaveBeenCalledWith('item-1', 'wh-1', 10);
+      expect(mockedReleaseReservationBatch).toHaveBeenCalledWith(
+        [{ itemId: 'item-1', warehouseId: 'wh-1', qty: 10 }],
+        expect.anything(),
+      );
     });
 
     it('should cancel without releasing when not reserved', async () => {

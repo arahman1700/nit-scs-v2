@@ -356,6 +356,52 @@ export async function releaseReservation(itemId: string, warehouseId: string, qt
   log('info', `[Inventory] Released reservation of ${qty} units of item ${itemId} in warehouse ${warehouseId}`);
 }
 
+/**
+ * Release reservations for multiple items in a single transaction.
+ * Used by MIRV cancellation to release all reserved items atomically.
+ */
+export async function releaseReservationBatch(
+  items: { itemId: string; warehouseId: string; qty: number }[],
+  externalTx?: TxClient,
+): Promise<void> {
+  if (items.length === 0) return;
+
+  const run = async (tx: TxClient) => {
+    for (const { itemId, warehouseId, qty } of items) {
+      // Decrement qtyReserved with optimistic locking
+      await updateLevelWithVersion(tx, itemId, warehouseId, {
+        qtyReserved: { decrement: qty },
+      });
+
+      // Release from oldest lots first (FIFO)
+      const lots = await tx.inventoryLot.findMany({
+        where: { itemId, warehouseId, status: 'active', reservedQty: { gt: 0 } },
+        orderBy: { receiptDate: 'asc' },
+      });
+
+      let remaining = qty;
+      for (const lot of lots) {
+        if (remaining <= 0) break;
+        const lotReserved = Number(lot.reservedQty ?? 0);
+        if (lotReserved <= 0) continue;
+        const toRelease = Math.min(remaining, lotReserved);
+        await updateLotWithVersion(tx, lot.id, lot.version, {
+          reservedQty: { decrement: toRelease },
+        });
+        remaining -= toRelease;
+      }
+    }
+  };
+
+  if (externalTx) {
+    await run(externalTx);
+  } else {
+    await prisma.$transaction(run);
+  }
+
+  log('info', `[Inventory] Batch-released reservations for ${items.length} items`);
+}
+
 // ── Consume Reservation (FIFO) ─────────────────────────────────────────
 
 export async function consumeReservation(

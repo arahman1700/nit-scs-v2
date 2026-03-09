@@ -17,6 +17,7 @@ import {
   addStock,
   reserveStock,
   releaseReservation,
+  releaseReservationBatch,
   consumeReservation,
   deductStock,
   getStockLevel,
@@ -343,6 +344,40 @@ describe('inventory.service', () => {
           data: expect.objectContaining({ reservedQty: { decrement: 7 }, version: { increment: 1 } }),
         }),
       );
+    });
+  });
+
+  // ─── releaseReservationBatch ─────────────────────────────────────────
+
+  describe('releaseReservationBatch', () => {
+    it('releases all items in a single transaction', async () => {
+      stubOptimisticLockSuccess({ qtyReserved: 20, version: 1 });
+      mockPrisma.inventoryLot.findMany.mockResolvedValue([]);
+
+      await releaseReservationBatch([
+        { itemId: 'item-a', warehouseId: 'wh-1', qty: 10 },
+        { itemId: 'item-b', warehouseId: 'wh-1', qty: 5 },
+      ]);
+
+      // Both items' levels should be decremented
+      expect(mockPrisma.inventoryLevel.updateMany).toHaveBeenCalledTimes(2);
+    });
+
+    it('does nothing for an empty items array', async () => {
+      await releaseReservationBatch([]);
+      expect(mockPrisma.inventoryLevel.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('uses externalTx when provided', async () => {
+      stubOptimisticLockSuccess({ qtyReserved: 10, version: 1 });
+      mockPrisma.inventoryLot.findMany.mockResolvedValue([]);
+
+      // Pass mockPrisma as externalTx (simulates being inside a parent transaction)
+      await releaseReservationBatch([{ itemId: 'item-a', warehouseId: 'wh-1', qty: 5 }], mockPrisma as any);
+
+      // Should use the externalTx, not create a new $transaction
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(mockPrisma.inventoryLevel.updateMany).toHaveBeenCalled();
     });
   });
 

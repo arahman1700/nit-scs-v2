@@ -381,3 +381,32 @@ describe('validateQuery — case insensitivity', () => {
     expect(result.valid).toBe(false);
   });
 });
+
+/*  validateQuery — sensitive column blocking                             */
+
+describe('validateQuery — sensitive columns', () => {
+  it('blocks queries selecting password_hash', () => {
+    const sql = 'SELECT id, password_hash FROM employees LIMIT 10';
+    const result = validateQuery(sql);
+    expect(result.valid).toBe(false);
+    expect(result.reason).toContain('sensitive column');
+  });
+
+  it('blocks queries referencing refresh_token', () => {
+    const sql = 'SELECT id, refresh_token FROM employees LIMIT 10';
+    const result = validateQuery(sql);
+    expect(result.valid).toBe(false);
+  });
+
+  it('blocks queries with api_key column', () => {
+    const sql = 'SELECT api_key FROM system_settings LIMIT 10';
+    const result = validateQuery(sql);
+    expect(result.valid).toBe(false);
+  });
+
+  it('allows queries without sensitive columns', () => {
+    const sql = 'SELECT id, full_name, email FROM employees LIMIT 10';
+    const result = validateQuery(sql);
+    expect(result.valid).toBe(true);
+  });
+});

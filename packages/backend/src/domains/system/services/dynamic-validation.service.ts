@@ -1,5 +1,28 @@
 import type { DynamicFieldDefinition } from '@prisma/client';
 
+// ── Safe Regex Helper ─────────────────────────────────────────────────
+
+/** Max input length for regex matching to prevent catastrophic backtracking */
+const MAX_REGEX_INPUT_LENGTH = 10_000;
+/** Max pattern length for admin-defined regex */
+const MAX_PATTERN_LENGTH = 500;
+
+/**
+ * Safely test a user-defined regex pattern against input.
+ * Limits input/pattern length to mitigate ReDoS attacks from
+ * malicious or poorly-crafted admin-defined patterns.
+ */
+function safeRegexTest(pattern: string, input: string): boolean {
+  if (pattern.length > MAX_PATTERN_LENGTH) return false;
+  if (input.length > MAX_REGEX_INPUT_LENGTH) return false;
+  try {
+    const regex = new RegExp(pattern);
+    return regex.test(input);
+  } catch {
+    return false; // Invalid regex pattern
+  }
+}
+
 // ── Types ──────────────────────────────────────────────────────────────
 
 export interface FieldError {
@@ -102,8 +125,7 @@ function validateFieldType(field: DynamicFieldDefinition, value: unknown, rules:
         errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
       }
       if (rules?.pattern) {
-        const regex = new RegExp(rules.pattern);
-        if (!regex.test(str)) {
+        if (!safeRegexTest(rules.pattern, str)) {
           errors.push({ field: key, message: `${field.label} format is invalid` });
         }
       }
@@ -124,8 +146,7 @@ function validateFieldType(field: DynamicFieldDefinition, value: unknown, rules:
         errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
       }
       if (rules?.pattern) {
-        const regex = new RegExp(rules.pattern);
-        if (!regex.test(str)) {
+        if (!safeRegexTest(rules.pattern, str)) {
           errors.push({ field: key, message: `${field.label} format is invalid` });
         }
       }
@@ -146,8 +167,7 @@ function validateFieldType(field: DynamicFieldDefinition, value: unknown, rules:
         errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
       }
       if (rules?.pattern) {
-        const regex = new RegExp(rules.pattern);
-        if (!regex.test(str)) {
+        if (!safeRegexTest(rules.pattern, str)) {
           errors.push({ field: key, message: `${field.label} format is invalid` });
         }
       }
@@ -169,8 +189,7 @@ function validateFieldType(field: DynamicFieldDefinition, value: unknown, rules:
         errors.push({ field: key, message: `${field.label} must be at most ${rules.maxLength} characters` });
       }
       if (rules?.pattern) {
-        const regex = new RegExp(rules.pattern);
-        if (!regex.test(str)) {
+        if (!safeRegexTest(rules.pattern, str)) {
           errors.push({ field: key, message: `${field.label} format is invalid` });
         }
       }

@@ -45,7 +45,7 @@ router.get('/*dataSource', async (req: Request, res: Response, next: NextFunctio
       try {
         config.filters = JSON.parse(String(req.query.filters));
       } catch {
-        // Ignore malformed filter JSON
+        return sendError(res, 400, 'Invalid filters JSON');
       }
     }
 

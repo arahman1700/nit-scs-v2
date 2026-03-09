@@ -305,42 +305,52 @@ async function autoFulfillParentMr(mirvId: string, userId: string): Promise<void
     });
     if (!mirv?.mrfId) return; // No parent MR
 
-    const mr = await prisma.materialRequisition.findUnique({
-      where: { id: mirv.mrfId },
-      select: { id: true, status: true, mrfNumber: true },
+    // Atomic check-and-update inside transaction to prevent race conditions
+    // when multiple MIs for the same MR are issued concurrently
+    const result = await prisma.$transaction(async tx => {
+      const mr = await tx.materialRequisition.findUnique({
+        where: { id: mirv.mrfId! },
+        select: { id: true, status: true, mrfNumber: true },
+      });
+      if (!mr) return null;
+
+      // Only advance if MR is in a fulfillable state
+      const fulfillable = ['from_stock', 'needs_purchase', 'partially_fulfilled', 'checking_stock'];
+      if (!fulfillable.includes(mr.status)) return null;
+
+      // Check if all MIRVs linked to this MR are issued/completed
+      const linkedMirvs = await tx.mirv.findMany({
+        where: { mrfId: mr.id },
+        select: { status: true },
+      });
+
+      const allIssued = linkedMirvs.every(m => m.status === 'issued' || m.status === 'completed');
+      if (!allIssued) return null;
+
+      // Optimistic update — only succeeds if status hasn't changed concurrently
+      const updated = await tx.materialRequisition.updateMany({
+        where: { id: mr.id, status: mr.status },
+        data: { status: 'fulfilled', fulfillmentDate: new Date() },
+      });
+
+      if (updated.count === 0) return null; // Concurrent update won, skip
+
+      return { mrId: mr.id, fromStatus: mr.status };
     });
-    if (!mr) return;
 
-    // Only advance if MR is in a fulfillable state
-    const fulfillable = ['from_stock', 'needs_purchase', 'partially_fulfilled', 'checking_stock'];
-    if (!fulfillable.includes(mr.status)) return;
-
-    // Check if all MIRVs linked to this MR are issued/completed
-    const linkedMirvs = await prisma.mirv.findMany({
-      where: { mrfId: mr.id },
-      select: { status: true },
-    });
-
-    const allIssued = linkedMirvs.every(m => m.status === 'issued' || m.status === 'completed');
-    if (!allIssued) return;
-
-    await prisma.materialRequisition.update({
-      where: { id: mr.id },
-      data: { status: 'fulfilled', fulfillmentDate: new Date() },
-    });
-
-    eventBus.publish({
-      type: 'document:status_changed',
-      entityType: 'mrf',
-      entityId: mr.id,
-      action: 'status_change',
-      payload: { from: mr.status, to: 'fulfilled', autoFulfilledByMi: mirvId },
-      performedById: userId,
-      timestamp: new Date().toISOString(),
-    });
+    if (result) {
+      eventBus.publish({
+        type: 'document:status_changed',
+        entityType: 'mrf',
+        entityId: result.mrId,
+        action: 'status_change',
+        payload: { from: result.fromStatus, to: 'fulfilled', autoFulfilledByMi: mirvId },
+        performedById: userId,
+        timestamp: new Date().toISOString(),
+      });
+    }
   } catch (err) {
     // Non-critical — log but don't fail the MI issuance
-
     logger.error({ err }, 'Failed to auto-fulfill parent MR after MI issuance');
   }
 }

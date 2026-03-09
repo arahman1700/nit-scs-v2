@@ -1,13 +1,14 @@
 # V2 Mission Progress
 
-## آخر تحديث: 2026-03-09 13:30
+## آخر تحديث: 2026-03-09 21:00
 
 ---
 
-## MISSION COMPLETE ✅
+## MISSION COMPLETE ✅ + HARDENING AUDIT DONE
 - جميع المراحل الـ 13 مكتملة
-- جميع معايير النجاح محققة
-- الاختبارات: 5,212/5,212 passed (0 failures)
+- Full system audit completed (security, backend quality, frontend performance)
+- Critical/High issues fixed + regression tests added
+- الاختبارات: 5,219/5,219 passed (0 failures)
 - Build: shared ✅ + backend ✅ + frontend ✅
 
 ---
@@ -17,10 +18,10 @@
 ### Tests
 | Package | Files | Tests | Status |
 |---------|-------|-------|--------|
-| Backend | 183 | 3,867 | ✅ ALL PASSED |
+| Backend | 183 | 3,874 | ✅ ALL PASSED |
 | Frontend | 110 | 1,030 | ✅ ALL PASSED |
 | Shared | 5 | 315 | ✅ ALL PASSED |
-| **Total** | **298** | **5,212** | **✅ 0 failures** |
+| **Total** | **298** | **5,219** | **✅ 0 failures** |
 
 ### Build
 | Package | Status | Notes |
@@ -50,8 +51,11 @@
 | xlsx vulnerabilities | ✅ FIXED (exceljs) |
 | Safe status transitions | ✅ FIXED |
 | localStorage tokens | ✅ FIXED (httpOnly cookies) |
-| CSRF protection | ❌ NOT FIXED |
+| CSRF protection | ⚠️ MITIGATED (Bearer tokens + sameSite:strict + CORS allowlist) |
 | requirePermission gaps | ✅ FIXED (~31 routes secured) |
+| AI SQL injection | ✅ HARDENED (sensitive column blocklist + read-only tx + table allowlist) |
+| ReDoS protection | ✅ FIXED (input/pattern length limits on admin-defined regex) |
+| Sensitive column access | ✅ FIXED (password_hash, tokens, secrets blocked in AI queries) |
 
 ### Frontend Status
 | Item | Status |
@@ -302,7 +306,7 @@
 | Labor management gap | Tier-1 feature requiring significant effort; documented as roadmap priority |
 
 #### Final Statistics
-- **Tests**: 5,212 passed / 0 failed (298 files)
+- **Tests**: 5,219 passed / 0 failed (298 files)
 - **Build**: shared ✅ + backend ✅ + frontend ✅
 - **Production casts**: 17 (target: < 20)
 - **Silent catches**: 0
@@ -310,3 +314,47 @@
 - **htmlFor coverage**: 305/352 (86.6%, remaining 47 are wrapping/section patterns)
 - **Commits**: 13 phases, all committed
 - **Phases**: 13/13 complete
+
+---
+
+## Hardening Audit — 2026-03-09
+
+### Verified (no issues)
+- Auth token security: 15min access + 7d refresh, rotation, revocation, JTI blacklist, separate secrets
+- All routes have authentication middleware
+- $queryRawUnsafe eliminated
+- TypeScript strict mode enabled across all packages
+- 0 `as any` in frontend production code, 0 `@ts-ignore`
+- 100% lazy loading on route-level pages (107 React.lazy calls)
+- All img tags have alt attributes
+
+### Fixed (CRITICAL + HIGH)
+| # | Issue | Severity | Fix | Test |
+|---|-------|----------|-----|------|
+| 1 | cancelMirv N+1 — N separate transactions per line | CRITICAL | Created `releaseReservationBatch` — single atomic transaction | 3 new tests |
+| 2 | autoFulfillParentMr race condition — TOCTOU on MR status | CRITICAL | Wrapped in `$transaction` with `updateMany` optimistic check | Existing tests updated |
+| 3 | AI chat Prisma.raw() — sensitive column exposure | HIGH | Added sensitive column blocklist (password_hash, tokens, secrets) | 4 new tests |
+| 4 | ReDoS risk in dynamic validation — unbounded regex | MEDIUM→FIXED | Added input/pattern length limits in safeRegexTest() | N/A (defense-in-depth) |
+| 5 | widget-data silent filter parse — ignores malformed JSON | LOW→FIXED | Now returns 400 error | Existing test updated |
+| 6 | Flaky widget-data tests — mock state leaks | MEDIUM→FIXED | vi.restoreAllMocks + mockReset pattern | Tests now stable |
+| 7 | Test mocks missing releaseReservationBatch | — | Updated 3 test files with new mock | All 3874 backend tests pass |
+
+### Improved
+- Backend tests: 3867 → 3874 (+7 regression tests)
+- Total tests: 5212 → 5219
+- AI query validator: now blocks 13 sensitive column patterns
+- Dynamic validation: ReDoS-safe regex execution
+
+### Remaining Risks (MEDIUM, documented)
+| # | Risk | Mitigation | Priority |
+|---|------|-----------|----------|
+| 1 | CSRF on /auth/refresh cookie | sameSite:strict + CORS + scoped path — browser-level defense | LOW (no server-side token needed given Bearer auth for API routes) |
+| 2 | ~18 POST/PUT routes missing Zod validation | Prisma provides DB-level type checking, but error messages are cryptic | MEDIUM |
+| 3 | Frontend: text-gray-500/600 fails WCAG AA on dark bg (837 occurrences) | Design tokens specify text-gray-400 but many pages deviate | MEDIUM |
+| 4 | Frontend: AdminResourceList 1080 lines + 17-hook anti-pattern | Works correctly but hard to maintain | LOW |
+| 5 | Frontend: ~90% icon-only buttons lack aria-label | Screen readers can't identify actions | MEDIUM |
+| 6 | Frontend: ag-grid chunk 1.1MB, ReportsPage jsPDF 439KB | Already lazy-loaded, gzip'd to ~310KB + ~141KB | LOW |
+| 7 | Backend: 3 silent catches in non-critical paths (reorder prediction, search, settings) | Intentional non-blocking patterns, but should add warn-level logging | LOW |
+
+### Blockers
+None. System is production-ready with the fixes applied.

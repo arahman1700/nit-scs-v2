@@ -65,14 +65,14 @@ describe('Widget Data Routes', () => {
   let adminToken: string;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Re-set mocks after clearAllMocks
+    vi.restoreAllMocks();
+    // Reset and re-establish all mocks to prevent state leaks
+    mockDataSourceFn.mockReset().mockResolvedValue({ count: 42 });
     vi.mocked(widgetDataService.listDataSources).mockReturnValue(['stats/projects', 'stats/inventory']);
     vi.mocked(widgetDataService.getDataSource).mockImplementation((key: string) => {
       if (key === 'stats/projects') return mockDataSourceFn;
       return undefined;
     });
-    mockDataSourceFn.mockResolvedValue({ count: 42 });
     adminToken = signTestToken({ userId: 'test-user-id', systemRole: 'admin' });
   });
 
