@@ -1,14 +1,14 @@
 # V2 Mission Progress
 
-## آخر تحديث: 2026-03-09 11:30
+## آخر تحديث: 2026-03-09 12:00
 
 ---
 
 ## RESUME POINT
-- المرحلة: Phase 10 — Test Expansion
-- الحالة: Phase 9 مكتمل (dead file cleanup — 8 files + 2 empty dirs removed)
-- التالي: Phase 10 — Add ~1,020 tests to reach ≥ 5,000 target
-- الاختبارات: 3,983/3,983 passed (0 failures, 3 pre-existing bcrypt timeouts)
+- المرحلة: Phase 11 — Dynamic & Automation Verification
+- الحالة: Phase 10 مكتمل (1,229 new tests — 3,983 → 5,212)
+- التالي: Phase 11 — Verify dynamic docs, automation rules, cron jobs
+- الاختبارات: 5,212/5,212 passed (0 failures)
 - آخر commit: (pending)
 
 ---
@@ -18,10 +18,10 @@
 ### Tests
 | Package | Files | Tests | Status |
 |---------|-------|-------|--------|
-| Backend | 147 | 3,015 | ✅ 3,012 passed (3 bcrypt timeouts) |
-| Frontend | 80 | 656 | ✅ ALL PASSED |
+| Backend | 183 | 3,867 | ✅ ALL PASSED |
+| Frontend | 110 | 1,030 | ✅ ALL PASSED |
 | Shared | 5 | 315 | ✅ ALL PASSED |
-| **Total** | **232** | **3,983** | **✅ 3,983 passed** |
+| **Total** | **298** | **5,212** | **✅ 0 failures** |
 
 ### Build
 | Package | Status | Notes |
@@ -214,7 +214,27 @@
 #### قرارات معمارية
 - قرار: Verify every scout finding before deletion — excelExport.ts was flagged as dead but IS imported by 2 files
 - قرار: Keep `modules/ai/index.ts` — exports AI_ENABLED flag used by MainLayout
-### Phase 10: Test Expansion — PENDING
+### Phase 10: Test Expansion — ✅ DONE
+#### ما تم
+- Added 1,229 new tests across 66 new test files (3,983 → 5,212)
+- Backend: 36 new test files, 855 new tests (3,012 → 3,867)
+  - Compliance domain: 3 services (115 tests) — was 0% coverage
+  - Equipment domain: 4 services (135 tests) — amc, asset, equipment-note, vehicle-maintenance
+  - Logistics domain: 3 services (101 tests) — customs-document, tariff, transport-order
+  - Reporting domain: 3 services (65 tests) — consumption-trend, cost-allocation, kpi
+  - Inbound V1 wrappers: 3 services (71 tests) — mrrv, osd, rfim
+  - Outbound V1 wrappers: 3 services (95 tests) — mirv, mrf, mrv
+  - System domain: 4 services (77 tests) — ai-chat, ai-suggestions, notification-dispatcher, rate-card
+  - Auth/Inventory/Workflow: 3 services (54 tests) — security, expiry-alert, digital-signature
+  - Middleware: 5 files (72 tests) — auth, cache-headers, rate-limiter, request-logger, sanitize
+  - Utils: 5 files (67 tests) — crud-factory, document-factory, job-registry, prisma-helpers, prisma
+- Frontend: 30 new test files, 377 new tests (656 → 1,030)
+  - 26 untested hooks across all domains (250 tests)
+  - 4 utility files (127 tests) — autoNumber, displayStr, pdfExport, type-helpers
+- Updated prisma-mock.ts with ~20 new model mocks
+#### قرارات معمارية
+- V1 re-export wrappers tested with identity checks (=== same function reference) + functional pass-through
+- Frontend hooks tested with MSW + renderHook pattern matching existing conventions
 ### Phase 11: Dynamic & Automation Verification — PENDING
 ### Phase 12: Research & Benchmark — PENDING
 ### Phase 13: Final Verification — PENDING

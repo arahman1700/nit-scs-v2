@@ -124,6 +124,27 @@ export interface PrismaMock {
   surplusDeclaration: PrismaModelMock;
   notificationPreference: PrismaModelMock;
   rolePermission: PrismaModelMock;
+  complianceChecklist: PrismaModelMock;
+  complianceChecklistItem: PrismaModelMock;
+  complianceAudit: PrismaModelMock;
+  complianceAuditResponse: PrismaModelMock;
+  supplierEvaluation: PrismaModelMock;
+  supplierEvaluationMetric: PrismaModelMock;
+  visitorPass: PrismaModelMock;
+  annualMaintenanceContract: PrismaModelMock;
+  asset: PrismaModelMock;
+  assetTransfer: PrismaModelMock;
+  assetDepreciation: PrismaModelMock;
+  equipmentDeliveryNote: PrismaModelMock;
+  equipmentReturnNote: PrismaModelMock;
+  vehicleMaintenance: PrismaModelMock;
+  equipmentFleet: PrismaModelMock;
+  customsDocument: PrismaModelMock;
+  tariffRate: PrismaModelMock;
+  transportOrder: PrismaModelMock;
+  transportOrderItem: PrismaModelMock;
+  warehouseZone: PrismaModelMock;
+  cycleCountLine: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -219,6 +240,27 @@ export function createPrismaMock(): PrismaMock {
     surplusDeclaration: createModelMock(),
     notificationPreference: createModelMock(),
     rolePermission: createModelMock(),
+    complianceChecklist: createModelMock(),
+    complianceChecklistItem: createModelMock(),
+    complianceAudit: createModelMock(),
+    complianceAuditResponse: createModelMock(),
+    supplierEvaluation: createModelMock(),
+    supplierEvaluationMetric: createModelMock(),
+    visitorPass: createModelMock(),
+    annualMaintenanceContract: createModelMock(),
+    asset: createModelMock(),
+    assetTransfer: createModelMock(),
+    assetDepreciation: createModelMock(),
+    equipmentDeliveryNote: createModelMock(),
+    equipmentReturnNote: createModelMock(),
+    vehicleMaintenance: createModelMock(),
+    equipmentFleet: createModelMock(),
+    customsDocument: createModelMock(),
+    tariffRate: createModelMock(),
+    transportOrder: createModelMock(),
+    transportOrderItem: createModelMock(),
+    warehouseZone: createModelMock(),
+    cycleCountLine: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),
