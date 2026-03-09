@@ -17,12 +17,6 @@
     "src/**/*.test.ts",
     "src/**/*.test.tsx",
     "src/test-setup.ts",
-    "src/test-utils",
-    "src/pages/admin/FeaturesShowcasePage.tsx",
-    "src/pages/admin/RoiCalculatorPage.tsx",
-    "src/pages/dynamic/DynamicDocumentFormPage.tsx",
-    "src/pages/dynamic/DynamicDocumentListPage.tsx",
-    "src/pages/admin/CustomDataSourcePage.tsx",
-    "src/pages/admin/WorkflowTemplatesPage.tsx"
+    "src/test-utils"
   ]
 }
