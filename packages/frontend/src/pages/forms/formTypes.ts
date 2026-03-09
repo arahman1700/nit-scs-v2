@@ -17,6 +17,12 @@ export interface FormSectionConfig {
   fields: FormFieldDef[];
 }
 
+export interface WizardStepConfig {
+  id: string;
+  label: string;
+  sectionIndices: number[];
+}
+
 export interface FormConfig {
   title: string;
   titleEn: string;
@@ -24,6 +30,7 @@ export interface FormConfig {
   subtitle: string;
   icon: React.ComponentType<{ className?: string; size?: number }>;
   sections: FormSectionConfig[];
+  wizardSteps?: WizardStepConfig[];
 }
 
 export interface FormConfigOptions {

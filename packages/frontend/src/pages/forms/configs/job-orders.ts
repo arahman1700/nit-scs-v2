@@ -12,6 +12,12 @@ export function getJoConfig(options: FormConfigOptions): FormConfig {
     code: 'JO',
     subtitle: 'N-MS-NIT-LSS-FRM-0201',
     icon: Truck,
+    wizardSteps: [
+      { id: 'request', label: 'Request Information', sectionIndices: [0] },
+      { id: 'service', label: 'Service Type & Details', sectionIndices: [1] },
+      { id: 'budget', label: 'Budget & Materials', sectionIndices: [] },
+      { id: 'review', label: 'Review & Submit', sectionIndices: [] },
+    ],
     sections: [
       {
         title: 'Request Information',

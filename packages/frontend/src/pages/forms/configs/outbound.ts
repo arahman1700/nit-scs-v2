@@ -12,6 +12,11 @@ export function getMiConfig(options: FormConfigOptions): FormConfig {
     code: 'MI',
     subtitle: 'N-MS-NIT-LSS-FRM-0102',
     icon: Package,
+    wizardSteps: [
+      { id: 'request', label: 'Request Info', sectionIndices: [0] },
+      { id: 'materials', label: 'Materials & Details', sectionIndices: [1] },
+      { id: 'review', label: 'Review & Submit', sectionIndices: [] },
+    ],
     sections: [
       {
         title: 'Basic Information',

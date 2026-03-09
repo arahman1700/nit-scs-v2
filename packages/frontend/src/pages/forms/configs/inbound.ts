@@ -12,6 +12,11 @@ export function getGrnConfig(options: FormConfigOptions): FormConfig {
     code: 'GRN',
     subtitle: 'N-MS-NIT-LSS-FRM-0101',
     icon: Package,
+    wizardSteps: [
+      { id: 'header', label: 'Receipt Details', sectionIndices: [0] },
+      { id: 'documents', label: 'Documents & Line Items', sectionIndices: [1] },
+      { id: 'review', label: 'Review & Submit', sectionIndices: [] },
+    ],
     sections: [
       {
         title: 'Receipt Details',

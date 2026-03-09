@@ -1,5 +1,5 @@
 import React, { Suspense, useState, useMemo } from 'react';
-import { Plus, Trash2, Search, AlertTriangle, ScanLine } from 'lucide-react';
+import { Plus, Trash2, Search, AlertTriangle, ScanLine, Package } from 'lucide-react';
 import type { VoucherLineItem, MaterialCatalogItem } from '@nit-scs-v2/shared/types';
 import { useItems, useUoms, useInventory } from '@/domains/master-data/hooks/useMasterData';
 import { extractRows, toRecord } from '@/utils/type-helpers';
@@ -13,6 +13,198 @@ interface LineItemsTableProps {
   showStockAvailability?: boolean; // For MI - shows available qty
   readOnly?: boolean;
 }
+
+/* ── Mobile card sub-component for viewports < md ── */
+interface MobileLineItemCardProps {
+  item: VoucherLineItem;
+  index: number;
+  readOnly: boolean;
+  showCondition: boolean;
+  showStockAvailability: boolean;
+  unitOptions: { id: string; label: string }[];
+  getAvailableQty: (code: string) => number;
+  getStockStatus: (code: string) => 'In Stock' | 'Low Stock' | 'Out of Stock';
+  onUpdate: (id: string, field: keyof VoucherLineItem, value: string | number) => void;
+  onRemove: (id: string) => void;
+}
+
+const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
+  item,
+  index,
+  readOnly,
+  showCondition,
+  showStockAvailability,
+  unitOptions,
+  getAvailableQty,
+  getStockStatus,
+  onUpdate,
+  onRemove,
+}) => {
+  const available = showStockAvailability && item.itemCode ? getAvailableQty(item.itemCode) : null;
+  const stockStatus = showStockAvailability && item.itemCode ? getStockStatus(item.itemCode) : null;
+  const isInsufficient = available !== null && item.quantity > available;
+
+  return (
+    <div className="glass-card rounded-xl p-4 space-y-3">
+      {/* Card Header — item name + delete */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 text-gray-500 text-xs font-medium shrink-0">
+            {index + 1}
+          </div>
+          {readOnly ? (
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{item.itemName || 'Unnamed Item'}</p>
+              {item.itemCode && <p className="text-[10px] font-mono text-gray-500">{item.itemCode}</p>}
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1 space-y-1">
+              <input
+                type="text"
+                value={item.itemName}
+                onChange={e => onUpdate(item.id, 'itemName', e.target.value)}
+                className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-semibold focus:border-nesma-secondary outline-none"
+                placeholder="Item name"
+              />
+              <input
+                type="text"
+                value={item.itemCode}
+                onChange={e => onUpdate(item.id, 'itemCode', e.target.value)}
+                className="w-full px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400 text-xs font-mono focus:border-nesma-secondary outline-none"
+                placeholder="CODE"
+              />
+            </div>
+          )}
+        </div>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => onRemove(item.id)}
+            aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
+            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
+
+      {/* Fields Row — Qty, Unit, Price */}
+      <div className="grid grid-cols-3 gap-2">
+        {/* Quantity */}
+        <div>
+          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Qty</label>
+          {readOnly ? (
+            <span className="text-sm text-white font-medium">{item.quantity}</span>
+          ) : (
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={item.quantity}
+              onChange={e => onUpdate(item.id, 'quantity', Number(e.target.value))}
+              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+            />
+          )}
+        </div>
+
+        {/* Unit */}
+        <div>
+          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Unit</label>
+          {readOnly ? (
+            <span className="text-sm text-gray-400">{item.unit}</span>
+          ) : (
+            <select
+              value={item.unit}
+              onChange={e => onUpdate(item.id, 'unit', e.target.value)}
+              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
+            >
+              {unitOptions.map(u => (
+                <option key={u.id} value={u.label}>
+                  {u.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Unit Price */}
+        <div>
+          <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1 block">Price</label>
+          {readOnly ? (
+            <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
+          ) : (
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={item.unitPrice}
+              onChange={e => onUpdate(item.id, 'unitPrice', Number(e.target.value))}
+              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Total + optional badges row */}
+      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+        <div className="flex items-center gap-2">
+          {/* Condition badge */}
+          {showCondition &&
+            (readOnly ? (
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full ${
+                  item.condition === 'New'
+                    ? 'bg-green-500/10 text-green-400'
+                    : item.condition === 'Good'
+                      ? 'bg-blue-500/10 text-blue-400'
+                      : item.condition === 'Fair'
+                        ? 'bg-yellow-500/10 text-yellow-400'
+                        : 'bg-red-500/10 text-red-400'
+                }`}
+              >
+                {item.condition}
+              </span>
+            ) : (
+              <select
+                value={item.condition || 'New'}
+                onChange={e => onUpdate(item.id, 'condition', e.target.value)}
+                className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] focus:border-nesma-secondary outline-none"
+              >
+                <option value="New">New</option>
+                <option value="Good">Good</option>
+                <option value="Fair">Fair</option>
+                <option value="Damaged">Damaged</option>
+              </select>
+            ))}
+
+          {/* Stock availability badge */}
+          {showStockAvailability && available !== null && (
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                isInsufficient
+                  ? 'bg-red-500/10 text-red-400'
+                  : stockStatus === 'Out of Stock'
+                    ? 'bg-red-500/10 text-red-400'
+                    : stockStatus === 'Low Stock'
+                      ? 'bg-amber-500/10 text-amber-400'
+                      : 'bg-emerald-500/10 text-emerald-400'
+              }`}
+            >
+              {isInsufficient && <AlertTriangle size={10} />}
+              Avail: {available}
+            </span>
+          )}
+        </div>
+
+        {/* Total amount */}
+        <div className="flex items-center gap-1.5">
+          <Package size={14} className="text-gray-500" />
+          <span className="text-sm text-nesma-secondary font-bold">{item.totalPrice.toLocaleString()} SAR</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   items,
@@ -291,224 +483,276 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
         </div>
       )}
 
-      {/* Items Table */}
+      {/* Items — Mobile Card View (< md) */}
       {items.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left" aria-label="Line items">
-            <thead>
-              <tr className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
-                <th scope="col" className="pb-3 px-2 font-medium w-8">
-                  #
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium">
-                  Code
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium min-w-[200px]">
-                  Item
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium">
-                  Unit
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium text-center">
-                  Qty
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium text-center">
-                  Price
-                </th>
-                <th scope="col" className="pb-3 px-2 font-medium text-center">
-                  Total
-                </th>
-                {showStockAvailability && (
-                  <th scope="col" className="pb-3 px-2 font-medium text-center">
-                    Available
-                  </th>
-                )}
-                {showCondition && (
-                  <th scope="col" className="pb-3 px-2 font-medium">
-                    Condition
-                  </th>
-                )}
-                {!readOnly && (
-                  <th scope="col" className="pb-3 px-2 font-medium w-10">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {items.map((item, idx) => (
-                <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                  <td className="py-3 px-2 text-gray-500 text-sm">{idx + 1}</td>
-                  <td className="py-3 px-2">
-                    {readOnly ? (
-                      <span className="text-xs font-mono text-gray-400">{item.itemCode}</span>
-                    ) : (
-                      <input
-                        type="text"
-                        value={item.itemCode}
-                        onChange={e => updateItem(item.id, 'itemCode', e.target.value)}
-                        className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs font-mono focus:border-nesma-secondary outline-none"
-                        placeholder="CODE"
-                      />
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    {readOnly ? (
-                      <span className="text-sm text-gray-200">{item.itemName}</span>
-                    ) : (
-                      <input
-                        type="text"
-                        value={item.itemName}
-                        onChange={e => updateItem(item.id, 'itemName', e.target.value)}
-                        className="w-full px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
-                        placeholder="Item name"
-                      />
-                    )}
-                  </td>
-                  <td className="py-3 px-2">
-                    {readOnly ? (
-                      <span className="text-sm text-gray-400">{item.unit}</span>
-                    ) : (
-                      <select
-                        value={item.unit}
-                        onChange={e => updateItem(item.id, 'unit', e.target.value)}
-                        className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
-                      >
-                        {UNIT_OPTIONS.map(u => (
-                          <option key={u.id} value={u.label}>
-                            {u.label}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    {readOnly ? (
-                      <span className="text-sm text-white font-medium">{item.quantity}</span>
-                    ) : (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.quantity}
-                        onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
-                        className="w-20 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-                      />
-                    )}
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    {readOnly ? (
-                      <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
-                    ) : (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unitPrice}
-                        onChange={e => updateItem(item.id, 'unitPrice', Number(e.target.value))}
-                        className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-                      />
-                    )}
-                  </td>
-                  <td className="py-3 px-2 text-center">
-                    <span className="text-sm text-nesma-secondary font-semibold">
-                      {item.totalPrice.toLocaleString()}
-                    </span>
-                  </td>
-                  {showStockAvailability && (
-                    <td className="py-3 px-2 text-center">
-                      {item.itemCode ? (
-                        (() => {
-                          const available = getAvailableQty(item.itemCode);
-                          const status = getStockStatus(item.itemCode);
-                          const isInsufficient = item.quantity > available;
-                          return (
-                            <div className="flex flex-col items-center gap-0.5">
-                              <span
-                                className={`text-xs font-medium ${isInsufficient ? 'text-red-400' : status === 'Out of Stock' ? 'text-red-400' : status === 'Low Stock' ? 'text-amber-400' : 'text-emerald-400'}`}
-                              >
-                                {available}
-                              </span>
-                              {isInsufficient && (
-                                <span className="flex items-center gap-1 text-[10px] text-red-400">
-                                  <AlertTriangle size={10} /> Insufficient
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })()
-                      ) : (
-                        <span className="text-xs text-gray-600">--</span>
-                      )}
-                    </td>
-                  )}
-                  {showCondition && (
-                    <td className="py-3 px-2">
-                      {readOnly ? (
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            item.condition === 'New'
-                              ? 'bg-green-500/10 text-green-400'
-                              : item.condition === 'Good'
-                                ? 'bg-blue-500/10 text-blue-400'
-                                : item.condition === 'Fair'
-                                  ? 'bg-yellow-500/10 text-yellow-400'
-                                  : 'bg-red-500/10 text-red-400'
-                          }`}
-                        >
-                          {item.condition}
-                        </span>
-                      ) : (
-                        <select
-                          value={item.condition || 'New'}
-                          onChange={e => updateItem(item.id, 'condition', e.target.value)}
-                          className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
-                        >
-                          <option value="New">New</option>
-                          <option value="Good">Good</option>
-                          <option value="Fair">Fair</option>
-                          <option value="Damaged">Damaged</option>
-                        </select>
-                      )}
-                    </td>
-                  )}
-                  {!readOnly && (
-                    <td className="py-3 px-2">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(item.id)}
-                        aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
-                        className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <>
+          <div className="md:hidden space-y-3">
+            {items.map((item, idx) => (
+              <MobileLineItemCard
+                key={item.id}
+                item={item}
+                index={idx}
+                readOnly={readOnly}
+                showCondition={showCondition}
+                showStockAvailability={showStockAvailability}
+                unitOptions={UNIT_OPTIONS}
+                getAvailableQty={getAvailableQty}
+                getStockStatus={getStockStatus}
+                onUpdate={updateItem}
+                onRemove={removeItem}
+              />
+            ))}
 
-          {/* Total Row */}
-          <div className="flex justify-end mt-4 pt-4 border-t border-white/10">
-            <div className="glass-card px-6 py-3 rounded-xl flex items-center gap-6">
-              <div className="text-sm text-gray-400">
-                Items: <span className="text-white font-medium">{items.length}</span>
+            {/* Mobile Add Item Button */}
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={addBlankItem}
+                className="w-full py-3 bg-nesma-primary hover:bg-nesma-primary/80 text-white rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <Plus size={16} />
+                Add Item
+              </button>
+            )}
+
+            {/* Mobile Total Summary */}
+            <div className="glass-card rounded-xl p-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Items</span>
+                <span className="text-white font-medium">{items.length}</span>
               </div>
-              <div className="h-6 w-px bg-white/10"></div>
-              <div className="text-sm text-gray-400">
-                Total Qty:{' '}
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Total Qty</span>
                 <span className="text-white font-medium">
                   {items.reduce((s, i) => s + i.quantity, 0).toLocaleString()}
                 </span>
               </div>
-              <div className="h-6 w-px bg-white/10"></div>
-              <div className="text-sm">
-                Total: <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
+              <div className="border-t border-white/10 pt-2 flex justify-between">
+                <span className="text-sm text-gray-400">Total</span>
+                <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
               </div>
             </div>
           </div>
-        </div>
+
+          {/* Items — Desktop Table View (>= md) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left" aria-label="Line items">
+              <thead>
+                <tr className="border-b border-white/10 text-gray-400 text-xs uppercase tracking-wider">
+                  <th scope="col" className="pb-3 px-2 font-medium w-8">
+                    #
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium">
+                    Code
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium min-w-[200px]">
+                    Item
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium">
+                    Unit
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium text-center">
+                    Qty
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium text-center">
+                    Price
+                  </th>
+                  <th scope="col" className="pb-3 px-2 font-medium text-center">
+                    Total
+                  </th>
+                  {showStockAvailability && (
+                    <th scope="col" className="pb-3 px-2 font-medium text-center">
+                      Available
+                    </th>
+                  )}
+                  {showCondition && (
+                    <th scope="col" className="pb-3 px-2 font-medium">
+                      Condition
+                    </th>
+                  )}
+                  {!readOnly && (
+                    <th scope="col" className="pb-3 px-2 font-medium w-10">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  )}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {items.map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="py-3 px-2 text-gray-500 text-sm">{idx + 1}</td>
+                    <td className="py-3 px-2">
+                      {readOnly ? (
+                        <span className="text-xs font-mono text-gray-400">{item.itemCode}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={item.itemCode}
+                          onChange={e => updateItem(item.id, 'itemCode', e.target.value)}
+                          className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs font-mono focus:border-nesma-secondary outline-none"
+                          placeholder="CODE"
+                        />
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {readOnly ? (
+                        <span className="text-sm text-gray-200">{item.itemName}</span>
+                      ) : (
+                        <input
+                          type="text"
+                          value={item.itemName}
+                          onChange={e => updateItem(item.id, 'itemName', e.target.value)}
+                          className="w-full px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
+                          placeholder="Item name"
+                        />
+                      )}
+                    </td>
+                    <td className="py-3 px-2">
+                      {readOnly ? (
+                        <span className="text-sm text-gray-400">{item.unit}</span>
+                      ) : (
+                        <select
+                          value={item.unit}
+                          onChange={e => updateItem(item.id, 'unit', e.target.value)}
+                          className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
+                        >
+                          {UNIT_OPTIONS.map(u => (
+                            <option key={u.id} value={u.label}>
+                              {u.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      {readOnly ? (
+                        <span className="text-sm text-white font-medium">{item.quantity}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
+                          className="w-20 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+                        />
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      {readOnly ? (
+                        <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
+                      ) : (
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unitPrice}
+                          onChange={e => updateItem(item.id, 'unitPrice', Number(e.target.value))}
+                          className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+                        />
+                      )}
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="text-sm text-nesma-secondary font-semibold">
+                        {item.totalPrice.toLocaleString()}
+                      </span>
+                    </td>
+                    {showStockAvailability && (
+                      <td className="py-3 px-2 text-center">
+                        {item.itemCode ? (
+                          (() => {
+                            const available = getAvailableQty(item.itemCode);
+                            const status = getStockStatus(item.itemCode);
+                            const isInsufficient = item.quantity > available;
+                            return (
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span
+                                  className={`text-xs font-medium ${isInsufficient ? 'text-red-400' : status === 'Out of Stock' ? 'text-red-400' : status === 'Low Stock' ? 'text-amber-400' : 'text-emerald-400'}`}
+                                >
+                                  {available}
+                                </span>
+                                {isInsufficient && (
+                                  <span className="flex items-center gap-1 text-[10px] text-red-400">
+                                    <AlertTriangle size={10} /> Insufficient
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <span className="text-xs text-gray-600">--</span>
+                        )}
+                      </td>
+                    )}
+                    {showCondition && (
+                      <td className="py-3 px-2">
+                        {readOnly ? (
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              item.condition === 'New'
+                                ? 'bg-green-500/10 text-green-400'
+                                : item.condition === 'Good'
+                                  ? 'bg-blue-500/10 text-blue-400'
+                                  : item.condition === 'Fair'
+                                    ? 'bg-yellow-500/10 text-yellow-400'
+                                    : 'bg-red-500/10 text-red-400'
+                            }`}
+                          >
+                            {item.condition}
+                          </span>
+                        ) : (
+                          <select
+                            value={item.condition || 'New'}
+                            onChange={e => updateItem(item.id, 'condition', e.target.value)}
+                            className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
+                          >
+                            <option value="New">New</option>
+                            <option value="Good">Good</option>
+                            <option value="Fair">Fair</option>
+                            <option value="Damaged">Damaged</option>
+                          </select>
+                        )}
+                      </td>
+                    )}
+                    {!readOnly && (
+                      <td className="py-3 px-2">
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
+                          className="p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Total Row */}
+            <div className="flex justify-end mt-4 pt-4 border-t border-white/10">
+              <div className="glass-card px-6 py-3 rounded-xl flex items-center gap-6">
+                <div className="text-sm text-gray-400">
+                  Items: <span className="text-white font-medium">{items.length}</span>
+                </div>
+                <div className="h-6 w-px bg-white/10"></div>
+                <div className="text-sm text-gray-400">
+                  Total Qty:{' '}
+                  <span className="text-white font-medium">
+                    {items.reduce((s, i) => s + i.quantity, 0).toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-6 w-px bg-white/10"></div>
+                <div className="text-sm">
+                  Total:{' '}
+                  <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       ) : (
         <div className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center">
           <div className="text-gray-500 mb-2">No items added yet</div>

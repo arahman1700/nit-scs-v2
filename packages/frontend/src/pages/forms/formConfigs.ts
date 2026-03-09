@@ -1,5 +1,5 @@
 // Re-export types and constants for backward compatibility
-export type { FormFieldDef, FormSectionConfig, FormConfig, FormConfigOptions } from './formTypes';
+export type { FormFieldDef, FormSectionConfig, FormConfig, FormConfigOptions, WizardStepConfig } from './formTypes';
 export { STATUS_FLOWS, EDITABLE_STATUSES, VALIDATOR_MAP, getApprovalInfo } from './formConstants';
 
 // Internal imports
