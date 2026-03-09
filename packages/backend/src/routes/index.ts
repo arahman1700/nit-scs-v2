@@ -38,10 +38,12 @@ router.get('/health/details', ...detailedHealthMiddleware, detailedHealthCheck);
 
 // ── Register all domains ───────────────────────────────────────────────
 registerAuthRoutes(router);
+// Inventory MUST be registered before master-data so that specific routes
+// (e.g. GET /inventory/expiring) match before master-data's CRUD /inventory/:id
+registerInventoryRoutes(router);
 registerMasterDataRoutes(router);
 registerInboundRoutes(router);
 registerOutboundRoutes(router);
-registerInventoryRoutes(router);
 registerWarehouseOpsRoutes(router);
 registerTransferRoutes(router);
 registerLogisticsRoutes(router);
