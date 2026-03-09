@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import os from 'os';
 import path from 'path';
 
 export default defineConfig({
@@ -14,5 +15,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test-setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: Math.max(2, Math.floor(os.cpus().length / 2)),
+      },
+    },
   },
 });
