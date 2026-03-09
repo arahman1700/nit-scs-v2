@@ -16,6 +16,7 @@ import {
 import { useKpis } from '@/domains/reporting/hooks/useKpis';
 import type { KpiResult, KpiCategory, ComprehensiveKpis } from '@/domains/reporting/hooks/useKpis';
 import type { ApiResponse } from '@/api/types';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Category Metadata ────────────────────────────────────────────────────────
 
@@ -212,7 +213,7 @@ export function KpiDashboard() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
   const query = useKpis();
-  const data = (query.data as unknown as ApiResponse<ComprehensiveKpis> | undefined)?.data;
+  const data = toRecord(query.data).data as ComprehensiveKpis | undefined;
   const isLoading = query.isLoading;
   const isError = query.isError;
 

@@ -6,6 +6,7 @@
  * and gets registered in the widget-data registry at startup.
  */
 import { prisma } from '../../../utils/prisma.js';
+import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 import { Prisma } from '@prisma/client';
 import { log } from '../../../config/logger.js';
 
@@ -80,6 +81,7 @@ export async function createCustomDataSource(data: {
       sourceKey: data.sourceKey,
       entityType: data.entityType,
       aggregation: data.aggregation,
+      // QueryTemplate lacks an index signature required by InputJsonObject
       queryTemplate: data.queryTemplate as unknown as Prisma.InputJsonValue,
       outputType: data.outputType,
       isPublic: data.isPublic ?? false,
@@ -106,6 +108,7 @@ export async function updateCustomDataSource(
       ...(data.entityType !== undefined && { entityType: data.entityType }),
       ...(data.aggregation !== undefined && { aggregation: data.aggregation }),
       ...(data.queryTemplate !== undefined && {
+        // QueryTemplate lacks an index signature required by InputJsonObject
         queryTemplate: data.queryTemplate as unknown as Prisma.InputJsonValue,
       }),
       ...(data.outputType !== undefined && { outputType: data.outputType }),
@@ -210,12 +213,12 @@ export async function executeCustomDataSource(source: {
     );
   }
 
-  const delegate = (prisma as unknown as Record<string, unknown>)[modelName] as {
+  const delegate = getPrismaDelegate<{
     count: (args?: unknown) => Promise<number>;
     groupBy: (args: unknown) => Promise<unknown[]>;
     findMany: (args: unknown) => Promise<unknown[]>;
     aggregate: (args: unknown) => Promise<unknown>;
-  };
+  }>(prisma, modelName);
 
   const where = buildWhereClause(template);
 

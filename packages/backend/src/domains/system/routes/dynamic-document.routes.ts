@@ -90,7 +90,7 @@ router.get('/:typeCode/:id', authenticate, async (req: Request, res: Response, n
       sendError(res, 404, 'Document not found for the specified type');
       return;
     }
-    if (!canAccessRecord(req.user!, doc as unknown as Record<string, unknown>, scopeMapping)) {
+    if (!canAccessRecord(req.user!, doc as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
     }
@@ -149,7 +149,7 @@ router.put('/:typeCode/:id', authenticate, async (req: Request, res: Response, n
       sendError(res, 404, 'Document not found for the specified type');
       return;
     }
-    if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
+    if (!canAccessRecord(req.user!, existingDoc as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
     }
@@ -159,7 +159,7 @@ router.put('/:typeCode/:id', authenticate, async (req: Request, res: Response, n
       action: 'update',
       tableName: 'dynamic_documents',
       recordId: req.params.id as string,
-      oldValues: existing as unknown as Record<string, unknown>,
+      oldValues: existing as Record<string, unknown>,
       newValues: req.body,
       entityEvent: 'updated',
       entityName: `dyn:${typeCode}`,
@@ -192,7 +192,7 @@ router.post('/:typeCode/:id/transition', authenticate, async (req: Request, res:
       sendError(res, 404, 'Document not found for the specified type');
       return;
     }
-    if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
+    if (!canAccessRecord(req.user!, existingDoc as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
     }
@@ -286,7 +286,7 @@ router.get('/:typeCode/:id/history', authenticate, async (req: Request, res: Res
       sendError(res, 404, 'Document not found for the specified type');
       return;
     }
-    if (!canAccessRecord(req.user!, existingDoc as unknown as Record<string, unknown>, scopeMapping)) {
+    if (!canAccessRecord(req.user!, existingDoc as Record<string, unknown>, scopeMapping)) {
       sendError(res, 403, 'You do not have access to this record');
       return;
     }

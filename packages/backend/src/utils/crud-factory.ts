@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { Server as SocketIOServer } from 'socket.io';
 import { ZodSchema } from 'zod';
 import { prisma } from './prisma.js';
+import { getPrismaDelegate } from './prisma-helpers.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from './response.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireRole, requirePermission } from '../middleware/rbac.js';
@@ -82,7 +83,7 @@ export interface CrudConfig {
 // ---------------------------------------------------------------------------
 
 function getDelegate(modelName: string): PrismaDelegate {
-  return (prisma as unknown as Record<string, PrismaDelegate>)[modelName];
+  return getPrismaDelegate<PrismaDelegate>(prisma, modelName);
 }
 
 /** Extract entity name from route base URL (e.g. '/api/v1/regions' -> 'regions'). */

@@ -9,6 +9,7 @@ import { SaveViewDialog } from '@/components/SaveViewDialog';
 import { BulkActionBar } from '@/components/BulkActionBar';
 import { useUserViews } from '@/domains/system/hooks/useUserViews';
 import type { UserView, UserViewConfig } from '@/domains/system/hooks/useUserViews';
+import { toRecord } from '@/utils/type-helpers';
 import type { ColumnDef } from '@/config/resourceColumns';
 
 interface DocumentListPanelProps {
@@ -46,7 +47,7 @@ export const DocumentListPanel: React.FC<DocumentListPanelProps> = ({
   const sortRef = useRef<{ sortKey?: string; sortDir?: string }>({});
 
   const { data: viewsData } = useUserViews(entityType);
-  const views: UserView[] = (viewsData as unknown as { data?: UserView[] })?.data ?? [];
+  const views: UserView[] = (toRecord(viewsData).data as UserView[]) ?? [];
 
   // Find active view object (for passing to SaveViewDialog as existingView)
   const activeView = activeViewId ? (views.find(v => v.id === activeViewId) ?? null) : null;

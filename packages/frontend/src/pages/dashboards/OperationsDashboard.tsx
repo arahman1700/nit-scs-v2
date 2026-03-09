@@ -17,12 +17,13 @@ import { KpiCard } from '@/components/KpiCard';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { useCrossDepartment } from '@/domains/reporting/hooks/useDashboard';
 import type { CrossDepartmentData } from '@/domains/reporting/hooks/useDashboard';
+import { toRecord } from '@/utils/type-helpers';
 import { CHART_PALETTE } from '@/config/chartTheme';
 
 export function OperationsDashboard() {
   const navigate = useNavigate();
   const query = useCrossDepartment();
-  const data = (query.data as unknown as { data?: CrossDepartmentData } | undefined)?.data;
+  const data = toRecord(query.data).data as CrossDepartmentData | undefined;
   const isLoading = query.isLoading;
 
   if (isLoading) {

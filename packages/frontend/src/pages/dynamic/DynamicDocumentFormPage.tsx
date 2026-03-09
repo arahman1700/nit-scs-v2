@@ -11,6 +11,7 @@ import type { StatusFlowConfig, FieldDefinition } from '@/domains/system/hooks/u
 import { DynamicFormRenderer } from '@/components/dynamic-form/DynamicFormRenderer';
 import { DynamicLineItemsTable } from '@/components/dynamic-form/DynamicLineItemsTable';
 import { CustomFieldsSection } from '@/components/forms/CustomFieldsSection';
+import { toRecord } from '@/utils/type-helpers';
 import { ArrowLeft, Save, Send, Clock, AlertCircle } from 'lucide-react';
 
 export const DynamicDocumentFormPage: React.FC = () => {
@@ -49,7 +50,7 @@ export const DynamicDocumentFormPage: React.FC = () => {
   useEffect(() => {
     if (existingDoc?.data) {
       setFormData(existingDoc.data);
-      const existingLines = (existingDoc as unknown as { lines?: Record<string, unknown>[] }).lines;
+      const existingLines = toRecord(existingDoc).lines as Record<string, unknown>[] | undefined;
       if (existingLines) setLineItems(existingLines);
     } else if (docType?.fields && isNew) {
       const defaults: Record<string, unknown> = {};
@@ -238,17 +239,16 @@ export const DynamicDocumentFormPage: React.FC = () => {
 
       {/* History */}
       {existingDoc &&
-        (
-          existingDoc as unknown as {
-            history?: Array<{
+        (toRecord(existingDoc).history as
+          | Array<{
               id: string;
               fromStatus: string | null;
               toStatus: string;
               performedAt: string;
+              comment?: string;
               performedBy?: { fullName: string };
-            }>;
-          }
-        ).history && (
+            }>
+          | undefined) && (
           <div className="glass-card rounded-2xl p-6">
             <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
               <Clock size={20} className="text-nesma-secondary" />
@@ -256,17 +256,15 @@ export const DynamicDocumentFormPage: React.FC = () => {
             </h3>
             <div className="space-y-3">
               {(
-                existingDoc as unknown as {
-                  history: Array<{
-                    id: string;
-                    fromStatus: string | null;
-                    toStatus: string;
-                    performedAt: string;
-                    comment?: string;
-                    performedBy?: { fullName: string };
-                  }>;
-                }
-              ).history.map(entry => (
+                toRecord(existingDoc).history as Array<{
+                  id: string;
+                  fromStatus: string | null;
+                  toStatus: string;
+                  performedAt: string;
+                  comment?: string;
+                  performedBy?: { fullName: string };
+                }>
+              ).map(entry => (
                 <div key={entry.id} className="flex items-center gap-4 p-3 rounded-lg bg-white/5">
                   <div className="w-2 h-2 rounded-full bg-nesma-secondary" />
                   <div className="flex-1">

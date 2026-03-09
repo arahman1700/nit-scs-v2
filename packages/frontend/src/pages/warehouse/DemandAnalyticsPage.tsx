@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTopConsumptionItems, useReorderSuggestions, useItemConsumptionTrend, useItemForecast } from '@/api/hooks';
 import type { TopConsumptionItem, ReorderSuggestion } from '@/api/hooks';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 import {
   TrendingUp,
   TrendingDown,
@@ -131,7 +132,7 @@ export const DemandAnalyticsPage: React.FC = () => {
 
   const warehousesQuery = useWarehouses({ pageSize: 100 });
   const warehouses = useMemo(() => {
-    const raw = (warehousesQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+    const raw = extractRows(warehousesQuery.data);
     return raw.map(w => ({
       id: String(w.id),
       name: String(w.warehouseName ?? w.name ?? '-'),
@@ -140,13 +141,13 @@ export const DemandAnalyticsPage: React.FC = () => {
   }, [warehousesQuery.data]);
 
   const topItemsQuery = useTopConsumptionItems(selectedWarehouseId || undefined, 12, 20);
-  const topItems = (topItemsQuery.data?.data ?? []) as unknown as TopConsumptionItem[];
+  const topItems = extractRows<TopConsumptionItem>(topItemsQuery.data);
 
   const reorderQuery = useReorderSuggestions(selectedWarehouseId || undefined);
-  const reorderItems = (reorderQuery.data?.data ?? []) as unknown as ReorderSuggestion[];
+  const reorderItems = extractRows<ReorderSuggestion>(reorderQuery.data);
 
   const trendQuery = useItemConsumptionTrend(selectedItemId || undefined, 12);
-  const trendData = (trendQuery.data?.data ?? null) as unknown as {
+  const trendData = (toRecord(trendQuery.data).data ?? null) as {
     itemId: string;
     itemCode: string;
     itemDescription: string;
@@ -156,7 +157,7 @@ export const DemandAnalyticsPage: React.FC = () => {
   } | null;
 
   const forecastQuery = useItemForecast(selectedItemId || undefined, selectedWarehouseId || undefined, 6);
-  const forecastData = (forecastQuery.data?.data ?? null) as unknown as {
+  const forecastData = (toRecord(forecastQuery.data).data ?? null) as {
     current: number;
     forecast: { month: string; projectedConsumption: number; projectedEndStock: number }[];
     reorderRecommended: boolean;

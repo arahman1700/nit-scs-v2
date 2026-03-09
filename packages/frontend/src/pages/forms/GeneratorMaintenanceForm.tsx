@@ -4,6 +4,7 @@ import { Save, Wrench, CheckCircle, Loader2 } from 'lucide-react';
 import type { Generator } from '@nit-scs-v2/shared/types';
 import { useCreateGeneratorMaintenance, useGeneratorMaintenance, useUpdateGeneratorMaintenance } from '@/api/hooks';
 import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 interface MaintenanceDoc {
   id?: string;
@@ -65,7 +66,8 @@ export const GeneratorMaintenanceForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'NEW');
+          const resData = toRecord(toRecord(res).data);
+          setDocumentNumber((resData.formNumber as string | undefined) ?? 'NEW');
           setSubmitted(true);
         },
       });

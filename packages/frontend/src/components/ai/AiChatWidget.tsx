@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Send, Loader2, Trash2, ChevronLeft, Plus } from 'lucide-react';
 import { useAiChat, useAiConversations, useAiConversation } from '@/domains/system/hooks/useAiChat';
 import type { AiMessage } from '@/domains/system/hooks/useAiChat';
+import { toRecord } from '@/utils/type-helpers';
 
 export function AiChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,8 +16,8 @@ export function AiChatWidget() {
   const { data: conversationsData } = useAiConversations();
   const { data: convData } = useAiConversation(conversationId);
 
-  const conversations = (conversationsData as unknown as { data?: unknown[] })?.data ?? [];
-  const loadedMessages = (convData as unknown as { data?: { messages?: AiMessage[] } })?.data?.messages ?? [];
+  const conversations = (toRecord(conversationsData).data as unknown[]) ?? [];
+  const loadedMessages = (toRecord(toRecord(convData).data).messages as AiMessage[]) ?? [];
 
   const allMessages = conversationId ? loadedMessages : localMessages;
 
@@ -43,7 +44,7 @@ export function AiChatWidget() {
         message: userMsg.content,
       });
 
-      const data = (result as unknown as { data?: { conversationId?: string; message?: AiMessage } })?.data;
+      const data = toRecord(toRecord(result).data) as { conversationId?: string; message?: AiMessage };
       if (data?.conversationId && !conversationId) {
         setConversationId(data.conversationId);
       }

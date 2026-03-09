@@ -13,6 +13,7 @@ import {
   useWarehouses,
   useItems,
 } from '@/api/hooks';
+import { toRows, toRecord } from '@/utils/type-helpers';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -89,8 +90,8 @@ export const AsnPage: React.FC = () => {
   );
 
   const { data: listData, isLoading } = useAsnList(params);
-  const items = (listData?.data ?? []) as unknown as AsnItem[];
-  const meta = (listData as unknown as Record<string, unknown>)?.meta as
+  const items = toRows<AsnItem>(listData?.data);
+  const meta = toRecord(listData).meta as
     | { page: number; pageSize: number; total: number; totalPages: number }
     | undefined;
 
@@ -270,7 +271,7 @@ export const AsnPage: React.FC = () => {
 
 const AsnDetail: React.FC<{ id: string; onBack: () => void }> = ({ id, onBack }) => {
   const { data: asnData, isLoading } = useAsn(id);
-  const asn = (asnData as unknown as { data?: AsnItem })?.data;
+  const asn = toRecord(asnData).data as AsnItem | undefined;
 
   const [showVariance, setShowVariance] = useState(false);
 
@@ -515,7 +516,7 @@ interface VarianceReport {
 
 const VarianceModal: React.FC<{ asnId: string; onClose: () => void }> = ({ asnId, onClose }) => {
   const { data: varianceData, isLoading } = useAsnVariance(asnId);
-  const report = (varianceData as unknown as { data?: VarianceReport })?.data;
+  const report = toRecord(varianceData).data as VarianceReport | undefined;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -623,17 +624,17 @@ const CreateAsnModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { data: warehousesData } = useWarehouses();
   const { data: itemsData } = useItems();
 
-  const suppliers = (suppliersData?.data ?? []) as unknown as Array<{
+  const suppliers = toRows<{
     id: string;
     supplierCode: string;
     supplierName: string;
-  }>;
-  const warehouses = (warehousesData?.data ?? []) as unknown as Array<{
+  }>(suppliersData?.data);
+  const warehouses = toRows<{
     id: string;
     warehouseCode: string;
     warehouseName: string;
-  }>;
-  const allItems = (itemsData?.data ?? []) as unknown as Array<{ id: string; code: string; name: string }>;
+  }>(warehousesData?.data);
+  const allItems = toRows<{ id: string; code: string; name: string }>(itemsData?.data);
 
   const [form, setForm] = useState({
     supplierId: '',

@@ -4,13 +4,14 @@ import { Save, FileCheck, CheckCircle } from 'lucide-react';
 import { useShipmentList, useAddCustomsStage } from '@/domains/logistics/hooks/useShipments';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 export const CustomsForm: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>({});
 
   const shipmentQuery = useShipmentList({ pageSize: 100 });
-  const shipmentData = (shipmentQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const shipmentData = extractRows(shipmentQuery.data);
 
   const createMutation = useAddCustomsStage();
 

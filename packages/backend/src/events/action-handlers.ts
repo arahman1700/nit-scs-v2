@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../utils/prisma.js';
+import { getPrismaDelegate } from '../utils/prisma-helpers.js';
 import { canTransition } from '@nit-scs-v2/shared';
 import { log } from '../config/logger.js';
 import { sendTemplatedEmail } from '../domains/system/services/email.service.js';
@@ -154,7 +155,7 @@ async function handleChangeStatus(params: Record<string, unknown>, event: System
     throw new Error(`Unknown entity type for status change: ${event.entityType}`);
   }
 
-  const delegate = (prisma as unknown as Record<string, { update: (args: unknown) => Promise<unknown> }>)[modelName];
+  const delegate = getPrismaDelegate(prisma, modelName);
   await delegate.update({
     where: { id: event.entityId },
     data: { status: targetStatus },
@@ -455,7 +456,7 @@ async function handleConditionalBranch(params: Record<string, unknown>, event: S
   }
 
   // Evaluate condition against event
-  const fieldValue = getNestedValue(event as unknown as Record<string, unknown>, condition.field);
+  const fieldValue = getNestedValue({ ...event }, condition.field);
   let result = false;
 
   switch (condition.op) {

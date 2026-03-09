@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CheckCircle, XCircle, Clock, Users, FileText, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { usePendingApprovals, useRespondToApproval } from '@/api/hooks';
 import type { ParallelApprovalGroup, ParallelApprovalResponse } from '@/api/hooks';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -200,7 +201,7 @@ const ApprovalCard: React.FC<{
 
 export const PendingApprovalsPage: React.FC = () => {
   const { data, isLoading, error } = usePendingApprovals();
-  const groups: ParallelApprovalGroup[] = (data as unknown as { data?: ParallelApprovalGroup[] })?.data ?? [];
+  const groups: ParallelApprovalGroup[] = (toRecord(data).data as ParallelApprovalGroup[]) ?? [];
 
   return (
     <div className="space-y-6">

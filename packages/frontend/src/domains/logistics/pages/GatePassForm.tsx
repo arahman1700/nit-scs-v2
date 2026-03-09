@@ -7,6 +7,7 @@ import { useCreateGatePass } from '@/domains/logistics/hooks/useGatePasses';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 export const GatePassForm: React.FC = () => {
   const navigate = useNavigate();
@@ -17,9 +18,9 @@ export const GatePassForm: React.FC = () => {
   const mirvQuery = useMiList({ pageSize: 100 });
   const mrrvQuery = useGrnList({ pageSize: 100 });
   const warehouseQuery = useWarehouses({ pageSize: 200 });
-  const mirvData = (mirvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const mrrvData = (mrrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const mirvData = extractRows(mirvQuery.data);
+  const mrrvData = extractRows(mrrvQuery.data);
+  const warehouses = extractRows(warehouseQuery.data);
 
   const createMutation = useCreateGatePass();
 

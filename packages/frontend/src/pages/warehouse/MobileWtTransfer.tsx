@@ -3,6 +3,7 @@ import { ArrowLeftRight, CheckCircle2, ScanLine, ArrowLeft, Loader2, AlertCircle
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { useWtList, useShipWt } from '@/api/hooks';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
+import { toRecord } from '@/utils/type-helpers';
 import { OfflineQueueBanner } from '@/components/OfflineQueueBanner';
 import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
 import { SwipeableSteps } from '@/components/SwipeableSteps';
@@ -33,7 +34,7 @@ export function MobileWtTransfer() {
 
   // Fetch approved WTs ready for shipping
   const wtListQuery = useWtList({ status: 'approved', page: 1, pageSize: 50 } as Record<string, unknown>);
-  const wtList = (wtListQuery.data as unknown as { data?: Array<Record<string, unknown>> })?.data ?? [];
+  const wtList = (toRecord(wtListQuery.data).data as Array<Record<string, unknown>> | undefined) ?? [];
 
   const shipMutation = useShipWt();
 

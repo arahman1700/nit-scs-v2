@@ -10,6 +10,7 @@ import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import { JobStatus } from '@nit-scs-v2/shared/types';
 import type { MIRV, JobOrder, Project, InventoryItem } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 type SETab = 'dashboard' | 'new-request' | 'my-requests' | 'my-project' | 'site-inventory';
 
@@ -36,7 +37,7 @@ export const SiteEngineerDashboard: React.FC = () => {
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
-  const allMrfs = (mrfQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allMrfs = extractRows(mrfQuery.data);
   const allProjects = (projectsQuery.data?.data ?? []) as Project[];
   const inventoryItems = (inventoryQuery.data?.data ?? []) as InventoryItem[];
 

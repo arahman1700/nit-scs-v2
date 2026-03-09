@@ -4,6 +4,7 @@ import { Save, Droplets, CheckCircle, Loader2 } from 'lucide-react';
 import type { Generator } from '@nit-scs-v2/shared/types';
 import { useCreateGeneratorFuel, useGeneratorFuel, useUpdateGeneratorFuel } from '@/api/hooks';
 import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 interface FuelDoc {
   id?: string;
@@ -67,7 +68,7 @@ export const GeneratorFuelForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'NEW');
+          setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? 'NEW');
           setSubmitted(true);
         },
       });

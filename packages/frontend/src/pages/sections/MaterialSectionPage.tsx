@@ -29,6 +29,7 @@ import {
   useWtList,
 } from '@/api/hooks';
 import { useInventory } from '@/domains/master-data/hooks/useMasterData';
+import { extractRows } from '@/utils/type-helpers';
 
 // Backward-compatible alias
 export { MaterialSectionPage as WarehouseSectionPage };
@@ -51,7 +52,7 @@ export const MaterialSectionPage: React.FC = () => {
   const imsfQuery = useImsfList({ pageSize: 50 });
   const wtQuery = useWtList({ pageSize: 50 });
 
-  const grnRows = (grnAll?.data ?? []) as unknown as Record<string, unknown>[];
+  const grnRows = extractRows(grnAll);
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -199,7 +200,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Goods Receipt Notes"
             icon={ArrowDownCircle}
             columns={RESOURCE_COLUMNS.grn.columns}
-            rows={(grnQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(grnQuery.data)}
             loading={grnQuery.isLoading}
             createLabel="New GRN"
             createUrl="/admin/forms/grn"
@@ -211,7 +212,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Quality Control Inspections"
             icon={ClipboardCheck}
             columns={RESOURCE_COLUMNS.qci.columns}
-            rows={(qciQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(qciQuery.data)}
             loading={qciQuery.isLoading}
             entityType="rfim"
           />
@@ -221,7 +222,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Discrepancy Reports"
             icon={AlertTriangle}
             columns={RESOURCE_COLUMNS.dr.columns}
-            rows={(drQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(drQuery.data)}
             loading={drQuery.isLoading}
             createLabel="New DR"
             createUrl="/admin/forms/dr"
@@ -233,7 +234,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Material Issuance"
             icon={ArrowUpCircle}
             columns={RESOURCE_COLUMNS.mi.columns}
-            rows={(miQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(miQuery.data)}
             loading={miQuery.isLoading}
             createLabel="New MI"
             createUrl="/admin/forms/mi"
@@ -245,7 +246,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Material Return Notes"
             icon={RotateCcw}
             columns={RESOURCE_COLUMNS.mrn.columns}
-            rows={(mrnQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(mrnQuery.data)}
             loading={mrnQuery.isLoading}
             createLabel="New MRN"
             createUrl="/admin/forms/mrn"
@@ -257,7 +258,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Material Requests"
             icon={FileText}
             columns={RESOURCE_COLUMNS.mr.columns}
-            rows={(mrQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(mrQuery.data)}
             loading={mrQuery.isLoading}
             createLabel="New MR"
             createUrl="/admin/forms/mr"
@@ -269,7 +270,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Stock Levels"
             icon={Package}
             columns={RESOURCE_COLUMNS.inventory.columns}
-            rows={(inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(inventoryQuery.data)}
             loading={inventoryQuery.isLoading}
           />
         ),
@@ -278,7 +279,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Bin Cards"
             icon={Package}
             columns={RESOURCE_COLUMNS['bin-cards'].columns}
-            rows={(binCardQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(binCardQuery.data)}
             loading={binCardQuery.isLoading}
           />
         ),
@@ -318,7 +319,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Internal Material Shifting"
             icon={Truck}
             columns={RESOURCE_COLUMNS.imsf.columns}
-            rows={(imsfQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(imsfQuery.data)}
             loading={imsfQuery.isLoading}
             createLabel="New IMSF"
             createUrl="/admin/forms/imsf"
@@ -330,7 +331,7 @@ export const MaterialSectionPage: React.FC = () => {
             title="Warehouse Transfers"
             icon={ArrowRightLeft}
             columns={RESOURCE_COLUMNS.wt.columns}
-            rows={(wtQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(wtQuery.data)}
             loading={wtQuery.isLoading}
             createLabel="New WT"
             createUrl="/admin/forms/wt"

@@ -10,6 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import type { JobOrder } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 type LogTab = 'overview' | 'jobs' | 'shipments' | 'gate-passes' | 'customs' | 'receiving';
 const CHART_COLORS = ['#2E3192', '#80D1E9', '#4CAF50', '#FF9800', '#F44336', '#9C27B0', '#00BCD4'];
@@ -29,9 +30,9 @@ export const LogisticsCoordinatorDashboard: React.FC = () => {
   const slaQuery = useSLACompliance();
 
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
-  const allShipments = (shipQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allGPs = (gpQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allMrrvs = (mrrvQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allShipments = extractRows(shipQuery.data);
+  const allGPs = extractRows(gpQuery.data);
+  const allMrrvs = extractRows(mrrvQuery.data);
 
   const isLoading = joQuery.isLoading;
 

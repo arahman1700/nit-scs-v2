@@ -6,6 +6,7 @@ import {
 } from '@/domains/system/hooks/useCustomFields';
 import type { CustomFieldDefinition } from '@/domains/system/hooks/useCustomFields';
 import { Settings2 } from 'lucide-react';
+import { toRecord } from '@/utils/type-helpers';
 
 interface CustomFieldsSectionProps {
   entityType: string;
@@ -27,8 +28,8 @@ export function CustomFieldsSection({
   const { data: defsData, isLoading } = useCustomFieldDefinitions(entityType);
   const { data: savedData } = useCustomFieldValues(entityType, entityId);
 
-  const definitions = (defsData as unknown as { data?: CustomFieldDefinition[] })?.data ?? [];
-  const savedValues = (savedData as unknown as { data?: Record<string, unknown> })?.data ?? {};
+  const definitions = (toRecord(defsData).data as CustomFieldDefinition[]) ?? [];
+  const savedValues = (toRecord(savedData).data as Record<string, unknown>) ?? {};
 
   // Load saved values when editing an existing document
   useEffect(() => {

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, ClipboardList, Clock, CheckCircle2, XCircle, Play } from 'lucide-react';
 import { useCycleCountList, useCreateCycleCount, useWarehouses } from '@/api/hooks';
+import { toRows, toRecord } from '@/utils/type-helpers';
 
 const STATUS_CONFIG: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
   scheduled: { bg: 'bg-blue-500/20', text: 'text-blue-400', icon: <Clock className="w-3 h-3" /> },
@@ -38,7 +39,7 @@ export const CycleCountListPage: React.FC = () => {
 
   const { data: listData, isLoading } = useCycleCountList(params);
   const items = listData?.data ?? [];
-  const meta = (listData as unknown as Record<string, unknown>)?.meta as
+  const meta = toRecord(listData).meta as
     | { page: number; pageSize: number; total: number; totalPages: number }
     | undefined;
 
@@ -237,11 +238,11 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
   const navigate = useNavigate();
   const createMutation = useCreateCycleCount();
   const { data: warehousesData } = useWarehouses();
-  const warehouses = (warehousesData?.data ?? []) as unknown as Array<{
+  const warehouses = toRows<{
     id: string;
     warehouseCode: string;
     warehouseName: string;
-  }>;
+  }>(warehousesData?.data);
 
   const [form, setForm] = useState({
     countType: 'full' as string,
@@ -255,7 +256,7 @@ const CreateCycleCountModal: React.FC<{ onClose: () => void }> = ({ onClose }) =
     if (!form.warehouseId) return;
 
     const result = await createMutation.mutateAsync(form);
-    const created = (result as unknown as { data?: { id: string } })?.data;
+    const created = toRecord(result).data as { id: string } | undefined;
     if (created?.id) {
       navigate(`/warehouse/cycle-counts/${created.id}`);
     }

@@ -7,6 +7,7 @@ import { useCreateWt } from '@/domains/transfers/hooks/useWt';
 import { useWarehouses, useProjects } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
+import { toRows } from '@/utils/type-helpers';
 
 export const StockTransferForm: React.FC = () => {
   const navigate = useNavigate();
@@ -18,8 +19,8 @@ export const StockTransferForm: React.FC = () => {
   const createMutation = useCreateWt();
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
-  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const projects = (projectQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const warehouses = toRows<Record<string, unknown>>(warehouseQuery.data?.data);
+  const projects = toRows<Record<string, unknown>>(projectQuery.data?.data);
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('stock-transfer'), []);

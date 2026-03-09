@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { RefreshCw, Search, Filter, BarChart3, Package, TrendingUp } from 'lucide-react';
 import { useAbcAnalysis, useAbcSummary, useRecalculateAbc } from '@/api/hooks';
+import { toRecord } from '@/utils/type-helpers';
 
 const CLASS_COLORS = {
   A: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30', chart: '#10b981' },
@@ -35,7 +36,7 @@ export const AbcAnalysisPage: React.FC = () => {
 
   const summary = summaryData?.data;
   const items = listData?.data ?? [];
-  const meta = (listData as unknown as Record<string, unknown>)?.meta as
+  const meta = toRecord(listData).meta as
     | { page: number; pageSize: number; total: number; totalPages: number }
     | undefined;
 

@@ -144,14 +144,16 @@ export async function getRuleById(id: string) {
 }
 
 export async function createRule(data: Prisma.PutAwayRuleUncheckedCreateInput): Promise<PutAwayRule> {
-  return prisma.putAwayRule.create({ data, include: LIST_INCLUDE }) as unknown as PutAwayRule;
+  const result = await prisma.putAwayRule.create({ data, include: LIST_INCLUDE });
+  return result as PutAwayRule;
 }
 
 export async function updateRule(id: string, data: Prisma.PutAwayRuleUncheckedUpdateInput): Promise<PutAwayRule> {
   const existing = await prisma.putAwayRule.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('PutAwayRule', id);
 
-  return prisma.putAwayRule.update({ where: { id }, data, include: LIST_INCLUDE }) as unknown as PutAwayRule;
+  const result = await prisma.putAwayRule.update({ where: { id }, data, include: LIST_INCLUDE });
+  return result as PutAwayRule;
 }
 
 export async function deleteRule(id: string): Promise<void> {

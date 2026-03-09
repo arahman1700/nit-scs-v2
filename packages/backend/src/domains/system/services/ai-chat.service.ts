@@ -51,7 +51,7 @@ async function getAnthropicClient(): Promise<AnthropicClient> {
   }>);
   const Anthropic = mod.Anthropic ?? mod.default?.Anthropic;
   if (!Anthropic) throw new Error('Failed to load @anthropic-ai/sdk — make sure it is installed.');
-  anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) as unknown as AnthropicClient;
+  anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }) as AnthropicClient;
   return anthropicClient;
 }
 

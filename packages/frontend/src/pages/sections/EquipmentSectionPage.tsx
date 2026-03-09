@@ -36,6 +36,7 @@ import {
 } from '@/api/hooks';
 import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
 import { CHART_PALETTE } from '@/config/chartTheme';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 const LazyKanban = React.lazy(() =>
   import('@/pages/transport/JobOrdersKanban').then(m => ({ default: m.JobOrdersKanban })),
@@ -119,7 +120,7 @@ export const EquipmentSectionPage: React.FC = () => {
   const joByType = useMemo(() => {
     const counts: Record<string, number> = {};
     joData.forEach(j => {
-      const t = ((j as unknown as Record<string, unknown>).type as string) || 'Other';
+      const t = (toRecord(j).type as string) || 'Other';
       counts[t] = (counts[t] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -129,7 +130,7 @@ export const EquipmentSectionPage: React.FC = () => {
     () =>
       joData
         .filter(j => {
-          const rec = j as unknown as Record<string, unknown>;
+          const rec = toRecord(j);
           return rec.slaStatus === 'Overdue' || rec.status === 'Overdue';
         })
         .slice(0, 5),
@@ -189,7 +190,7 @@ export const EquipmentSectionPage: React.FC = () => {
             {overdueJobs.length > 0 ? (
               <div className="space-y-3">
                 {overdueJobs.map(j => {
-                  const rec = j as unknown as Record<string, unknown>;
+                  const rec = toRecord(j);
                   return (
                     <div
                       key={rec.id as string}
@@ -261,7 +262,7 @@ export const EquipmentSectionPage: React.FC = () => {
           </thead>
           <tbody>
             {joData.slice(0, 15).map(j => {
-              const rec = j as unknown as Record<string, unknown>;
+              const rec = toRecord(j);
               return (
                 <tr key={rec.id as string} className="border-b border-white/5 hover:bg-white/5 transition-colors">
                   <td className="p-4 text-white font-medium">{(rec.documentNumber as string) || (rec.id as string)}</td>
@@ -297,7 +298,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Gate Passes"
         icon={ShieldCheck}
         columns={RESOURCE_COLUMNS['gate-passes'].columns}
-        rows={(gpQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(gpQuery.data)}
         loading={gpQuery.isLoading}
         createLabel="New Gate Pass"
         createUrl="/admin/forms/gatepass"
@@ -348,7 +349,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Rental Contracts"
         icon={FileSignature}
         columns={RESOURCE_COLUMNS['rental-contracts'].columns}
-        rows={(rcQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(rcQuery.data)}
         loading={rcQuery.isLoading}
         createLabel="New Rental Contract"
         createUrl="/admin/forms/rental-contract"
@@ -395,7 +396,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Generator Fuel Logs"
         icon={Fuel}
         columns={RESOURCE_COLUMNS['generator-fuel'].columns}
-        rows={(genFuelQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(genFuelQuery.data)}
         loading={genFuelQuery.isLoading}
         createLabel="Log Fuel"
         createUrl="/admin/forms/generator-fuel"
@@ -408,7 +409,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Generator Maintenance"
         icon={Zap}
         columns={RESOURCE_COLUMNS.generators.columns}
-        rows={(genMainQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(genMainQuery.data)}
         loading={genMainQuery.isLoading}
         createLabel="New Maintenance"
         createUrl="/admin/forms/generator-maintenance"
@@ -421,7 +422,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Tool Registry"
         icon={Wrench}
         columns={RESOURCE_COLUMNS.tools.columns}
-        rows={(toolQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(toolQuery.data)}
         loading={toolQuery.isLoading}
         createLabel="New Tool"
         createUrl="/admin/forms/tool"
@@ -434,7 +435,7 @@ export const EquipmentSectionPage: React.FC = () => {
         title="Tool Issues"
         icon={Wrench}
         columns={RESOURCE_COLUMNS['tool-issues'].columns}
-        rows={(toolIssueQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+        rows={extractRows(toolIssueQuery.data)}
         loading={toolIssueQuery.isLoading}
         createLabel="Issue Tool"
         createUrl="/admin/forms/tool-issue"

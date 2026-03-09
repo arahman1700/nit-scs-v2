@@ -6,6 +6,7 @@ import { LineItemsTable } from '@/components/LineItemsTable';
 import { useCreateRentalContract } from '@/api/hooks';
 import { useSuppliers } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { toRecord } from '@/utils/type-helpers';
 
 export const RentalContractForm: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export const RentalContractForm: React.FC = () => {
     e.preventDefault();
     createMutation.mutate({ ...formData, lineItems } as Record<string, unknown>, {
       onSuccess: res => {
-        setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? nextNumber);
+        setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? nextNumber);
         setSubmitted(true);
       },
     });

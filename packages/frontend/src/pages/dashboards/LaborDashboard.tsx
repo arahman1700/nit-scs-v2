@@ -29,6 +29,7 @@ import { useLaborProductivity } from '@/domains/job-orders/hooks/useLaborProduct
 import { useLaborStandards, useUpsertLaborStandard, useLaborPerformance } from '@/domains/job-orders/hooks/useLabor';
 import type { WorkerProductivity, ProductivitySummary } from '@/domains/job-orders/hooks/useLaborProductivity';
 import type { LaborStandard, PerformanceWorker } from '@/domains/job-orders/hooks/useLabor';
+import { toRecord } from '@/utils/type-helpers';
 
 type TabKey = 'productivity' | 'standards' | 'performance';
 
@@ -75,7 +76,7 @@ const DEFAULT_TASK_TYPES = [
 function StandardsTab() {
   const standardsQuery = useLaborStandards();
   const upsertMutation = useUpsertLaborStandard();
-  const standards = (standardsQuery.data as unknown as { data?: LaborStandard[] } | undefined)?.data || [];
+  const standards = (toRecord(standardsQuery.data).data as LaborStandard[] | undefined) || [];
 
   const [editingRow, setEditingRow] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{ standardMinutes: string; description: string; unitOfMeasure: string }>(
@@ -248,17 +249,13 @@ function StandardsTab() {
 function PerformanceTab() {
   const [days, setDays] = useState(30);
   const performanceQuery = useLaborPerformance(days);
-  const report = (
-    performanceQuery.data as unknown as
-      | {
-          data?: {
-            period: { days: number; since: string };
-            standards: Array<{ taskType: string; standardMinutes: number; unit: string }>;
-            workers: PerformanceWorker[];
-          };
-        }
-      | undefined
-  )?.data;
+  const report = toRecord(performanceQuery.data).data as
+    | {
+        period: { days: number; since: string };
+        standards: Array<{ taskType: string; standardMinutes: number; unit: string }>;
+        workers: PerformanceWorker[];
+      }
+    | undefined;
 
   const getEfficiencyColor = (eff: number) => {
     if (eff >= 100) return '#10b981'; // green
@@ -442,7 +439,7 @@ export function LaborDashboard() {
   const [days, setDays] = useState(30);
   const query = useLaborProductivity(days);
 
-  const data = (query.data as unknown as { data?: ProductivitySummary } | undefined)?.data;
+  const data = toRecord(query.data).data as ProductivitySummary | undefined;
   const isLoading = query.isLoading;
 
   const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [

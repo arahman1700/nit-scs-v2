@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Calculator, DollarSign, Clock, Target, TrendingDown, Loader2, BarChart3, ArrowRight } from 'lucide-react';
 import { useCalculateRoi, type RoiInput, type RoiResult } from '@/domains/reporting/hooks/useRoiCalculator';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Default values ─────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export const RoiCalculatorPage: React.FC = () => {
   const handleCalculate = useCallback(() => {
     mutation.mutate(inputs, {
       onSuccess: res => {
-        const data = (res as unknown as { data?: RoiResult })?.data;
+        const data = toRecord(res).data as RoiResult | undefined;
         if (data) setResult(data);
       },
     });

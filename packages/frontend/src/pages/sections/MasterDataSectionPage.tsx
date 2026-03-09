@@ -15,6 +15,7 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useSuppliers, useItems, useProjects, useEmployees, useWarehouses, useFleet, useGenerators } from '@/api/hooks';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -87,9 +88,9 @@ export const MasterDataSectionPage: React.FC = () => {
   const itemsTotal = itemsQuery.data?.meta?.total ?? 0;
   const projectsTotal = projectsQuery.data?.meta?.total ?? 0;
   const employeesTotal = employeesQuery.data?.meta?.total ?? 0;
-  const warehousesData = (warehousesQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const fleetData = (fleetQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const generatorsData = (generatorsQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const warehousesData = extractRows(warehousesQuery.data);
+  const fleetData = extractRows(fleetQuery.data);
+  const generatorsData = extractRows(generatorsQuery.data);
   const warehousesTotal = warehousesQuery.data?.meta?.total ?? warehousesData.length;
 
   const loading =
@@ -101,12 +102,11 @@ export const MasterDataSectionPage: React.FC = () => {
   const projectsFullQuery = useProjects({ pageSize: 15 });
   const employeesFullQuery = useEmployees({ pageSize: 15 });
 
-  // Cast to Record<string, unknown>[] because shared types use idealized field names
-  // (code, name) but API returns Prisma field names (itemCode, supplierName, etc.)
-  const suppliersData = (suppliersFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const itemsData = (itemsFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const projectsData = (projectsFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const employeesData = (employeesFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  // extractRows handles the Record<string, unknown>[] conversion centrally
+  const suppliersData = extractRows(suppliersFullQuery.data);
+  const itemsData = extractRows(itemsFullQuery.data);
+  const projectsData = extractRows(projectsFullQuery.data);
+  const employeesData = extractRows(employeesFullQuery.data);
 
   // ── KPIs ──────────────────────────────────────────────────────────────────
 

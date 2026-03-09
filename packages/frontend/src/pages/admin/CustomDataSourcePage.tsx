@@ -7,6 +7,7 @@ import {
   usePreviewCustomDataSource,
 } from '@/domains/reporting/hooks/useCustomDataSources';
 import type { CustomDataSource, CreateDataSourceInput } from '@/domains/reporting/hooks/useCustomDataSources';
+import { toRecord } from '@/utils/type-helpers';
 import { Database, Plus, Trash2, Play, Edit2, X, Save, Filter } from 'lucide-react';
 
 const ENTITY_TYPES = [
@@ -295,7 +296,7 @@ export function CustomDataSourcePage() {
   const [showForm, setShowForm] = useState(false);
   const [previewResult, setPreviewResult] = useState<unknown>(null);
 
-  const sources = (listData as unknown as { data?: CustomDataSource[] })?.data ?? [];
+  const sources = (toRecord(listData).data as CustomDataSource[]) ?? [];
 
   const handleNew = useCallback(() => {
     setEditing(EMPTY_FORM);
@@ -340,7 +341,7 @@ export function CustomDataSourcePage() {
       outputType: editing.outputType,
       name: editing.name || 'Preview',
     });
-    setPreviewResult((result as unknown as { data?: unknown })?.data ?? result);
+    setPreviewResult(toRecord(result).data ?? result);
   }, [editing, previewMutation]);
 
   const handleDelete = useCallback(

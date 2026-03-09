@@ -7,6 +7,7 @@ import {
   useEmployees,
   useItems,
 } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 const COL_SPAN_MAP: Record<number, string> = {
   1: 'md:col-span-1',
@@ -88,8 +89,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             onChange={e => handleChange(e.target.value)}
             className={inputBase}
             disabled={disabled || field.isReadOnly}
-            {...(rules.min !== undefined && { min: rules.min as unknown as string })}
-            {...(rules.max !== undefined && { max: rules.max as unknown as string })}
+            {...(rules.min !== undefined && { min: String(rules.min) })}
+            {...(rules.max !== undefined && { max: String(rules.max) })}
           />
         );
 
@@ -101,8 +102,8 @@ export const DynamicFieldRenderer: React.FC<DynamicFieldRendererProps> = ({
             onChange={e => handleChange(e.target.value)}
             className={inputBase}
             disabled={disabled || field.isReadOnly}
-            {...(rules.min !== undefined && { min: rules.min as unknown as string })}
-            {...(rules.max !== undefined && { max: rules.max as unknown as string })}
+            {...(rules.min !== undefined && { min: String(rules.min) })}
+            {...(rules.max !== undefined && { max: String(rules.max) })}
           />
         );
 
@@ -279,12 +280,13 @@ function LookupField({
 }) {
   const useHook = LOOKUP_HOOKS[type];
   const { data: hookData } = useHook();
-  const items = ((hookData as { data?: Array<Record<string, unknown>> })?.data ?? []) as Array<{
-    id: string;
-    name?: string;
-    fullName?: string;
-    code?: string;
-  }>;
+  const items =
+    (toRecord(hookData).data as Array<{
+      id: string;
+      name?: string;
+      fullName?: string;
+      code?: string;
+    }>) ?? [];
 
   const inputBase =
     'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:border-nesma-secondary focus:ring-1 focus:ring-nesma-secondary outline-none transition-all appearance-none';

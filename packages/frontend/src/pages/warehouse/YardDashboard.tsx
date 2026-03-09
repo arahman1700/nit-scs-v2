@@ -27,6 +27,7 @@ import {
 } from '@/domains/warehouse-ops/hooks/useYard';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 import type { YardStatus, DockDoor, DockUtilization } from '@/domains/warehouse-ops/hooks/useYard';
 
 // ── Status colors ─────────────────────────────────────────────────────
@@ -378,15 +379,15 @@ export const YardDashboard: React.FC = () => {
   // Queries
   const { data: warehousesRes } = useWarehouses();
   const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+    (toRecord(warehousesRes).data as Array<{ id: string; warehouseName: string; warehouseCode: string }> | undefined) ??
+    [];
 
   const { data: statusRes, isLoading } = useYardStatus(selectedWarehouse || undefined);
-  const yardStatus = (statusRes as unknown as { data?: YardStatus })?.data;
+  const yardStatus = toRecord(statusRes).data as YardStatus | undefined;
 
   const todayDate = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const { data: utilizationRes } = useDockUtilization(selectedWarehouse || undefined, todayDate);
-  const utilization = (utilizationRes as unknown as { data?: DockUtilization })?.data;
+  const utilization = toRecord(utilizationRes).data as DockUtilization | undefined;
 
   // Mutations
   const checkInAppt = useCheckInAppointment();

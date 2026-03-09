@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { displayStr } from '../displayStr';
+import { toRecord } from '../type-helpers';
 
 // ---------------------------------------------------------------------------
 // Section 1: Generic PDF generator (DocumentPdfOptions)
@@ -88,7 +89,7 @@ export function generateDocumentPdf(options: DocumentPdfOptions) {
   const signatures = options.signatures ?? getDefaultSignatures(options.title);
   if (signatures.length > 0) {
     // Get current Y position after autoTable or field section
-    const finalY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? yPos;
+    const finalY = (toRecord(doc).lastAutoTable as { finalY: number } | undefined)?.finalY ?? yPos;
     let sigY = finalY + 20;
 
     // Check if we need a new page for signatures
@@ -227,8 +228,8 @@ export function createNitPdf(options: PdfOptions): jsPDF {
   // but also set up a final page count replacement
   const _pageCount = doc.getNumberOfPages;
   // Store reference for the finalize step
-  (doc as unknown as Record<string, unknown>).__nitStartY = lineY + 6;
-  (doc as unknown as Record<string, unknown>).__nitTotalPlaceholder = totalPagesPlaceholder;
+  toRecord(doc).__nitStartY = lineY + 6;
+  toRecord(doc).__nitTotalPlaceholder = totalPagesPlaceholder;
 
   return doc;
 }
@@ -237,7 +238,7 @@ export function createNitPdf(options: PdfOptions): jsPDF {
  * Get the current Y position to start content after the header.
  */
 export function getStartY(doc: jsPDF): number {
-  return ((doc as unknown as Record<string, unknown>).__nitStartY as number) ?? 40;
+  return (toRecord(doc).__nitStartY as number) ?? 40;
 }
 
 /**
@@ -281,7 +282,7 @@ export function addTable(doc: jsPDF, columns: TableColumn[], data: Record<string
     },
   });
 
-  const lastTable = (doc as unknown as Record<string, unknown>).lastAutoTable as { finalY: number } | undefined;
+  const lastTable = toRecord(doc).lastAutoTable as { finalY: number } | undefined;
   return lastTable?.finalY ?? y + 10;
 }
 
@@ -620,7 +621,7 @@ export function addWatermark(doc: jsPDF, text = 'DRAFT'): void {
 /** Check if we need a page break and add one if needed */
 export function addPageBreakIfNeeded(doc: jsPDF, requiredSpace: number): number {
   const pageHeight = doc.internal.pageSize.getHeight();
-  const currentY = ((doc as unknown as Record<string, unknown>).__nitCurrentY as number) ?? getStartY(doc);
+  const currentY = (toRecord(doc).__nitCurrentY as number) ?? getStartY(doc);
   const margin = 20;
 
   if (currentY + requiredSpace > pageHeight - margin) {

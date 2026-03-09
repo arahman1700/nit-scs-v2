@@ -76,7 +76,7 @@ router.post('/', async (req, res, next) => {
     const data: Record<string, unknown> = {
       ...parsed.data,
       conditions: parsed.data.conditions as object,
-      actions: parsed.data.actions as unknown as object,
+      actions: parsed.data.actions as object,
       workflowId,
     };
 
@@ -106,7 +106,7 @@ router.put('/:id', async (req, res, next) => {
 
     const updateData: Record<string, unknown> = { ...parsed.data };
     if (parsed.data.conditions) updateData.conditions = parsed.data.conditions as object;
-    if (parsed.data.actions) updateData.actions = parsed.data.actions as unknown as object;
+    if (parsed.data.actions) updateData.actions = parsed.data.actions as object;
 
     // Recompute nextRunAt when cronExpression changes
     if (parsed.data.cronExpression) {

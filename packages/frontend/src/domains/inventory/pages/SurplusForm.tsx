@@ -6,6 +6,7 @@ import { useCreateSurplus } from '@/api/hooks';
 import { useProjects, useWarehouses, useItems } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
+import { toRecord } from '@/utils/type-helpers';
 
 export const SurplusForm: React.FC = () => {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export const SurplusForm: React.FC = () => {
     e.preventDefault();
     createMutation.mutate(formData as Record<string, unknown>, {
       onSuccess: res => {
-        setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? nextNumber);
+        setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? nextNumber);
         setSubmitted(true);
       },
     });

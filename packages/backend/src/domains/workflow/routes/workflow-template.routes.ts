@@ -77,7 +77,7 @@ router.post('/:id/install', requirePermission('workflow_template', 'create'), as
             name: rule.name,
             triggerEvent: rule.triggerEvent,
             conditions: rule.conditions as Prisma.InputJsonValue,
-            actions: rule.actions as unknown as Prisma.InputJsonValue,
+            actions: rule.actions as Prisma.InputJsonValue,
             isActive: true,
             sortOrder: idx,
           })),

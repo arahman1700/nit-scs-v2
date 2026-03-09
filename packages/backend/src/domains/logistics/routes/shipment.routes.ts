@@ -171,7 +171,7 @@ baseRouter.put(
         action: 'update',
         tableName: 'customs_tracking',
         recordId: updated.id,
-        oldValues: existing as unknown as Record<string, unknown>,
+        oldValues: existing as Record<string, unknown>,
         newValues: req.body,
       });
 

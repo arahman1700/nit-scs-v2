@@ -4,6 +4,7 @@ import { useSurplusList, useScrapList, useToolList } from '@/api/hooks';
 import { KpiCard } from '@/components/KpiCard';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { StatusBadge } from '@/components/StatusBadge';
+import { extractRows } from '@/utils/type-helpers';
 
 // ── Asset Lifecycle Dashboard ──────────────────────────────────────────────
 // Unified view across Surplus, Scrap, Tools, and Fixed Assets.
@@ -16,8 +17,8 @@ export const AssetDashboard: React.FC = () => {
   const { data: scrapResponse, isLoading: scrapLoading } = useScrapList({ pageSize: 100 });
   const { data: toolResponse, isLoading: toolLoading } = useToolList({ pageSize: 100 });
 
-  const surplusRows = (surplusResponse?.data ?? []) as unknown as Record<string, unknown>[];
-  const scrapRows = (scrapResponse?.data ?? []) as unknown as Record<string, unknown>[];
+  const surplusRows = extractRows(surplusResponse);
+  const scrapRows = extractRows(scrapResponse);
   const toolRows = (toolResponse?.data ?? []) as Record<string, unknown>[];
 
   const isLoading = surplusLoading || scrapLoading || toolLoading;

@@ -8,6 +8,7 @@ import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useShipmentList, useSLACompliance, flattenSLA } from '@/api/hooks';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 const LazySla = React.lazy(() =>
   import('@/domains/reporting/pages/SlaDashboard').then(m => ({ default: m.SlaDashboard })),
@@ -24,7 +25,7 @@ export const ShippingSectionPage: React.FC = () => {
 
   const sla = flattenSLA(slaQuery.data?.data);
   const shipData = shipQuery.data?.data ?? [];
-  const inTransitCount = shipData.filter(s => (s as unknown as Record<string, unknown>).status === 'in_transit').length;
+  const inTransitCount = shipData.filter(s => toRecord(s).status === 'in_transit').length;
 
   const kpis: KpiCardProps[] = [
     {
@@ -105,7 +106,7 @@ export const ShippingSectionPage: React.FC = () => {
               {shipData.length > 0 ? (
                 <div className="space-y-3">
                   {shipData.slice(0, 5).map(s => {
-                    const rec = s as unknown as Record<string, unknown>;
+                    const rec = toRecord(s);
                     return (
                       <div
                         key={rec.id as string}
@@ -135,7 +136,7 @@ export const ShippingSectionPage: React.FC = () => {
             title="Shipments"
             icon={Ship}
             columns={RESOURCE_COLUMNS.shipments.columns}
-            rows={(shipQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(shipQuery.data)}
             loading={shipQuery.isLoading}
             createLabel="New Shipment"
             createUrl="/admin/forms/shipment"

@@ -6,6 +6,7 @@ import { exportToExcel } from '@/lib/excelExport';
 import { useInventory, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { useInventorySummary } from '@/domains/reporting/hooks/useDashboard';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows, toRows } from '@/utils/type-helpers';
 
 // ── Types for the API response shape ──────────────────────────────────────
 
@@ -84,7 +85,7 @@ export const InventoryDashboard: React.FC = () => {
 
   // Parse raw API data into display rows
   const allRows: InventoryRow[] = useMemo(() => {
-    const raw = (inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+    const raw = extractRows(inventoryQuery.data);
     return raw.map(parseInventoryRow);
   }, [inventoryQuery.data]);
 
@@ -94,7 +95,7 @@ export const InventoryDashboard: React.FC = () => {
 
   // Warehouse list for the filter dropdown
   const warehouses = useMemo(() => {
-    const raw = (warehousesQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+    const raw = extractRows(warehousesQuery.data);
     return raw.map(w => ({
       id: String(w.id),
       name: String(w.warehouseName ?? displayStr(w) ?? '-'),
@@ -167,7 +168,7 @@ export const InventoryDashboard: React.FC = () => {
       minLevel: r.minLevel,
     }));
     exportToExcel(
-      exportData as unknown as Record<string, unknown>[],
+      toRows(exportData),
       [
         { header: '#', key: 'sn' },
         { header: 'Item Code', key: 'itemCode' },

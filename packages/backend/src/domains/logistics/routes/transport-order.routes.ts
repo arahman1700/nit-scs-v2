@@ -18,11 +18,13 @@ export default createDocumentRouter({
   createSchema: transportOrderCreateSchema,
   createRoles: WRITE_ROLES,
   create: (body, userId) => {
+    // Body is Zod-validated upstream by createSchema; cast to specific input type
     return transportOrderService.create(body as unknown as TransportOrderCreateInput, userId);
   },
 
   updateSchema: transportOrderUpdateSchema,
   updateRoles: WRITE_ROLES,
+  // Body is Zod-validated upstream by updateSchema; cast to specific input type
   update: (id, body) => transportOrderService.update(id, body as unknown as TransportOrderUpdateInput),
 
   actions: [

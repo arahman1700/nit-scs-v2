@@ -3,6 +3,7 @@ import { Gavel, DollarSign, Loader2 } from 'lucide-react';
 import { useSscList, useScrapList } from '@/api/hooks';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { StatusBadge } from '@/components/StatusBadge';
+import { extractRows } from '@/utils/type-helpers';
 
 // ── SSC Dashboard ──────────────────────────────────────────────────────────
 // Rendered as tab content inside AssetSectionPage (SSC tab).
@@ -13,7 +14,7 @@ export const SscDashboard: React.FC = () => {
   const { data: scrapResponse, isLoading: scrapLoading } = useScrapList({ status: 'in_ssc' });
 
   const rows = (sscResponse?.data ?? []) as Record<string, unknown>[];
-  const scrapRows = (scrapResponse?.data ?? []) as unknown as Record<string, unknown>[];
+  const scrapRows = extractRows(scrapResponse);
 
   const isLoading = sscLoading || scrapLoading;
 

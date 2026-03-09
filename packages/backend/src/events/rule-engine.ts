@@ -33,7 +33,7 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
 }
 
 function evaluateLeaf(condition: LeafCondition, event: SystemEvent): boolean {
-  const fieldValue = getNestedValue(event as unknown as Record<string, unknown>, condition.field);
+  const fieldValue = getNestedValue({ ...event }, condition.field);
   const target = condition.value;
 
   switch (condition.op) {

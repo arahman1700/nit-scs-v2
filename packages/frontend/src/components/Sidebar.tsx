@@ -5,6 +5,7 @@ import { UserRole } from '@nit-scs-v2/shared/types';
 import { SECTION_NAVIGATION } from '@/config/navigation';
 import { useNavigation } from '@/domains/system/hooks/useNavigation';
 import { NesmaLogo } from '@/components/NesmaLogo';
+import { toRecord } from '@/utils/type-helpers';
 import {
   LogOut,
   Search,

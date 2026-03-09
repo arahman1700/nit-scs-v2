@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toRecord } from '@/utils/type-helpers';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -26,7 +27,7 @@ export const PwaInstallPrompt: React.FC = () => {
 
     // Detect iOS Safari
     const ua = navigator.userAgent;
-    const isiOS = /iPad|iPhone|iPod/.test(ua) && !(window as unknown as Record<string, unknown>).MSStream;
+    const isiOS = /iPad|iPhone|iPod/.test(ua) && !toRecord(window).MSStream;
     if (isiOS) {
       setIsIOS(true);
       setShowBanner(true);

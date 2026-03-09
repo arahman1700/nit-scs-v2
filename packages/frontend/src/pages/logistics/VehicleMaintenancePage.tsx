@@ -21,6 +21,7 @@ import {
   useCompleteVehicleMaintenance,
   useCancelVehicleMaintenance,
 } from '@/api/hooks';
+import { toRows, toRecord } from '@/utils/type-helpers';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
@@ -124,8 +125,8 @@ export const VehicleMaintenancePage: React.FC = () => {
   );
 
   const { data: listData, isLoading } = useVehicleMaintenanceList(params);
-  const items = (listData?.data ?? []) as unknown as VehicleMaintenanceRecord[];
-  const meta = (listData as unknown as Record<string, unknown>)?.meta as
+  const items = toRows<VehicleMaintenanceRecord>(listData?.data);
+  const meta = toRecord(listData).meta as
     | { page: number; pageSize: number; total: number; totalPages: number }
     | undefined;
 
@@ -288,7 +289,7 @@ export const VehicleMaintenancePage: React.FC = () => {
 
 const MaintenanceDetailModal: React.FC<{ id: string; onClose: () => void }> = ({ id, onClose }) => {
   const { data: maintenanceData, isLoading } = useVehicleMaintenance(id);
-  const record = (maintenanceData as unknown as { data?: VehicleMaintenanceRecord })?.data;
+  const record = toRecord(maintenanceData).data as VehicleMaintenanceRecord | undefined;
 
   const completeMutation = useCompleteVehicleMaintenance();
   const cancelMutation = useCancelVehicleMaintenance();

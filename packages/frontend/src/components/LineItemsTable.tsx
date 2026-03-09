@@ -2,6 +2,7 @@ import React, { Suspense, useState, useMemo } from 'react';
 import { Plus, Trash2, Search, AlertTriangle, ScanLine } from 'lucide-react';
 import type { VoucherLineItem, MaterialCatalogItem } from '@nit-scs-v2/shared/types';
 import { useItems, useUoms, useInventory } from '@/domains/master-data/hooks/useMasterData';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
@@ -25,7 +26,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
 
   // Inventory levels from real API — keyed by item code for fast lookup
   const inventoryQuery = useInventory({ pageSize: 200 });
-  const inventoryLevels = (inventoryQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const inventoryLevels = extractRows(inventoryQuery.data);
   const inventoryByCode = useMemo(() => {
     const map = new Map<string, number>();
     for (const level of inventoryLevels) {
@@ -47,10 +48,10 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
     if (qty <= 10) return 'Low Stock';
     return 'In Stock';
   };
-  const MATERIAL_CATALOG = (itemsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+  const MATERIAL_CATALOG = extractRows(itemsQuery.data);
   const uomsQuery = useUoms({ pageSize: 100 });
   const UNIT_OPTIONS = useMemo(() => {
-    const uoms = (uomsQuery.data?.data ?? []) as Array<Record<string, unknown>>;
+    const uoms = extractRows(uomsQuery.data);
     const seen = new Set<string>();
     return uoms
       .map(u => ({ id: String(u.id ?? ''), label: String(u.uomName || u.uomCode || '') }))
@@ -87,7 +88,7 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   );
 
   const addItemFromCatalog = (catalogItem: MaterialCatalogItem) => {
-    const raw = catalogItem as unknown as Record<string, unknown>;
+    const raw = toRecord(catalogItem);
     const code = (raw.itemCode as string) || catalogItem.code;
     const name = (raw.itemDescription as string) || catalogItem.name;
     const uomObj = raw.uom as Record<string, unknown> | undefined;

@@ -26,6 +26,7 @@ import {
 } from '@/domains/warehouse-ops/hooks/useCrossDock';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import type { CrossDock, CrossDockOpportunity } from '@/domains/warehouse-ops/hooks/useCrossDock';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 // ── Status config ───────────────────────────────────────────────────────
 
@@ -84,19 +85,21 @@ export const CrossDockDashboard: React.FC = () => {
 
   // Queries
   const { data: warehousesRes } = useWarehouses();
-  const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+  const warehouses = (toRecord(warehousesRes).data ?? []) as Array<{
+    id: string;
+    warehouseName: string;
+    warehouseCode: string;
+  }>;
 
   const { data: statsRes, isLoading: statsLoading } = useCrossDockStats(selectedWarehouse || undefined);
   const stats =
-    (statsRes as unknown as { data?: import('@/domains/warehouse-ops/hooks/useCrossDock').CrossDockStats })?.data ??
+    (toRecord(statsRes).data as import('@/domains/warehouse-ops/hooks/useCrossDock').CrossDockStats | undefined) ??
     null;
 
   const { data: opportunitiesRes, isLoading: oppsLoading } = useCrossDockOpportunities(
     activeTab === 'opportunities' ? selectedWarehouse || undefined : undefined,
   );
-  const opportunities = (opportunitiesRes as unknown as { data?: CrossDockOpportunity[] })?.data ?? [];
+  const opportunities = (toRecord(opportunitiesRes).data ?? []) as CrossDockOpportunity[];
 
   const activeStatusFilter =
     activeTab === 'active'
@@ -114,7 +117,7 @@ export const CrossDockDashboard: React.FC = () => {
         }
       : undefined,
   );
-  const allRecords = (listRes as unknown as { data?: CrossDock[] })?.data ?? [];
+  const allRecords = (toRecord(listRes).data ?? []) as CrossDock[];
 
   const displayedRecords = useMemo(() => {
     if (activeTab === 'active') {

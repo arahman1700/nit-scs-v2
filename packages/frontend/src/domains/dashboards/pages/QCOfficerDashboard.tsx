@@ -6,6 +6,7 @@ import { useDrList } from '@/domains/inbound/hooks/useDr';
 import { useGrnList } from '@/domains/inbound/hooks/useGrn';
 import { useParams, useNavigate } from 'react-router-dom';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 type QCTab = 'overview' | 'inspections' | 'osd' | 'incoming';
@@ -23,9 +24,9 @@ export const QCOfficerDashboard: React.FC = () => {
   const drQuery = useDrList({ pageSize: 200 });
   const grnQuery = useGrnList({ pageSize: 200 });
 
-  const allRfims = (qciQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allOsds = (drQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allMrrvs = (grnQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allRfims = extractRows(qciQuery.data);
+  const allOsds = extractRows(drQuery.data);
+  const allMrrvs = extractRows(grnQuery.data);
 
   const isLoading = qciQuery.isLoading || drQuery.isLoading || grnQuery.isLoading;
 

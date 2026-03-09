@@ -136,7 +136,7 @@ router.put(
         action: 'update',
         tableName: 'assets',
         recordId: req.params.id as string,
-        oldValues: existing as unknown as Record<string, unknown>,
+        oldValues: existing as Record<string, unknown>,
         newValues: req.body,
         entityEvent: 'updated',
         entityName: 'assets',

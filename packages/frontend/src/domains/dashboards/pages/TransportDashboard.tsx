@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 // ============ KANBAN COLUMN ============
 const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; borderColor: string }> = ({
@@ -74,7 +75,7 @@ const KanbanColumn: React.FC<{ status: string; jobs: JobOrder[]; color: string; 
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <User size={14} className="text-gray-500" />
-              <span>{displayStr((job as unknown as Record<string, unknown>).requestedBy) || job.requester || '-'}</span>
+              <span>{displayStr(toRecord(job).requestedBy) || job.requester || '-'}</span>
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Calendar size={14} className="text-gray-500" />
@@ -123,7 +124,7 @@ export const TransportDashboard: React.FC = () => {
   const supplierQuery = useSuppliers({ pageSize: 200 });
   const employeeQuery = useEmployees({ pageSize: 200 });
   const JOBS = (jobsQuery.data?.data ?? []) as JobOrder[];
-  const suppliers = (supplierQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const suppliers = extractRows(supplierQuery.data);
   const employees = (employeeQuery.data?.data ?? []) as Employee[];
   const isLoading = jobsQuery.isLoading;
   const isError = jobsQuery.isError;

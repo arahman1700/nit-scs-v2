@@ -17,6 +17,7 @@ import type { TabDef } from '@/components/SectionTabBar';
 import { useInventorySummary, useWarehouses, useInventory, useGatePasses, useStockTransfers } from '@/api/hooks';
 import { displayStr } from '@/utils/displayStr';
 import { CHART_PALETTE } from '@/config/chartTheme';
+import { extractRows } from '@/utils/type-helpers';
 
 const InventoryDashboard = React.lazy(() =>
   import('@/pages/warehouse/InventoryDashboard').then(m => ({ default: m.InventoryDashboard })),
@@ -95,11 +96,11 @@ export const InventorySectionPage: React.FC = () => {
   ];
 
   const byCategory = useMemo(() => inv?.byCategory ?? [], [inv]);
-  const lowStockItems = (lowStockData?.data ?? []) as unknown as Record<string, unknown>[];
-  const inventoryRows = (invItems?.data ?? []) as unknown as Record<string, unknown>[];
-  const warehouseRows = (whData?.data ?? []) as unknown as Record<string, unknown>[];
-  const gatePassRows = (gpData?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const stockTransferRows = (stData?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const lowStockItems = extractRows(lowStockData);
+  const inventoryRows = extractRows(invItems);
+  const warehouseRows = extractRows(whData);
+  const gatePassRows = extractRows(gpData);
+  const stockTransferRows = extractRows(stData);
 
   const renderPieLabel = ({ name, percent }: { name?: string; percent?: number }) =>
     `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`;

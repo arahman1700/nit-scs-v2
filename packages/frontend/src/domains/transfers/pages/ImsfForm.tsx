@@ -7,6 +7,7 @@ import { useProjects } from '@/domains/master-data/hooks/useMasterData';
 import { useCreateImsf } from '@/domains/transfers/hooks/useImsf';
 import type { Project } from '@nit-scs-v2/shared/types';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { toRecord } from '@/utils/type-helpers';
 
 export const ImsfForm: React.FC = () => {
   const navigate = useNavigate();
@@ -37,8 +38,7 @@ export const ImsfForm: React.FC = () => {
     };
     createMutation.mutate(payload, {
       onSuccess: res => {
-        const doc = res as unknown as { data?: { imsfNumber?: string } };
-        setDocumentNumber(doc.data?.imsfNumber ?? nextNumber);
+        setDocumentNumber((toRecord(toRecord(res).data).imsfNumber as string) ?? nextNumber);
         setSubmitted(true);
       },
     });

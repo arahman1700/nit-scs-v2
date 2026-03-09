@@ -4,6 +4,7 @@ import { KpiCard } from '@/components/KpiCard';
 import { useSecurityDashboard } from '@/domains/auth/hooks/useSecurity';
 import type { SecurityDashboard as SecurityDashboardData } from '@/domains/auth/hooks/useSecurity';
 import { Shield, Users, ShieldAlert, Lock, CheckCircle, Loader2, Globe } from 'lucide-react';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Loading Skeleton ──────────────────────────────────────────────────────────
 
@@ -97,7 +98,7 @@ function SuspiciousIpsList({ ips }: { ips: string[] }) {
 
 export const SecurityDashboard: React.FC = () => {
   const query = useSecurityDashboard();
-  const data = (query.data as unknown as { data?: SecurityDashboardData } | undefined)?.data;
+  const data = toRecord(query.data).data as SecurityDashboardData | undefined;
   const isLoading = query.isLoading;
   const isFetching = query.isFetching;
 

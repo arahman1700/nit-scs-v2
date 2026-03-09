@@ -22,6 +22,7 @@ import { useMrnList } from '@/domains/outbound/hooks/useMrn';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StatusBadge } from '@/components/StatusBadge';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
@@ -91,7 +92,7 @@ export const WarehouseDashboard: React.FC = () => {
   const inventoryQuery = useInventory({ pageSize: 100 });
 
   // Normalize InventoryLevel records (API shape) into display-friendly objects
-  const inventoryItems = ((inventoryQuery.data?.data ?? []) as unknown as Record<string, unknown>[]).map(inv => {
+  const inventoryItems = extractRows(inventoryQuery.data).map(inv => {
     const nested = inv.item as Record<string, unknown> | undefined;
     return {
       id: String(inv.id),
@@ -115,9 +116,9 @@ export const WarehouseDashboard: React.FC = () => {
     };
   });
 
-  const mrrvData = (mrrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const mirvData = (mirvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const mrvData = (mrvQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const mrrvData = extractRows(mrrvQuery.data);
+  const mirvData = extractRows(mirvQuery.data);
+  const mrvData = extractRows(mrvQuery.data);
   const isLoading = mrrvQuery.isLoading || mirvQuery.isLoading || mrvQuery.isLoading || inventoryQuery.isLoading;
   const isError = mrrvQuery.isError || mirvQuery.isError || mrvQuery.isError || inventoryQuery.isError;
 

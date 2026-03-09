@@ -23,6 +23,7 @@ type AnyCreateMutation = UseMutationResult<ApiResponse<any>, Error, any, unknown
 type AnyUpdateMutation = UseMutationResult<ApiResponse<any>, Error, any, unknown>;
 import { useFormSubmit } from '@/hooks/useFormSubmit';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { extractRows } from '@/utils/type-helpers';
 import {
   getFormConfig,
   getJoTypeSections,
@@ -233,15 +234,15 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
   });
 
   // Extract option arrays from API data (API returns legacy Prisma field names, not shared type names)
-  const projectsRaw = (projectsQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const warehousesRaw = (warehousesQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const suppliersRaw = (suppliersQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const employeesRaw = (employeesQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const projectsRaw = extractRows(projectsQuery.data);
+  const warehousesRaw = extractRows(warehousesQuery.data);
+  const suppliersRaw = extractRows(suppliersQuery.data);
+  const employeesRaw = extractRows(employeesQuery.data);
 
   const projectOptions = projectsRaw.map(p => (p.projectName as string) || (p.name as string) || '');
   const warehouseOptions = warehousesRaw.map(w => (w.warehouseName as string) || (w.name as string) || '');
   const supplierOptions = suppliersRaw.map(s => (s.supplierName as string) || (s.name as string) || '');
-  const mrrvOptions = ((mrrvListQuery.data?.data as unknown as Array<Record<string, unknown>>) ?? []).map(m => {
+  const mrrvOptions = extractRows(mrrvListQuery.data).map(m => {
     const sup = m.supplier as Record<string, unknown> | string | undefined;
     const supName = typeof sup === 'string' ? sup : (sup?.supplierName as string) || (sup?.name as string) || '';
     const num = (m.mrrvNumber as string) || (m.id as string);

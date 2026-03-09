@@ -5,6 +5,7 @@ import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';
 import { useCreateTool, useTool, useUpdateTool } from '@/api/hooks';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 interface ToolDoc {
   id?: string;
@@ -63,7 +64,7 @@ export const ToolForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'NEW');
+          setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? 'NEW');
           setSubmitted(true);
           toast.success('Tool Registered', 'New tool has been added to inventory');
         },

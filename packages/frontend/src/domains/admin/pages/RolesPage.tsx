@@ -4,6 +4,7 @@ import { UserRole } from '@nit-scs-v2/shared/types';
 import { ROLE_PERMISSIONS } from '@nit-scs-v2/shared/permissions';
 import type { Permission } from '@nit-scs-v2/shared/permissions';
 import { usePermissions, useUpdateRolePermissions, useResetPermissions } from '@/domains/auth/hooks/usePermissions';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -116,7 +117,7 @@ export const RolesPage: React.FC = () => {
   const effectiveForRole = useCallback(
     (role: UserRole): Record<string, string[]> => {
       if (editMode) return local[role] ?? {};
-      return dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
+      return dbMatrix[role] ?? (toRecord(ROLE_PERMISSIONS)[role] as Record<string, string[]> | undefined) ?? {};
     },
     [editMode, local, dbMatrix],
   );
@@ -124,8 +125,9 @@ export const RolesPage: React.FC = () => {
   // Enter edit mode — clone current DB matrix
   const enterEditMode = useCallback(() => {
     const snapshot: PermMatrix = {};
+    const rolePermsRecord = toRecord(ROLE_PERMISSIONS);
     for (const role of ROLES) {
-      const source = dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
+      const source = dbMatrix[role] ?? (rolePermsRecord[role] as Record<string, string[]> | undefined) ?? {};
       snapshot[role] = {};
       for (const [res, perms] of Object.entries(source)) {
         snapshot[role][res] = [...(perms as string[])];
@@ -172,8 +174,9 @@ export const RolesPage: React.FC = () => {
 
   const handleDiscard = useCallback(() => {
     const snapshot: PermMatrix = {};
+    const rolePermsRecord = toRecord(ROLE_PERMISSIONS);
     for (const role of ROLES) {
-      const source = dbMatrix[role] ?? (ROLE_PERMISSIONS as unknown as PermMatrix)[role] ?? {};
+      const source = dbMatrix[role] ?? (rolePermsRecord[role] as Record<string, string[]> | undefined) ?? {};
       snapshot[role] = {};
       for (const [res, perms] of Object.entries(source)) {
         snapshot[role][res] = [...(perms as string[])];

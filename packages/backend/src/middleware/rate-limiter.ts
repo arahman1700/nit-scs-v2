@@ -136,7 +136,7 @@ export function authRateLimiter(maxAttempts = 5, windowSec = 900) {
  */
 export function aiRateLimiter(maxRequests = 30, windowSec = 3600) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const userId = (req as unknown as { user?: { userId?: string } }).user?.userId || 'anon';
+    const userId = req.user?.userId || 'anon';
     const key = `rl:ai:${userId}`;
 
     redisLimiter(key, maxRequests, windowSec)

@@ -4,6 +4,7 @@ import { Save, MapPin, CheckCircle, Loader2 } from 'lucide-react';
 import type { Warehouse } from '@nit-scs-v2/shared/types';
 import { useCreateWarehouseZone, useWarehouseZone, useUpdateWarehouseZone } from '@/api/hooks';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 interface ZoneDoc {
   id?: string;
@@ -68,7 +69,7 @@ export const WarehouseZoneForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'NEW');
+          setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? 'NEW');
           setSubmitted(true);
         },
       });

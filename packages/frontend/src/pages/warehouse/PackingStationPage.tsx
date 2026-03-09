@@ -22,6 +22,7 @@ import {
 } from '@/domains/warehouse-ops/hooks/usePacking';
 import type { PackingQueueItem, PackingLine } from '@/domains/warehouse-ops/hooks/usePacking';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
@@ -62,14 +63,14 @@ export function PackingStationPage() {
   // Queries
   const { data: warehousesRes } = useWarehouses();
   const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+    (toRecord(warehousesRes).data as Array<{ id: string; warehouseName: string; warehouseCode: string }> | undefined) ??
+    [];
 
   const { data: queueRes, isLoading: queueLoading } = usePackingQueue(selectedWarehouse || undefined);
-  const queue = (queueRes as unknown as { data?: PackingQueueItem[] })?.data ?? [];
+  const queue = (toRecord(queueRes).data as PackingQueueItem[] | undefined) ?? [];
 
   const { data: sessionRes, isLoading: sessionLoading } = usePackingSession(activeSessionId ?? undefined);
-  const session = (sessionRes as unknown as { data?: Record<string, unknown> })?.data as
+  const session = toRecord(sessionRes).data as
     | (Record<string, unknown> & {
         sessionNumber: string;
         status: string;
@@ -92,8 +93,8 @@ export function PackingStationPage() {
       { mirvId, packedById: 'current-user', warehouseId: selectedWarehouse },
       {
         onSuccess: res => {
-          const data = (res as unknown as { data?: { id: string } })?.data;
-          if (data?.id) setActiveSessionId(data.id);
+          const data = toRecord(toRecord(res).data);
+          if (data.id) setActiveSessionId(data.id as string);
         },
       },
     );

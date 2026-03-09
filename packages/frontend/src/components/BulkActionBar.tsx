@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { CheckSquare, X, Download, AlertTriangle, Loader2 } from 'lucide-react';
 import { useBulkActions, useExecuteBulkAction } from '@/domains/system/hooks/useBulkActions';
 import type { BulkActionResponse } from '@/domains/system/hooks/useBulkActions';
+import { toRecord } from '@/utils/type-helpers';
 
 interface BulkActionBarProps {
   selectedIds: Set<string>;
@@ -31,7 +32,7 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedIds, entit
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [result, setResult] = useState<BulkActionResponse | null>(null);
 
-  const actions: string[] = (actionsData as unknown as { data?: { actions?: string[] } })?.data?.actions ?? [];
+  const actions: string[] = (toRecord(toRecord(actionsData).data).actions as string[]) ?? [];
   const ids = Array.from(selectedIds);
 
   const handleExecute = useCallback(
@@ -45,7 +46,7 @@ export const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedIds, entit
           ids,
         });
         const bulkResult =
-          (res as unknown as { data?: BulkActionResponse })?.data ?? (res as unknown as BulkActionResponse);
+          (toRecord(res).data as BulkActionResponse | undefined) ?? (res as unknown as BulkActionResponse);
         setResult(bulkResult);
         setTimeout(() => setResult(null), 4000);
       } catch {

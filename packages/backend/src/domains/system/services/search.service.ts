@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import { prisma } from '../../../utils/prisma.js';
+import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 
 interface SearchResult {
   type: string;
@@ -133,9 +134,7 @@ export async function globalSearch(query: string, filters?: SearchFilters): Prom
 
       if (orConditions.length === 0) return [];
 
-      const delegate = (prisma as unknown as Record<string, unknown>)[def.model] as
-        | { findMany: (args: Record<string, unknown>) => Promise<Record<string, unknown>[]> }
-        | undefined;
+      const delegate = getPrismaDelegate(prisma, def.model);
       if (!delegate) return [];
 
       try {

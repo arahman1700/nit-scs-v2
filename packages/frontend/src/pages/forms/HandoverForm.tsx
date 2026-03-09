@@ -12,6 +12,7 @@ import {
 } from '@/api/hooks';
 import { useWarehouses, useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { toRecord } from '@/utils/type-helpers';
 
 interface HandoverDoc {
   id?: string;
@@ -79,7 +80,7 @@ export const HandoverForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? nextNumber);
+          setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? nextNumber);
           setSubmitted(true);
           toast.success('Handover Created', 'New handover document has been created');
         },

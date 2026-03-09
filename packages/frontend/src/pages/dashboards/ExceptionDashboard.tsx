@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import { useExceptions } from '@/domains/reporting/hooks/useDashboard';
 import type { ExceptionData } from '@/domains/reporting/hooks/useDashboard';
+import { toRecord } from '@/utils/type-helpers';
 import {
   AlertTriangle,
   Clock,
@@ -311,7 +312,7 @@ function ExpiringInventoryTable({ items }: { items: ExceptionData['expiringInven
 
 export const ExceptionDashboard: React.FC = () => {
   const query = useExceptions();
-  const data = (query.data as unknown as { data?: ExceptionData } | undefined)?.data;
+  const data = toRecord(query.data).data as ExceptionData | undefined;
   const isLoading = query.isLoading;
   const isFetching = query.isFetching;
 

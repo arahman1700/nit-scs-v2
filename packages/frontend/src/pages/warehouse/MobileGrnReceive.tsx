@@ -3,6 +3,7 @@ import { Package, CheckCircle2, ScanLine, ArrowLeft, Loader2, AlertCircle } from
 import BarcodeScanner from '@/components/BarcodeScanner';
 import { useGrnList, useReceiveGrn } from '@/api/hooks';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
+import { toRecord } from '@/utils/type-helpers';
 import { OfflineQueueBanner } from '@/components/OfflineQueueBanner';
 import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
 import { SwipeableSteps } from '@/components/SwipeableSteps';
@@ -35,7 +36,7 @@ export function MobileGrnReceive() {
 
   // Fetch pending GRNs that can be received
   const grnListQuery = useGrnList({ status: 'approved', page: 1, pageSize: 50 } as Record<string, unknown>);
-  const grnList = (grnListQuery.data as unknown as { data?: Array<Record<string, unknown>> })?.data ?? [];
+  const grnList = (toRecord(grnListQuery.data).data as Array<Record<string, unknown>> | undefined) ?? [];
 
   const receiveMutation = useReceiveGrn();
 

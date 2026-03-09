@@ -2,6 +2,7 @@ import type { Server as SocketIOServer, Socket } from 'socket.io';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { log } from '../config/logger.js';
 import { prisma } from '../utils/prisma.js';
+import { getPrismaDelegate } from '../utils/prisma-helpers.js';
 import { hasPermission, type Permission } from '@nit-scs-v2/shared';
 
 // ---------------------------------------------------------------------------
@@ -140,9 +141,7 @@ export function setupSocketIO(io: SocketIOServer) {
         let docType: string | null = null;
 
         for (const table of docTables) {
-          const delegate = (prisma as unknown as Record<string, { findUnique: (a: unknown) => Promise<unknown> }>)[
-            table
-          ];
+          const delegate = getPrismaDelegate(prisma, table);
           if (!delegate) continue;
           const found = await delegate.findUnique({ where: { id: documentId }, select: { id: true } });
           if (found) {

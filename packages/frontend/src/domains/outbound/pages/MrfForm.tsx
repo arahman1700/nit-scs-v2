@@ -8,6 +8,7 @@ import { useWarehouses, useProjects } from '@/domains/master-data/hooks/useMaste
 import { useCurrentUser } from '@/domains/auth/hooks/useAuth';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 import { getRequiredApprovalLevel } from '@nit-scs-v2/shared/permissions';
 
 export const MrfForm: React.FC = () => {
@@ -20,8 +21,8 @@ export const MrfForm: React.FC = () => {
   const currentUserName = meQuery.data?.data?.fullName ?? '';
   const warehouseQuery = useWarehouses({ pageSize: 200 });
   const projectQuery = useProjects({ pageSize: 200 });
-  const warehouses = (warehouseQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
-  const projects = (projectQuery.data?.data ?? []) as unknown as Array<Record<string, unknown>>;
+  const warehouses = extractRows(warehouseQuery.data);
+  const projects = extractRows(projectQuery.data);
 
   const totalValue = useMemo(() => lineItems.reduce((s, i) => s + i.totalPrice, 0), [lineItems]);
   const nextNumber = useMemo(() => previewNextNumber('mrf'), []);

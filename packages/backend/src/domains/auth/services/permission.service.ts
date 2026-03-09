@@ -38,7 +38,7 @@ export async function getAllPermissions(): Promise<PermissionCache> {
 
   if (rows.length === 0) {
     // DB is empty — return hardcoded defaults
-    cache = ROLE_PERMISSIONS as unknown as PermissionCache;
+    cache = ROLE_PERMISSIONS as PermissionCache;
     cacheTimestamp = Date.now();
     return cache;
   }
@@ -112,7 +112,7 @@ export async function updateRolePermissions(
  * Reset permissions to hardcoded defaults. If role is provided, reset only that role.
  */
 export async function resetToDefaults(role?: string): Promise<void> {
-  const defaults = ROLE_PERMISSIONS as unknown as PermissionCache;
+  const defaults = ROLE_PERMISSIONS as PermissionCache;
 
   if (role) {
     // Reset single role
@@ -123,7 +123,7 @@ export async function resetToDefaults(role?: string): Promise<void> {
     const creates = Object.entries(roleDefaults).map(([resource, actions]) => ({
       role,
       resource,
-      actions: actions as unknown as Permission[],
+      actions: actions as Permission[],
     }));
     await prisma.rolePermission.createMany({ data: creates });
   } else {

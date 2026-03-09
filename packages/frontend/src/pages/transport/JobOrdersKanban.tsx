@@ -25,6 +25,7 @@ import type { JobOrder } from '@nit-scs-v2/shared/types';
 import { toast } from '@/components/Toaster';
 import { Truck, User, MoreHorizontal, Plus, AlertCircle, CheckCircle, XCircle, MapPin, Search } from 'lucide-react';
 import { displayStr } from '@/utils/displayStr';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Backend → Kanban column mapping ──────────────────────────────────────────
 
@@ -244,12 +245,12 @@ export const JobOrdersKanban: React.FC = () => {
   useEffect(() => {
     if (joData.length === 0) return;
     // Build a fingerprint to detect actual data changes
-    const fingerprint = joData.map(jo => `${jo.id}:${(jo as unknown as { status: string }).status}`).join(',');
+    const fingerprint = joData.map(jo => `${jo.id}:${toRecord(jo).status}`).join(',');
     if (fingerprint === lastSyncRef.current) return;
     lastSyncRef.current = fingerprint;
 
     const mapped = joData.map(jo => {
-      const rawStatus = (jo as unknown as { status: string }).status ?? 'draft';
+      const rawStatus = (toRecord(jo).status as string) ?? 'draft';
       backendStatusMap.current[jo.id] = rawStatus;
       return { ...jo, status: backendStatusToColumn(rawStatus) };
     });

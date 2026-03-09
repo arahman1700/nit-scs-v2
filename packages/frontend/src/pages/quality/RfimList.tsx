@@ -5,6 +5,7 @@ import { useQciList } from '@/domains/inbound/hooks/useQci';
 import { DocumentActions } from '@/components/DocumentActions';
 import { ExportButton } from '@/components/ExportButton';
 import type { RFIM } from '@nit-scs-v2/shared/types';
+import { toRows, toRecord } from '@/utils/type-helpers';
 
 // Custom Badge for Inspection Status (includes per-status icons, unlike shared StatusBadge)
 const InspectionStatusBadge: React.FC<{ status: string }> = ({ status }) => {
@@ -117,7 +118,7 @@ export const RfimList: React.FC = () => {
         </div>
         <div className="flex gap-3">
           <ExportButton
-            data={filteredData as unknown as Record<string, unknown>[]}
+            data={toRows(filteredData)}
             columns={[
               { key: 'formNumber', label: 'QCI #' },
               { key: 'mrrvId', label: 'GRN Ref' },
@@ -250,7 +251,7 @@ export const RfimList: React.FC = () => {
                           >
                             <Eye size={16} />
                           </button>
-                          <DocumentActions resource="rfim" row={row as unknown as Record<string, unknown>} />
+                          <DocumentActions resource="rfim" row={toRecord(row)} />
                         </div>
                       </td>
                     </tr>

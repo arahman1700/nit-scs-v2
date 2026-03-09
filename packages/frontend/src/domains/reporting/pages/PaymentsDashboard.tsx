@@ -23,7 +23,7 @@ export const PaymentsDashboard: React.FC = () => {
 
   const jobs: JO[] = useMemo(() => {
     if (!joResponse?.data) return [];
-    return joResponse.data as unknown as JO[];
+    return joResponse.data as JO[];
   }, [joResponse]);
 
   // KPI calculations

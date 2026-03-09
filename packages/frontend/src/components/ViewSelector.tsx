@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useUserViews, useUpdateView, useDeleteView } from '@/domains/system/hooks/useUserViews';
 import type { UserView } from '@/domains/system/hooks/useUserViews';
 import { Bookmark, ChevronDown, Check, Star, Trash2, Plus, Loader2 } from 'lucide-react';
+import { toRecord } from '@/utils/type-helpers';
 
 interface ViewSelectorProps {
   entityType: string;
@@ -23,7 +24,7 @@ export const ViewSelector: React.FC<ViewSelectorProps> = ({
   const updateView = useUpdateView();
   const deleteView = useDeleteView();
 
-  const views: UserView[] = (data as unknown as { data?: UserView[] })?.data ?? [];
+  const views: UserView[] = (toRecord(data).data as UserView[]) ?? [];
 
   // Close on outside click
   useEffect(() => {

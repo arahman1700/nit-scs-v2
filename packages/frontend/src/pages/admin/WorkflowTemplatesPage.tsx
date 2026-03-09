@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkflowTemplateList, useInstallWorkflowTemplate } from '@/domains/workflow/hooks/useWorkflowTemplates';
 import type { WorkflowTemplate } from '@/domains/workflow/hooks/useWorkflowTemplates';
+import { toRecord } from '@/utils/type-helpers';
 import { Zap, Download, ChevronDown, ChevronUp, Check, Loader2 } from 'lucide-react';
 
 const CATEGORY_LABELS: Record<string, { label: string; color: string }> = {
@@ -23,7 +24,7 @@ export function WorkflowTemplatesPage() {
   const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
   const [installingId, setInstallingId] = useState<string | null>(null);
 
-  const templates = (listData as unknown as { data?: WorkflowTemplate[] })?.data ?? [];
+  const templates = (toRecord(listData).data as WorkflowTemplate[]) ?? [];
 
   const categories = Array.from(new Set(templates.map(t => t.category)));
 
@@ -35,7 +36,7 @@ export function WorkflowTemplatesPage() {
       try {
         const result = await installMutation.mutateAsync(template.id);
         setInstalledIds(prev => new Set(prev).add(template.id));
-        const workflowId = (result as unknown as { data?: { workflowId?: string } })?.data?.workflowId;
+        const workflowId = toRecord(toRecord(result).data).workflowId as string | undefined;
         if (workflowId) {
           // Optionally navigate to the newly created workflow
           setTimeout(() => navigate(`/admin/system/workflows/${workflowId}`), 1500);

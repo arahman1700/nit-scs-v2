@@ -17,6 +17,7 @@ import {
 } from '@/api/hooks';
 import { useProjects, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
+import { toRecord } from '@/utils/type-helpers';
 
 interface ScrapDoc {
   id?: string;
@@ -118,7 +119,7 @@ export const ScrapForm: React.FC = () => {
     } else {
       createMutation.mutate(payload, {
         onSuccess: res => {
-          setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? nextNumber);
+          setDocumentNumber((toRecord(toRecord(res).data).formNumber as string) ?? nextNumber);
           setSubmitted(true);
         },
       });

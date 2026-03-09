@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Mail, BarChart3 } from 'lucide-react';
 import { useEmailLogs, useEmailLogStats } from '@/domains/system/hooks/useEmailTemplates';
 import { EmailLogTable } from '@/components/email/EmailLogTable';
+import { toRecord } from '@/utils/type-helpers';
 
 interface LogStats {
   total: number;
@@ -29,7 +30,7 @@ export const EmailLogsPage: React.FC = () => {
     createdAt: string;
   }[];
 
-  const stats = (statsData as unknown as { data?: LogStats })?.data;
+  const stats = toRecord(statsData).data as LogStats | undefined;
 
   return (
     <div className="space-y-6">

@@ -33,13 +33,14 @@ import {
 import type { ItemForecast, SeasonalPattern } from '@/domains/reporting/hooks/useDemandForecast';
 import { useWarehouses } from '@/api/hooks';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 // ── Forecast Dashboard ──────────────────────────────────────────────────────
 
 export const ForecastDashboard: React.FC = () => {
   // Warehouse selector
   const { data: warehouseResponse } = useWarehouses();
-  const warehouses = (warehouseResponse?.data ?? []) as unknown as Array<{ id: string; [key: string]: unknown }>;
+  const warehouses = extractRows(warehouseResponse) as Array<{ id: string; [key: string]: unknown }>;
   const [warehouseId, setWarehouseId] = useState<string>('');
   const [selectedItemId, setSelectedItemId] = useState<string>('');
 

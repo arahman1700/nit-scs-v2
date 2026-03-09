@@ -15,6 +15,7 @@ import {
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { useUndeliveredJOs, useOptimizeRoute, useEstimateFuel } from '@/domains/logistics/hooks/useRouteOptimizer';
 import type { OptimizedRoute, UndeliveredJO } from '@/domains/logistics/hooks/useRouteOptimizer';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Component ───────────────────────────────────────────────────────────
 
@@ -27,12 +28,14 @@ export const RouteOptimizerPage: React.FC = () => {
 
   // Queries
   const { data: warehousesRes } = useWarehouses();
-  const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+  const warehouses = (toRecord(warehousesRes).data ?? []) as Array<{
+    id: string;
+    warehouseName: string;
+    warehouseCode: string;
+  }>;
 
   const { data: josRes, isLoading: josLoading } = useUndeliveredJOs(selectedWarehouse || undefined);
-  const undeliveredJOs: UndeliveredJO[] = (josRes as unknown as { data?: UndeliveredJO[] })?.data ?? [];
+  const undeliveredJOs: UndeliveredJO[] = (toRecord(josRes).data ?? []) as UndeliveredJO[];
 
   // Only show JOs that have coordinates
   const availableJOs = useMemo(
@@ -73,7 +76,7 @@ export const RouteOptimizerPage: React.FC = () => {
       { warehouseId: selectedWarehouse, joIds: Array.from(selectedJoIds) },
       {
         onSuccess: res => {
-          const route = (res as unknown as { data?: OptimizedRoute })?.data ?? null;
+          const route = (toRecord(res).data as OptimizedRoute | undefined) ?? null;
           setOptimizedRoute(route);
           // Automatically calculate fuel cost
           if (route && fuelPrice > 0) {
@@ -81,7 +84,7 @@ export const RouteOptimizerPage: React.FC = () => {
               { distanceKm: route.totalDistanceKm, fuelPrice },
               {
                 onSuccess: fuelRes => {
-                  const estimate = (fuelRes as unknown as { data?: { totalCost: number } })?.data;
+                  const estimate = toRecord(fuelRes).data as { totalCost: number } | undefined;
                   setFuelCost(estimate?.totalCost ?? null);
                 },
               },
@@ -98,7 +101,7 @@ export const RouteOptimizerPage: React.FC = () => {
       { distanceKm: optimizedRoute.totalDistanceKm, fuelPrice },
       {
         onSuccess: fuelRes => {
-          const estimate = (fuelRes as unknown as { data?: { totalCost: number } })?.data;
+          const estimate = toRecord(fuelRes).data as { totalCost: number } | undefined;
           setFuelCost(estimate?.totalCost ?? null);
         },
       },

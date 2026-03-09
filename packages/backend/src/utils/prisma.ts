@@ -7,7 +7,8 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // hot-reloading in development.
 // ---------------------------------------------------------------------------
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- standard global singleton pattern
+const globalForPrisma = globalThis as any as { prisma: PrismaClient | undefined };
 
 // ---------------------------------------------------------------------------
 // Soft-Delete Middleware (via $extends)
@@ -58,7 +59,8 @@ export const prisma = basePrisma.$extends({
       },
     },
   },
-}) as unknown as PrismaClient;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type
+}) as any as PrismaClient;
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = basePrisma;

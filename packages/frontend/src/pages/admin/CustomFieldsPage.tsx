@@ -6,6 +6,7 @@ import {
   useDeleteCustomFieldDefinition,
 } from '@/domains/system/hooks/useCustomFields';
 import type { CustomFieldDefinition, CreateFieldDefinitionInput } from '@/domains/system/hooks/useCustomFields';
+import { toRecord } from '@/utils/type-helpers';
 import { Settings2, Plus, Trash2, Edit2, X, Save } from 'lucide-react';
 
 const ENTITY_TYPES = [
@@ -60,7 +61,7 @@ export function CustomFieldsPage() {
   const [editing, setEditing] = useState<CreateFieldDefinitionInput & { id?: string }>(EMPTY_FIELD);
   const [showForm, setShowForm] = useState(false);
 
-  const fields = (listData as unknown as { data?: CustomFieldDefinition[] })?.data ?? [];
+  const fields = (toRecord(listData).data as CustomFieldDefinition[]) ?? [];
 
   const handleNew = useCallback(() => {
     setEditing({ ...EMPTY_FIELD, entityType: selectedEntityType });

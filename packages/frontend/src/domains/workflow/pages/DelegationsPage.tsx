@@ -19,6 +19,7 @@ import {
 import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { toast } from '@/components/Toaster';
 import type { DelegationRule } from '@/domains/workflow/hooks/useDelegations';
+import { toRecord } from '@/utils/type-helpers';
 
 const SCOPE_OPTIONS = [
   { value: 'all', label: 'All Documents' },
@@ -48,9 +49,8 @@ export const DelegationsPage: React.FC = () => {
   const toggleMutation = useToggleDelegation();
   const deleteMutation = useDeleteDelegation();
 
-  const delegations = ((delegationsQuery.data as { data?: DelegationRule[] })?.data ?? []) as DelegationRule[];
-  const employees = ((employeesQuery.data as unknown as { data?: { id: string; name: string; email?: string }[] })
-    ?.data ?? []) as { id: string; name: string; email?: string }[];
+  const delegations = (toRecord(delegationsQuery.data).data as DelegationRule[]) ?? [];
+  const employees = (toRecord(employeesQuery.data).data as { id: string; name: string; email?: string }[]) ?? [];
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

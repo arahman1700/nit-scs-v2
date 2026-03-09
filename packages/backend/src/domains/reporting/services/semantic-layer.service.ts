@@ -6,6 +6,7 @@
  * and the service translates that into Prisma queries.
  */
 import { prisma } from '../../../utils/prisma.js';
+import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 
 // ── Entity → Prisma Model Map (shared with custom-data-source.service) ──
 
@@ -186,7 +187,7 @@ export async function executeSemanticQuery(params: SemanticQueryParams) {
     );
   }
 
-  const delegate = (prisma as unknown as Record<string, unknown>)[modelName] as PrismaDelegate;
+  const delegate = getPrismaDelegate<PrismaDelegate>(prisma, modelName);
 
   // 2. Look up dimensions
   let dimensionFields: Array<{ key: string; field: string }> = [];

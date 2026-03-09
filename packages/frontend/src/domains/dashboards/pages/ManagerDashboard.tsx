@@ -27,6 +27,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@nit-scs-v2/shared/formatters';
 import type { MIRV, JobOrder, Project } from '@nit-scs-v2/shared/types';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows, toRecord } from '@/utils/type-helpers';
 
 interface UnifiedDoc {
   id: string;
@@ -79,12 +80,12 @@ export const ManagerDashboard: React.FC = () => {
   const projectsQuery = useProjects({ pageSize: 200 });
 
   const crossDeptQuery = useCrossDepartment();
-  const crossDept = (crossDeptQuery.data as unknown as { data?: CrossDepartmentData } | undefined)?.data;
+  const crossDept = toRecord(crossDeptQuery.data).data as CrossDepartmentData | undefined;
 
   const allMirvs = (mirvQuery.data?.data ?? []) as MIRV[];
   const allJOs = (joQuery.data?.data ?? []) as JobOrder[];
-  const allMrfs = (mrfQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allSTs = (stQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allMrfs = extractRows(mrfQuery.data);
+  const allSTs = extractRows(stQuery.data);
   const allProjects = (projectsQuery.data?.data ?? []) as Project[];
 
   const isLoading = mirvQuery.isLoading || joQuery.isLoading;
@@ -166,9 +167,9 @@ export const ManagerDashboard: React.FC = () => {
   const activeProjects = useMemo(() => allProjects.filter(p => p.status === 'active'), [allProjects]);
 
   // ── Unified document list (7 doc types) ─────────────────────────────
-  const allGrns = (grnQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allScrap = (scrapQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
-  const allDrs = (drQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const allGrns = extractRows(grnQuery.data);
+  const allScrap = extractRows(scrapQuery.data);
+  const allDrs = extractRows(drQuery.data);
 
   const unifiedDocs = useMemo((): UnifiedDoc[] => {
     const docs: UnifiedDoc[] = [
@@ -176,27 +177,19 @@ export const ManagerDashboard: React.FC = () => {
         id: d.id as string,
         type: 'MI',
         formType: 'mirv',
-        number: String((d as unknown as Record<string, unknown>).mirvNumber || d.id).slice(0, 16),
+        number: String(toRecord(d).mirvNumber || d.id).slice(0, 16),
         status: d.status as string,
-        date: String(
-          (d as unknown as Record<string, unknown>).requestDate ||
-            (d as unknown as Record<string, unknown>).createdAt ||
-            '',
-        ),
-        project: displayStr((d as unknown as Record<string, unknown>).project),
+        date: String(toRecord(d).requestDate || toRecord(d).createdAt || ''),
+        project: displayStr(toRecord(d).project),
       })),
       ...allJOs.map(d => ({
         id: d.id as string,
         type: 'JO',
         formType: 'jo',
-        number: String((d as unknown as Record<string, unknown>).joNumber || d.id).slice(0, 16),
+        number: String(toRecord(d).joNumber || d.id).slice(0, 16),
         status: d.status as string,
-        date: String(
-          (d as unknown as Record<string, unknown>).requestDate ||
-            (d as unknown as Record<string, unknown>).createdAt ||
-            '',
-        ),
-        project: displayStr((d as unknown as Record<string, unknown>).project),
+        date: String(toRecord(d).requestDate || toRecord(d).createdAt || ''),
+        project: displayStr(toRecord(d).project),
       })),
       ...allMrfs.map(d => ({
         id: d.id as string,
@@ -657,12 +650,8 @@ export const ManagerDashboard: React.FC = () => {
                 {activeProjects.slice(0, 20).map(p => (
                   <tr key={p.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-3 text-sm text-white font-medium">{displayStr(p)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-300">
-                      {(p as unknown as Record<string, unknown>).client as string}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
-                      {displayStr((p as unknown as Record<string, unknown>).projectManager)}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-300">{toRecord(p).client as string}</td>
+                    <td className="px-4 py-3 text-sm text-gray-400">{displayStr(toRecord(p).projectManager)}</td>
                     <td className="px-4 py-3">
                       <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400">
                         {p.status}

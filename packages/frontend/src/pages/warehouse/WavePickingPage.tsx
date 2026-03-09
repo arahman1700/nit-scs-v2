@@ -23,6 +23,7 @@ import {
 import { useMiList } from '@/domains/outbound/hooks/useMi';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import type { Wave, PickStop } from '@/domains/outbound/hooks/usePickOptimizer';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Status config ───────────────────────────────────────────────────────
 
@@ -69,13 +70,15 @@ export const WavePickingPage: React.FC = () => {
 
   // Queries
   const { data: warehousesRes } = useWarehouses();
-  const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+  const warehouses = (toRecord(warehousesRes).data ?? []) as Array<{
+    id: string;
+    warehouseName: string;
+    warehouseCode: string;
+  }>;
 
   const statusFilter = activeTab === 'completed' ? 'completed' : undefined;
   const { data: wavesRes, isLoading: wavesLoading } = useWaveList(selectedWarehouse || undefined, statusFilter);
-  const allWaves = (wavesRes as unknown as { data?: Wave[] })?.data ?? [];
+  const allWaves = (toRecord(wavesRes).data ?? []) as Wave[];
 
   // Filter active tab: created + picking
   const displayedWaves = useMemo(() => {
@@ -85,7 +88,7 @@ export const WavePickingPage: React.FC = () => {
 
   // Selected wave detail
   const { data: waveDetailRes, isLoading: detailLoading } = useWave(selectedWaveId ?? undefined);
-  const waveDetail = (waveDetailRes as unknown as { data?: Wave })?.data;
+  const waveDetail = toRecord(waveDetailRes).data as Wave | undefined;
 
   // Mutations
   const startMutation = useStartWave();
@@ -398,18 +401,13 @@ function CreateWaveModal({ warehouses, onClose, defaultWarehouse }: CreateWaveMo
         > as import('@/api/types').ListParams)
       : undefined,
   );
-  const mis =
-    (
-      miRes as unknown as {
-        data?: Array<{
-          id: string;
-          mirvNumber: string;
-          project?: { name: string };
-          requestDate: string;
-          _count?: { lines: number };
-        }>;
-      }
-    )?.data ?? [];
+  const mis = (toRecord(miRes).data ?? []) as Array<{
+    id: string;
+    mirvNumber: string;
+    project?: { name: string };
+    requestDate: string;
+    _count?: { lines: number };
+  }>;
 
   const createMutation = useCreateWave();
 

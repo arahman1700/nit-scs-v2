@@ -7,6 +7,7 @@ import { RESOURCE_COLUMNS } from '@/config/resourceColumns';
 import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useScrapList, useSurplusList } from '@/api/hooks';
+import { extractRows } from '@/utils/type-helpers';
 
 const SscDashboard = lazy(() => import('@/pages/dashboards/SscDashboard').then(m => ({ default: m.SscDashboard })));
 
@@ -104,7 +105,7 @@ export const ScrapSectionPage: React.FC = () => {
             title="Scrap Items"
             icon={Recycle}
             columns={RESOURCE_COLUMNS.scrap.columns}
-            rows={(scrapQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(scrapQuery.data)}
             loading={scrapQuery.isLoading}
             createLabel="Report Scrap"
             createUrl="/admin/forms/scrap"
@@ -128,7 +129,7 @@ export const ScrapSectionPage: React.FC = () => {
             title="Surplus Items"
             icon={TrendingDown}
             columns={RESOURCE_COLUMNS.surplus.columns}
-            rows={(surplusQuery.data?.data ?? []) as unknown as Record<string, unknown>[]}
+            rows={extractRows(surplusQuery.data)}
             loading={surplusQuery.isLoading}
             createLabel="Report Surplus"
             createUrl="/admin/forms/surplus"

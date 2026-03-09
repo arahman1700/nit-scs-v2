@@ -16,6 +16,7 @@
  */
 
 import { prisma } from '../../../utils/prisma.js';
+import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 import { createNotification } from './notification.service.js';
 import { initializeScheduledRules } from '../../../events/scheduled-rule-runner.js';
 import { log } from '../../../config/logger.js';
@@ -80,7 +81,7 @@ function scheduleLoop(name: string, fn: () => Promise<void>, intervalMs: number,
 
 /** Prisma delegate for dynamic model access */
 export function getDelegate(modelName: string): PrismaDelegate {
-  return (prisma as unknown as Record<string, PrismaDelegate>)[modelName];
+  return getPrismaDelegate<PrismaDelegate>(prisma, modelName);
 }
 
 /** Convert SLA hours to milliseconds */
@@ -255,7 +256,7 @@ export async function notifySla(params: {
 
 function buildJobContext(): JobContext {
   return {
-    prisma: prisma as unknown as JobContext['prisma'],
+    prisma: prisma as JobContext['prisma'],
     io,
     log,
     notifySla,

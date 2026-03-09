@@ -6,6 +6,7 @@ import {
   useTriggerAnalysis,
 } from '@/domains/system/hooks/useAiSuggestions';
 import type { AiSuggestion } from '@/domains/system/hooks/useAiSuggestions';
+import { toRecord } from '@/utils/type-helpers';
 import { Lightbulb, Check, X, RefreshCw, Loader2, AlertTriangle, TrendingDown, Clock, Package } from 'lucide-react';
 
 const TYPE_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -31,7 +32,7 @@ export function AiInsightsPage() {
   const applyMutation = useApplySuggestion();
   const analyzeMutation = useTriggerAnalysis();
 
-  const suggestions = (suggestionsData as unknown as { data?: AiSuggestion[] })?.data ?? [];
+  const suggestions = (toRecord(suggestionsData).data as AiSuggestion[]) ?? [];
 
   const handleAnalyze = useCallback(async () => {
     await analyzeMutation.mutateAsync();

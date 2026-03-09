@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BarChart3, Table, PieChart, LineChart, Copy, Loader2 } from 'lucide-react';
 import { useReportTemplates, useTemplateToReport } from '@/domains/reporting/hooks/useSavedReports';
 import type { SavedReport } from '@/domains/reporting/hooks/useSavedReports';
+import { toRecord } from '@/utils/type-helpers';
 
 const CATEGORIES = [
   { key: 'all', label: 'All' },
@@ -44,7 +45,7 @@ export const ReportTemplateGallery: React.FC<ReportTemplateGalleryProps> = ({ on
     setUsingId(templateId);
     try {
       const result = await useTemplate.mutateAsync(templateId);
-      const newId = (result as unknown as { data?: { id?: string } })?.data?.id;
+      const newId = toRecord(toRecord(result).data).id as string | undefined;
       if (newId) {
         onTemplateUsed(newId);
       }

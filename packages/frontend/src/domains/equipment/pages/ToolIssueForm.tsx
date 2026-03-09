@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, Wrench, CheckCircle } from 'lucide-react';
 import { useCreateToolIssue, useToolList } from '@/api/hooks';
+import { toRecord } from '@/utils/type-helpers';
 
 export const ToolIssueForm: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +19,8 @@ export const ToolIssueForm: React.FC = () => {
     e.preventDefault();
     createMutation.mutate(formData as Record<string, unknown>, {
       onSuccess: res => {
-        setDocumentNumber((res as unknown as { data?: { formNumber?: string } }).data?.formNumber ?? 'TI-NEW');
+        const resData = toRecord(toRecord(res).data);
+        setDocumentNumber((resData.formNumber as string | undefined) ?? 'TI-NEW');
         setSubmitted(true);
       },
     });

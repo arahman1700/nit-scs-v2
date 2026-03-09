@@ -7,6 +7,7 @@ import type { KpiCardProps } from '@/components/KpiCard';
 import type { TabDef } from '@/components/SectionTabBar';
 import { useEmployees } from '@/domains/master-data/hooks/useMasterData';
 import { displayStr } from '@/utils/displayStr';
+import { extractRows } from '@/utils/type-helpers';
 
 const DelegationsPage = React.lazy(() =>
   import('@/domains/workflow/pages/DelegationsPage').then(m => ({ default: m.DelegationsPage })),
@@ -35,7 +36,7 @@ export const EmployeeSectionPage: React.FC = () => {
   const navigate = useNavigate();
   const employeesQuery = useEmployees({ pageSize: 1 });
   const employeesFullQuery = useEmployees({ pageSize: 15 });
-  const employeesData = (employeesFullQuery.data?.data ?? []) as unknown as Record<string, unknown>[];
+  const employeesData = extractRows(employeesFullQuery.data);
   const employeesTotal = employeesQuery.data?.meta?.total ?? 0;
 
   const kpis: KpiCardProps[] = [

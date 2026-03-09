@@ -1,5 +1,6 @@
 import type { Server as SocketIOServer } from 'socket.io';
 import { prisma } from '../../../utils/prisma.js';
+import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 import { createAuditLog } from '../../system/services/audit.service.js';
 import { createNotification } from '../../system/services/notification.service.js';
 import { emitToRole, emitToDocument } from '../../../socket/setup.js';
@@ -92,7 +93,7 @@ type PrismaDelegate = {
 
 function getDelegate(documentType: string): PrismaDelegate {
   const modelName = MODEL_MAP[documentType] || documentType;
-  return (prisma as unknown as Record<string, PrismaDelegate>)[modelName];
+  return getPrismaDelegate<PrismaDelegate>(prisma, modelName);
 }
 
 // ── Delegation Resolution ───────────────────────────────────────────────

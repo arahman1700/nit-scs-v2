@@ -8,6 +8,7 @@ import {
 } from '@/domains/logistics/hooks/useTariffs';
 import type { TariffRate, LineBreakdown, DutyCalculationResult } from '@/domains/logistics/hooks/useTariffs';
 import { toast } from '@/components/Toaster';
+import { toRecord } from '@/utils/type-helpers';
 import {
   Calculator,
   Plus,
@@ -69,7 +70,7 @@ export const TariffPage: React.FC = () => {
 
   // Queries & Mutations
   const { data: ratesRes, isLoading: ratesLoading } = useTariffRateList({ search: searchQuery || undefined });
-  const rates: TariffRate[] = (ratesRes as unknown as { data?: TariffRate[] })?.data ?? [];
+  const rates: TariffRate[] = (toRecord(ratesRes).data ?? []) as TariffRate[];
 
   const createMutation = useCreateTariffRate();
   const updateMutation = useUpdateTariffRate();
@@ -159,7 +160,7 @@ export const TariffPage: React.FC = () => {
     if (!shipmentId.trim()) return;
     setCalculationResult(null);
     calcQuery.refetch().then(res => {
-      const result = (res.data as unknown as { data?: DutyCalculationResult })?.data ?? null;
+      const result = (toRecord(res.data).data as DutyCalculationResult | undefined) ?? null;
       if (result) {
         setCalculationResult(result);
       } else if (res.isError) {

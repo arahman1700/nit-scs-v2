@@ -11,6 +11,7 @@ import {
 } from '@/domains/equipment/hooks/useAssets';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { toast } from '@/components/Toaster';
+import { toRecord } from '@/utils/type-helpers';
 import {
   Archive,
   Plus,
@@ -106,10 +107,10 @@ export const AssetRegisterPage: React.FC = () => {
 
   // Queries
   const { data: assetsRes, isLoading: assetsLoading } = useAssetList({ search: searchQuery || undefined });
-  const assets: Asset[] = (assetsRes as unknown as { data?: Asset[] })?.data ?? [];
+  const assets: Asset[] = (toRecord(assetsRes).data as Asset[] | undefined) ?? [];
 
   const { data: summaryRes } = useAssetSummary();
-  const summary: AssetSummary = (summaryRes as unknown as { data?: AssetSummary })?.data ?? {
+  const summary: AssetSummary = (toRecord(summaryRes).data as AssetSummary | undefined) ?? {
     totalAssets: 0,
     activeAssets: 0,
     retiredAssets: 0,
@@ -117,12 +118,12 @@ export const AssetRegisterPage: React.FC = () => {
   };
 
   const { data: detailRes, isLoading: detailLoading } = useAsset(selectedAssetId);
-  const selectedAsset: Asset | null = (detailRes as unknown as { data?: Asset })?.data ?? null;
+  const selectedAsset: Asset | null = (toRecord(detailRes).data as Asset | undefined) ?? null;
 
   const { data: warehousesRes } = useWarehouses();
   const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+    (toRecord(warehousesRes).data as Array<{ id: string; warehouseName: string; warehouseCode: string }> | undefined) ??
+    [];
 
   // Mutations
   const createMutation = useCreateAsset();

@@ -8,6 +8,7 @@ import {
 } from '@/domains/warehouse-ops/hooks/usePutAwayRules';
 import { useWarehouseZoneList } from '@/domains/warehouse-ops/hooks/useWarehouseZones';
 import { useWarehouses, useItems } from '@/domains/master-data/hooks/useMasterData';
+import { toRecord } from '@/utils/type-helpers';
 import type { PutAwayRule } from '@/domains/warehouse-ops/hooks/usePutAwayRules';
 
 // ── Item categories matching the Prisma CHECK constraint ─────────────────
@@ -52,20 +53,18 @@ export function PutAwayRulesPage() {
   const updateMutation = useUpdatePutAwayRule();
   const deleteMutation = useDeletePutAwayRule();
 
-  const rules = (rulesRes as unknown as { data?: PutAwayRule[] })?.data ?? [];
+  const rules = (toRecord(rulesRes).data as PutAwayRule[] | undefined) ?? [];
   const warehouses =
-    (warehousesRes as unknown as { data?: Array<{ id: string; warehouseName: string; warehouseCode: string }> })
-      ?.data ?? [];
+    (toRecord(warehousesRes).data as Array<{ id: string; warehouseName: string; warehouseCode: string }> | undefined) ??
+    [];
   const zones =
-    (zonesRes as unknown as { data?: Array<{ id: string; zoneName: string; zoneCode: string }> })?.data ?? [];
+    (toRecord(zonesRes).data as Array<{ id: string; zoneName: string; zoneCode: string }> | undefined) ?? [];
   const items =
-    (itemsRes as unknown as { data?: Array<{ id: string; code: string; name: string; category: string }> })?.data ?? [];
+    (toRecord(itemsRes).data as Array<{ id: string; code: string; name: string; category: string }> | undefined) ?? [];
   const suggestions =
-    (
-      suggestionsRes as unknown as {
-        data?: Array<{ zoneId: string; zoneName: string; zoneCode: string; reason: string; confidence: string }>;
-      }
-    )?.data ?? [];
+    (toRecord(suggestionsRes).data as
+      | Array<{ zoneId: string; zoneName: string; zoneCode: string; reason: string; confidence: string }>
+      | undefined) ?? [];
 
   function openCreate() {
     setEditingRule(null);

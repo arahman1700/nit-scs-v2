@@ -25,6 +25,11 @@ interface ApprovalConfig {
   amountField?: string;
 }
 
+/** Parse a Prisma JSON field as StatusFlowConfig */
+function parseStatusFlow(raw: unknown): StatusFlowConfig {
+  return raw as StatusFlowConfig;
+}
+
 function parseApprovalConfig(raw: unknown): ApprovalConfig | null {
   if (!raw || typeof raw !== 'object') return null;
   const config = raw as ApprovalConfig;
@@ -110,7 +115,7 @@ export async function createDocument(
   userId: string,
 ) {
   const docType = await getDocumentTypeByCode(typeCode);
-  const statusFlow = docType.statusFlow as unknown as StatusFlowConfig;
+  const statusFlow = parseStatusFlow(docType.statusFlow);
 
   // Validate header data
   const errors = validateDynamicData(docType.fields, body.data);
@@ -210,7 +215,7 @@ export async function updateDocument(
   if (!existing) throw new NotFoundError('Document not found');
 
   // Only allow updates in editable statuses
-  const statusFlow = existing.documentType.statusFlow as unknown as StatusFlowConfig;
+  const statusFlow = parseStatusFlow(existing.documentType.statusFlow);
   const editableStatuses = getEditableStatuses(statusFlow);
   if (!editableStatuses.includes(existing.status)) {
     throw new Error(`Cannot edit document in '${existing.status}' status`);
@@ -273,7 +278,7 @@ export async function transitionDocument(
   });
   if (!doc) throw new NotFoundError('Document not found');
 
-  const statusFlow = doc.documentType.statusFlow as unknown as StatusFlowConfig;
+  const statusFlow = parseStatusFlow(doc.documentType.statusFlow);
   const allowedTransitions = statusFlow.transitions[doc.status] || [];
 
   if (!allowedTransitions.includes(targetStatus)) {

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAmcList, useAmc, useCreateAmc, useActivateAmc, useTerminateAmc } from '@/api/hooks';
 import type { Amc } from '@/api/hooks';
+import { toRows, toRecord } from '@/utils/type-helpers';
 
 // ── Status Config ───────────────────────────────────────────────────────
 
@@ -85,8 +86,8 @@ export const AmcPage: React.FC = () => {
   );
 
   const { data: listData, isLoading } = useAmcList(params);
-  const items = (listData?.data ?? []) as unknown as Amc[];
-  const meta = (listData as unknown as Record<string, unknown>)?.meta as
+  const items = toRows<Amc>(listData?.data);
+  const meta = toRecord(listData).meta as
     | { page: number; pageSize: number; total: number; totalPages: number }
     | undefined;
 
@@ -240,7 +241,7 @@ export const AmcPage: React.FC = () => {
 
 const AmcDetailModal: React.FC<{ id: string; onClose: () => void }> = ({ id, onClose }) => {
   const { data: amcData, isLoading } = useAmc(id);
-  const amc = (amcData as unknown as { data?: Amc })?.data;
+  const amc = toRecord(amcData).data as Amc | undefined;
 
   const activateMutation = useActivateAmc();
   const terminateMutation = useTerminateAmc();
