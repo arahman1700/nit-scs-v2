@@ -38,6 +38,7 @@ vi.mock('../../../utils/prisma.js', () => ({
             create: vi.fn().mockResolvedValue({ id: 'ss1' }),
             update: vi.fn().mockResolvedValue({ id: 'ss1' }),
             updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+            count: vi.fn().mockResolvedValue(0),
           };
         }
         return new Proxy({}, { get: () => vi.fn().mockResolvedValue(null) });

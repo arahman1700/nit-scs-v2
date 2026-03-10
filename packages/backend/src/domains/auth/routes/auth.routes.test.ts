@@ -125,7 +125,13 @@ describe('POST /api/v1/auth/login', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.email).toBe('admin@nit.com');
     expect(res.body.data.accessToken).toBe('fake-access-token');
-    expect(res.body.data.refreshToken).toBe('fake-refresh-token');
+    // refreshToken is no longer in the response body — it's set as an httpOnly cookie
+    expect(res.body.data.refreshToken).toBeUndefined();
+    // Verify the httpOnly cookie is set
+    const setCookieHeader = res.headers['set-cookie'];
+    expect(setCookieHeader).toBeDefined();
+    const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+    expect(cookies.some((c: string) => c.includes('nit_refresh_token=fake-refresh-token'))).toBe(true);
     expect(loginMock).toHaveBeenCalledWith('admin@nit.com', 'Secret123', expect.any(String), undefined);
   });
 
@@ -178,7 +184,13 @@ describe('POST /api/v1/auth/refresh', () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.accessToken).toBe('new-access');
-    expect(res.body.data.refreshToken).toBe('new-refresh');
+    // refreshToken is no longer in the response body — it's set as an httpOnly cookie
+    expect(res.body.data.refreshToken).toBeUndefined();
+    // Verify the httpOnly cookie is set with the new refresh token
+    const setCookieHeader = res.headers['set-cookie'];
+    expect(setCookieHeader).toBeDefined();
+    const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader];
+    expect(cookies.some((c: string) => c.includes('nit_refresh_token=new-refresh'))).toBe(true);
     expect(refreshMock).toHaveBeenCalledWith('valid-refresh-token');
   });
 

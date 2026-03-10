@@ -7,6 +7,12 @@ import { prisma } from '../../../utils/prisma.js';
 
 const router = Router();
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // All approval routes require authentication
 router.use(authenticate);
 
@@ -49,12 +55,20 @@ router.get('/steps/:documentType/:documentId', async (req, res) => {
 // ── Workflow CRUD (admin-only) ──────────────────────────────────────────
 
 // GET /api/v1/approvals/workflows — List all approval workflow rules
-router.get('/workflows', async (_req, res) => {
+router.get('/workflows', async (req, res) => {
   try {
-    const workflows = await prisma.approvalWorkflow.findMany({
-      orderBy: [{ documentType: 'asc' }, { minAmount: 'asc' }],
-    });
-    sendSuccess(res, workflows);
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+
+    const [workflows, total] = await Promise.all([
+      prisma.approvalWorkflow.findMany({
+        orderBy: [{ documentType: 'asc' }, { minAmount: 'asc' }],
+        skip,
+        take: pageSize,
+      }),
+      prisma.approvalWorkflow.count(),
+    ]);
+
+    sendSuccess(res, workflows, { page, pageSize, total });
   } catch (err) {
     sendError(res, 500, (err as Error).message);
   }

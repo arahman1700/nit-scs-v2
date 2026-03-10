@@ -7,7 +7,13 @@
 
 import { Router } from 'express';
 import { rateLimiter } from '../middleware/rate-limiter.js';
-import { healthCheck, detailedHealthCheck, detailedHealthMiddleware } from '../domains/system/routes/health.routes.js';
+import {
+  healthCheck,
+  detailedHealthCheck,
+  detailedHealthMiddleware,
+  livenessProbe,
+  readinessProbe,
+} from '../domains/system/routes/health.routes.js';
 
 // ── Domain Barrels ──────────────────────────────────────────────────────
 import { registerAuthRoutes } from '../domains/auth/index.js';
@@ -43,6 +49,10 @@ export function createApiRouter() {
 
   // ── Detailed Health Check (authenticated admin only) ─────────────────
   router.get('/health/details', ...detailedHealthMiddleware, detailedHealthCheck);
+
+  // ── Kubernetes-style probes (public, lightweight) ─────────────────────
+  router.get('/live', livenessProbe);
+  router.get('/ready', readinessProbe);
 
   // ── Register all domains ───────────────────────────────────────────────
   registerAuthRoutes(router);

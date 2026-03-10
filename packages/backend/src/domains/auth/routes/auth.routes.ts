@@ -41,7 +41,9 @@ router.post(
         path: REFRESH_COOKIE_PATH, // Only sent to refresh endpoint
       });
 
-      sendSuccess(res, result);
+      // Strip refreshToken from response body — cookie already handles it
+      const { refreshToken: _rt, ...safeResult } = result;
+      sendSuccess(res, safeResult);
     } catch (err) {
       if (
         err instanceof Error &&
@@ -76,7 +78,9 @@ router.post('/refresh', validate(refreshSchema), async (req: Request, res: Respo
       path: REFRESH_COOKIE_PATH,
     });
 
-    sendSuccess(res, tokens);
+    // Strip refreshToken from response body — cookie already handles it
+    const { refreshToken: _rt, ...safeTokens } = tokens;
+    sendSuccess(res, safeTokens);
   } catch {
     sendError(res, 401, 'Invalid refresh token');
   }

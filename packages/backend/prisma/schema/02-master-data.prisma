@@ -287,9 +287,9 @@ model Supplier {
   address       String?
   cityId        String?  @map("city_id") @db.Uuid
   /// Commercial registration number
-  crNumber      String?  @map("cr_number") @db.VarChar(50)
+  crNumber      String?  @unique @map("cr_number") @db.VarChar(50)
   /// VAT registration number
-  vatNumber     String?  @map("vat_number") @db.VarChar(50)
+  vatNumber     String?  @unique @map("vat_number") @db.VarChar(50)
   /// CHECK: rating BETWEEN 1 AND 5
   rating        Int?     @db.SmallInt
   /// CHECK: status IN ('active', 'inactive', 'blocked')

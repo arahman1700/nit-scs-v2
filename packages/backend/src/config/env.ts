@@ -45,13 +45,13 @@ export function getEnv(): Env {
   if (!_env) {
     const result = envSchema.safeParse(process.env);
     if (!result.success) {
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV !== 'test') {
         console.error('Environment validation failed:', result.error.format());
-        throw new Error('Invalid environment configuration — cannot start in production with invalid env');
+        throw new Error('Invalid environment configuration — set required env vars (JWT_SECRET, etc.)');
       }
 
-      // Development/test fallback
-      console.warn('⚠  Using development fallback environment — DO NOT use in production');
+      // Test-only fallback
+      console.warn('⚠  Using test fallback environment — only allowed in NODE_ENV=test');
       _env = envSchema.parse({
         ...process.env,
         DATABASE_URL: process.env.DATABASE_URL || 'postgresql://nit_admin:nit_scs_dev_2026@localhost:5432/nit_scs',

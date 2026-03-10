@@ -21,10 +21,27 @@ if (!existsSync(DOCS_DIR)) {
   mkdirSync(DOCS_DIR, { recursive: true });
 }
 
+const ALLOWED_DOC_TYPES: Record<string, string[]> = {
+  '.pdf': ['application/pdf'],
+  '.jpg': ['image/jpeg'],
+  '.jpeg': ['image/jpeg'],
+  '.png': ['image/png'],
+  '.gif': ['image/gif'],
+  '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  '.xls': ['application/vnd.ms-excel'],
+  '.doc': ['application/msword'],
+  '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  '.csv': ['text/csv', 'application/csv', 'text/plain'],
+  '.txt': ['text/plain'],
+  '.zip': ['application/zip'],
+  '.pptx': ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  '.ppt': ['application/vnd.ms-powerpoint'],
+};
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, DOCS_DIR),
   filename: (_req, file, cb) => {
-    const ext = extname(file.originalname);
+    const ext = extname(file.originalname).toLowerCase();
     cb(null, `${randomUUID()}${ext}`);
   },
 });
@@ -32,6 +49,19 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: { fileSize: 25 * 1024 * 1024 }, // 25MB for company docs
+  fileFilter: (_req, file, cb) => {
+    const ext = extname(file.originalname).toLowerCase();
+    const allowedMimes = ALLOWED_DOC_TYPES[ext];
+    if (!allowedMimes) {
+      cb(new Error(`File type ${ext} not allowed`));
+      return;
+    }
+    if (!allowedMimes.includes(file.mimetype)) {
+      cb(new Error(`MIME type mismatch for ${ext}`));
+      return;
+    }
+    cb(null, true);
+  },
 });
 
 // Visibility filter based on user's system role
@@ -157,6 +187,16 @@ router.post('/', authenticate, requireRole('admin', 'manager'), (req: Request, r
     if (!req.file) return sendError(res, 400, 'No file uploaded');
 
     try {
+      let parsedTags: string[] = [];
+      if (req.body.tags) {
+        try {
+          const raw = JSON.parse(req.body.tags);
+          parsedTags = Array.isArray(raw) ? raw.map(String) : [];
+        } catch {
+          return sendError(res, 400, 'Invalid tags format — expected a JSON array');
+        }
+      }
+
       const doc = await prisma.companyDocument.create({
         data: {
           title: String(req.body.title || req.file.originalname),
@@ -166,7 +206,7 @@ router.post('/', authenticate, requireRole('admin', 'manager'), (req: Request, r
           fileName: req.file.originalname,
           fileSize: req.file.size,
           mimeType: req.file.mimetype,
-          tags: req.body.tags ? JSON.parse(req.body.tags) : [],
+          tags: parsedTags,
           visibility: req.body.visibility || 'all',
           uploadedById: req.user!.userId,
         },

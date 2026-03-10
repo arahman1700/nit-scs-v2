@@ -94,6 +94,12 @@ describe('GET /api/v1/attachments/:entityType/:recordId', () => {
 
 describe('DELETE /api/v1/attachments/:id', () => {
   it('should return 200 on soft delete', async () => {
+    // Ownership check: getById is called first; uploadedById must match test user
+    vi.mocked(attachmentService.getById).mockResolvedValue({
+      id: 'att-1',
+      fileName: 'test.pdf',
+      uploadedById: 'test-user-id',
+    } as never);
     vi.mocked(attachmentService.softDelete).mockResolvedValue(undefined as never);
 
     const res = await request.delete('/api/v1/attachments/att-1').set('Authorization', `Bearer ${ADMIN_TOKEN}`);
@@ -106,7 +112,8 @@ describe('DELETE /api/v1/attachments/:id', () => {
   it('should return error when softDelete throws', async () => {
     const err = new Error('Not found') as Error & { statusCode?: number };
     err.statusCode = 404;
-    vi.mocked(attachmentService.softDelete).mockRejectedValue(err);
+    // getById throws when attachment doesn't exist
+    vi.mocked(attachmentService.getById).mockRejectedValue(err);
 
     const res = await request.delete('/api/v1/attachments/not-found').set('Authorization', `Bearer ${ADMIN_TOKEN}`);
 

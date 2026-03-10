@@ -162,9 +162,41 @@ export function buildSchemaPrompt(): string {
   return lines.join('\n');
 }
 
+/** Build a map of allowed table → allowed columns for column-level validation */
+const ALLOWED_COLUMNS_MAP = new Map<string, Set<string>>();
+for (const t of ALLOWED_TABLES) {
+  ALLOWED_COLUMNS_MAP.set(t.table, new Set(t.columns));
+}
+
+/**
+ * Strip SQL comments and quoted identifiers that could bypass validation.
+ * Returns cleaned SQL for safe regex-based validation.
+ */
+export function stripCommentsAndQuotes(sql: string): string {
+  let cleaned = sql;
+  // Strip block comments (/* ... */) — non-greedy, handles nested-ish
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  // Strip line comments (-- to end of line)
+  cleaned = cleaned.replace(/--[^\n]*/g, ' ');
+  // Strip double-quoted identifiers ("table_name" → table_name)
+  cleaned = cleaned.replace(/"([^"]+)"/g, '$1');
+  // Strip backtick-quoted identifiers (`table_name` → table_name)
+  cleaned = cleaned.replace(/`([^`]+)`/g, '$1');
+  // Collapse multiple whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
+  return cleaned;
+}
+
 /** Validate that a SQL query only uses SELECT on allowed tables */
 export function validateQuery(sql: string): { valid: boolean; reason?: string } {
-  const normalized = sql.trim().toLowerCase();
+  // Block backslash escapes that could bypass validation
+  if (/\\/.test(sql)) {
+    return { valid: false, reason: 'Backslash escapes are not allowed.' };
+  }
+
+  // Strip comments and quoted identifiers BEFORE any validation
+  const cleaned = stripCommentsAndQuotes(sql);
+  const normalized = cleaned.trim().toLowerCase();
 
   // Must start with SELECT
   if (!normalized.startsWith('select')) {
@@ -206,15 +238,15 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     'unlock',
   ];
   for (const word of forbidden) {
-    // Check as whole word
+    // Check as whole word against cleaned SQL
     const regex = new RegExp(`\\b${word}\\b`, 'i');
-    if (regex.test(sql)) {
+    if (regex.test(cleaned)) {
       return { valid: false, reason: `Forbidden keyword: ${word}` };
     }
   }
 
   // Block subqueries in FROM clause — pattern: FROM (SELECT or FROM\s*\(SELECT
-  if (/\bfrom\s*\(\s*select\b/i.test(sql)) {
+  if (/\bfrom\s*\(\s*select\b/i.test(cleaned)) {
     return { valid: false, reason: 'Subqueries in FROM clause are not allowed.' };
   }
 
@@ -246,14 +278,27 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
   ];
   for (const col of sensitiveColumns) {
     const colRegex = new RegExp(`\\b${col}\\b`, 'i');
-    if (colRegex.test(sql)) {
+    if (colRegex.test(cleaned)) {
       return { valid: false, reason: `Access to sensitive column not allowed: ${col}` };
     }
   }
 
-  // Extract table names from FROM and JOIN clauses
-  const fromMatch = sql.match(/\bfrom\s+(\w+)/gi) ?? [];
-  const joinMatch = sql.match(/\bjoin\s+(\w+)/gi) ?? [];
+  // Block access to blocked tables even as quoted identifiers (already stripped above,
+  // but also check the original for patterns like information_schema.xxx)
+  for (const blocked of BLOCKED_TABLES) {
+    const blockedRegex = new RegExp(`\\b${blocked}\\b`, 'i');
+    if (blockedRegex.test(cleaned)) {
+      return { valid: false, reason: `System catalog table not allowed: ${blocked}` };
+    }
+  }
+  // Also block _prisma_migrations (internal Prisma table)
+  if (/\b_prisma_migrations\b/i.test(cleaned)) {
+    return { valid: false, reason: 'System table not allowed: _prisma_migrations' };
+  }
+
+  // Extract table names from FROM and JOIN clauses (using cleaned SQL)
+  const fromMatch = cleaned.match(/\bfrom\s+(\w+)/gi) ?? [];
+  const joinMatch = cleaned.match(/\bjoin\s+(\w+)/gi) ?? [];
   const allTables = [...fromMatch, ...joinMatch].map(m => m.split(/\s+/)[1]?.toLowerCase()).filter(Boolean);
 
   for (const table of allTables) {
@@ -268,6 +313,23 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     // Check against allowlist
     if (!ALLOWED_TABLE_SET.has(table!)) {
       return { valid: false, reason: `Table not allowed: ${table}` };
+    }
+  }
+
+  // Validate extracted column names against allowed columns per table
+  // Extract SELECT column references and validate against table schema
+  for (const table of allTables) {
+    const allowedCols = ALLOWED_COLUMNS_MAP.get(table!);
+    if (!allowedCols) continue;
+
+    // Extract column names from <table>.<column> references
+    const qualifiedColRegex = new RegExp(`\\b${table}\\.(\\w+)`, 'gi');
+    let colMatch: RegExpExecArray | null;
+    while ((colMatch = qualifiedColRegex.exec(cleaned)) !== null) {
+      const col = colMatch[1]!.toLowerCase();
+      if (!allowedCols.has(col)) {
+        return { valid: false, reason: `Column '${col}' not allowed on table '${table}'` };
+      }
     }
   }
 

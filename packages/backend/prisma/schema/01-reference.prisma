@@ -125,5 +125,6 @@ model ApprovalWorkflow {
   /// Maximum hours for approval SLA
   slaHours     Int      @map("sla_hours")
 
+  @@index([documentType], map: "idx_approval_workflows_doc_type")
   @@map("approval_workflows")
 }

@@ -8,7 +8,7 @@
 import { Prisma } from '@prisma/client';
 import { logger } from '../../../config/logger.js';
 import { prisma } from '../../../utils/prisma.js';
-import { buildSchemaPrompt, validateQuery } from './ai-schema-context.js';
+import { buildSchemaPrompt, validateQuery, stripCommentsAndQuotes } from './ai-schema-context.js';
 import { buildScopeFilter as _buildScopeFilter } from '../../../utils/scope-filter.js';
 
 interface ChatMessage {
@@ -157,11 +157,13 @@ export async function chat(
             'Query execution is disabled or restricted to admin for safety.';
         } else {
           // Execute the query inside a read-only transaction with 5s timeout
+          // Sanitize: strip comments before passing to Prisma.raw (defense-in-depth)
+          const sanitizedQuery = stripCommentsAndQuotes(query);
           try {
             resultData = await prisma.$transaction(
               async tx => {
                 await tx.$executeRaw`SET TRANSACTION READ ONLY`;
-                return tx.$queryRaw(Prisma.raw(query));
+                return tx.$queryRaw(Prisma.raw(sanitizedQuery));
               },
               { timeout: 5000 },
             );

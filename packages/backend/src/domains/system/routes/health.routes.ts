@@ -148,5 +148,26 @@ export async function detailedHealthCheck(req: Request, res: Response): Promise<
   res.status(httpStatus).json(response);
 }
 
+/**
+ * Kubernetes-style liveness probe.
+ * Returns 200 if the process is alive — does not check dependencies.
+ */
+export function livenessProbe(_req: Request, res: Response): void {
+  res.status(200).json({ status: 'alive', timestamp: new Date().toISOString() });
+}
+
+/**
+ * Kubernetes-style readiness probe.
+ * Returns 200 only if all critical dependencies (DB) are reachable.
+ */
+export async function readinessProbe(_req: Request, res: Response): Promise<void> {
+  const { overallStatus } = await computeHealthStatus();
+  const ready = overallStatus !== 'unhealthy';
+  res.status(ready ? 200 : 503).json({
+    status: ready ? 'ready' : 'not_ready',
+    timestamp: new Date().toISOString(),
+  });
+}
+
 /** Middleware chain for the authenticated detailed health endpoint */
 export const detailedHealthMiddleware = [authenticate as (req: Request, res: Response, next: NextFunction) => void];

@@ -39,6 +39,7 @@ vi.mock('../../../utils/prisma.js', () => {
   const savedReport = {
     findMany: vi.fn().mockResolvedValue([]),
     findUnique: vi.fn().mockResolvedValue(null),
+    count: vi.fn().mockResolvedValue(0),
     create: vi.fn().mockResolvedValue({ id: 'rpt-1', name: 'Test Report' }),
     update: vi.fn().mockResolvedValue({ id: 'rpt-1', name: 'Updated Report' }),
     delete: vi.fn().mockResolvedValue(undefined),

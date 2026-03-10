@@ -117,6 +117,15 @@ router.post('/:entityType/:recordId', authenticate, (req: Request, res: Response
 router.get('/:id/download', authenticate, async (req: Request, res: Response) => {
   try {
     const attachment = await attachmentService.getById(req.params.id as string);
+
+    // Ownership check: uploader or admin/manager can download
+    const isOwner = attachment.uploadedById === req.user!.userId;
+    const isPrivileged = ['admin', 'manager'].includes(req.user!.systemRole);
+    if (!isOwner && !isPrivileged) {
+      sendError(res, 403, 'You do not have permission to download this attachment');
+      return;
+    }
+
     const filePath = join(UPLOADS_DIR, attachment.fileName);
 
     if (!existsSync(filePath)) {
@@ -137,6 +146,15 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
 // DELETE /api/v1/attachments/:id
 router.delete('/:id', authenticate, async (req: Request, res: Response) => {
   try {
+    // Ownership check: uploader or admin can delete
+    const attachment = await attachmentService.getById(req.params.id as string);
+    const isOwner = attachment.uploadedById === req.user!.userId;
+    const isAdmin = req.user!.systemRole === 'admin';
+    if (!isOwner && !isAdmin) {
+      sendError(res, 403, 'You do not have permission to delete this attachment');
+      return;
+    }
+
     await attachmentService.softDelete(req.params.id as string);
     sendSuccess(res, { deleted: true });
   } catch (err) {

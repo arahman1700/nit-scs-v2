@@ -58,6 +58,12 @@ const WMA_WEIGHTS = [0.5, 0.3, 0.2]; // most recent → oldest
 const TREND_THRESHOLD = 0.02; // slope magnitude below this = stable
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/** Yield back to the event loop between heavy computations to avoid blocking. */
+const yieldToEventLoop = () => new Promise<void>(resolve => setImmediate(resolve));
+
+/** Number of items to process before yielding to the event loop. */
+const YIELD_BATCH_SIZE = 50;
+
 // ── Utility Functions ───────────────────────────────────────────────────────
 
 /** Build an ordered array of YYYY-MM strings for the last N months. */
@@ -375,8 +381,9 @@ export async function getForecast(params: {
     entry.monthlyData.set(row.month_key, row.total_qty);
   }
 
-  // Compute forecast for each item
+  // Compute forecast for each item, yielding periodically to avoid blocking
   const forecasts: ItemForecast[] = [];
+  let processed = 0;
 
   for (const [id, entry] of itemMap) {
     const forecast = computeItemForecast(
@@ -388,6 +395,11 @@ export async function getForecast(params: {
       forecastMonths,
     );
     forecasts.push(forecast);
+
+    processed++;
+    if (processed % YIELD_BATCH_SIZE === 0) {
+      await yieldToEventLoop();
+    }
   }
 
   // Sort by average monthly demand descending
@@ -457,6 +469,7 @@ export async function getSeasonalPatterns(warehouseId?: string): Promise<Seasona
 
   const allMonthKeys = buildMonthKeys(LOOKBACK_MONTHS);
   const results: SeasonalPattern[] = [];
+  let processed = 0;
 
   for (const [itemId, entry] of itemMap) {
     // Build values array
@@ -515,6 +528,11 @@ export async function getSeasonalPatterns(warehouseId?: string): Promise<Seasona
       peakMonth: MONTH_LABELS[peakIdx],
       troughMonth: MONTH_LABELS[troughIdx],
     });
+
+    processed++;
+    if (processed % YIELD_BATCH_SIZE === 0) {
+      await yieldToEventLoop();
+    }
   }
 
   // Sort by seasonality strength descending
@@ -659,10 +677,11 @@ export async function generateReorderSuggestions(
     consumptionMap.set(row.item_id, row.avg_monthly);
   }
 
-  // 3. Evaluate each inventory item
+  // 3. Evaluate each inventory item, yielding periodically to avoid blocking
   const suggestions: ReorderSuggestion[] = [];
 
-  for (const inv of inventoryRows) {
+  for (let idx = 0; idx < inventoryRows.length; idx++) {
+    const inv = inventoryRows[idx];
     const avgMonthly = consumptionMap.get(inv.item_id) ?? 0;
     const safetyStock = (avgMonthly * leadTimeDays) / 30;
     const qtyOnHand = inv.qty_on_hand;
@@ -702,6 +721,10 @@ export async function generateReorderSuggestions(
       urgency,
       daysUntilStockout,
     });
+
+    if ((idx + 1) % YIELD_BATCH_SIZE === 0) {
+      await yieldToEventLoop();
+    }
   }
 
   // Sort by urgency (critical first) then by daysUntilStockout ascending

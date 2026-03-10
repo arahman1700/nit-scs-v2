@@ -236,27 +236,31 @@ export async function setCustomFieldValues(
     throw err;
   }
 
-  for (const [fieldKey, value] of Object.entries(values)) {
-    const def = defMap.get(fieldKey);
-    if (!def) continue; // Skip unknown fields
-
-    await prisma.customFieldValue.upsert({
-      where: {
-        definitionId_entityId: {
-          definitionId: def.id,
-          entityId,
+  const upsertOps = Object.entries(values)
+    .filter(([fieldKey]) => defMap.has(fieldKey))
+    .map(([fieldKey, value]) => {
+      const def = defMap.get(fieldKey)!;
+      return prisma.customFieldValue.upsert({
+        where: {
+          definitionId_entityId: {
+            definitionId: def.id,
+            entityId,
+          },
         },
-      },
-      update: {
-        value: value !== null && value !== undefined ? (value as Prisma.InputJsonValue) : Prisma.JsonNull,
-      },
-      create: {
-        definitionId: def.id,
-        entityType,
-        entityId,
-        value: value !== null && value !== undefined ? (value as Prisma.InputJsonValue) : Prisma.JsonNull,
-      },
+        update: {
+          value: value !== null && value !== undefined ? (value as Prisma.InputJsonValue) : Prisma.JsonNull,
+        },
+        create: {
+          definitionId: def.id,
+          entityType,
+          entityId,
+          value: value !== null && value !== undefined ? (value as Prisma.InputJsonValue) : Prisma.JsonNull,
+        },
+      });
     });
+
+  if (upsertOps.length > 0) {
+    await prisma.$transaction(upsertOps);
   }
 }
 

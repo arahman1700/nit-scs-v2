@@ -35,6 +35,22 @@ export function getSocket(): Socket {
         }
       }
     });
+
+    // Ensure auth token is up-to-date on reconnect
+    socket.io.on('reconnect_attempt', () => {
+      const freshToken = localStorage.getItem('nit_scs_token');
+      if (freshToken && socket) {
+        socket.auth = { token: freshToken };
+      }
+    });
+
+    socket.io.on('reconnect', attempt => {
+      console.info(`[Socket.IO] Reconnected after ${attempt} attempt(s)`);
+    });
+
+    socket.io.on('reconnect_failed', () => {
+      console.warn('[Socket.IO] Reconnection failed after max attempts');
+    });
   }
   return socket;
 }

@@ -42,6 +42,7 @@ const mockEmailTemplate = {
   create: vi.fn(),
   update: vi.fn(),
   delete: vi.fn(),
+  count: vi.fn().mockResolvedValue(0),
 };
 
 vi.mock('../../../utils/prisma.js', () => ({
@@ -82,12 +83,15 @@ describe('Email Template Routes', () => {
       mockEmailTemplate.findMany.mockResolvedValue([
         { id: 't1', code: 'grn_created', name: 'GRN Created', _count: { emailLogs: 5 } },
       ]);
+      mockEmailTemplate.count.mockResolvedValue(1);
 
       const res = await request.get(BASE).set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveLength(1);
+      expect(res.body.meta).toBeDefined();
+      expect(res.body.meta.total).toBe(1);
     });
 
     it('returns 401 without auth', async () => {

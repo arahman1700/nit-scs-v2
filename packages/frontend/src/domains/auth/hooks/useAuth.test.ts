@@ -1,6 +1,8 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../../test-utils/msw-server';
 import React from 'react';
 import { useLogin, useCurrentUser, useLogout } from './useAuth';
 
@@ -110,5 +112,58 @@ describe('useLogout', () => {
 
     expect(mockStorage.removeItem).toHaveBeenCalledWith('nit_scs_token');
     expect(mockStorage.removeItem).not.toHaveBeenCalledWith('nit_scs_refresh_token');
+  });
+});
+
+// ── Error Path Tests ──────────────────────────────────────────────────────
+
+describe('useLogin – error paths', () => {
+  beforeEach(() => {
+    mockStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('handles 401 on wrong credentials and does not store tokens', async () => {
+    // Override both login (returns 401) and refresh (also fails) so the
+    // apiClient's 401-interceptor doesn't accidentally recover.
+    server.use(
+      http.post('/api/v1/auth/login', () =>
+        HttpResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 }),
+      ),
+      http.post('/api/v1/auth/refresh', () =>
+        HttpResponse.json({ success: false, message: 'No session' }, { status: 401 }),
+      ),
+    );
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    await expect(
+      act(() => result.current.mutateAsync({ email: 'admin@nit.sa', password: 'wrong-password' })),
+    ).rejects.toThrow();
+
+    // React state may need a tick to flush after the rejection
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(mockStorage.setItem).not.toHaveBeenCalledWith('nit_scs_token', expect.anything());
+  });
+
+  it('handles token refresh failure with 401', async () => {
+    // Both /auth/me and /auth/refresh return 401 so the interceptor
+    // cannot recover and the query settles into an error state.
+    server.use(
+      http.get('/api/v1/auth/me', () =>
+        HttpResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 }),
+      ),
+      http.post('/api/v1/auth/refresh', () =>
+        HttpResponse.json({ success: false, message: 'Token expired' }, { status: 401 }),
+      ),
+    );
+
+    mockStorage.setItem('nit_scs_token', 'expired-token');
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCurrentUser(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
   });
 });

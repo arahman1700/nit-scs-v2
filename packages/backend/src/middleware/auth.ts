@@ -61,12 +61,21 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   next();
 }
 
-export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
   if (authHeader?.startsWith('Bearer ')) {
     try {
-      req.user = verifyAccessToken(authHeader.slice(7));
+      const payload = verifyAccessToken(authHeader.slice(7));
+      // Check blacklist — if revoked, treat as unauthenticated
+      if (payload.jti) {
+        const blacklisted = await isTokenBlacklisted(payload.jti);
+        if (blacklisted) {
+          next();
+          return;
+        }
+      }
+      req.user = payload;
     } catch {
       // Ignore invalid tokens for optional auth
     }

@@ -9,16 +9,30 @@ import type { Prisma } from '@prisma/client';
 const router = Router();
 router.use(authenticate);
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // ── GET / — List all templates (optionally filter by category) ─────────
 router.get('/', async (req, res, next) => {
   try {
     const category = req.query.category as string | undefined;
     const where: Prisma.WorkflowTemplateWhereInput = category ? { category } : {};
-    const templates = await prisma.workflowTemplate.findMany({
-      where,
-      orderBy: [{ category: 'asc' }, { name: 'asc' }],
-    });
-    sendSuccess(res, templates);
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+
+    const [templates, total] = await Promise.all([
+      prisma.workflowTemplate.findMany({
+        where,
+        orderBy: [{ category: 'asc' }, { name: 'asc' }],
+        skip,
+        take: pageSize,
+      }),
+      prisma.workflowTemplate.count({ where }),
+    ]);
+
+    sendSuccess(res, templates, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

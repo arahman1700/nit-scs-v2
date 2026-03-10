@@ -1,6 +1,8 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../../test-utils/msw-server';
 import React from 'react';
 import {
   useMiList,
@@ -302,5 +304,40 @@ describe('useCancelMi', () => {
     expect(invalidatedKeys).toContainEqual(['inventory']);
 
     invalidateSpy.mockRestore();
+  });
+});
+
+// ── Error Path Tests ──────────────────────────────────────────────────────
+
+describe('useCreateMi – error paths', () => {
+  beforeEach(() => {
+    mockStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('handles 400 validation error on create', async () => {
+    server.use(
+      http.post('/api/v1/mi', () =>
+        HttpResponse.json(
+          { success: false, message: 'Validation failed', errors: [{ field: 'projectId', message: 'Required' }] },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateMi(), { wrapper });
+
+    await expect(
+      act(() =>
+        result.current.mutateAsync({
+          warehouseId: 'wh-1',
+          requestedById: 'emp-1',
+        } as any),
+      ),
+    ).rejects.toThrow();
+
+    // React state needs a tick to flush after the rejection
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });

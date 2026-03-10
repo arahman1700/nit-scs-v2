@@ -53,6 +53,7 @@ vi.mock('../../../utils/prisma.js', () => ({
     workflowRule: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn().mockResolvedValue(null),
+      count: vi.fn().mockResolvedValue(0),
       create: vi.fn().mockResolvedValue({ id: 'wr1', workflowId: 'wf1', name: 'Rule' }),
       update: vi.fn().mockResolvedValue({ id: 'wr1', name: 'Updated' }),
       delete: vi.fn().mockResolvedValue({ id: 'wr1' }),

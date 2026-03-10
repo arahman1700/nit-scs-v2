@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import type { PrismaMock } from '../../../test-utils/prisma-mock.js';
 
-const { mockPrisma, mockBuildSchemaPrompt, mockValidateQuery } = vi.hoisted(() => {
+const { mockPrisma, mockBuildSchemaPrompt, mockValidateQuery, mockStripCommentsAndQuotes } = vi.hoisted(() => {
   return {
     mockPrisma: {} as PrismaMock & {
       aiConversation: any;
@@ -10,6 +10,7 @@ const { mockPrisma, mockBuildSchemaPrompt, mockValidateQuery } = vi.hoisted(() =
     },
     mockBuildSchemaPrompt: vi.fn(() => 'SCHEMA_PROMPT'),
     mockValidateQuery: vi.fn(() => ({ valid: true })),
+    mockStripCommentsAndQuotes: vi.fn((sql: string) => sql),
   };
 });
 
@@ -17,6 +18,7 @@ vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('./ai-schema-context.js', () => ({
   buildSchemaPrompt: mockBuildSchemaPrompt,
   validateQuery: mockValidateQuery,
+  stripCommentsAndQuotes: mockStripCommentsAndQuotes,
 }));
 vi.mock('../../../utils/scope-filter.js', () => ({
   buildScopeFilter: vi.fn(() => ({})),

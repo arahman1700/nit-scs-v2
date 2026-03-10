@@ -21,5 +21,25 @@ export default defineConfig({
         maxForks: Math.max(2, Math.floor(os.cpus().length / 2)),
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      exclude: [
+        'node_modules/',
+        '**/*.test.ts',
+        '**/*.test.tsx',
+        '**/*.spec.ts',
+        '**/test-setup.*',
+        '**/test-app.*',
+        '**/prisma-mock.*',
+        '**/msw-*',
+      ],
+      thresholds: {
+        lines: 60,
+        functions: 55,
+        branches: 50,
+        statements: 60,
+      },
+    },
   },
 });

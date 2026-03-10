@@ -37,6 +37,7 @@ vi.mock('../../../utils/prisma.js', () => ({
     userView: {
       findMany: vi.fn().mockResolvedValue([]),
       findFirst: vi.fn().mockResolvedValue(null),
+      count: vi.fn().mockResolvedValue(0),
       create: vi.fn().mockResolvedValue({
         id: 'uv1',
         name: 'My View',

@@ -8,12 +8,28 @@ import type {
   GridApi,
   ColumnState,
 } from 'ag-grid-community';
-import { AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
+import {
+  ModuleRegistry,
+  themeQuartz,
+  ClientSideRowModelModule,
+  ColumnAutoSizeModule,
+  CellStyleModule,
+  TextEditorModule,
+  RowSelectionModule,
+  ValidationModule,
+} from 'ag-grid-community';
 import { EmptyState } from '@/components/EmptyState';
 import type { ColumnDef } from '@/config/resourceColumns';
 import { mapColumnsToAgGrid } from './useGridColumns';
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  ColumnAutoSizeModule,
+  CellStyleModule,
+  TextEditorModule,
+  RowSelectionModule,
+  ValidationModule,
+]);
 
 const darkTheme = themeQuartz.withParams({
   backgroundColor: 'transparent',

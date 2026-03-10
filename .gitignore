@@ -15,6 +15,9 @@ packages/backend/prisma/seed.js.map
 uploads/*
 !uploads/.gitkeep
 
+# Database backups
+backups/
+
 # Screenshots (dev/debug artifacts)
 *.png
 !packages/frontend/public/icons/*.png

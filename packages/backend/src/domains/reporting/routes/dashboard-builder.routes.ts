@@ -55,25 +55,39 @@ const router = Router();
 
 router.use(authenticate);
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // ── GET /api/dashboards — list user's dashboards + defaults for their role ──
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const userRole = req.user!.systemRole;
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
 
-    const dashboards = await prisma.dashboard.findMany({
-      where: {
-        OR: [{ ownerId: userId }, { isPublic: true }, { defaultForRole: userRole }],
-      },
-      include: {
-        _count: { select: { widgets: true } },
-        owner: { select: { fullName: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const where = {
+      OR: [{ ownerId: userId }, { isPublic: true }, { defaultForRole: userRole }],
+    };
 
-    sendSuccess(res, dashboards);
+    const [dashboards, total] = await Promise.all([
+      prisma.dashboard.findMany({
+        where,
+        include: {
+          _count: { select: { widgets: true } },
+          owner: { select: { fullName: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.dashboard.count({ where }),
+    ]);
+
+    sendSuccess(res, dashboards, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

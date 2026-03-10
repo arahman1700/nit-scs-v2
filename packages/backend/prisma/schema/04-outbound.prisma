@@ -123,6 +123,8 @@ model Mrv {
   @@index([returnedById], map: "idx_mrv_returned_by")
   @@index([createdAt], map: "idx_mrv_created")
   @@index([status, createdAt], map: "idx_mrv_status_created")
+  @@index([fromWarehouseId], map: "idx_mrv_from_warehouse")
+  @@index([originalMirvId], map: "idx_mrv_original_mirv")
   @@map("mrv")
 }
 
@@ -356,6 +358,9 @@ model StockTransfer {
   @@index([createdAt], map: "idx_stock_transfers_created")
   @@index([status, createdAt], map: "idx_stock_transfers_status_created")
   @@index([fromWarehouseId, status], map: "idx_stock_transfers_from_wh_status")
+  @@index([requestedById], map: "idx_stock_transfers_requested_by")
+  @@index([fromProjectId], map: "idx_stock_transfers_from_project")
+  @@index([toProjectId], map: "idx_stock_transfers_to_project")
   @@map("stock_transfers")
 }
 

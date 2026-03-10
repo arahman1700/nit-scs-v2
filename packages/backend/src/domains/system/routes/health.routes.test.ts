@@ -85,3 +85,33 @@ describe('GET /api/v1/health/details', () => {
     expect(res.body).not.toHaveProperty('components');
   });
 });
+
+describe('GET /api/v1/live', () => {
+  it('should return 200 with alive status', async () => {
+    const res = await request.get('/api/v1/live');
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('alive');
+    expect(res.body).toHaveProperty('timestamp');
+  });
+
+  it('should not require authentication', async () => {
+    const res = await request.get('/api/v1/live');
+    expect(res.status).toBe(200);
+  });
+});
+
+describe('GET /api/v1/ready', () => {
+  it('should return 200 when database is reachable', async () => {
+    const res = await request.get('/api/v1/ready');
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ready');
+    expect(res.body).toHaveProperty('timestamp');
+  });
+
+  it('should not require authentication', async () => {
+    const res = await request.get('/api/v1/ready');
+    expect(res.status).toBe(200);
+  });
+});

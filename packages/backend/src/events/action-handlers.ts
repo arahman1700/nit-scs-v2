@@ -101,16 +101,16 @@ async function handleCreateNotification(params: Record<string, unknown>, event: 
   }
 
   // Create DB notifications — Socket.IO push is handled by notification service subscribers
-  for (const recipient of recipients) {
-    await prisma.notification.create({
-      data: {
+  if (recipients.length > 0) {
+    await prisma.notification.createMany({
+      data: recipients.map(recipient => ({
         recipientId: recipient.id,
         title,
         body,
         notificationType,
         referenceTable: event.entityType,
         referenceId: event.entityId,
-      },
+      })),
     });
   }
 

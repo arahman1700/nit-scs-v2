@@ -66,6 +66,8 @@ model Shipment {
   @@index([createdAt], map: "idx_shipments_created")
   @@index([status, createdAt], map: "idx_shipments_status_created")
   @@index([supplierId, createdAt], map: "idx_shipments_supplier_created")
+  @@index([freightForwarderId], map: "idx_shipments_freight_forwarder")
+  @@index([destinationWarehouseId], map: "idx_shipments_dest_warehouse")
   @@map("shipments")
 }
 

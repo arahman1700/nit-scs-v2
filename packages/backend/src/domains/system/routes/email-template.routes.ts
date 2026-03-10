@@ -28,17 +28,31 @@ const updateEmailTemplateSchema = z.object({
 
 const router = Router();
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // All template routes require authentication + read permission
 router.use(authenticate, requirePermission('email_template', 'read'));
 
 // GET /api/email-templates — list all templates
-router.get('/', async (_req, res, next) => {
+router.get('/', async (req, res, next) => {
   try {
-    const templates = await prisma.emailTemplate.findMany({
-      orderBy: { code: 'asc' },
-      include: { _count: { select: { emailLogs: true } } },
-    });
-    sendSuccess(res, templates);
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+
+    const [templates, total] = await Promise.all([
+      prisma.emailTemplate.findMany({
+        orderBy: { code: 'asc' },
+        include: { _count: { select: { emailLogs: true } } },
+        skip,
+        take: pageSize,
+      }),
+      prisma.emailTemplate.count(),
+    ]);
+
+    sendSuccess(res, templates, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

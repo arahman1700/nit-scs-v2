@@ -34,23 +34,37 @@ const router = Router();
 
 router.use(authenticate);
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // ── GET /api/reports/saved — list user's saved reports ──────────────────
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
 
-    const reports = await prisma.savedReport.findMany({
-      where: {
-        OR: [{ ownerId: userId }, { isPublic: true }],
-      },
-      include: {
-        owner: { select: { fullName: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
+    const where = {
+      OR: [{ ownerId: userId }, { isPublic: true }],
+    };
 
-    sendSuccess(res, reports);
+    const [reports, total] = await Promise.all([
+      prisma.savedReport.findMany({
+        where,
+        include: {
+          owner: { select: { fullName: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.savedReport.count({ where }),
+    ]);
+
+    sendSuccess(res, reports, { page, pageSize, total });
   } catch (err) {
     next(err);
   }
@@ -86,13 +100,21 @@ router.post('/', validate(createSavedReportSchema), async (req: Request, res: Re
 
 router.get('/templates', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const templates = await prisma.savedReport.findMany({
-      where: { isTemplate: true },
-      orderBy: [{ category: 'asc' }, { name: 'asc' }],
-      include: { owner: { select: { fullName: true } } },
-    });
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+    const where = { isTemplate: true };
 
-    sendSuccess(res, templates);
+    const [templates, total] = await Promise.all([
+      prisma.savedReport.findMany({
+        where,
+        orderBy: [{ category: 'asc' }, { name: 'asc' }],
+        include: { owner: { select: { fullName: true } } },
+        skip,
+        take: pageSize,
+      }),
+      prisma.savedReport.count({ where }),
+    ]);
+
+    sendSuccess(res, templates, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

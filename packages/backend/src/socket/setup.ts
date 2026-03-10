@@ -138,17 +138,15 @@ export function setupSocketIO(io: SocketIOServer) {
           'stockTransfer',
           'shipment',
         ] as const;
-        let docType: string | null = null;
-
-        for (const table of docTables) {
-          const delegate = getPrismaDelegate(prisma, table);
-          if (!delegate) continue;
-          const found = await delegate.findUnique({ where: { id: documentId }, select: { id: true } });
-          if (found) {
-            docType = table;
-            break;
-          }
-        }
+        const results = await Promise.all(
+          docTables.map(async table => {
+            const delegate = getPrismaDelegate(prisma, table);
+            if (!delegate) return null;
+            const found = await delegate.findUnique({ where: { id: documentId }, select: { id: true } });
+            return found ? table : null;
+          }),
+        );
+        const docType = results.find(r => r !== null) ?? null;
 
         if (!docType) {
           socket.emit('error:not_found', { message: 'Document not found' });

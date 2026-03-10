@@ -15,6 +15,12 @@ function getWorkflowId(req: import('express').Request): string {
   return (req.params as Record<string, string>).workflowId;
 }
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // All rule routes require admin/manager
 router.use(authenticate, requireRole('admin', 'manager'));
 
@@ -22,12 +28,21 @@ router.use(authenticate, requireRole('admin', 'manager'));
 router.get('/', async (req, res, next) => {
   try {
     const workflowId = getWorkflowId(req);
-    const rules = await prisma.workflowRule.findMany({
-      where: { workflowId },
-      orderBy: { sortOrder: 'asc' },
-      include: { _count: { select: { executionLogs: true } } },
-    });
-    sendSuccess(res, rules);
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+    const where = { workflowId };
+
+    const [rules, total] = await Promise.all([
+      prisma.workflowRule.findMany({
+        where,
+        orderBy: { sortOrder: 'asc' },
+        include: { _count: { select: { executionLogs: true } } },
+        skip,
+        take: pageSize,
+      }),
+      prisma.workflowRule.count({ where }),
+    ]);
+
+    sendSuccess(res, rules, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

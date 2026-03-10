@@ -7,27 +7,40 @@ import { NotFoundError } from '@nit-scs-v2/shared';
 
 const router = Router();
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 // GET /api/v1/views/:entityType — List user's saved views
 router.get('/:entityType', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.user!.userId;
     const { entityType } = req.params;
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+    const where = { userId, entityType: entityType as string };
 
-    const views = await prisma.userView.findMany({
-      where: { userId, entityType: entityType as string },
-      orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }],
-      select: {
-        id: true,
-        name: true,
-        viewType: true,
-        config: true,
-        isDefault: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const [views, total] = await Promise.all([
+      prisma.userView.findMany({
+        where,
+        orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }],
+        select: {
+          id: true,
+          name: true,
+          viewType: true,
+          config: true,
+          isDefault: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        skip,
+        take: pageSize,
+      }),
+      prisma.userView.count({ where }),
+    ]);
 
-    sendSuccess(res, views);
+    sendSuccess(res, views, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

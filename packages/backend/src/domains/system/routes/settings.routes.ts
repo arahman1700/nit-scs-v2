@@ -14,6 +14,12 @@ import { DOC_PREFIXES } from '@nit-scs-v2/shared/constants';
 
 const router = Router();
 
+const parsePagination = (query: Record<string, unknown>) => {
+  const page = Math.max(1, parseInt(String(query.page ?? '1'), 10));
+  const pageSize = Math.min(100, Math.max(1, parseInt(String(query.pageSize ?? '25'), 10)));
+  return { page, pageSize, skip: (page - 1) * pageSize };
+};
+
 const DEFAULT_SETTINGS: Record<string, string> = {
   vatRate: '15',
   currency: 'SAR',
@@ -27,13 +33,21 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 router.get('/', authenticate, async (req, res, next) => {
   try {
     const userId = req.user!.userId;
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
 
-    const rows = await prisma.systemSetting.findMany({
-      where: {
-        OR: [{ userId: null }, { userId }],
-      },
-      orderBy: { updatedAt: 'asc' },
-    });
+    const where = {
+      OR: [{ userId: null }, { userId }],
+    };
+
+    const [rows, total] = await Promise.all([
+      prisma.systemSetting.findMany({
+        where,
+        orderBy: { updatedAt: 'asc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.systemSetting.count({ where }),
+    ]);
 
     // Merge: defaults → global (userId=null) → per-user overrides
     const settings: Record<string, string> = { ...DEFAULT_SETTINGS };
@@ -41,7 +55,7 @@ router.get('/', authenticate, async (req, res, next) => {
       settings[row.key] = row.value;
     }
 
-    sendSuccess(res, settings);
+    sendSuccess(res, settings, { page, pageSize, total });
   } catch (err) {
     next(err);
   }

@@ -174,3 +174,69 @@ export type ShipmentStatus =
   | 'delivered'
   | 'cancelled';
 export type HandoverStatus = 'initiated' | 'in_progress' | 'completed';
+
+// ── Job Order Status (union type matching DB CHECK constraint) ────────
+export type JobOrderStatus =
+  | 'draft'
+  | 'pending_approval'
+  | 'quoted'
+  | 'approved'
+  | 'assigned'
+  | 'in_progress'
+  | 'on_hold'
+  | 'completed'
+  | 'closure_pending'
+  | 'closure_approved'
+  | 'invoiced'
+  | 'rejected'
+  | 'cancelled';
+
+// ── Inventory Lot Status ─────────────────────────────────────────────
+export type InventoryLotStatus = 'active' | 'depleted' | 'expired' | 'blocked';
+
+// ── Cycle Counting Statuses ──────────────────────────────────────────
+export type CycleCountStatus = 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
+export type CycleCountLineStatus = 'pending' | 'counted' | 'verified' | 'adjusted';
+
+// ── Cross-Dock Status ────────────────────────────────────────────────
+export type CrossDockStatus = 'identified' | 'approved' | 'in_progress' | 'completed' | 'cancelled';
+
+// ── Tool & Equipment Statuses ────────────────────────────────────────
+export type ToolCondition = 'good' | 'under_maintenance' | 'damaged' | 'decommissioned';
+export type ToolIssueStatus = 'issued' | 'overdue' | 'returned';
+
+// ── Asset Register Status ────────────────────────────────────────────
+export type AssetStatus = 'active' | 'maintenance' | 'retired' | 'disposed' | 'lost';
+export type AssetCondition = 'new' | 'good' | 'fair' | 'poor';
+
+// ── Generator Statuses ───────────────────────────────────────────────
+export type GeneratorStatus = 'available' | 'assigned' | 'maintenance' | 'decommissioned';
+export type GeneratorMaintenanceStatus = 'scheduled' | 'in_progress' | 'completed' | 'overdue';
+
+// ── Customs & Compliance ─────────────────────────────────────────────
+export type CustomsTrackingStage =
+  | 'docs_submitted'
+  | 'declaration_filed'
+  | 'under_inspection'
+  | 'awaiting_payment'
+  | 'duties_paid'
+  | 'ready_for_release'
+  | 'released'
+  | 'on_hold'
+  | 'rejected';
+export type CustomsDocumentStatus = 'pending' | 'received' | 'verified' | 'rejected';
+export type ComplianceAuditStatus = 'draft' | 'in_progress' | 'completed' | 'action_required';
+
+// ── Transport & Visitor ──────────────────────────────────────────────
+export type TransportOrderStatus = 'draft' | 'scheduled' | 'in_transit' | 'delivered' | 'cancelled';
+export type VisitorPassStatus = 'scheduled' | 'checked_in' | 'checked_out' | 'overstay' | 'cancelled';
+
+// ── SSC Bid Status ───────────────────────────────────────────────────
+export type SscBidStatus = 'submitted' | 'under_review' | 'accepted' | 'rejected';
+
+// ── Packing & Staging ────────────────────────────────────────────────
+export type PackingSessionStatus = 'in_progress' | 'completed' | 'cancelled';
+export type StagingAssignmentStatus = 'staged' | 'moved' | 'expired';
+
+// ── AMC Status ───────────────────────────────────────────────────────
+export type AmcStatus = 'draft' | 'active' | 'expired' | 'terminated';

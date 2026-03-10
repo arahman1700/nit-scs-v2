@@ -1,6 +1,8 @@
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../../test-utils/msw-server';
 import React from 'react';
 import {
   useGrnList,
@@ -260,5 +262,55 @@ describe('useStoreGrn', () => {
     expect(invalidatedKeys).toContainEqual(['inventory']);
 
     invalidateSpy.mockRestore();
+  });
+});
+
+// ── Error Path Tests ──────────────────────────────────────────────────────
+
+describe('useCreateGrn – error paths', () => {
+  beforeEach(() => {
+    mockStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('handles 500 server error on create', async () => {
+    server.use(http.post('/api/v1/grn', () => HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 })));
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useCreateGrn(), { wrapper });
+
+    await expect(
+      act(() =>
+        result.current.mutateAsync({
+          supplierId: 'sup-1',
+          warehouseId: 'wh-1',
+          projectId: 'proj-1',
+        } as any),
+      ),
+    ).rejects.toThrow();
+
+    // React state needs a tick to flush after the rejection
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('useGrnList – error paths', () => {
+  beforeEach(() => {
+    mockStorage.clear();
+    vi.clearAllMocks();
+  });
+
+  it('handles network error on list fetch', async () => {
+    server.use(
+      http.get('/api/v1/grn', () =>
+        HttpResponse.json({ success: false, message: 'Service unavailable' }, { status: 503 }),
+      ),
+    );
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(() => useGrnList(), { wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
   });
 });

@@ -141,6 +141,23 @@ if (Sentry.isInitialized()) {
   Sentry.setupExpressErrorHandler(app);
 }
 
+// ── In-Flight Request Tracking (for graceful shutdown draining) ──────────
+let inFlightRequests = 0;
+let isShuttingDown = false;
+
+app.use((_req, res, next) => {
+  if (isShuttingDown) {
+    res.set('Connection', 'close');
+    res.status(503).json({ error: 'Server is shutting down' });
+    return;
+  }
+  inFlightRequests++;
+  res.on('finish', () => {
+    inFlightRequests--;
+  });
+  next();
+});
+
 // ── Error Handler (must be last middleware) ────────────────────────────────
 app.use(errorHandler);
 
@@ -181,10 +198,22 @@ httpServer.listen(PORT, () => {
 
 // ── Graceful Shutdown ─────────────────────────────────────────────────────
 async function shutdown(signal: string) {
-  logger.info(`${signal} received — shutting down gracefully...`);
+  if (isShuttingDown) return; // Prevent double-shutdown
+  isShuttingDown = true;
+  logger.info({ signal, inFlightRequests }, 'Shutdown initiated — draining in-flight requests...');
 
   stopScheduler();
   io.close();
+
+  // Wait for in-flight requests to finish (up to 5s)
+  const drainStart = Date.now();
+  while (inFlightRequests > 0 && Date.now() - drainStart < 5000) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  if (inFlightRequests > 0) {
+    logger.warn({ remaining: inFlightRequests }, 'Drain timeout — closing with in-flight requests');
+  }
+
   httpServer.close(async () => {
     logger.info('HTTP server closed');
     try {

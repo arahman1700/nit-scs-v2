@@ -53,6 +53,7 @@ vi.mock('../../../utils/prisma.js', () => ({
     workflowTemplate: {
       findMany: vi.fn().mockResolvedValue([]),
       findUnique: vi.fn().mockResolvedValue(null),
+      count: vi.fn().mockResolvedValue(0),
       update: vi.fn().mockResolvedValue({ id: 'tmpl1', installCount: 1 }),
     },
     workflow: {
