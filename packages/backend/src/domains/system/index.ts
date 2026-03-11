@@ -1,8 +1,5 @@
 import type { Router } from 'express';
-import notificationRoutes from './routes/notification.routes.js';
-import auditRoutes from './routes/audit.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
-import uploadRoutes from './routes/upload.routes.js';
 import importRoutes from './routes/import.routes.js';
 import bulkRoutes from './routes/bulk.routes.js';
 import emailTemplateRoutes from './routes/email-template.routes.js';
@@ -10,8 +7,6 @@ import emailLogRoutes from './routes/email-log.routes.js';
 import emailWebhookRoutes from './routes/email-webhook.routes.js';
 import barcodeRoutes from './routes/barcode.routes.js';
 import searchRoutes from './routes/search.routes.js';
-import pushRoutes from './routes/push.routes.js';
-import attachmentRoutes from './routes/attachment.routes.js';
 import userViewRoutes from './routes/user-view.routes.js';
 import companyDocumentRoutes from './routes/company-document.routes.js';
 import navigationRoutes from './routes/navigation.routes.js';
@@ -22,10 +17,7 @@ import dynamicDocumentRoutes from './routes/dynamic-document.routes.js';
 import dynamicDocumentTypeRoutes from './routes/dynamic-document-type.routes.js';
 
 export function registerSystemRoutes(router: Router) {
-  router.use('/notifications', notificationRoutes);
-  router.use('/audit', auditRoutes);
   router.use('/settings', settingsRoutes);
-  router.use('/upload', uploadRoutes);
   router.use('/import', importRoutes);
   router.use('/bulk', bulkRoutes);
   router.use('/email-templates', emailTemplateRoutes);
@@ -33,8 +25,6 @@ export function registerSystemRoutes(router: Router) {
   router.use('/webhooks', emailWebhookRoutes);
   router.use('/barcodes', barcodeRoutes);
   router.use('/search', searchRoutes);
-  router.use('/push', pushRoutes);
-  router.use('/attachments', attachmentRoutes);
   router.use('/views', userViewRoutes);
   router.use('/documents', companyDocumentRoutes);
   router.use('/navigation', navigationRoutes);

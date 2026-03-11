@@ -50,7 +50,7 @@ vi.mock('../services/putaway-rules.service.js', () => ({
   suggestPutAwayLocation: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../../system/services/audit.service.js', () => ({
+vi.mock('../../audit/services/audit.service.js', () => ({
   createAuditLog: vi.fn().mockResolvedValue(undefined),
   getAuditLogs: vi.fn(),
 }));

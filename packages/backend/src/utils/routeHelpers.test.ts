@@ -7,7 +7,7 @@ const { mockCreateAuditLog, mockEmitToDocument, mockEmitToAll, mockEventBus } = 
   mockEventBus: { publish: vi.fn(), subscribe: vi.fn() },
 }));
 
-vi.mock('../domains/system/services/audit.service.js', () => ({
+vi.mock('../domains/audit/services/audit.service.js', () => ({
   createAuditLog: mockCreateAuditLog,
 }));
 vi.mock('../socket/setup.js', () => ({

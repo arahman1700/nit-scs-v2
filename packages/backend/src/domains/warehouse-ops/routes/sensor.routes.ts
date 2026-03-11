@@ -7,7 +7,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendNoContent, sendError } from '../../../utils/response.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
 import {
   listSensors,

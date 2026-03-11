@@ -49,7 +49,7 @@ vi.mock('../../auth/services/permission.service.js', () => ({
   invalidatePermissionCache: vi.fn(),
 }));
 
-vi.mock('../../system/services/audit.service.js', () => ({
+vi.mock('../../audit/services/audit.service.js', () => ({
   getAuditLogs: vi.fn(),
   createAuditLog: vi.fn().mockResolvedValue({}),
 }));

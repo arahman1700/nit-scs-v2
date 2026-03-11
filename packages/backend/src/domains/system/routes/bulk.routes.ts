@@ -5,7 +5,7 @@ import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 import { bulkActionSchema } from '../../../schemas/bulk.schema.js';
 import { executeBulkAction, getAvailableBulkActions } from '../services/bulk.service.js';
-import { createAuditLog } from '../services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
 import { emitToAll } from '../../../socket/setup.js';
 import type { Request, Response, NextFunction } from 'express';

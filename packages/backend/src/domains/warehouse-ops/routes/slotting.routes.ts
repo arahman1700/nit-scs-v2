@@ -11,7 +11,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { analyzeSlotting, getItemPickFrequencies, applySuggestion } from '../services/slotting-optimizer.service.js';
 import {
   analyzeCoLocation,

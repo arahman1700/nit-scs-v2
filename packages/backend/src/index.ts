@@ -28,8 +28,8 @@ import { setupSocketIO } from './socket/setup.js';
 // rateLimiter is applied inside routes/index.ts (not here) to avoid double-counting
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
-import { startNotificationDispatcher } from './domains/system/services/notification-dispatcher.service.js';
-import { startScheduler, stopScheduler } from './domains/system/services/scheduler.service.js';
+import { startNotificationDispatcher } from './domains/notifications/services/notification-dispatcher.service.js';
+import { startScheduler, stopScheduler } from './domains/scheduler/services/scheduler.service.js';
 import {
   registerDynamicDataSources,
   register as registerDataSource,
@@ -190,7 +190,7 @@ httpServer.listen(PORT, () => {
 
   // ── AI Module (optional — behind AI_ENABLED flag) ──────────────
   if (process.env.AI_ENABLED === 'true') {
-    import('./domains/system/ai-module.js')
+    import('./domains/ai-services/ai-module.js')
       .then(({ initAiModule }) => initAiModule(app))
       .catch(err => logger.error({ err }, 'Failed to initialize AI module'));
   }

@@ -10,7 +10,7 @@ import {
   getCustomFieldValues,
   setCustomFieldValues,
 } from '../services/custom-fields.service.js';
-import { createAuditLog } from '../services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { logger } from '../../../config/logger.js';
 
 const router = Router();

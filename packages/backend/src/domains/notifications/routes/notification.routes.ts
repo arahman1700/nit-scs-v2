@@ -6,8 +6,8 @@ import { requireRole } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendNoContent } from '../../../utils/response.js';
 import * as notificationService from '../services/notification.service.js';
-import { notificationListSchema, notificationCreateSchema } from '../schemas/system.schema.js';
-import { verifyUnsubscribeToken } from '../services/email.service.js';
+import { notificationListSchema, notificationCreateSchema } from '../../system/schemas/system.schema.js';
+import { verifyUnsubscribeToken } from '../../system/services/email.service.js';
 import { prisma } from '../../../utils/prisma.js';
 import { log } from '../../../config/logger.js';
 

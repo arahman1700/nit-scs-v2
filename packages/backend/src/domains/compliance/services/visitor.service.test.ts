@@ -10,12 +10,12 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
-vi.mock('../../system/services/notification.service.js', () => ({ createNotification: vi.fn() }));
+vi.mock('../../notifications/services/notification.service.js', () => ({ createNotification: vi.fn() }));
 vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createNotification } from '../../system/services/notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import { list, getById, register, update, checkIn, checkOut, cancel } from './visitor.service.js';
 
 const mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;

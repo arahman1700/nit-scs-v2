@@ -1,6 +1,6 @@
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { log } from '../../../config/logger.js';
 import { eventBus } from '../../../events/event-bus.js';
 import { updateLevelWithVersion } from './inventory.service.js';

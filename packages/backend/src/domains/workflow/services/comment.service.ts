@@ -22,6 +22,7 @@ const DOCUMENT_DELEGATES: Record<
   'stock-transfer': prisma.stockTransfer,
   mrf: prisma.materialRequisition,
   shipment: prisma.shipment,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as Record<string, any>;
 
 /**

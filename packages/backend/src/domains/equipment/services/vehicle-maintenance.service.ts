@@ -13,7 +13,7 @@ import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createNotification } from '../../system/services/notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import type {
   VehicleMaintenanceCreateDto,
   VehicleMaintenanceUpdateDto,

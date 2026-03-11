@@ -8,13 +8,13 @@ const { mockPrisma } = vi.hoisted(() => {
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
-vi.mock('../../system/services/audit.service.js', () => ({ createAuditLog: vi.fn() }));
+vi.mock('../../audit/services/audit.service.js', () => ({ createAuditLog: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../../utils/cache.js', () => ({ invalidateCachePattern: vi.fn() }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import {
   addStock,
   reserveStock,

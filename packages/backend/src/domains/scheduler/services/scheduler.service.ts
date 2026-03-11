@@ -9,22 +9,22 @@
  * and all shared helper functions used by domain job handlers.
  *
  * Domain job modules (imported for side-effect registration):
- * - domains/system/jobs/sla-jobs.ts
- * - domains/system/jobs/maintenance-jobs.ts
- * - domains/system/jobs/notification-jobs.ts
+ * - domains/scheduler/jobs/sla-jobs.ts
+ * - domains/scheduler/jobs/maintenance-jobs.ts
+ * - domains/notifications/jobs/notification-jobs.ts
  * - domains/inventory/jobs/expiry-jobs.ts
  */
 
 import { prisma } from '../../../utils/prisma.js';
 import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
-import { createNotification } from './notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import { initializeScheduledRules } from '../../../events/scheduled-rule-runner.js';
 import { log } from '../../../config/logger.js';
 import { getRedis } from '../../../config/redis.js';
 import { emitToRole, emitToUser } from '../../../socket/setup.js';
-import { sendPushToUser } from './push-notification.service.js';
+import { sendPushToUser } from '../../notifications/services/push-notification.service.js';
 import { SLA_HOURS } from '@nit-scs-v2/shared';
-import { getAllSlaHours } from './system-config.service.js';
+import { getAllSlaHours } from '../../system/services/system-config.service.js';
 import { getAllJobs, clearJobs } from '../../../utils/job-registry.js';
 import type { PrismaDelegate, JobContext } from '../../../utils/job-registry.js';
 import type { Server as SocketIOServer } from 'socket.io';
@@ -32,7 +32,7 @@ import type { Server as SocketIOServer } from 'socket.io';
 // ── Import domain job modules for side-effect registration ───────────────
 import '../jobs/sla-jobs.js';
 import '../jobs/maintenance-jobs.js';
-import '../jobs/notification-jobs.js';
+import '../../notifications/jobs/notification-jobs.js';
 import '../../inventory/jobs/expiry-jobs.js';
 
 const timers: ReturnType<typeof setTimeout>[] = [];

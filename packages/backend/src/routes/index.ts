@@ -1,12 +1,13 @@
 // ---------------------------------------------------------------------------
-// Route Aggregation — V2 (Domain-Driven)
+// Route Aggregation — V2 (Domain-Driven + Route Registry)
 // ---------------------------------------------------------------------------
 // Each domain barrel (domains/xxx/index.ts) registers its own routes.
-// This file composes all domains under /api/v1.
+// The RouteRegistry handles safe ordering to prevent route shadowing.
 // ---------------------------------------------------------------------------
 
 import { Router } from 'express';
 import { rateLimiter } from '../middleware/rate-limiter.js';
+import { RouteRegistry } from '../utils/route-registry.js';
 import {
   healthCheck,
   detailedHealthCheck,
@@ -15,7 +16,7 @@ import {
   readinessProbe,
 } from '../domains/system/routes/health.routes.js';
 
-// ── Domain Barrels ──────────────────────────────────────────────────────
+// ── Domain Barrels (19 domains) ───────────────────────────────────────────
 import { registerAuthRoutes } from '../domains/auth/index.js';
 import { registerMasterDataRoutes } from '../domains/master-data/index.js';
 import { registerInboundRoutes } from '../domains/inbound/index.js';
@@ -30,13 +31,18 @@ import { registerWorkflowRoutes } from '../domains/workflow/index.js';
 import { registerComplianceRoutes } from '../domains/compliance/index.js';
 import { registerReportingRoutes } from '../domains/reporting/index.js';
 import { registerSystemRoutes } from '../domains/system/index.js';
+// ── New domains (split from system) ───────────────────────────────────────
+import { registerNotificationRoutes } from '../domains/notifications/index.js';
+import { registerAuditRoutes } from '../domains/audit/index.js';
+import { registerUploadRoutes } from '../domains/uploads/index.js';
 
 /**
  * Create a fresh API router with all domain routes registered.
  *
+ * Uses RouteRegistry for automatic safe ordering — no more manual
+ * "inventory MUST be before master-data" comments.
+ *
  * Returns a new Router instance each call — critical for test isolation.
- * In production, called once at startup. In tests, called per test-app
- * so that module-level middleware state (rate limiter, etc.) is not shared.
  */
 export function createApiRouter() {
   const router = Router();
@@ -54,23 +60,31 @@ export function createApiRouter() {
   router.get('/live', livenessProbe);
   router.get('/ready', readinessProbe);
 
-  // ── Register all domains ───────────────────────────────────────────────
-  registerAuthRoutes(router);
-  // Inventory MUST be registered before master-data so that specific routes
-  // (e.g. GET /inventory/expiring) match before master-data's CRUD /inventory/:id
-  registerInventoryRoutes(router);
-  registerMasterDataRoutes(router);
-  registerInboundRoutes(router);
-  registerOutboundRoutes(router);
-  registerWarehouseOpsRoutes(router);
-  registerTransferRoutes(router);
-  registerLogisticsRoutes(router);
-  registerJobOrderRoutes(router);
-  registerEquipmentRoutes(router);
-  registerWorkflowRoutes(router);
-  registerComplianceRoutes(router);
-  registerReportingRoutes(router);
-  registerSystemRoutes(router);
+  // ── Register all domains via RouteRegistry ────────────────────────────
+  // Order no longer matters — the registry handles safe ordering
+  // to prevent route shadowing (static paths before param paths).
+  const registry = new RouteRegistry();
+
+  registry.register('auth', registerAuthRoutes);
+  registry.register('inventory', registerInventoryRoutes);
+  registry.register('master-data', registerMasterDataRoutes);
+  registry.register('inbound', registerInboundRoutes);
+  registry.register('outbound', registerOutboundRoutes);
+  registry.register('warehouse-ops', registerWarehouseOpsRoutes);
+  registry.register('transfers', registerTransferRoutes);
+  registry.register('logistics', registerLogisticsRoutes);
+  registry.register('job-orders', registerJobOrderRoutes);
+  registry.register('equipment', registerEquipmentRoutes);
+  registry.register('workflow', registerWorkflowRoutes);
+  registry.register('compliance', registerComplianceRoutes);
+  registry.register('reporting', registerReportingRoutes);
+  registry.register('system', registerSystemRoutes);
+  // New domains (split from system)
+  registry.register('notifications', registerNotificationRoutes);
+  registry.register('audit', registerAuditRoutes);
+  registry.register('uploads', registerUploadRoutes);
+
+  registry.mount(router);
 
   return router;
 }

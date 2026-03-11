@@ -4,7 +4,7 @@ import { requireRole } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { prisma } from '../../../utils/prisma.js';
 import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../utils/response.js';
-import { createAuditLog } from '../services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import {
   createTaskSchema,
   updateTaskSchema,

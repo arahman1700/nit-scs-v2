@@ -9,7 +9,7 @@ import {
   deleteCustomDataSource,
   executeCustomDataSource,
 } from '../services/custom-data-source.service.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { logger } from '../../../config/logger.js';
 
 const router = Router();

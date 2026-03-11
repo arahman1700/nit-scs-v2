@@ -6,7 +6,7 @@ import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 import { getAuditLogs } from '../services/audit.service.js';
-import { auditLogQuerySchema } from '../schemas/system.schema.js';
+import { auditLogQuerySchema } from '../../system/schemas/system.schema.js';
 
 const router = Router();
 

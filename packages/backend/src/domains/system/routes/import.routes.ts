@@ -6,7 +6,7 @@ import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendError } from '../../../utils/response.js';
 import { importExecuteSchema } from '../schemas/import.schema.js';
 import { parseExcelPreview, executeImport, getExpectedFields } from '../services/import.service.js';
-import { createAuditLog } from '../services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
 import { extname } from 'node:path';
 import type { Request, Response, NextFunction } from 'express';

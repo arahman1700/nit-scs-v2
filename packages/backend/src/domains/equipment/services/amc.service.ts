@@ -8,7 +8,7 @@ import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { eventBus } from '../../../events/event-bus.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createNotification } from '../../system/services/notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import type { AmcCreateDto, AmcUpdateDto, ListParams } from '../../../types/dto.js';
 
 const LIST_INCLUDE = {

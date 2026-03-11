@@ -7,7 +7,7 @@
  */
 
 import { registerJob } from '../../../utils/job-registry.js';
-import type { JobContext, PrismaDelegate } from '../../../utils/job-registry.js';
+import type { JobContext } from '../../../utils/job-registry.js';
 
 // ── SLA Breach Detection ─────────────────────────────────────────────────
 

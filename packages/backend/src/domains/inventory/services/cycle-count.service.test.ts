@@ -11,7 +11,7 @@ vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../system/services/document-number.service.js', () => ({
   generateDocumentNumber: vi.fn().mockResolvedValue('CC-2026-0001'),
 }));
-vi.mock('../../system/services/audit.service.js', () => ({ createAuditLog: vi.fn().mockResolvedValue({}) }));
+vi.mock('../../audit/services/audit.service.js', () => ({ createAuditLog: vi.fn().mockResolvedValue({}) }));
 vi.mock('./inventory.service.js', () => ({
   updateLevelWithVersion: mockUpdateLevelWithVersion,
 }));
@@ -30,7 +30,7 @@ import {
   autoCreateCycleCounts,
 } from './cycle-count.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 
 // ── Helper: create model mock with findUniqueOrThrow ────────────────────
 function createModelMock(): PrismaModelMock & { findUniqueOrThrow: ReturnType<typeof vi.fn> } {

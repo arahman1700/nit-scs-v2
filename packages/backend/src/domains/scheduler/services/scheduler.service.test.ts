@@ -56,8 +56,8 @@ const {
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: mockLog }));
 vi.mock('../../../config/redis.js', () => ({ getRedis: vi.fn().mockReturnValue(null) }));
-vi.mock('./email.service.js', () => ({ processQueuedEmails: mockProcessQueuedEmails }));
-vi.mock('./notification.service.js', () => ({ createNotification: mockCreateNotification }));
+vi.mock('../../system/services/email.service.js', () => ({ processQueuedEmails: mockProcessQueuedEmails }));
+vi.mock('../../notifications/services/notification.service.js', () => ({ createNotification: mockCreateNotification }));
 vi.mock('../../auth/services/auth.service.js', () => ({ cleanupExpiredTokens: mockCleanupExpiredTokens }));
 vi.mock('../../inventory/services/abc-analysis.service.js', () => ({
   calculateABCClassification: mockCalculateABC,
@@ -81,8 +81,8 @@ vi.mock('../../../socket/setup.js', () => ({
   emitToAll: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('./push-notification.service.js', () => ({ sendPushToUser: mockSendPushToUser }));
-vi.mock('./system-config.service.js', () => ({ getAllSlaHours: mockGetAllSlaHours }));
+vi.mock('../../notifications/services/push-notification.service.js', () => ({ sendPushToUser: mockSendPushToUser }));
+vi.mock('../../system/services/system-config.service.js', () => ({ getAllSlaHours: mockGetAllSlaHours }));
 
 // ── Imports ──────────────────────────────────────────────────────────────
 

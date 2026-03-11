@@ -32,7 +32,7 @@ vi.mock('../services/bulk.service.js', () => ({
   getAvailableBulkActions: vi.fn(),
 }));
 
-vi.mock('../services/audit.service.js', () => ({
+vi.mock('../../audit/services/audit.service.js', () => ({
   getAuditLogs: vi.fn(),
   createAuditLog: vi.fn(),
 }));

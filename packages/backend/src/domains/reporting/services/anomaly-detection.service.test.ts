@@ -4,11 +4,13 @@ import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-moc
 const { mockPrisma } = vi.hoisted(() => ({ mockPrisma: {} as PrismaMock }));
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
-vi.mock('../../system/services/notification.service.js', () => ({ createNotification: vi.fn().mockResolvedValue({}) }));
+vi.mock('../../notifications/services/notification.service.js', () => ({
+  createNotification: vi.fn().mockResolvedValue({}),
+}));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { detectAnomalies, getInventoryHealthSummary } from './anomaly-detection.service.js';
-import { createNotification } from '../../system/services/notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import { log } from '../../../config/logger.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────

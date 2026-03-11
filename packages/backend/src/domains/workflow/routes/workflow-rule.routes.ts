@@ -100,6 +100,7 @@ router.post('/', async (req, res, next) => {
       data.nextRunAt = nextCronRun(parsed.data.cronExpression, new Date());
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rule = await prisma.workflowRule.create({ data: data as any });
 
     invalidateRuleCache();
@@ -131,6 +132,7 @@ router.put('/:id', async (req, res, next) => {
       updateData.nextRunAt = null;
     }
 
+     
     const rule = await prisma.workflowRule.update({
       where: { id },
       data: updateData as any,

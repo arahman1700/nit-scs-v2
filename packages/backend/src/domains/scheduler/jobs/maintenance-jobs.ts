@@ -9,7 +9,7 @@
 
 import { registerJob } from '../../../utils/job-registry.js';
 import type { JobContext } from '../../../utils/job-registry.js';
-import { processQueuedEmails } from '../services/email.service.js';
+import { processQueuedEmails } from '../../system/services/email.service.js';
 import { cleanupExpiredTokens } from '../../auth/services/auth.service.js';
 import { calculateABCClassification, applyABCClassification } from '../../inventory/services/abc-analysis.service.js';
 import { autoCreateCycleCounts } from '../../inventory/services/cycle-count.service.js';

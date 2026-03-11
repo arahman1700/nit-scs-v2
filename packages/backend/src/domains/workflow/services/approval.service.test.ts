@@ -7,7 +7,7 @@ const { mockPrisma } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('../../system/services/audit.service.js', () => ({ createAuditLog: vi.fn() }));
+vi.mock('../../audit/services/audit.service.js', () => ({ createAuditLog: vi.fn() }));
 vi.mock('../../../socket/setup.js', () => ({
   emitToRole: vi.fn(),
   emitToUser: vi.fn(),
@@ -19,7 +19,7 @@ vi.mock('../../../events/event-bus.js', () => ({
 }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
-import { createAuditLog } from '../../system/services/audit.service.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 import {
   getApprovalChain,
   getRequiredApproval,

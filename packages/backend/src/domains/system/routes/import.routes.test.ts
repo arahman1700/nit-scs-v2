@@ -52,7 +52,7 @@ vi.mock('../services/import.service.js', () => ({
   ]),
 }));
 
-vi.mock('../services/audit.service.js', () => ({
+vi.mock('../../audit/services/audit.service.js', () => ({
   createAuditLog: vi.fn().mockResolvedValue({}),
 }));
 

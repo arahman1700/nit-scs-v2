@@ -60,7 +60,7 @@ vi.mock('../middleware/rbac.js', () => ({
 }));
 vi.mock('../middleware/pagination.js', () => ({ paginate: mockPaginate }));
 vi.mock('../middleware/validate.js', () => ({ validate: mockValidate }));
-vi.mock('../domains/system/services/audit.service.js', () => ({
+vi.mock('../domains/audit/services/audit.service.js', () => ({
   createAuditLog: mockCreateAuditLog,
 }));
 vi.mock('../socket/setup.js', () => ({ emitEntityEvent: mockEmitEntityEvent }));

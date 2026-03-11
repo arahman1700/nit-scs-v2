@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '../../../utils/prisma.js';
-import { createNotification } from '../../system/services/notification.service.js';
+import { createNotification } from '../../notifications/services/notification.service.js';
 import { eventBus } from '../../../events/event-bus.js';
 import { log } from '../../../config/logger.js';
 

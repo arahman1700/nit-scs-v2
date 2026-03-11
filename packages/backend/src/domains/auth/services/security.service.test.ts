@@ -11,7 +11,7 @@ const { mockPrisma, mockCreateNotification, mockLog } = vi.hoisted(() => {
 });
 
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
-vi.mock('../../system/services/notification.service.js', () => ({
+vi.mock('../../notifications/services/notification.service.js', () => ({
   createNotification: mockCreateNotification,
 }));
 vi.mock('../../../config/logger.js', () => ({ log: mockLog }));
