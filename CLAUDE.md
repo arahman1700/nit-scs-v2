@@ -15,7 +15,7 @@ Enterprise supply chain management system (monorepo) with dark glassmorphism the
 
 ## Architecture — Domain-Driven Structure
 
-### 14 Backend Domains
+### 19 Backend Domains
 
 ```
 packages/backend/src/domains/
@@ -32,7 +32,12 @@ packages/backend/src/domains/
 ├── workflow/        # Approvals, delegation, comments, digital signatures
 ├── compliance/      # Supplier evaluation, compliance audits, visitors
 ├── reporting/       # Dashboards, KPIs, reports, analytics, cost allocation
-└── system/          # Notifications, audit, settings, uploads, email, barcode, search
+├── notifications/   # Notification routes, push, dispatcher, jobs
+├── scheduler/       # Cron scheduler, maintenance & SLA jobs
+├── audit/           # Audit log routes and service
+├── uploads/         # Attachment and upload routes/services
+├── ai-services/     # AI chat, suggestions, schema context
+└── system/          # Settings, email, barcode, search, custom fields, bulk ops
 ```
 
 Each domain has a barrel `index.ts` that exports `registerXxxRoutes(router)`.

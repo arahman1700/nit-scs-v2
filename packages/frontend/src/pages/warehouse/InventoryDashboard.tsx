@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import { Search, Package, MapPin, Layers, BarChart3, X, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 import { ExportButton } from '@/components/ExportButton';
 
@@ -63,12 +64,12 @@ const getStockStatus = (available: number, minLevel: number): { label: string; c
 };
 
 export const InventoryDashboard: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterWarehouse, setFilterWarehouse] = useState('');
-  const [filterCategory, setFilterCategory] = useState('');
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [searchQuery, setSearchQuery] = useUrlState('q', '');
+  const [filterWarehouse, setFilterWarehouse] = useUrlState('warehouse', '');
+  const [filterCategory, setFilterCategory] = useUrlState('category', '');
+  const [viewMode, setViewMode] = useUrlState<'table' | 'grid'>('view', 'table');
   const [selectedItem, setSelectedItem] = useState<InventoryRow | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useUrlState('page', 1);
   const pageSize = 50;
 
   // ── API hooks ─────────────────────────────────────────────────────────

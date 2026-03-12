@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import {
   ArrowRightLeft,
   Search,
@@ -26,7 +27,7 @@ import {
 } from '@/domains/warehouse-ops/hooks/useCrossDock';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import type { CrossDock, CrossDockOpportunity } from '@/domains/warehouse-ops/hooks/useCrossDock';
-import { extractRows, toRecord } from '@/utils/type-helpers';
+import { toRecord } from '@/utils/type-helpers';
 
 // ── Status config ───────────────────────────────────────────────────────
 
@@ -80,8 +81,8 @@ type Tab = 'opportunities' | 'active' | 'history';
 // ── Component ───────────────────────────────────────────────────────────
 
 export const CrossDockDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('opportunities');
-  const [selectedWarehouse, setSelectedWarehouse] = useState('');
+  const [activeTab, setActiveTab] = useUrlState<Tab>('tab', 'opportunities');
+  const [selectedWarehouse, setSelectedWarehouse] = useUrlState('warehouse', '');
 
   // Queries
   const { data: warehousesRes } = useWarehouses();

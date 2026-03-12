@@ -19,16 +19,22 @@ export function useRealtimeSync() {
 
   const handleDocumentStatus = useCallback(
     (payload: { documentType: string; documentId: string; status: string }) => {
-      const { documentType } = payload;
-      queryClient.invalidateQueries({ queryKey: [documentType] });
+      const { documentType, documentId } = payload;
+      // Invalidate the specific document and its list queries
+      queryClient.invalidateQueries({ queryKey: [documentType, documentId] });
+      queryClient.invalidateQueries({ queryKey: [documentType, { type: 'list' }], exact: false });
+      // Dashboards showing this document type need a refresh
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     [queryClient],
   );
 
   const handleApproval = useCallback(
-    (payload: { documentType: string }) => {
-      queryClient.invalidateQueries({ queryKey: [payload.documentType] });
+    (payload: { documentType: string; documentId?: string }) => {
+      if (payload.documentId) {
+        queryClient.invalidateQueries({ queryKey: [payload.documentType, payload.documentId] });
+      }
+      queryClient.invalidateQueries({ queryKey: [payload.documentType, { type: 'list' }], exact: false });
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
     [queryClient],
@@ -38,32 +44,40 @@ export function useRealtimeSync() {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
   }, [queryClient]);
 
-  const handleInventoryUpdate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['inventory'] });
-    queryClient.invalidateQueries({ queryKey: ['dashboard', 'inventory-summary'] });
-  }, [queryClient]);
+  const handleInventoryUpdate = useCallback(
+    (payload?: { warehouseId?: string; itemCode?: string }) => {
+      if (payload?.warehouseId) {
+        // Targeted: only invalidate inventory for this warehouse
+        queryClient.invalidateQueries({
+          queryKey: ['inventory'],
+          predicate: query => {
+            const params = query.queryKey[1] as Record<string, unknown> | undefined;
+            return !params || params.warehouseId === payload.warehouseId || params.warehouseId === undefined;
+          },
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'inventory-summary'] });
+    },
+    [queryClient],
+  );
 
   const handleTaskEvent = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['tasks'] });
   }, [queryClient]);
 
-  const handleEntityCreated = useCallback(
-    (p: { entity: string }) => {
-      queryClient.invalidateQueries({ queryKey: [p.entity] });
-    },
-    [queryClient],
-  );
-
-  const handleEntityUpdated = useCallback(
-    (p: { entity: string }) => {
-      queryClient.invalidateQueries({ queryKey: [p.entity] });
-    },
-    [queryClient],
-  );
-
-  const handleEntityDeleted = useCallback(
-    (p: { entity: string }) => {
-      queryClient.invalidateQueries({ queryKey: [p.entity] });
+  const handleEntityEvent = useCallback(
+    (p: { entity: string; id?: string }) => {
+      if (p.id) {
+        // Targeted: invalidate specific record + list
+        queryClient.invalidateQueries({ queryKey: [p.entity, p.id] });
+      }
+      // Always invalidate lists for this entity type
+      queryClient.invalidateQueries({
+        queryKey: [p.entity],
+        predicate: query => query.queryKey.length > 1 && typeof query.queryKey[1] === 'object',
+      });
     },
     [queryClient],
   );
@@ -71,7 +85,6 @@ export function useRealtimeSync() {
   useEffect(() => {
     const socket = getSocket();
 
-    // Re-join document rooms on reconnect
     const handleReconnect = () => {
       const room = currentRoomRef.current;
       if (room) {
@@ -98,10 +111,10 @@ export function useRealtimeSync() {
     socket.on('task:assigned', handleTaskEvent);
     socket.on('task:completed', handleTaskEvent);
 
-    // Broad invalidation for any entity change (catch-all)
-    socket.on('entity:created', handleEntityCreated);
-    socket.on('entity:updated', handleEntityUpdated);
-    socket.on('entity:deleted', handleEntityDeleted);
+    // Entity events — unified handler
+    socket.on('entity:created', handleEntityEvent);
+    socket.on('entity:updated', handleEntityEvent);
+    socket.on('entity:deleted', handleEntityEvent);
 
     return () => {
       socket.off('connect', handleReconnect);
@@ -114,9 +127,9 @@ export function useRealtimeSync() {
       socket.off('inventory:updated', handleInventoryUpdate);
       socket.off('task:assigned', handleTaskEvent);
       socket.off('task:completed', handleTaskEvent);
-      socket.off('entity:created', handleEntityCreated);
-      socket.off('entity:updated', handleEntityUpdated);
-      socket.off('entity:deleted', handleEntityDeleted);
+      socket.off('entity:created', handleEntityEvent);
+      socket.off('entity:updated', handleEntityEvent);
+      socket.off('entity:deleted', handleEntityEvent);
     };
   }, [
     queryClient,
@@ -125,24 +138,17 @@ export function useRealtimeSync() {
     handleNotification,
     handleInventoryUpdate,
     handleTaskEvent,
-    handleEntityCreated,
-    handleEntityUpdated,
-    handleEntityDeleted,
+    handleEntityEvent,
   ]);
 
-  /**
-   * Join a document room for real-time collaboration.
-   * Stores the room so it can be re-joined automatically on reconnect.
-   */
+  /** Join a document room for real-time collaboration. */
   const joinDocumentRoom = useCallback((documentRoom: string) => {
     currentRoomRef.current = documentRoom;
     const socket = getSocket();
     socket.emit('document:join', documentRoom);
   }, []);
 
-  /**
-   * Leave the current document room.
-   */
+  /** Leave the current document room. */
   const leaveDocumentRoom = useCallback(() => {
     const room = currentRoomRef.current;
     if (room) {

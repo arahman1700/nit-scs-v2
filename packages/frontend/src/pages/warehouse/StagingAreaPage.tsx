@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import {
   Layers,
   ArrowDownCircle,
@@ -411,13 +412,13 @@ const NewAssignmentModal: React.FC<{
 type TabId = 'overview' | 'inbound' | 'outbound' | 'alerts';
 
 export function StagingAreaPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useUrlState<TabId>('tab', 'overview');
   const [showNewModal, setShowNewModal] = useState(false);
 
   // Warehouse selector
   const { data: whResp } = useWarehouses();
   const warehouses = whResp?.data ?? [];
-  const [warehouseId, setWarehouseId] = useState('');
+  const [warehouseId, setWarehouseId] = useUrlState('warehouse', '');
 
   // Auto-select first warehouse
   React.useEffect(() => {

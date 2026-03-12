@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import {
   useAssetList,
   useAsset,
@@ -29,7 +30,6 @@ import {
   MapPin,
   Tag,
   Calendar,
-  FileText,
 } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ const statusConfig: Record<string, { label: string; classes: string }> = {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export const AssetRegisterPage: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlState('q', '');
   const [modalView, setModalView] = useState<ModalView>('none');
   const [selectedAssetId, setSelectedAssetId] = useState<string | undefined>(undefined);
   const [formData, setFormData] = useState<AssetFormData>(emptyForm);
@@ -127,7 +127,7 @@ export const AssetRegisterPage: React.FC = () => {
 
   // Mutations
   const createMutation = useCreateAsset();
-  const updateMutation = useUpdateAsset();
+  const _updateMutation = useUpdateAsset();
   const transferMutation = useTransferAsset();
   const retireMutation = useRetireAsset();
   const disposeMutation = useDisposeAsset();

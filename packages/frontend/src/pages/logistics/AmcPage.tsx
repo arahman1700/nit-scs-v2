@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import {
   Wrench,
   Plus,
@@ -7,8 +8,6 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
-  Clock,
-  AlertTriangle,
   FileText,
   Calendar,
   DollarSign,
@@ -69,9 +68,9 @@ function formatCurrency(value: number) {
 // ── Main Page ───────────────────────────────────────────────────────────
 
 export const AmcPage: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(25);
-  const [search, setSearch] = useState('');
+  const [page, setPage] = useUrlState('page', 1);
+  const pageSize = 25;
+  const [search, setSearch] = useUrlState('q', '');
   const [searchInput, setSearchInput] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useUrlState } from '@/hooks/useUrlState';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import {
   Layers,
@@ -172,9 +173,9 @@ function ZoneHeatmap({ suggestions }: { suggestions: SlottingSuggestion[] }) {
 // ── Main Component ──────────────────────────────────────────────────────
 
 export const SlottingPage: React.FC = () => {
-  const [selectedWarehouse, setSelectedWarehouse] = useState('');
+  const [selectedWarehouse, setSelectedWarehouse] = useUrlState('warehouse', '');
   const [applyingIds, setApplyingIds] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<TabKey>('standard');
+  const [activeTab, setActiveTab] = useUrlState<TabKey>('tab', 'standard');
 
   // Standard queries
   const { data: warehousesRes } = useWarehouses();

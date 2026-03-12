@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUrlState } from '@/hooks/useUrlState';
 import { Plus, Search, Filter, ClipboardList, Clock, CheckCircle2, XCircle, Play } from 'lucide-react';
 import { useCycleCountList, useCreateCycleCount } from '@/domains/inventory/hooks/useCycleCounts';
 import { useWarehouses } from '@/domains/master-data/hooks/useMasterData';
@@ -21,10 +22,10 @@ const COUNT_TYPE_LABELS: Record<string, string> = {
 
 export const CycleCountListPage: React.FC = () => {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(25);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
+  const [page, setPage] = useUrlState('page', 1);
+  const pageSize = 25;
+  const [statusFilter, setStatusFilter] = useUrlState('status', '');
+  const [search, setSearch] = useUrlState('q', '');
   const [searchInput, setSearchInput] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 

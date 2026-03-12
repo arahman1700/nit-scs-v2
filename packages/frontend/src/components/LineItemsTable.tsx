@@ -1,210 +1,30 @@
 import React, { Suspense, useState, useMemo } from 'react';
-import { Plus, Trash2, Search, AlertTriangle, ScanLine, Package } from 'lucide-react';
 import type { VoucherLineItem, MaterialCatalogItem } from '@nit-scs-v2/shared/types';
 import { useItems, useUoms, useInventory } from '@/domains/master-data/hooks/useMasterData';
 import { extractRows, toRecord } from '@/utils/type-helpers';
+import {
+  aggregateInventoryByCode,
+  deduplicateUoms,
+  mergeOrAddItem,
+  updateLineItem,
+  getConditionBadgeClass,
+  getStockStatus,
+  getStockTextClass,
+} from './line-items/line-item-utils';
+import { MaterialCatalogPicker } from './line-items/MaterialCatalogPicker';
+import { MobileLineItemCard } from './line-items/MobileLineItemCard';
+import { LineItemsSummary } from './line-items/LineItemsSummary';
+import { Plus, Trash2, Search, AlertTriangle, ScanLine } from 'lucide-react';
 
 const BarcodeScanner = React.lazy(() => import('@/components/BarcodeScanner'));
 
 interface LineItemsTableProps {
   items: VoucherLineItem[];
   onItemsChange: (items: VoucherLineItem[]) => void;
-  showCondition?: boolean; // For MRN/GRN
-  showStockAvailability?: boolean; // For MI - shows available qty
+  showCondition?: boolean;
+  showStockAvailability?: boolean;
   readOnly?: boolean;
 }
-
-/* ── Mobile card sub-component for viewports < md ── */
-interface MobileLineItemCardProps {
-  item: VoucherLineItem;
-  index: number;
-  readOnly: boolean;
-  showCondition: boolean;
-  showStockAvailability: boolean;
-  unitOptions: { id: string; label: string }[];
-  getAvailableQty: (code: string) => number;
-  getStockStatus: (code: string) => 'In Stock' | 'Low Stock' | 'Out of Stock';
-  onUpdate: (id: string, field: keyof VoucherLineItem, value: string | number) => void;
-  onRemove: (id: string) => void;
-}
-
-const MobileLineItemCard: React.FC<MobileLineItemCardProps> = ({
-  item,
-  index,
-  readOnly,
-  showCondition,
-  showStockAvailability,
-  unitOptions,
-  getAvailableQty,
-  getStockStatus,
-  onUpdate,
-  onRemove,
-}) => {
-  const available = showStockAvailability && item.itemCode ? getAvailableQty(item.itemCode) : null;
-  const stockStatus = showStockAvailability && item.itemCode ? getStockStatus(item.itemCode) : null;
-  const isInsufficient = available !== null && item.quantity > available;
-
-  return (
-    <div className="glass-card rounded-xl p-4 space-y-3">
-      {/* Card Header — item name + delete */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/5 text-gray-400 text-xs font-medium shrink-0">
-            {index + 1}
-          </div>
-          {readOnly ? (
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{item.itemName || 'Unnamed Item'}</p>
-              {item.itemCode && <p className="text-[10px] font-mono text-gray-400">{item.itemCode}</p>}
-            </div>
-          ) : (
-            <div className="min-w-0 flex-1 space-y-1">
-              <input
-                type="text"
-                value={item.itemName}
-                onChange={e => onUpdate(item.id, 'itemName', e.target.value)}
-                className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm font-semibold focus:border-nesma-secondary outline-none"
-                placeholder="Item name"
-              />
-              <input
-                type="text"
-                value={item.itemCode}
-                onChange={e => onUpdate(item.id, 'itemCode', e.target.value)}
-                className="w-full px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-gray-400 text-xs font-mono focus:border-nesma-secondary outline-none"
-                placeholder="CODE"
-              />
-            </div>
-          )}
-        </div>
-        {!readOnly && (
-          <button
-            type="button"
-            onClick={() => onRemove(item.id)}
-            aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
-            className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all shrink-0"
-          >
-            <Trash2 size={16} />
-          </button>
-        )}
-      </div>
-
-      {/* Fields Row — Qty, Unit, Price */}
-      <div className="grid grid-cols-3 gap-2">
-        {/* Quantity */}
-        <div>
-          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Qty</label>
-          {readOnly ? (
-            <span className="text-sm text-white font-medium">{item.quantity}</span>
-          ) : (
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.quantity}
-              onChange={e => onUpdate(item.id, 'quantity', Number(e.target.value))}
-              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-            />
-          )}
-        </div>
-
-        {/* Unit */}
-        <div>
-          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Unit</label>
-          {readOnly ? (
-            <span className="text-sm text-gray-400">{item.unit}</span>
-          ) : (
-            <select
-              value={item.unit}
-              onChange={e => onUpdate(item.id, 'unit', e.target.value)}
-              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
-            >
-              {unitOptions.map(u => (
-                <option key={u.id} value={u.label}>
-                  {u.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {/* Unit Price */}
-        <div>
-          <label className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1 block">Price</label>
-          {readOnly ? (
-            <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
-          ) : (
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={item.unitPrice}
-              onChange={e => onUpdate(item.id, 'unitPrice', Number(e.target.value))}
-              className="w-full px-2 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Total + optional badges row */}
-      <div className="flex items-center justify-between pt-2 border-t border-white/10">
-        <div className="flex items-center gap-2">
-          {/* Condition badge */}
-          {showCondition &&
-            (readOnly ? (
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded-full ${
-                  item.condition === 'New'
-                    ? 'bg-green-500/10 text-green-400'
-                    : item.condition === 'Good'
-                      ? 'bg-blue-500/10 text-blue-400'
-                      : item.condition === 'Fair'
-                        ? 'bg-yellow-500/10 text-yellow-400'
-                        : 'bg-red-500/10 text-red-400'
-                }`}
-              >
-                {item.condition}
-              </span>
-            ) : (
-              <select
-                value={item.condition || 'New'}
-                onChange={e => onUpdate(item.id, 'condition', e.target.value)}
-                className="px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-[10px] focus:border-nesma-secondary outline-none"
-              >
-                <option value="New">New</option>
-                <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-                <option value="Damaged">Damaged</option>
-              </select>
-            ))}
-
-          {/* Stock availability badge */}
-          {showStockAvailability && available !== null && (
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                isInsufficient
-                  ? 'bg-red-500/10 text-red-400'
-                  : stockStatus === 'Out of Stock'
-                    ? 'bg-red-500/10 text-red-400'
-                    : stockStatus === 'Low Stock'
-                      ? 'bg-amber-500/10 text-amber-400'
-                      : 'bg-emerald-500/10 text-emerald-400'
-              }`}
-            >
-              {isInsufficient && <AlertTriangle size={10} />}
-              Avail: {available}
-            </span>
-          )}
-        </div>
-
-        {/* Total amount */}
-        <div className="flex items-center gap-1.5">
-          <Package size={14} className="text-gray-400" />
-          <span className="text-sm text-nesma-secondary font-bold">{item.totalPrice.toLocaleString()} SAR</span>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   items,
@@ -213,71 +33,23 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
   showStockAvailability = false,
   readOnly = false,
 }) => {
-  // React Query hooks for master data
   const itemsQuery = useItems({ pageSize: 100 });
-
-  // Inventory levels from real API — keyed by item code for fast lookup
   const inventoryQuery = useInventory({ pageSize: 200 });
-  const inventoryLevels = extractRows(inventoryQuery.data);
-  const inventoryByCode = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const level of inventoryLevels) {
-      const item = level.item as Record<string, unknown> | undefined;
-      const code = (item?.itemCode as string) ?? (item?.code as string) ?? '';
-      const onHand = (level.qtyOnHand as number) ?? 0;
-      const reserved = (level.qtyReserved as number) ?? 0;
-      const available = onHand - reserved;
-      // Sum across all warehouses for the same item code
-      map.set(code, (map.get(code) ?? 0) + available);
-    }
-    return map;
-  }, [inventoryLevels]);
-
-  const getAvailableQty = (code: string): number => inventoryByCode.get(code) ?? 0;
-  const getStockStatus = (code: string): 'In Stock' | 'Low Stock' | 'Out of Stock' => {
-    const qty = getAvailableQty(code);
-    if (qty <= 0) return 'Out of Stock';
-    if (qty <= 10) return 'Low Stock';
-    return 'In Stock';
-  };
-  const MATERIAL_CATALOG = extractRows(itemsQuery.data);
   const uomsQuery = useUoms({ pageSize: 100 });
-  const UNIT_OPTIONS = useMemo(() => {
-    const uoms = extractRows(uomsQuery.data);
-    const seen = new Set<string>();
-    return uoms
-      .map(u => ({ id: String(u.id ?? ''), label: String(u.uomName || u.uomCode || '') }))
-      .filter(u => {
-        if (!u.label || seen.has(u.label)) return false;
-        seen.add(u.label);
-        return true;
-      });
-  }, [uomsQuery.data]);
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const inventoryByCode = useMemo(
+    () => aggregateInventoryByCode(extractRows(inventoryQuery.data)),
+    [inventoryQuery.data],
+  );
+  const getAvailableQty = (code: string): number => inventoryByCode.get(code) ?? 0;
+
+  const MATERIAL_CATALOG = extractRows(itemsQuery.data);
+  const UNIT_OPTIONS = useMemo(() => deduplicateUoms(extractRows(uomsQuery.data)), [uomsQuery.data]);
+
   const [showCatalog, setShowCatalog] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = useMemo(
-    () => ['All', ...new Set(MATERIAL_CATALOG.map((m: Record<string, unknown>) => m.category as string))],
-    [MATERIAL_CATALOG],
-  );
-
-  const filteredCatalog = useMemo(
-    () =>
-      MATERIAL_CATALOG.filter((m: Record<string, unknown>) => {
-        const matchSearch =
-          searchTerm === '' ||
-          ((m.itemDescription as string) ?? (m.name as string) ?? '')
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          ((m.itemCode as string) ?? (m.code as string) ?? '').toLowerCase().includes(searchTerm.toLowerCase());
-        const matchCategory = selectedCategory === 'All' || m.category === selectedCategory;
-        return matchSearch && matchCategory;
-      }),
-    [MATERIAL_CATALOG, searchTerm, selectedCategory],
-  );
+  // ── Item management ─────────────────────────────────────────────────────
 
   const addItemFromCatalog = (catalogItem: MaterialCatalogItem) => {
     const raw = toRecord(catalogItem);
@@ -289,15 +61,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
     const itemId = raw.id as string | undefined;
     const uomId = (uomObj?.id as string) || (raw.uomId as string) || undefined;
 
-    const existing = items.find(i => i.itemCode === code);
-    if (existing) {
-      const updated = items.map(i =>
-        i.itemCode === code ? { ...i, quantity: i.quantity + 1, totalPrice: (i.quantity + 1) * i.unitPrice } : i,
-      );
-      onItemsChange(updated);
-    } else {
-      const newItem: VoucherLineItem = {
-        id: `line-${Date.now()}`,
+    onItemsChange(
+      mergeOrAddItem(items, {
         itemId,
         itemCode: code,
         itemName: name,
@@ -307,11 +72,9 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
         unitPrice: price,
         totalPrice: price,
         condition: 'New',
-      };
-      onItemsChange([...items, newItem]);
-    }
+      }),
+    );
     setShowCatalog(false);
-    setSearchTerm('');
   };
 
   const addItemFromScan = (scannedItem: Record<string, unknown>) => {
@@ -320,16 +83,8 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
     const unit = String(scannedItem.unit || 'Piece');
     const price = Number(scannedItem.unitPrice || 0);
 
-    // If item with same code already exists, increment qty
-    const existing = items.find(i => i.itemCode === code);
-    if (existing) {
-      const updated = items.map(i =>
-        i.itemCode === code ? { ...i, quantity: i.quantity + 1, totalPrice: (i.quantity + 1) * i.unitPrice } : i,
-      );
-      onItemsChange(updated);
-    } else {
-      const newItem: VoucherLineItem = {
-        id: `line-${Date.now()}`,
+    onItemsChange(
+      mergeOrAddItem(items, {
         itemCode: code,
         itemName: name,
         unit,
@@ -337,43 +92,32 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
         unitPrice: price,
         totalPrice: price,
         condition: 'New',
-      };
-      onItemsChange([...items, newItem]);
-    }
+      }),
+    );
     setShowScanner(false);
   };
 
   const addBlankItem = () => {
-    const newItem: VoucherLineItem = {
-      id: `line-${Date.now()}`,
-      itemCode: '',
-      itemName: '',
-      unit: 'Piece',
-      quantity: 1,
-      unitPrice: 0,
-      totalPrice: 0,
-      condition: 'New',
-    };
-    onItemsChange([...items, newItem]);
+    onItemsChange([
+      ...items,
+      {
+        id: `line-${Date.now()}`,
+        itemCode: '',
+        itemName: '',
+        unit: 'Piece',
+        quantity: 1,
+        unitPrice: 0,
+        totalPrice: 0,
+        condition: 'New',
+      },
+    ]);
   };
 
-  const removeItem = (id: string) => {
-    onItemsChange(items.filter(i => i.id !== id));
+  const handleUpdate = (id: string, field: keyof VoucherLineItem, value: string | number) => {
+    onItemsChange(updateLineItem(items, id, field, value));
   };
 
-  const updateItem = (id: string, field: keyof VoucherLineItem, value: string | number) => {
-    const updated = items.map(item => {
-      if (item.id !== id) return item;
-      const patched = { ...item, [field]: value };
-      if (field === 'quantity' || field === 'unitPrice') {
-        patched.totalPrice =
-          (field === 'quantity' ? Number(value) : patched.quantity) *
-          (field === 'unitPrice' ? Number(value) : patched.unitPrice);
-      }
-      return patched;
-    });
-    onItemsChange(updated);
-  };
+  const removeItem = (id: string) => onItemsChange(items.filter(i => i.id !== id));
 
   const totalValue = useMemo(() => items.reduce((sum, item) => sum + item.totalPrice, 0), [items]);
 
@@ -419,73 +163,11 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
       </div>
 
       {/* Material Catalog Picker */}
-      {showCatalog && (
-        <div className="glass-card rounded-xl p-4 border border-nesma-secondary/20 animate-fade-in">
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1 relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search items..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-black/30 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
-                autoFocus
-              />
-            </div>
-            <select
-              value={selectedCategory}
-              onChange={e => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
+      {showCatalog && <MaterialCatalogPicker catalog={MATERIAL_CATALOG} onSelect={addItemFromCatalog} />}
 
-          <div className="max-h-48 overflow-y-auto custom-scrollbar space-y-1">
-            {filteredCatalog.map((item: Record<string, unknown>) => {
-              const code = (item.itemCode as string) || (item.code as string) || '';
-              const name = (item.itemDescription as string) || (item.name as string) || '';
-              const price = Number(item.standardCost) || (item.unitPrice as number) || 0;
-              const uom = item.uom as Record<string, unknown> | undefined;
-              const unitLabel = (uom?.uomCode as string) || (item.unit as string) || '';
-              return (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => addItemFromCatalog(item as unknown as MaterialCatalogItem)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-white/5 rounded-lg transition-colors text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-gray-400 border border-white/5">
-                      {code}
-                    </span>
-                    <div>
-                      <span className="text-sm text-gray-200 group-hover:text-white">{name}</span>
-                      <span className="text-xs text-gray-400 block">{code}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-sm text-nesma-secondary font-medium">{price?.toLocaleString()} SAR</span>
-                    <span className="text-xs text-gray-400 block">/{unitLabel}</span>
-                  </div>
-                </button>
-              );
-            })}
-            {filteredCatalog.length === 0 && (
-              <div className="text-center py-6 text-gray-400 text-sm">No results found</div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Items — Mobile Card View (< md) */}
       {items.length > 0 ? (
         <>
+          {/* Mobile View */}
           <div className="md:hidden space-y-3">
             {items.map((item, idx) => (
               <MobileLineItemCard
@@ -497,13 +179,10 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                 showStockAvailability={showStockAvailability}
                 unitOptions={UNIT_OPTIONS}
                 getAvailableQty={getAvailableQty}
-                getStockStatus={getStockStatus}
-                onUpdate={updateItem}
+                onUpdate={handleUpdate}
                 onRemove={removeItem}
               />
             ))}
-
-            {/* Mobile Add Item Button */}
             {!readOnly && (
               <button
                 type="button"
@@ -514,27 +193,10 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                 Add Item
               </button>
             )}
-
-            {/* Mobile Total Summary */}
-            <div className="glass-card rounded-xl p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Items</span>
-                <span className="text-white font-medium">{items.length}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Total Qty</span>
-                <span className="text-white font-medium">
-                  {items.reduce((s, i) => s + i.quantity, 0).toLocaleString()}
-                </span>
-              </div>
-              <div className="border-t border-white/10 pt-2 flex justify-between">
-                <span className="text-sm text-gray-400">Total</span>
-                <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
-              </div>
-            </div>
+            <LineItemsSummary items={items} totalValue={totalValue} variant="mobile" />
           </div>
 
-          {/* Items — Desktop Table View (>= md) */}
+          {/* Desktop Table */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left" aria-label="Line items">
               <thead>
@@ -578,179 +240,148 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {items.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="py-3 px-2 text-gray-400 text-sm">{idx + 1}</td>
-                    <td className="py-3 px-2">
-                      {readOnly ? (
-                        <span className="text-xs font-mono text-gray-400">{item.itemCode}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={item.itemCode}
-                          onChange={e => updateItem(item.id, 'itemCode', e.target.value)}
-                          className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs font-mono focus:border-nesma-secondary outline-none"
-                          placeholder="CODE"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-2">
-                      {readOnly ? (
-                        <span className="text-sm text-gray-200">{item.itemName}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={item.itemName}
-                          onChange={e => updateItem(item.id, 'itemName', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
-                          placeholder="Item name"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-2">
-                      {readOnly ? (
-                        <span className="text-sm text-gray-400">{item.unit}</span>
-                      ) : (
-                        <select
-                          value={item.unit}
-                          onChange={e => updateItem(item.id, 'unit', e.target.value)}
-                          className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
-                        >
-                          {UNIT_OPTIONS.map(u => (
-                            <option key={u.id} value={u.label}>
-                              {u.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      {readOnly ? (
-                        <span className="text-sm text-white font-medium">{item.quantity}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.quantity}
-                          onChange={e => updateItem(item.id, 'quantity', Number(e.target.value))}
-                          className="w-20 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      {readOnly ? (
-                        <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.unitPrice}
-                          onChange={e => updateItem(item.id, 'unitPrice', Number(e.target.value))}
-                          className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
-                        />
-                      )}
-                    </td>
-                    <td className="py-3 px-2 text-center">
-                      <span className="text-sm text-nesma-secondary font-semibold">
-                        {item.totalPrice.toLocaleString()}
-                      </span>
-                    </td>
-                    {showStockAvailability && (
-                      <td className="py-3 px-2 text-center">
-                        {item.itemCode ? (
-                          (() => {
-                            const available = getAvailableQty(item.itemCode);
-                            const status = getStockStatus(item.itemCode);
-                            const isInsufficient = item.quantity > available;
-                            return (
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span
-                                  className={`text-xs font-medium ${isInsufficient ? 'text-red-400' : status === 'Out of Stock' ? 'text-red-400' : status === 'Low Stock' ? 'text-amber-400' : 'text-emerald-400'}`}
-                                >
-                                  {available}
-                                </span>
-                                {isInsufficient && (
-                                  <span className="flex items-center gap-1 text-[10px] text-red-400">
-                                    <AlertTriangle size={10} /> Insufficient
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-xs text-gray-400">--</span>
-                        )}
-                      </td>
-                    )}
-                    {showCondition && (
+                {items.map((item, idx) => {
+                  const available = showStockAvailability && item.itemCode ? getAvailableQty(item.itemCode) : null;
+                  const stockStatus = available !== null ? getStockStatus(available) : null;
+                  const isInsufficient = available !== null && item.quantity > available;
+
+                  return (
+                    <tr key={item.id} className="hover:bg-white/5 transition-colors group">
+                      <td className="py-3 px-2 text-gray-400 text-sm">{idx + 1}</td>
                       <td className="py-3 px-2">
                         {readOnly ? (
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              item.condition === 'New'
-                                ? 'bg-green-500/10 text-green-400'
-                                : item.condition === 'Good'
-                                  ? 'bg-blue-500/10 text-blue-400'
-                                  : item.condition === 'Fair'
-                                    ? 'bg-yellow-500/10 text-yellow-400'
-                                    : 'bg-red-500/10 text-red-400'
-                            }`}
-                          >
-                            {item.condition}
-                          </span>
+                          <span className="text-xs font-mono text-gray-400">{item.itemCode}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={item.itemCode}
+                            onChange={e => handleUpdate(item.id, 'itemCode', e.target.value)}
+                            className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs font-mono focus:border-nesma-secondary outline-none"
+                            placeholder="CODE"
+                          />
+                        )}
+                      </td>
+                      <td className="py-3 px-2">
+                        {readOnly ? (
+                          <span className="text-sm text-gray-200">{item.itemName}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={item.itemName}
+                            onChange={e => handleUpdate(item.id, 'itemName', e.target.value)}
+                            className="w-full px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm focus:border-nesma-secondary outline-none"
+                            placeholder="Item name"
+                          />
+                        )}
+                      </td>
+                      <td className="py-3 px-2">
+                        {readOnly ? (
+                          <span className="text-sm text-gray-400">{item.unit}</span>
                         ) : (
                           <select
-                            value={item.condition || 'New'}
-                            onChange={e => updateItem(item.id, 'condition', e.target.value)}
+                            value={item.unit}
+                            onChange={e => handleUpdate(item.id, 'unit', e.target.value)}
                             className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
                           >
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Damaged">Damaged</option>
+                            {UNIT_OPTIONS.map(u => (
+                              <option key={u.id} value={u.label}>
+                                {u.label}
+                              </option>
+                            ))}
                           </select>
                         )}
                       </td>
-                    )}
-                    {!readOnly && (
-                      <td className="py-3 px-2">
-                        <button
-                          type="button"
-                          onClick={() => removeItem(item.id)}
-                          aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
-                          className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <td className="py-3 px-2 text-center">
+                        {readOnly ? (
+                          <span className="text-sm text-white font-medium">{item.quantity}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.quantity}
+                            onChange={e => handleUpdate(item.id, 'quantity', Number(e.target.value))}
+                            className="w-20 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+                          />
+                        )}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="py-3 px-2 text-center">
+                        {readOnly ? (
+                          <span className="text-sm text-gray-300">{item.unitPrice.toLocaleString()}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.unitPrice}
+                            onChange={e => handleUpdate(item.id, 'unitPrice', Number(e.target.value))}
+                            className="w-24 px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-sm text-center focus:border-nesma-secondary outline-none"
+                          />
+                        )}
+                      </td>
+                      <td className="py-3 px-2 text-center">
+                        <span className="text-sm text-nesma-secondary font-semibold">
+                          {item.totalPrice.toLocaleString()}
+                        </span>
+                      </td>
+                      {showStockAvailability && (
+                        <td className="py-3 px-2 text-center">
+                          {item.itemCode && available !== null && stockStatus !== null ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className={`text-xs font-medium ${getStockTextClass(stockStatus, isInsufficient)}`}>
+                                {available}
+                              </span>
+                              {isInsufficient && (
+                                <span className="flex items-center gap-1 text-[10px] text-red-400">
+                                  <AlertTriangle size={10} /> Insufficient
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">--</span>
+                          )}
+                        </td>
+                      )}
+                      {showCondition && (
+                        <td className="py-3 px-2">
+                          {readOnly ? (
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full ${getConditionBadgeClass(item.condition)}`}
+                            >
+                              {item.condition}
+                            </span>
+                          ) : (
+                            <select
+                              value={item.condition || 'New'}
+                              onChange={e => handleUpdate(item.id, 'condition', e.target.value)}
+                              className="px-2 py-1.5 bg-black/20 border border-white/10 rounded-lg text-white text-xs focus:border-nesma-secondary outline-none"
+                            >
+                              <option value="New">New</option>
+                              <option value="Good">Good</option>
+                              <option value="Fair">Fair</option>
+                              <option value="Damaged">Damaged</option>
+                            </select>
+                          )}
+                        </td>
+                      )}
+                      {!readOnly && (
+                        <td className="py-3 px-2">
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item.id)}
+                            aria-label={`Remove ${item.itemName || item.itemCode || 'item'}`}
+                            className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-nesma-secondary focus-visible:outline-none"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-
-            {/* Total Row */}
-            <div className="flex justify-end mt-4 pt-4 border-t border-white/10">
-              <div className="glass-card px-6 py-3 rounded-xl flex items-center gap-6">
-                <div className="text-sm text-gray-400">
-                  Items: <span className="text-white font-medium">{items.length}</span>
-                </div>
-                <div className="h-6 w-px bg-white/10"></div>
-                <div className="text-sm text-gray-400">
-                  Total Qty:{' '}
-                  <span className="text-white font-medium">
-                    {items.reduce((s, i) => s + i.quantity, 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="h-6 w-px bg-white/10"></div>
-                <div className="text-sm">
-                  Total:{' '}
-                  <span className="text-nesma-secondary font-bold text-lg">{totalValue.toLocaleString()} SAR</span>
-                </div>
-              </div>
-            </div>
+            <LineItemsSummary items={items} totalValue={totalValue} variant="desktop" />
           </div>
         </>
       ) : (
@@ -762,7 +393,6 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
         </div>
       )}
 
-      {/* Barcode Scanner Modal */}
       <Suspense fallback={null}>
         <BarcodeScanner isOpen={showScanner} onClose={() => setShowScanner(false)} onItemFound={addItemFromScan} />
       </Suspense>
