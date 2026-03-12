@@ -97,11 +97,10 @@ export default defineConfig({
   ],
   build: {
     sourcemap: true,
-    chunkSizeWarningLimit: 1200, // ag-grid is ~1.1MB; already code-split via manualChunks
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks: {
-          'ag-grid': ['ag-grid-community', 'ag-grid-react'],
           charts: ['recharts'],
           dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
           socketio: ['socket.io-client'],

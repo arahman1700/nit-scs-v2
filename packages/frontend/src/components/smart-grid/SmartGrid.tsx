@@ -1,54 +1,27 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
-import { AgGridReact } from 'ag-grid-react';
-import type {
-  ColDef,
-  GridReadyEvent,
-  SortChangedEvent,
-  CellValueChangedEvent,
-  GridApi,
-  ColumnState,
-} from 'ag-grid-community';
+import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import {
-  ModuleRegistry,
-  themeQuartz,
-  ClientSideRowModelModule,
-  ColumnAutoSizeModule,
-  CellStyleModule,
-  TextEditorModule,
-  RowSelectionModule,
-  ValidationModule,
-} from 'ag-grid-community';
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  flexRender,
+  type ColumnDef as TanStackColumnDef,
+  type SortingState,
+  type ColumnSizingState,
+  type VisibilityState,
+  type RowSelectionState,
+} from '@tanstack/react-table';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import type { ColumnDef } from '@/config/resourceColumns';
-import { mapColumnsToAgGrid } from './useGridColumns';
+import { StatusBadge } from '@/components/StatusBadge';
 
-ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  ColumnAutoSizeModule,
-  CellStyleModule,
-  TextEditorModule,
-  RowSelectionModule,
-  ValidationModule,
-]);
-
-const darkTheme = themeQuartz.withParams({
-  backgroundColor: 'transparent',
-  foregroundColor: '#d1d5db',
-  headerBackgroundColor: 'rgba(255,255,255,0.03)',
-  headerTextColor: '#9ca3af',
-  headerFontSize: 11,
-  headerFontWeight: 600,
-  rowHoverColor: 'rgba(255,255,255,0.04)',
-  borderColor: 'rgba(255,255,255,0.05)',
-  selectedRowBackgroundColor: 'rgba(217,175,123,0.08)',
-  cellTextColor: '#d1d5db',
-  oddRowBackgroundColor: 'transparent',
-  fontSize: 13,
-  rowBorder: true,
-  wrapperBorder: false,
-  columnBorder: false,
-  spacing: 6,
-});
+export interface ColumnState {
+  colId: string;
+  width?: number;
+  visible?: boolean;
+  sort?: 'asc' | 'desc' | null;
+  sortIndex?: number;
+}
 
 export interface SmartGridProps {
   columns: ColumnDef[];
@@ -65,6 +38,34 @@ export interface SmartGridProps {
   onColumnStateChanged?: (state: ColumnState[]) => void;
 }
 
+/** Resolve a nested key like 'item.itemCode' from a data row. */
+function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce<unknown>((acc, key) => {
+    if (acc && typeof acc === 'object') return (acc as Record<string, unknown>)[key];
+    return undefined;
+  }, obj);
+}
+
+/** Detect status-type columns by function name or key pattern. */
+function isStatusColumn(col: ColumnDef): boolean {
+  if (col.key === 'status' || col.key === 'stockStatus' || col.key === 'slaStatus') return true;
+  if (col.component) {
+    const fnName = col.component.name || col.component.toString();
+    return fnName.includes('statusCol') || fnName.includes('StatusBadge') || fnName.includes('slaCol');
+  }
+  return false;
+}
+
+/** Detect currency-type columns by format function name or key. */
+function isCurrencyColumn(col: ColumnDef): boolean {
+  if (col.key === 'value') return true;
+  if (col.format) {
+    const fnName = col.format.name || col.format.toString();
+    return fnName.includes('sarFormat');
+  }
+  return false;
+}
+
 export const SmartGrid: React.FC<SmartGridProps> = ({
   columns,
   rowData,
@@ -72,90 +73,190 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
   onSortChanged,
   onRowClicked,
   isDocument,
-  selectedIds: _selectedIds,
-  onSelectionChanged: _onSelectionChanged,
-  onCellValueChanged,
+  selectedIds,
+  onSelectionChanged,
+  onCellValueChanged: _onCellValueChanged,
   suppressPagination,
   initialColumnState,
   onColumnStateChanged,
 }) => {
-  const gridRef = useRef<GridApi | null>(null);
+  // ── Sorting ────────────────────────────────────────────────────────────
+  const [sorting, setSorting] = useState<SortingState>(() => {
+    if (!initialColumnState) return [];
+    return initialColumnState
+      .filter(cs => cs.sort)
+      .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+      .map(cs => ({ id: cs.colId, desc: cs.sort === 'desc' }));
+  });
 
-  const agColumns = useMemo(() => mapColumnsToAgGrid(columns), [columns]);
+  // ── Column sizing ──────────────────────────────────────────────────────
+  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>(() => {
+    if (!initialColumnState) return {};
+    const sizing: ColumnSizingState = {};
+    for (const cs of initialColumnState) {
+      if (cs.width) sizing[cs.colId] = cs.width;
+    }
+    return sizing;
+  });
 
-  const defaultColDef = useMemo<ColDef>(
-    () => ({
-      sortable: true,
-      resizable: true,
-      suppressMovable: false,
-      minWidth: 80,
-    }),
-    [],
-  );
+  // ── Column visibility ──────────────────────────────────────────────────
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
+    if (!initialColumnState) return {};
+    const vis: VisibilityState = {};
+    for (const cs of initialColumnState) {
+      if (cs.visible === false) vis[cs.colId] = false;
+    }
+    return vis;
+  });
 
-  const onGridReady = useCallback(
-    (params: GridReadyEvent) => {
-      gridRef.current = params.api;
-      if (initialColumnState && initialColumnState.length > 0) {
-        params.api.applyColumnState({ state: initialColumnState, applyOrder: true });
-      }
-      params.api.sizeColumnsToFit();
+  // ── Row selection ──────────────────────────────────────────────────────
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>(() => {
+    if (!selectedIds || selectedIds.size === 0) return {};
+    const sel: RowSelectionState = {};
+    for (const id of selectedIds) sel[id] = true;
+    return sel;
+  });
+
+  // Sync external selectedIds → internal rowSelection
+  useEffect(() => {
+    if (!selectedIds) return;
+    const sel: RowSelectionState = {};
+    for (const id of selectedIds) sel[id] = true;
+    setRowSelection(sel);
+  }, [selectedIds]);
+
+  // Notify parent on selection change
+  const handleRowSelectionChange = useCallback(
+    (updater: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState)) => {
+      setRowSelection(prev => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        if (onSelectionChanged) {
+          onSelectionChanged(new Set(Object.keys(next).filter(k => next[k])));
+        }
+        return next;
+      });
     },
-    [initialColumnState],
+    [onSelectionChanged],
   );
 
+  // ── Column definitions ─────────────────────────────────────────────────
+  const tanStackColumns = useMemo<TanStackColumnDef<Record<string, unknown>>[]>(() => {
+    const cols: TanStackColumnDef<Record<string, unknown>>[] = [];
+
+    // Checkbox column for document mode
+    if (isDocument) {
+      cols.push({
+        id: '_select',
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            className="accent-nesma-secondary"
+            checked={table.getIsAllRowsSelected()}
+            onChange={table.getToggleAllRowsSelectedHandler()}
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            className="accent-nesma-secondary"
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+          />
+        ),
+        size: 40,
+        minSize: 40,
+        maxSize: 40,
+        enableSorting: false,
+        enableResizing: false,
+      });
+    }
+
+    for (const col of columns) {
+      const isStatus = isStatusColumn(col);
+      const isCurrency = isCurrencyColumn(col);
+
+      cols.push({
+        id: col.key,
+        accessorFn: row => getNestedValue(row, col.key),
+        header: col.label,
+        size: col.key === 'id' ? 150 : isStatus ? 120 : isCurrency ? 130 : undefined,
+        minSize: col.key === 'id' ? 130 : 80,
+        maxSize: col.key === 'id' ? 180 : undefined,
+        cell: info => {
+          const value = info.getValue();
+          if (isStatus) {
+            if (col.component) return col.component(value);
+            if (!value) return <span className="text-gray-400">-</span>;
+            return <StatusBadge status={value as string} />;
+          }
+          if (isCurrency) {
+            if (value == null) return <span className="text-gray-400">-</span>;
+            return <span>{Number(value).toLocaleString()} SAR</span>;
+          }
+          if (col.component) return col.component(value);
+          if (col.format && value != null) return <span>{col.format(value)}</span>;
+          return <span>{value != null ? String(value) : '-'}</span>;
+        },
+      });
+    }
+
+    return cols;
+  }, [columns, isDocument]);
+
+  // ── Table instance ─────────────────────────────────────────────────────
+  const table = useReactTable({
+    data: rowData,
+    columns: tanStackColumns,
+    state: { sorting, columnSizing, columnVisibility, rowSelection },
+    onSortingChange: updater => {
+      setSorting(prev => {
+        const next = typeof updater === 'function' ? updater(prev) : updater;
+        if (onSortChanged && next.length > 0) {
+          onSortChanged(next[0].id, next[0].desc ? 'desc' : 'asc');
+        }
+        return next;
+      });
+    },
+    onColumnSizingChange: setColumnSizing,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: handleRowSelectionChange,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getRowId: row => row.id as string,
+    enableRowSelection: isDocument,
+    columnResizeMode: 'onChange',
+  });
+
+  // ── Column state persistence (debounced) ───────────────────────────────
   const columnStateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleColumnStateChanged = useCallback(() => {
-    if (!onColumnStateChanged || !gridRef.current) return;
-    // Debounce to avoid excessive saves during resize dragging
-    if (columnStateTimerRef.current) clearTimeout(columnStateTimerRef.current);
-    columnStateTimerRef.current = setTimeout(() => {
-      if (gridRef.current) {
-        onColumnStateChanged(gridRef.current.getColumnState());
-      }
-    }, 500);
-  }, [onColumnStateChanged]);
 
   useEffect(() => {
+    if (!onColumnStateChanged) return;
+    if (columnStateTimerRef.current) clearTimeout(columnStateTimerRef.current);
+    columnStateTimerRef.current = setTimeout(() => {
+      const state: ColumnState[] = table
+        .getAllColumns()
+        .filter(c => c.id !== '_select')
+        .map((c, i) => ({
+          colId: c.id,
+          width: c.getSize(),
+          visible: c.getIsVisible(),
+          sort: sorting.find(s => s.id === c.id)
+            ? sorting.find(s => s.id === c.id)!.desc
+              ? ('desc' as const)
+              : ('asc' as const)
+            : null,
+          sortIndex: sorting.findIndex(s => s.id === c.id) >= 0 ? sorting.findIndex(s => s.id === c.id) : undefined,
+        }));
+      onColumnStateChanged(state);
+    }, 500);
+
     return () => {
       if (columnStateTimerRef.current) clearTimeout(columnStateTimerRef.current);
     };
-  }, []);
+  }, [sorting, columnSizing, columnVisibility, onColumnStateChanged, table]);
 
-  const handleSortChanged = useCallback(
-    (event: SortChangedEvent) => {
-      if (!onSortChanged) return;
-      const sortModel = event.api.getColumnState().filter(c => c.sort);
-      if (sortModel.length > 0) {
-        const first = sortModel[0];
-        onSortChanged(first.colId, first.sort as 'asc' | 'desc');
-      }
-    },
-    [onSortChanged],
-  );
-
-  const handleCellValueChanged = useCallback(
-    (event: CellValueChangedEvent) => {
-      if (!onCellValueChanged) return;
-      const rowId = event.data?.id as string;
-      if (rowId && event.colDef.field) {
-        onCellValueChanged(rowId, event.colDef.field, event.newValue);
-      }
-    },
-    [onCellValueChanged],
-  );
-
-  const handleRowClicked = useCallback(
-    (event: { data: Record<string, unknown> }) => {
-      if (onRowClicked && event.data) {
-        onRowClicked(event.data);
-      }
-    },
-    [onRowClicked],
-  );
-
-  const noRowsOverlay = useMemo(() => () => <EmptyState />, []);
-
+  // ── Loading state ──────────────────────────────────────────────────────
   if (loading && rowData.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -164,29 +265,74 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     );
   }
 
+  // ── Empty state ────────────────────────────────────────────────────────
+  if (rowData.length === 0) {
+    return <EmptyState />;
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────
+  const maxHeight = suppressPagination ? undefined : Math.min(600, 56 + rowData.length * 42);
+
   return (
-    <div className="w-full" style={{ height: rowData.length === 0 ? 200 : Math.min(600, 56 + rowData.length * 42) }}>
-      <AgGridReact
-        theme={darkTheme}
-        columnDefs={agColumns}
-        rowData={rowData}
-        defaultColDef={defaultColDef}
-        enableRtl={false}
-        animateRows={false}
-        rowSelection={isDocument ? 'multiple' : undefined}
-        suppressRowClickSelection
-        onGridReady={onGridReady}
-        onSortChanged={handleSortChanged}
-        onCellValueChanged={handleCellValueChanged}
-        onRowClicked={handleRowClicked}
-        onColumnResized={handleColumnStateChanged}
-        onColumnMoved={handleColumnStateChanged}
-        onColumnVisible={handleColumnStateChanged}
-        noRowsOverlayComponent={noRowsOverlay}
-        loading={loading}
-        getRowId={params => params.data.id as string}
-        domLayout={suppressPagination ? 'autoHeight' : 'normal'}
-      />
+    <div className="w-full overflow-auto" style={{ maxHeight }}>
+      <table className="w-full border-collapse">
+        <thead className="sticky top-0 z-10">
+          {table.getHeaderGroups().map(headerGroup => (
+            <tr key={headerGroup.id} className="bg-white/[0.03]">
+              {headerGroup.headers.map(header => {
+                const canSort = header.column.getCanSort();
+                const sorted = header.column.getIsSorted();
+                return (
+                  <th
+                    key={header.id}
+                    className={`px-3 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider select-none whitespace-nowrap ${
+                      canSort ? 'cursor-pointer hover:text-gray-300' : ''
+                    }`}
+                    style={{ width: header.getSize() }}
+                    onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                  >
+                    <div className="flex items-center gap-1">
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                      {sorted === 'asc' && <ChevronUp size={12} className="text-nesma-secondary" />}
+                      {sorted === 'desc' && <ChevronDown size={12} className="text-nesma-secondary" />}
+                    </div>
+                    {/* Resize handle */}
+                    {header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 hover:opacity-100 bg-nesma-secondary/40"
+                        style={{ transform: 'translateX(50%)' }}
+                      />
+                    )}
+                  </th>
+                );
+              })}
+            </tr>
+          ))}
+        </thead>
+        <tbody>
+          {table.getRowModel().rows.map(row => (
+            <tr
+              key={row.id}
+              className={`border-b border-white/[0.05] transition-colors duration-150 ${
+                row.getIsSelected() ? 'bg-[rgba(217,175,123,0.08)]' : 'hover:bg-white/[0.04]'
+              } ${onRowClicked ? 'cursor-pointer' : ''}`}
+              onClick={() => onRowClicked?.(row.original)}
+            >
+              {row.getVisibleCells().map(cell => (
+                <td
+                  key={cell.id}
+                  className="px-3 py-2.5 text-[13px] text-gray-300 whitespace-nowrap"
+                  style={{ width: cell.column.getSize() }}
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
