@@ -75,7 +75,7 @@ SELECT
     (SELECT COUNT(*) FROM "RCV_RECEIPT_LINES" rl WHERE rl."mrrv_id" = m."id") AS "line_count",
     m."created_at"
 FROM "RCV_RECEIPT_HEADERS" m
-JOIN "AP_SUPPLIERS" s ON s."id" = m."supplier_id"
+JOIN "FND_SUPPLIERS" s ON s."id" = m."supplier_id"
 JOIN "WMS_WAREHOUSES" w ON w."id" = m."warehouse_id"
 WHERE m."status" IN ('draft', 'pending_qc', 'qc_approved', 'received')
 
@@ -95,7 +95,7 @@ SELECT
     (SELECT COUNT(*) FROM "RCV_ASN_LINES" al WHERE al."asn_id" = a."id") AS "line_count",
     a."created_at"
 FROM "RCV_ASN_HEADERS" a
-JOIN "AP_SUPPLIERS" s ON s."id" = a."supplier_id"
+JOIN "FND_SUPPLIERS" s ON s."id" = a."supplier_id"
 JOIN "WMS_WAREHOUSES" w ON w."id" = a."warehouse_id"
 WHERE a."status" IN ('pending', 'in_transit')
 WITH DATA;
@@ -131,16 +131,16 @@ SELECT
     ct."payment_status",
     (COALESCE(ct."duties_amount", 0) + COALESCE(ct."vat_amount", 0) + COALESCE(ct."other_fees", 0)) AS "total_customs_cost",
     ct."stage_date" AS "last_stage_date",
-    (SELECT COUNT(*) FROM "WSH_CUSTOMS_DOCUMENTS" cd
+    (SELECT COUNT(*) FROM "CUST_DOCUMENTS" cd
      WHERE cd."shipment_id" = sh."id" AND cd."status" = 'pending') AS "pending_doc_count",
-    (SELECT COUNT(*) FROM "WSH_CUSTOMS_DOCUMENTS" cd
+    (SELECT COUNT(*) FROM "CUST_DOCUMENTS" cd
      WHERE cd."shipment_id" = sh."id") AS "total_doc_count"
 FROM "WSH_DELIVERY_HEADERS" sh
-JOIN "AP_SUPPLIERS" s ON s."id" = sh."supplier_id"
+JOIN "FND_SUPPLIERS" s ON s."id" = sh."supplier_id"
 LEFT JOIN "WMS_WAREHOUSES" w ON w."id" = sh."destination_warehouse_id"
 LEFT JOIN LATERAL (
     SELECT *
-    FROM "WSH_CUSTOMS_TRACKING" t
+    FROM "CUST_TRACKING" t
     WHERE t."shipment_id" = sh."id"
     ORDER BY t."stage_date" DESC
     LIMIT 1

@@ -101,9 +101,9 @@ model CustomsTracking {
   shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@index([shipmentId], map: "idx_customs_tracking_shipment")
-  @@index([shipmentId, stage], map: "idx_wsh_customs_shipment_stage")
-  @@index([paymentStatus], map: "idx_wsh_customs_payment_status")
-  @@map("WSH_CUSTOMS_TRACKING")
+  @@index([shipmentId, stage], map: "idx_cust_shipment_stage")
+  @@index([paymentStatus], map: "idx_cust_payment_status")
+  @@map("CUST_TRACKING")
 }
 
 /// Shipment line items (packing list)
@@ -160,7 +160,7 @@ model SupplierEquipmentRate {
 
   @@index([supplierId, equipmentTypeId], map: "idx_supplier_equipment_rates_lookup")
   @@index([status], map: "idx_supplier_equipment_rates_status")
-  @@map("AP_SUPPLIER_EQUIPMENT_RATES")
+  @@map("FND_SUPPLIER_EQUIPMENT_RATES")
 }
 
 /// Generator depreciation journal entries
@@ -180,7 +180,7 @@ model DepreciationEntry {
   generator Generator @relation(fields: [generatorId], references: [id], onDelete: Restrict)
 
   @@unique([generatorId, period], map: "uq_depreciation_gen_period")
-  @@map("EAM_DEPRECIATION_ENTRIES")
+  @@map("WMS_DEPRECIATION_ENTRIES")
 }
 
 // ############################################################################
@@ -208,6 +208,6 @@ model TariffRate {
   @@unique([hsCode, country, effectiveFrom], map: "uq_tariff_hs_country_effective")
   @@index([hsCode], map: "idx_tariff_rates_hs_code")
   @@index([isActive], map: "idx_tariff_rates_active")
-  @@index([hsCode, isActive, effectiveFrom], map: "idx_wsh_tariff_lookup")
-  @@map("WSH_TARIFF_RATES")
+  @@index([hsCode, isActive, effectiveFrom], map: "idx_cust_tariff_lookup")
+  @@map("CUST_TARIFF_RATES")
 }

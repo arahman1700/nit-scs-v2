@@ -47,21 +47,7 @@ function extractIndexes(content: string): { columns: string; name: string }[] {
 
 // ── Oracle Module Prefixes ─────────────────────────────────────────────────
 
-const VALID_PREFIXES = [
-  'FND_',
-  'PER_',
-  'AP_',
-  'PA_',
-  'HR_',
-  'MTL_',
-  'RCV_',
-  'ONT_',
-  'WSH_',
-  'WMS_',
-  'EAM_',
-  'QA_',
-  'AME_',
-];
+const VALID_PREFIXES = ['FND_', 'MTL_', 'RCV_', 'ONT_', 'WSH_', 'WMS_', 'CUST_'];
 
 // ============================================================================
 // TEST SUITE
@@ -104,24 +90,20 @@ describe('P5: Oracle Module Prefix Distribution', () => {
   const schemas = readSchemaFiles();
   const allMaps = schemas.flatMap(s => extractMapDirectives(s.content));
 
-  it('WMS_ prefix should have >= 25 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('WMS_')).length).toBeGreaterThanOrEqual(25);
+  it('FND_ prefix should have >= 50 tables', () => {
+    expect(allMaps.filter(m => m.startsWith('FND_')).length).toBeGreaterThanOrEqual(50);
   });
 
-  it('MTL_ prefix should have >= 10 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('MTL_')).length).toBeGreaterThanOrEqual(10);
+  it('WMS_ prefix should have >= 50 tables', () => {
+    expect(allMaps.filter(m => m.startsWith('WMS_')).length).toBeGreaterThanOrEqual(50);
   });
 
-  it('FND_ prefix should have >= 15 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('FND_')).length).toBeGreaterThanOrEqual(15);
+  it('MTL_ prefix should have >= 15 tables', () => {
+    expect(allMaps.filter(m => m.startsWith('MTL_')).length).toBeGreaterThanOrEqual(15);
   });
 
-  it('EAM_ prefix should have >= 10 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('EAM_')).length).toBeGreaterThanOrEqual(10);
-  });
-
-  it('RCV_ prefix should have >= 4 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('RCV_')).length).toBeGreaterThanOrEqual(4);
+  it('RCV_ prefix should have >= 7 tables', () => {
+    expect(allMaps.filter(m => m.startsWith('RCV_')).length).toBeGreaterThanOrEqual(7);
   });
 
   it('ONT_ prefix should have >= 5 tables', () => {
@@ -132,12 +114,14 @@ describe('P5: Oracle Module Prefix Distribution', () => {
     expect(allMaps.filter(m => m.startsWith('WSH_')).length).toBeGreaterThanOrEqual(5);
   });
 
-  it('QA_ prefix should have >= 5 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('QA_')).length).toBeGreaterThanOrEqual(5);
+  it('CUST_ prefix should have >= 3 tables', () => {
+    expect(allMaps.filter(m => m.startsWith('CUST_')).length).toBeGreaterThanOrEqual(3);
   });
 
-  it('AME_ prefix should have >= 5 tables', () => {
-    expect(allMaps.filter(m => m.startsWith('AME_')).length).toBeGreaterThanOrEqual(5);
+  it('no non-logistics prefixes remain (HR_, PER_, AP_, PA_, EAM_, QA_, AME_)', () => {
+    const banned = ['HR_', 'PER_', 'AP_', 'PA_', 'EAM_', 'QA_', 'AME_'];
+    const violations = allMaps.filter(m => banned.some(b => m.startsWith(b)));
+    expect(violations).toEqual([]);
   });
 });
 
@@ -191,15 +175,15 @@ describe('P5: Composite Indexes for Heavy Logistics Operations', () => {
 
   // --- Customs Clearance ---
   it('has customs stage composite index', () => {
-    expect(indexNames).toContain('idx_wsh_customs_shipment_stage');
+    expect(indexNames).toContain('idx_cust_shipment_stage');
   });
 
   it('has customs docs shipment+status index', () => {
-    expect(indexNames).toContain('idx_wsh_customs_docs_shipment_status');
+    expect(indexNames).toContain('idx_cust_docs_shipment_status');
   });
 
   it('has tariff lookup composite index', () => {
-    expect(indexNames).toContain('idx_wsh_tariff_lookup');
+    expect(indexNames).toContain('idx_cust_tariff_lookup');
   });
 
   // --- Picking / Putaway / Cross-dock ---
@@ -251,24 +235,24 @@ describe('P5: Specific Table Name Mappings', () => {
     ONT_ISSUE_LINES: 'MirvLine',
     ONT_RETURN_HEADERS: 'Mrv → MRN',
     ONT_RETURN_LINES: 'MrvLine',
-    QA_INSPECTION_HEADERS: 'Rfim → QCI',
+    RCV_INSPECTION_HEADERS: 'Rfim → QCI',
     RCV_DISCREPANCY_HEADERS: 'OsdReport → DR',
     MTL_ONHAND_QUANTITIES: 'InventoryLevel',
     MTL_LOT_NUMBERS: 'InventoryLot',
     WMS_GATE_PASSES: 'GatePass',
     WSH_DELIVERY_HEADERS: 'Shipment',
     MTL_SYSTEM_ITEMS: 'Item',
-    AP_SUPPLIERS: 'Supplier',
+    FND_SUPPLIERS: 'Supplier',
     WMS_WAREHOUSES: 'Warehouse',
-    PER_ALL_PEOPLE: 'Employee',
-    PA_PROJECTS: 'Project',
+    FND_EMPLOYEES: 'Employee',
+    FND_PROJECTS: 'Project',
     WMS_JOB_ORDERS: 'JobOrder',
     MTL_TRANSFER_HEADERS: 'StockTransfer',
     RCV_ASN_HEADERS: 'AdvanceShippingNotice',
     WMS_ZONES: 'WarehouseZone',
     WMS_CROSS_DOCKS: 'CrossDock',
-    EAM_ASSET_REGISTER: 'Asset',
-    WSH_CUSTOMS_DOCUMENTS: 'CustomsDocument',
+    WMS_ASSET_REGISTER: 'Asset',
+    CUST_DOCUMENTS: 'CustomsDocument',
   };
 
   for (const [tableName, description] of Object.entries(expectedMappings)) {
@@ -324,8 +308,8 @@ describe('P5: Materialized Views Migration', () => {
 
   it('MV_PENDING_CUSTOMS references shipping and customs tables', () => {
     expect(migrationSQL).toContain('"WSH_DELIVERY_HEADERS"');
-    expect(migrationSQL).toContain('"WSH_CUSTOMS_TRACKING"');
-    expect(migrationSQL).toContain('"WSH_CUSTOMS_DOCUMENTS"');
+    expect(migrationSQL).toContain('"CUST_TRACKING"');
+    expect(migrationSQL).toContain('"CUST_DOCUMENTS"');
   });
 
   it('MV_WAREHOUSE_UTILIZATION references warehouse zone tables', () => {

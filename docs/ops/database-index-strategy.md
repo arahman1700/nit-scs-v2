@@ -43,19 +43,24 @@ Examples:
 | `idx_mtl_lots_wh_avail` | `MTL_LOT_NUMBERS` | warehouseId, status, availableQty | Warehouse lot availability |
 | `idx_mtl_lots_supplier_receipt` | `MTL_LOT_NUMBERS` | supplierId, receiptDate | Supplier receipt tracking |
 
-### Shipping & Customs (WSH)
+### Shipping (WSH)
 
 | Index Name | Table | Columns | Purpose |
 |---|---|---|---|
 | `idx_wsh_ship_dest_status` | `WSH_DELIVERY_HEADERS` | destinationWarehouseId, status | Shipment arrival processing |
 | `idx_wsh_ship_mode_status` | `WSH_DELIVERY_HEADERS` | modeOfShipment, status | Mode-based filtering |
 | `idx_wsh_ship_eta_status` | `WSH_DELIVERY_HEADERS` | etaPort, status | ETA-based tracking |
-| `idx_wsh_customs_shipment_stage` | `WSH_CUSTOMS_TRACKING` | shipmentId, stage | Customs stage lookup |
-| `idx_wsh_customs_payment_status` | `WSH_CUSTOMS_TRACKING` | paymentStatus | Payment status filtering |
 | `idx_wsh_lines_shipment_item` | `WSH_DELIVERY_LINES` | shipmentId, itemId | Packing list lookup |
-| `idx_wsh_tariff_lookup` | `WSH_TARIFF_RATES` | hsCode, isActive, effectiveFrom | Tariff rate lookup |
-| `idx_wsh_customs_docs_shipment_status` | `WSH_CUSTOMS_DOCUMENTS` | shipmentId, status | Customs doc status |
-| `idx_wsh_customs_docs_shipment_type` | `WSH_CUSTOMS_DOCUMENTS` | shipmentId, documentType | Customs doc type filter |
+
+### Customs (CUST)
+
+| Index Name | Table | Columns | Purpose |
+|---|---|---|---|
+| `idx_cust_shipment_stage` | `CUST_TRACKING` | shipmentId, stage | Customs stage lookup |
+| `idx_cust_payment_status` | `CUST_TRACKING` | paymentStatus | Payment status filtering |
+| `idx_cust_tariff_lookup` | `CUST_TARIFF_RATES` | hsCode, isActive, effectiveFrom | Tariff rate lookup |
+| `idx_cust_docs_shipment_status` | `CUST_DOCUMENTS` | shipmentId, status | Customs doc status |
+| `idx_cust_docs_shipment_type` | `CUST_DOCUMENTS` | shipmentId, documentType | Customs doc type filter |
 
 ### Warehouse Operations (WMS)
 
@@ -73,22 +78,22 @@ Examples:
 | `idx_wms_staging_source_ref` | `WMS_STAGING_ASSIGNMENTS` | sourceDocType, sourceDocId | Staging source lookup |
 | `idx_wms_packing_wh_status` | `WMS_PACKING_SESSIONS` | warehouseId, status | Packing operations |
 
-### Asset & Equipment (EAM)
+### Asset & Equipment (WMS)
 
 | Index Name | Table | Columns | Purpose |
 |---|---|---|---|
-| `idx_eam_tool_issues_overdue` | `EAM_TOOL_ISSUES` | status, expectedReturnDate | Overdue tool detection |
-| `idx_eam_vehicle_maint_vehicle_status` | `EAM_VEHICLE_MAINTENANCE` | vehicleId, status | Vehicle maintenance |
-| `idx_eam_vehicle_maint_status_sched` | `EAM_VEHICLE_MAINTENANCE` | status, scheduledDate | Maintenance scheduling |
-| `idx_eam_assets_status_category` | `EAM_ASSET_REGISTER` | status, category | Asset status/category |
-| `idx_eam_assets_wh_status` | `EAM_ASSET_REGISTER` | locationWarehouseId, status | Asset warehouse status |
+| `idx_wms_tool_issues_overdue` | `WMS_TOOL_ISSUES` | status, expectedReturnDate | Overdue tool detection |
+| `idx_wms_vehicle_maint_vehicle_status` | `WMS_VEHICLE_MAINTENANCE` | vehicleId, status | Vehicle maintenance |
+| `idx_wms_vehicle_maint_status_sched` | `WMS_VEHICLE_MAINTENANCE` | status, scheduledDate | Maintenance scheduling |
+| `idx_wms_assets_status_category` | `WMS_ASSET_REGISTER` | status, category | Asset status/category |
+| `idx_wms_assets_wh_status` | `WMS_ASSET_REGISTER` | locationWarehouseId, status | Asset warehouse status |
 
-### Quality & Compliance (QA)
+### Compliance (WMS)
 
 | Index Name | Table | Columns | Purpose |
 |---|---|---|---|
-| `idx_qa_audit_wh_status` | `QA_COMPLIANCE_AUDITS` | warehouseId, status | Audit filtering |
-| `idx_qa_audit_wh_date` | `QA_COMPLIANCE_AUDITS` | warehouseId, auditDate | Audit history |
+| `idx_wms_audit_wh_status` | `WMS_COMPLIANCE_AUDITS` | warehouseId, status | Audit filtering |
+| `idx_wms_audit_wh_date` | `WMS_COMPLIANCE_AUDITS` | warehouseId, auditDate | Audit history |
 
 ## Index Design Principles
 

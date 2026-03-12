@@ -179,7 +179,7 @@ model DocumentComment {
 
   @@index([documentType, documentId], map: "idx_doc_comments_doc")
   @@index([authorId], map: "idx_doc_comments_author")
-  @@map("AME_DOCUMENT_COMMENTS")
+  @@map("FND_DOCUMENT_COMMENTS")
 }
 
 // ############################################################################
@@ -209,7 +209,7 @@ model ApprovalStep {
   @@index([documentType, documentId], map: "idx_approval_steps_doc")
   @@index([approverId], map: "idx_approval_steps_approver")
   @@index([status], map: "idx_approval_steps_status")
-  @@map("AME_APPROVAL_STEPS")
+  @@map("FND_APPROVAL_STEPS")
 }
 
 // ############################################################################
@@ -238,7 +238,7 @@ model DelegationRule {
   @@index([delegatorId], map: "idx_delegation_delegator")
   @@index([delegateId], map: "idx_delegation_delegate")
   @@index([startDate, endDate], map: "idx_delegation_dates")
-  @@map("AME_DELEGATION_RULES")
+  @@map("FND_DELEGATION_RULES")
 }
 
 // ############################################################################

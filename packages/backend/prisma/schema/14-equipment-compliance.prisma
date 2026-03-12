@@ -37,7 +37,7 @@ model EquipmentDeliveryNote {
   @@index([jobOrderId], map: "idx_equip_delivery_notes_jo")
   @@index([rentalContractId], map: "idx_equip_delivery_notes_rental")
   @@index([status], map: "idx_equip_delivery_notes_status")
-  @@map("EAM_DELIVERY_NOTES")
+  @@map("WMS_DELIVERY_NOTES")
 }
 
 /// Equipment Return Note — records equipment being returned from a job site
@@ -79,7 +79,7 @@ model EquipmentReturnNote {
   @@index([jobOrderId], map: "idx_equip_return_notes_jo")
   @@index([deliveryNoteId], map: "idx_equip_return_notes_delivery")
   @@index([status], map: "idx_equip_return_notes_status")
-  @@map("EAM_RETURN_NOTES")
+  @@map("WMS_RETURN_NOTES")
 }
 
 // ############################################################################
@@ -113,7 +113,7 @@ model SupplierEvaluation {
   @@index([status], map: "idx_supplier_eval_status")
   @@index([periodStart, periodEnd], map: "idx_supplier_eval_period")
   @@index([createdAt], map: "idx_supplier_eval_created")
-  @@map("AP_SUPPLIER_EVALUATIONS")
+  @@map("FND_SUPPLIER_EVALUATIONS")
 }
 
 /// Individual metric scores within a supplier evaluation
@@ -133,7 +133,7 @@ model SupplierEvaluationMetric {
   evaluation SupplierEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([evaluationId], map: "idx_supplier_eval_metric_eval")
-  @@map("AP_SUPPLIER_EVALUATION_METRICS")
+  @@map("FND_SUPPLIER_EVALUATION_METRICS")
 }
 
 // ############################################################################

@@ -19,7 +19,7 @@ model ParallelApprovalGroup {
   @@unique([documentType, documentId, approvalLevel], map: "uq_parallel_approval_doc_level")
   @@index([documentType, documentId], map: "idx_parallel_approval_doc")
   @@index([status], map: "idx_parallel_approval_status")
-  @@map("AME_PARALLEL_APPROVAL_GROUPS")
+  @@map("FND_PARALLEL_APPROVAL_GROUPS")
 }
 
 /// Individual responses within a parallel approval group
@@ -38,7 +38,7 @@ model ParallelApprovalResponse {
   @@unique([groupId, approverId], map: "uq_parallel_response_group_approver")
   @@index([groupId], map: "idx_parallel_response_group")
   @@index([approverId], map: "idx_parallel_response_approver")
-  @@map("AME_PARALLEL_APPROVAL_RESPONSES")
+  @@map("FND_PARALLEL_APPROVAL_RESPONSES")
 }
 
 // ############################################################################
@@ -447,7 +447,7 @@ model WorkflowTemplate {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("AME_WORKFLOW_TEMPLATES")
+  @@map("FND_WORKFLOW_TEMPLATES")
 }
 
 // ############################################################################

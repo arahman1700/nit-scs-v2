@@ -34,7 +34,7 @@
 
 ### MV_OPEN_INBOUND_DOCS
 
-**Source tables:** `RCV_RECEIPT_HEADERS`, `RCV_ASN_HEADERS`, `AP_SUPPLIERS`, `WMS_WAREHOUSES`
+**Source tables:** `RCV_RECEIPT_HEADERS`, `RCV_ASN_HEADERS`, `FND_SUPPLIERS`, `WMS_WAREHOUSES`
 
 **Columns:**
 - `doc_type` — `GRN` or `ASN`
@@ -55,7 +55,7 @@
 
 ### MV_PENDING_CUSTOMS
 
-**Source tables:** `WSH_DELIVERY_HEADERS`, `WSH_CUSTOMS_TRACKING`, `WSH_CUSTOMS_DOCUMENTS`, `AP_SUPPLIERS`, `WMS_WAREHOUSES`
+**Source tables:** `WSH_DELIVERY_HEADERS`, `CUST_TRACKING`, `CUST_DOCUMENTS`, `FND_SUPPLIERS`, `WMS_WAREHOUSES`
 
 **Columns:**
 - `shipment_id`, `shipment_number`, `shipment_status`
@@ -78,7 +78,7 @@
 
 ### MV_WAREHOUSE_UTILIZATION
 
-**Source tables:** `WMS_WAREHOUSES`, `WMS_WAREHOUSE_TYPES`, `WMS_ZONES`, `WMS_BIN_LOCATIONS`, `MTL_ONHAND_QUANTITIES`
+**Source tables:** `WMS_WAREHOUSES`, `WMS_WAREHOUSE_TYPES`, `WMS_ZONES`, `WMS_BIN_LOCATIONS`
 
 **Columns:**
 - `warehouse_id`, `warehouse_name`, `warehouse_code`

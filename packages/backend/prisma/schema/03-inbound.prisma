@@ -120,7 +120,7 @@ model Rfim {
   @@index([mrrvId], map: "idx_rfim_mrrv")
   @@index([status], map: "idx_rfim_status")
   @@index([status, createdAt], map: "idx_rfim_status_created")
-  @@map("QA_INSPECTION_HEADERS")
+  @@map("RCV_INSPECTION_HEADERS")
 }
 
 /// Over/Short/Damage reports linked to MRRVs

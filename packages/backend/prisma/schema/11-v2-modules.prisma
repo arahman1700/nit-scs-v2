@@ -136,7 +136,7 @@ model RentalContract {
 
   @@index([status], map: "idx_rental_contracts_status")
   @@index([status, endDate], map: "idx_rental_contracts_status_end")
-  @@map("EAM_RENTAL_CONTRACTS")
+  @@map("WMS_RENTAL_CONTRACTS")
 }
 
 /// Rental contract line items
@@ -152,7 +152,7 @@ model RentalContractLine {
   contract RentalContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@index([contractId], map: "idx_rental_contract_lines_contract")
-  @@map("EAM_RENTAL_CONTRACT_LINES")
+  @@map("WMS_RENTAL_CONTRACT_LINES")
 }
 
 /// Generator fuel consumption log
@@ -173,7 +173,7 @@ model GeneratorFuelLog {
   loggedBy  Employee  @relation("FuelLoggedBy", fields: [loggedById], references: [id], onDelete: Restrict)
 
   @@index([generatorId, fuelDate], map: "idx_fuel_log_gen_date")
-  @@map("EAM_GENERATOR_FUEL_LOGS")
+  @@map("WMS_GENERATOR_FUEL_LOGS")
 }
 
 /// Generator maintenance schedule and records
@@ -198,7 +198,7 @@ model GeneratorMaintenance {
   performedBy Employee? @relation("MaintenancePerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
 
   @@index([generatorId, scheduledDate], map: "idx_gen_maint_gen_date")
-  @@map("EAM_GENERATOR_MAINTENANCE")
+  @@map("WMS_GENERATOR_MAINTENANCE")
 }
 
 /// Surplus item identification and disposition
@@ -320,7 +320,7 @@ model Tool {
   // Reverse relations
   toolIssues ToolIssue[]
 
-  @@map("EAM_TOOL_REGISTRY")
+  @@map("WMS_TOOL_REGISTRY")
 }
 
 /// Tool issue and return tracking
@@ -348,8 +348,8 @@ model ToolIssue {
   @@index([toolId], map: "idx_tool_issues_tool")
   @@index([status], map: "idx_tool_issues_status")
   @@index([issuedToId, status], map: "idx_tool_issues_user_status")
-  @@index([status, expectedReturnDate], map: "idx_eam_tool_issues_overdue")
-  @@map("EAM_TOOL_ISSUES")
+  @@index([status, expectedReturnDate], map: "idx_wms_tool_issues_overdue")
+  @@map("WMS_TOOL_ISSUES")
 }
 
 /// Warehouse zone configuration
@@ -603,7 +603,7 @@ model InspectionChecklist {
   items InspectionChecklistItem[]
 
   @@index([category, isActive], map: "idx_inspection_checklists_cat_active")
-  @@map("QA_INSPECTION_CHECKLISTS")
+  @@map("WMS_INSPECTION_CHECKLISTS")
 }
 
 /// Individual items within an inspection checklist
@@ -619,7 +619,7 @@ model InspectionChecklistItem {
   checklist InspectionChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
 
   @@index([checklistId], map: "idx_checklist_items_checklist")
-  @@map("QA_INSPECTION_CHECKLIST_ITEMS")
+  @@map("WMS_INSPECTION_CHECKLIST_ITEMS")
 }
 
 // ############################################################################

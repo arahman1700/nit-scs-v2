@@ -93,7 +93,7 @@ model EquipmentCategory {
   // Relations
   equipmentTypes EquipmentType[]
 
-  @@map("EAM_EQUIPMENT_CATEGORIES")
+  @@map("WMS_EQUIPMENT_CATEGORIES")
 }
 
 /// Equipment type definitions
@@ -111,7 +111,7 @@ model EquipmentType {
   annualMaintenanceContracts AnnualMaintenanceContract[]
 
   @@index([categoryId], map: "idx_equipment_types_category")
-  @@map("EAM_EQUIPMENT_TYPES")
+  @@map("WMS_EQUIPMENT_TYPES")
 }
 
 /// Approval workflow rules per document type and amount threshold
@@ -126,5 +126,5 @@ model ApprovalWorkflow {
   slaHours     Int      @map("sla_hours")
 
   @@index([documentType], map: "idx_approval_workflows_doc_type")
-  @@map("AME_APPROVAL_WORKFLOWS")
+  @@map("FND_APPROVAL_WORKFLOWS")
 }

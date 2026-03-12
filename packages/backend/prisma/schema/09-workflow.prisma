@@ -37,7 +37,7 @@ model Workflow {
   rules WorkflowRule[]
 
   @@index([entityType, isActive], map: "idx_workflows_entity_active")
-  @@map("AME_WORKFLOWS")
+  @@map("FND_WORKFLOWS")
 }
 
 /// IF-THEN rule within a workflow
@@ -69,7 +69,7 @@ model WorkflowRule {
 
   @@index([workflowId, isActive], map: "idx_rules_workflow_active")
   @@index([triggerEvent], map: "idx_rules_trigger")
-  @@map("AME_WORKFLOW_RULES")
+  @@map("FND_WORKFLOW_RULES")
 }
 
 /// Audit trail of every rule execution
@@ -97,5 +97,5 @@ model WorkflowExecutionLog {
   @@index([ruleId], map: "idx_exec_log_rule")
   @@index([entityType, entityId], map: "idx_exec_log_entity")
   @@index([executedAt], map: "idx_exec_log_date")
-  @@map("AME_WORKFLOW_EXECUTION_LOGS")
+  @@map("FND_WORKFLOW_EXECUTION_LOGS")
 }

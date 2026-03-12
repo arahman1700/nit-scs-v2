@@ -56,7 +56,7 @@ model AnnualMaintenanceContract {
   @@index([status], map: "idx_amc_status")
   @@index([supplierId], map: "idx_amc_supplier")
   @@index([endDate], map: "idx_amc_end_date")
-  @@map("EAM_MAINTENANCE_CONTRACTS")
+  @@map("WMS_MAINTENANCE_CONTRACTS")
 }
 
 // ############################################################################
@@ -103,9 +103,9 @@ model Asset {
   @@index([category], map: "idx_assets_category")
   @@index([locationWarehouseId], map: "idx_assets_warehouse")
   @@index([assignedToId], map: "idx_assets_assigned_to")
-  @@index([status, category], map: "idx_eam_assets_status_category")
-  @@index([locationWarehouseId, status], map: "idx_eam_assets_wh_status")
-  @@map("EAM_ASSET_REGISTER")
+  @@index([status, category], map: "idx_wms_assets_status_category")
+  @@index([locationWarehouseId, status], map: "idx_wms_assets_wh_status")
+  @@map("WMS_ASSET_REGISTER")
 }
 
 /// Asset transfer history — tracks movement between warehouses and employees
@@ -131,7 +131,7 @@ model AssetTransfer {
 
   @@index([assetId], map: "idx_asset_transfers_asset")
   @@index([transferDate], map: "idx_asset_transfers_date")
-  @@map("EAM_ASSET_TRANSFERS")
+  @@map("WMS_ASSET_TRANSFERS")
 }
 
 /// Asset depreciation records — quarterly depreciation calculations
@@ -150,7 +150,7 @@ model AssetDepreciation {
 
   @@unique([assetId, period], map: "uq_asset_depreciation_period")
   @@index([assetId], map: "idx_asset_depreciations_asset")
-  @@map("EAM_ASSET_DEPRECIATIONS")
+  @@map("WMS_ASSET_DEPRECIATIONS")
 }
 
 // ############################################################################
@@ -182,9 +182,9 @@ model CustomsDocument {
   @@index([shipmentId], map: "idx_customs_documents_shipment")
   @@index([status], map: "idx_customs_documents_status")
   @@index([documentType], map: "idx_customs_documents_type")
-  @@index([shipmentId, status], map: "idx_wsh_customs_docs_shipment_status")
-  @@index([shipmentId, documentType], map: "idx_wsh_customs_docs_shipment_type")
-  @@map("WSH_CUSTOMS_DOCUMENTS")
+  @@index([shipmentId, status], map: "idx_cust_docs_shipment_status")
+  @@index([shipmentId, documentType], map: "idx_cust_docs_shipment_type")
+  @@map("CUST_DOCUMENTS")
 }
 
 // ############################################################################
@@ -224,9 +224,9 @@ model VehicleMaintenance {
   @@index([vehicleId], map: "idx_vehicle_maint_vehicle")
   @@index([status], map: "idx_vehicle_maint_status")
   @@index([scheduledDate], map: "idx_vehicle_maint_scheduled")
-  @@index([vehicleId, status], map: "idx_eam_vehicle_maint_vehicle_status")
-  @@index([status, scheduledDate], map: "idx_eam_vehicle_maint_status_sched")
-  @@map("EAM_VEHICLE_MAINTENANCE")
+  @@index([vehicleId, status], map: "idx_wms_vehicle_maint_vehicle_status")
+  @@index([status, scheduledDate], map: "idx_wms_vehicle_maint_status_sched")
+  @@map("WMS_VEHICLE_MAINTENANCE")
 }
 
 // ############################################################################
@@ -254,7 +254,7 @@ model ComplianceChecklist {
   @@index([standard], map: "idx_compliance_checklists_standard")
   @@index([category], map: "idx_compliance_checklists_category")
   @@index([isActive], map: "idx_compliance_checklists_active")
-  @@map("QA_COMPLIANCE_CHECKLISTS")
+  @@map("WMS_COMPLIANCE_CHECKLISTS")
 }
 
 /// Individual checklist questions/items within a compliance checklist
@@ -274,7 +274,7 @@ model ComplianceChecklistItem {
   responses ComplianceAuditResponse[]
 
   @@index([checklistId], map: "idx_compliance_checklist_items_checklist")
-  @@map("QA_COMPLIANCE_CHECKLIST_ITEMS")
+  @@map("WMS_COMPLIANCE_CHECKLIST_ITEMS")
 }
 
 /// A compliance audit conducted against a checklist at a specific warehouse
@@ -308,9 +308,9 @@ model ComplianceAudit {
   @@index([auditorId], map: "idx_compliance_audits_auditor")
   @@index([status], map: "idx_compliance_audits_status")
   @@index([auditDate], map: "idx_compliance_audits_date")
-  @@index([warehouseId, status], map: "idx_qa_audit_wh_status")
-  @@index([warehouseId, auditDate], map: "idx_qa_audit_wh_date")
-  @@map("QA_COMPLIANCE_AUDITS")
+  @@index([warehouseId, status], map: "idx_wms_audit_wh_status")
+  @@index([warehouseId, auditDate], map: "idx_wms_audit_wh_date")
+  @@map("WMS_COMPLIANCE_AUDITS")
 }
 
 /// Individual responses to checklist items within an audit
@@ -330,7 +330,7 @@ model ComplianceAuditResponse {
 
   @@index([auditId], map: "idx_compliance_audit_responses_audit")
   @@index([checklistItemId], map: "idx_compliance_audit_responses_item")
-  @@map("QA_COMPLIANCE_AUDIT_RESPONSES")
+  @@map("WMS_COMPLIANCE_AUDIT_RESPONSES")
 }
 
 // ############################################################################

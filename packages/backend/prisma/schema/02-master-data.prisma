@@ -21,7 +21,7 @@ model Entity {
   projects  Project[]
   jobOrders JobOrder[]
 
-  @@map("HR_LEGAL_ENTITIES")
+  @@map("FND_LEGAL_ENTITIES")
 }
 
 /// Construction projects and sites
@@ -71,7 +71,7 @@ model Project {
   dynamicDocuments     DynamicDocument[]     @relation("DynDocProject")
   transportOrders      TransportOrder[]
 
-  @@map("PA_PROJECTS")
+  @@map("FND_PROJECTS")
 }
 
 /// System users and employees
@@ -271,7 +271,7 @@ model Employee {
   @@index([assignedProjectId], map: "idx_employees_project")
   @@index([assignedWarehouseId], map: "idx_employees_warehouse")
   @@index([department], map: "idx_employees_department")
-  @@map("PER_ALL_PEOPLE")
+  @@map("FND_EMPLOYEES")
 }
 
 /// Suppliers, vendors, and freight forwarders
@@ -315,7 +315,7 @@ model Supplier {
   annualMaintenanceContracts AnnualMaintenanceContract[]
 
   @@index([cityId], map: "idx_suppliers_city")
-  @@map("AP_SUPPLIERS")
+  @@map("FND_SUPPLIERS")
 }
 
 /// Warehouse and storage locations
@@ -488,7 +488,7 @@ model Generator {
   @@index([currentProjectId], map: "idx_generators_project")
   @@index([currentWarehouseId], map: "idx_generators_warehouse")
   @@index([equipmentTypeId], map: "idx_generators_equipment_type")
-  @@map("EAM_GENERATORS")
+  @@map("WMS_GENERATORS")
 }
 
 /// Vehicle and heavy equipment fleet
@@ -516,5 +516,5 @@ model EquipmentFleet {
 
   @@index([equipmentTypeId], map: "idx_equipment_fleet_type")
   @@index([driverId], map: "idx_equipment_fleet_driver")
-  @@map("EAM_FLEET_VEHICLES")
+  @@map("WMS_FLEET_VEHICLES")
 }
