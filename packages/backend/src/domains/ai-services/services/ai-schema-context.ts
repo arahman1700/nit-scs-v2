@@ -3,6 +3,7 @@
  * for generating safe, scoped SQL queries.
  *
  * Only exposes an allow-list of tables. AI may only SELECT from these tables.
+ * Table names use Oracle WMS standard (matching Prisma @@map values).
  */
 
 export interface TableInfo {
@@ -11,35 +12,35 @@ export interface TableInfo {
   columns: string[];
 }
 
-/** Tables the AI is allowed to query (SELECT only) */
+/** Tables the AI is allowed to query (SELECT only) — Oracle WMS naming */
 export const ALLOWED_TABLES: TableInfo[] = [
   {
-    table: 'projects',
+    table: 'FND_PROJECTS',
     description: 'Projects / job sites',
     columns: ['id', 'project_code', 'project_name', 'client', 'manager', 'status', 'created_at'],
   },
   {
-    table: 'items',
+    table: 'MTL_SYSTEM_ITEMS',
     description: 'Material items catalog',
     columns: ['id', 'item_code', 'item_name', 'category', 'uom_id', 'status', 'created_at'],
   },
   {
-    table: 'warehouses',
+    table: 'WMS_WAREHOUSES',
     description: 'Warehouses / storage locations',
     columns: ['id', 'warehouse_code', 'warehouse_name', 'project_id', 'status'],
   },
   {
-    table: 'suppliers',
+    table: 'FND_SUPPLIERS',
     description: 'Material suppliers',
     columns: ['id', 'supplier_code', 'supplier_name', 'category', 'status'],
   },
   {
-    table: 'employees',
+    table: 'FND_EMPLOYEES',
     description: 'System users / employees',
     columns: ['id', 'employee_id', 'full_name', 'email', 'system_role', 'status'],
   },
   {
-    table: 'mrrv',
+    table: 'RCV_RECEIPT_HEADERS',
     description: 'Goods Receipt Notes (GRN)',
     columns: [
       'id',
@@ -54,82 +55,90 @@ export const ALLOWED_TABLES: TableInfo[] = [
     ],
   },
   {
-    table: 'mrrv_lines',
+    table: 'RCV_RECEIPT_LINES',
     description: 'GRN line items',
     columns: ['id', 'mrrv_id', 'item_id', 'qty_received', 'qty_accepted', 'unit_cost'],
   },
   {
-    table: 'mirv',
+    table: 'ONT_ISSUE_HEADERS',
     description: 'Material Issues (MI)',
     columns: ['id', 'mirv_number', 'status', 'project_id', 'warehouse_id', 'request_date', 'issued_date', 'created_at'],
   },
   {
-    table: 'mirv_lines',
+    table: 'ONT_ISSUE_LINES',
     description: 'MI line items',
     columns: ['id', 'mirv_id', 'item_id', 'qty_requested', 'qty_issued'],
   },
   {
-    table: 'mrv',
+    table: 'ONT_RETURN_HEADERS',
     description: 'Material Returns (MRN)',
     columns: ['id', 'mrv_number', 'status', 'project_id', 'warehouse_id', 'return_date', 'created_at'],
   },
   {
-    table: 'material_requisitions',
+    table: 'ONT_REQUISITION_HEADERS',
     description: 'Material Requests (MR)',
     columns: ['id', 'mrf_number', 'status', 'project_id', 'created_at'],
   },
   {
-    table: 'job_orders',
+    table: 'WMS_JOB_ORDERS',
     description: 'Job Orders (JO)',
     columns: ['id', 'jo_number', 'jo_type', 'status', 'priority', 'project_id', 'request_date', 'created_at'],
   },
   {
-    table: 'shipments',
+    table: 'WSH_DELIVERY_HEADERS',
     description: 'Shipments',
-    columns: ['id', 'shipment_number', 'status', 'origin', 'destination', 'eta', 'created_at'],
+    columns: [
+      'id',
+      'shipment_number',
+      'status',
+      'origin_country',
+      'destination_warehouse_id',
+      'eta_port',
+      'created_at',
+    ],
   },
   {
-    table: 'inventory_levels',
+    table: 'MTL_ONHAND_QUANTITIES',
     description: 'Current inventory levels per item/warehouse',
     columns: ['id', 'item_id', 'warehouse_id', 'qty_on_hand', 'qty_reserved', 'qty_available', 'reorder_point'],
   },
   {
-    table: 'inventory_lots',
+    table: 'MTL_LOT_NUMBERS',
     description: 'Individual inventory lots (FIFO)',
     columns: ['id', 'item_id', 'warehouse_id', 'lot_number', 'available_qty', 'unit_cost', 'received_date', 'status'],
   },
   {
-    table: 'scrap_items',
+    table: 'MTL_SCRAP_ITEMS',
     description: 'Scrap items',
     columns: ['id', 'scrap_number', 'status', 'item_id', 'qty', 'project_id', 'created_at'],
   },
   {
-    table: 'rfim',
+    table: 'RCV_INSPECTION_HEADERS',
     description: 'Quality Control Inspections (QCI)',
     columns: ['id', 'rfim_number', 'status', 'mrrv_id', 'result', 'created_at'],
   },
   {
-    table: 'osd_reports',
+    table: 'RCV_DISCREPANCY_HEADERS',
     description: 'Discrepancy Reports (DR)',
-    columns: ['id', 'osd_number', 'status', 'report_type', 'created_at'],
+    columns: ['id', 'osd_number', 'status', 'report_types', 'created_at'],
   },
   {
-    table: 'stock_transfers',
+    table: 'MTL_TRANSFER_HEADERS',
     description: 'Stock transfer / WT documents',
     columns: ['id', 'transfer_number', 'status', 'from_warehouse_id', 'to_warehouse_id', 'transfer_date', 'created_at'],
   },
   {
-    table: 'gate_passes',
+    table: 'WMS_GATE_PASSES',
     description: 'Gate pass documents',
     columns: ['id', 'gate_pass_number', 'status', 'mirv_id', 'project_id', 'created_at'],
   },
   {
-    table: 'imsf',
-    description: 'Inter-site material supply forms',
-    columns: ['id', 'imsf_number', 'status', 'from_warehouse_id', 'to_warehouse_id', 'created_at'],
+    table: 'MTL_INTERNAL_TRANSFERS',
+    description: 'Inter-site material supply forms (IMSF)',
+    columns: ['id', 'imsf_number', 'status', 'sender_project_id', 'receiver_project_id', 'created_at'],
   },
   {
-    table: 'surplus_items',
+    table: 'MTL_SURPLUS_ITEMS',
     description: 'Surplus inventory',
     columns: ['id', 'surplus_number', 'status', 'item_id', 'qty', 'project_id', 'created_at'],
   },
@@ -299,18 +308,18 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
   // Extract table names from FROM and JOIN clauses (using cleaned SQL)
   const fromMatch = cleaned.match(/\bfrom\s+(\w+)/gi) ?? [];
   const joinMatch = cleaned.match(/\bjoin\s+(\w+)/gi) ?? [];
-  const allTables = [...fromMatch, ...joinMatch].map(m => m.split(/\s+/)[1]?.toLowerCase()).filter(Boolean);
+  const allTables = [...fromMatch, ...joinMatch].map(m => m.split(/\s+/)[1]?.toUpperCase()).filter(Boolean);
 
   for (const table of allTables) {
     // Block any pg_ prefixed tables (system catalogs)
-    if (table!.startsWith('pg_')) {
+    if (table!.toLowerCase().startsWith('pg_')) {
       return { valid: false, reason: `System catalog table not allowed: ${table}` };
     }
     // Block known system catalog schemas/tables
-    if (BLOCKED_TABLES.has(table!)) {
+    if (BLOCKED_TABLES.has(table!.toLowerCase())) {
       return { valid: false, reason: `System catalog table not allowed: ${table}` };
     }
-    // Check against allowlist
+    // Check against allowlist (case-insensitive)
     if (!ALLOWED_TABLE_SET.has(table!)) {
       return { valid: false, reason: `Table not allowed: ${table}` };
     }

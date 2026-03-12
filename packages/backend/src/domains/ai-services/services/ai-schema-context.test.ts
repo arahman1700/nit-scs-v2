@@ -5,20 +5,20 @@ import { ALLOWED_TABLES, BLOCKED_TABLES, buildSchemaPrompt, validateQuery } from
 /*  ALLOWED_TABLES registry                                           */
 /* ------------------------------------------------------------------ */
 describe('ALLOWED_TABLES', () => {
-  it('includes original core tables', () => {
+  it('includes core Oracle WMS tables', () => {
     const names = ALLOWED_TABLES.map(t => t.table);
-    expect(names).toContain('projects');
-    expect(names).toContain('items');
-    expect(names).toContain('mrrv');
-    expect(names).toContain('inventory_levels');
+    expect(names).toContain('FND_PROJECTS');
+    expect(names).toContain('MTL_SYSTEM_ITEMS');
+    expect(names).toContain('RCV_RECEIPT_HEADERS');
+    expect(names).toContain('MTL_ONHAND_QUANTITIES');
   });
 
-  it('includes the 4 newly added tables', () => {
+  it('includes transfer and logistics tables', () => {
     const names = ALLOWED_TABLES.map(t => t.table);
-    expect(names).toContain('stock_transfers');
-    expect(names).toContain('gate_passes');
-    expect(names).toContain('imsf');
-    expect(names).toContain('surplus_items');
+    expect(names).toContain('MTL_TRANSFER_HEADERS');
+    expect(names).toContain('WMS_GATE_PASSES');
+    expect(names).toContain('MTL_INTERNAL_TRANSFERS');
+    expect(names).toContain('MTL_SURPLUS_ITEMS');
   });
 
   it('every entry has table, description, and non-empty columns', () => {
@@ -26,6 +26,14 @@ describe('ALLOWED_TABLES', () => {
       expect(t.table).toBeTruthy();
       expect(t.description).toBeTruthy();
       expect(t.columns.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('all table names use Oracle WMS naming convention (UPPER_CASE with prefix)', () => {
+    const validPrefixes = ['FND_', 'MTL_', 'WMS_', 'ONT_', 'RCV_', 'WSH_', 'CUST_', 'AP_'];
+    for (const t of ALLOWED_TABLES) {
+      const hasValidPrefix = validPrefixes.some(p => t.table.startsWith(p));
+      expect(hasValidPrefix).toBe(true);
     }
   });
 });
@@ -71,43 +79,43 @@ describe('buildSchemaPrompt', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — valid queries', () => {
   it('accepts a simple SELECT with LIMIT', () => {
-    const result = validateQuery('SELECT id, project_name FROM projects LIMIT 10');
+    const result = validateQuery('SELECT id, project_name FROM FND_PROJECTS LIMIT 10');
     expect(result).toEqual({ valid: true });
   });
 
   it('accepts a SELECT with JOIN on allowed tables', () => {
     const sql =
-      'SELECT m.id, i.item_name FROM mrrv_lines ml JOIN items i ON ml.item_id = i.id JOIN mrrv m ON ml.mrrv_id = m.id LIMIT 50';
+      'SELECT m.id, i.item_name FROM RCV_RECEIPT_LINES ml JOIN MTL_SYSTEM_ITEMS i ON ml.item_id = i.id JOIN RCV_RECEIPT_HEADERS m ON ml.mrrv_id = m.id LIMIT 50';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
-  it('accepts a query on newly added stock_transfers table', () => {
-    const sql = 'SELECT id, transfer_number, status FROM stock_transfers LIMIT 20';
+  it('accepts a query on MTL_TRANSFER_HEADERS table', () => {
+    const sql = 'SELECT id, transfer_number, status FROM MTL_TRANSFER_HEADERS LIMIT 20';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
-  it('accepts a query on newly added gate_passes table', () => {
-    const sql = 'SELECT id, gate_pass_number FROM gate_passes LIMIT 10';
+  it('accepts a query on WMS_GATE_PASSES table', () => {
+    const sql = 'SELECT id, gate_pass_number FROM WMS_GATE_PASSES LIMIT 10';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
-  it('accepts a query on newly added imsf table', () => {
-    const sql = 'SELECT id, imsf_number, status FROM imsf LIMIT 10';
+  it('accepts a query on MTL_INTERNAL_TRANSFERS table', () => {
+    const sql = 'SELECT id, imsf_number, status FROM MTL_INTERNAL_TRANSFERS LIMIT 10';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
-  it('accepts a query on newly added surplus_items table', () => {
-    const sql = 'SELECT id, surplus_number FROM surplus_items LIMIT 5';
+  it('accepts a query on MTL_SURPLUS_ITEMS table', () => {
+    const sql = 'SELECT id, surplus_number FROM MTL_SURPLUS_ITEMS LIMIT 5';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
   it('accepts a query with WHERE clause and ORDER BY', () => {
-    const sql = "SELECT id, status FROM projects WHERE status = 'active' ORDER BY created_at LIMIT 100";
+    const sql = "SELECT id, status FROM FND_PROJECTS WHERE status = 'active' ORDER BY created_at LIMIT 100";
     expect(validateQuery(sql).valid).toBe(true);
   });
 
   it('accepts aggregate queries on allowed tables', () => {
-    const sql = 'SELECT warehouse_id, COUNT(*) as cnt FROM inventory_levels GROUP BY warehouse_id LIMIT 50';
+    const sql = 'SELECT warehouse_id, COUNT(*) as cnt FROM MTL_ONHAND_QUANTITIES GROUP BY warehouse_id LIMIT 50';
     expect(validateQuery(sql).valid).toBe(true);
   });
 });
@@ -117,18 +125,18 @@ describe('validateQuery — valid queries', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — non-SELECT rejection', () => {
   it('rejects INSERT statement', () => {
-    const result = validateQuery("INSERT INTO projects (id) VALUES ('x')");
+    const result = validateQuery("INSERT INTO FND_PROJECTS (id) VALUES ('x')");
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Only SELECT');
   });
 
   it('rejects UPDATE statement', () => {
-    const result = validateQuery("UPDATE projects SET status = 'deleted'");
+    const result = validateQuery("UPDATE FND_PROJECTS SET status = 'deleted'");
     expect(result.valid).toBe(false);
   });
 
   it('rejects DELETE statement', () => {
-    const result = validateQuery('DELETE FROM projects');
+    const result = validateQuery('DELETE FROM FND_PROJECTS');
     expect(result.valid).toBe(false);
   });
 });
@@ -138,7 +146,7 @@ describe('validateQuery — non-SELECT rejection', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — multi-statement', () => {
   it('rejects queries containing semicolons', () => {
-    const sql = 'SELECT id FROM projects LIMIT 10; DROP TABLE projects';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 10; DROP TABLE FND_PROJECTS';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Multiple statements');
@@ -182,7 +190,7 @@ describe('validateQuery — forbidden keywords', () => {
   for (const keyword of forbiddenWords) {
     it(`rejects queries containing "${keyword}"`, () => {
       // Build a query that starts with SELECT but smuggles in the keyword
-      const sql = `SELECT id FROM projects WHERE 1=1 LIMIT 10 ${keyword} something`;
+      const sql = `SELECT id FROM FND_PROJECTS WHERE 1=1 LIMIT 10 ${keyword} something`;
       const result = validateQuery(sql);
       expect(result.valid).toBe(false);
       expect(result.reason).toContain('Forbidden keyword');
@@ -190,7 +198,7 @@ describe('validateQuery — forbidden keywords', () => {
   }
 
   it('rejects CTE (WITH ... AS)', () => {
-    const sql = 'WITH cte AS (SELECT id FROM projects) SELECT * FROM cte LIMIT 10';
+    const sql = 'WITH cte AS (SELECT id FROM FND_PROJECTS) SELECT * FROM cte LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     // WITH is forbidden, and also does not start with SELECT
@@ -198,7 +206,7 @@ describe('validateQuery — forbidden keywords', () => {
   });
 
   it('rejects SELECT ... INTO (data exfiltration)', () => {
-    const sql = 'SELECT id INTO temp_table FROM projects LIMIT 10';
+    const sql = 'SELECT id INTO temp_table FROM FND_PROJECTS LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Forbidden keyword');
@@ -211,14 +219,14 @@ describe('validateQuery — forbidden keywords', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — subquery in FROM', () => {
   it('rejects subquery in FROM clause', () => {
-    const sql = 'SELECT * FROM (SELECT id FROM projects) sub LIMIT 10';
+    const sql = 'SELECT * FROM (SELECT id FROM FND_PROJECTS) sub LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Subqueries in FROM');
   });
 
   it('rejects subquery in FROM with extra whitespace', () => {
-    const sql = 'SELECT * FROM  (  SELECT id FROM projects ) sub LIMIT 10';
+    const sql = 'SELECT * FROM  (  SELECT id FROM FND_PROJECTS ) sub LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Subqueries in FROM');
@@ -230,26 +238,26 @@ describe('validateQuery — subquery in FROM', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — LIMIT enforcement', () => {
   it('rejects queries without a LIMIT clause', () => {
-    const sql = 'SELECT id FROM projects';
+    const sql = 'SELECT id FROM FND_PROJECTS';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('LIMIT');
   });
 
   it('rejects LIMIT exceeding 1000', () => {
-    const sql = 'SELECT id FROM projects LIMIT 5000';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 5000';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('LIMIT must not exceed 1000');
   });
 
   it('accepts LIMIT of exactly 1000', () => {
-    const sql = 'SELECT id FROM projects LIMIT 1000';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 1000';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
   it('accepts LIMIT of 1', () => {
-    const sql = 'SELECT id FROM projects LIMIT 1';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 1';
     expect(validateQuery(sql).valid).toBe(true);
   });
 });
@@ -329,7 +337,7 @@ describe('validateQuery — system catalog tables', () => {
   });
 
   it('rejects pg_ table in a JOIN', () => {
-    const sql = 'SELECT p.id FROM projects p JOIN pg_roles r ON p.manager = r.rolname LIMIT 10';
+    const sql = 'SELECT p.id FROM FND_PROJECTS p JOIN pg_roles r ON p.manager = r.rolname LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('System catalog table not allowed');
@@ -348,7 +356,7 @@ describe('validateQuery — table allowlist', () => {
   });
 
   it('rejects query with unknown table in JOIN', () => {
-    const sql = 'SELECT p.id FROM projects p JOIN secret_data s ON p.id = s.project_id LIMIT 10';
+    const sql = 'SELECT p.id FROM FND_PROJECTS p JOIN secret_data s ON p.id = s.project_id LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('Table not allowed');
@@ -360,17 +368,17 @@ describe('validateQuery — table allowlist', () => {
 /* ------------------------------------------------------------------ */
 describe('validateQuery — case insensitivity', () => {
   it('accepts uppercase SELECT', () => {
-    const sql = 'SELECT id FROM projects LIMIT 10';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 10';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
   it('accepts mixed-case select', () => {
-    const sql = 'Select id From projects Limit 10';
+    const sql = 'Select id From fnd_projects Limit 10';
     expect(validateQuery(sql).valid).toBe(true);
   });
 
   it('detects forbidden keywords regardless of case', () => {
-    const sql = 'SELECT id FROM projects LIMIT 10 UNION SELECT id FROM items LIMIT 10';
+    const sql = 'SELECT id FROM FND_PROJECTS LIMIT 10 UNION SELECT id FROM MTL_SYSTEM_ITEMS LIMIT 10';
     expect(validateQuery(sql).valid).toBe(false);
   });
 
@@ -386,26 +394,26 @@ describe('validateQuery — case insensitivity', () => {
 
 describe('validateQuery — sensitive columns', () => {
   it('blocks queries selecting password_hash', () => {
-    const sql = 'SELECT id, password_hash FROM employees LIMIT 10';
+    const sql = 'SELECT id, password_hash FROM FND_EMPLOYEES LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
     expect(result.reason).toContain('sensitive column');
   });
 
   it('blocks queries referencing refresh_token', () => {
-    const sql = 'SELECT id, refresh_token FROM employees LIMIT 10';
+    const sql = 'SELECT id, refresh_token FROM FND_EMPLOYEES LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
   });
 
   it('blocks queries with api_key column', () => {
-    const sql = 'SELECT api_key FROM system_settings LIMIT 10';
+    const sql = 'SELECT api_key FROM FND_SYSTEM_SETTINGS LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(false);
   });
 
   it('allows queries without sensitive columns', () => {
-    const sql = 'SELECT id, full_name, email FROM employees LIMIT 10';
+    const sql = 'SELECT id, full_name, email FROM FND_EMPLOYEES LIMIT 10';
     const result = validateQuery(sql);
     expect(result.valid).toBe(true);
   });
