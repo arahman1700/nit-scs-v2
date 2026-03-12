@@ -253,6 +253,41 @@ export {
   useRejectCustomsDocument,
   useDocumentCompleteness,
 } from '../../domains/logistics/hooks/useCustomsDocuments';
+export {
+  useCarrierList,
+  useCarrier,
+  useCreateCarrier,
+  useUpdateCarrier,
+  useSuspendCarrier,
+  useActivateCarrier,
+  useDeleteCarrier,
+  useCarrierRates,
+  useCreateCarrierRate,
+  useUpdateCarrierRate,
+  useDeleteCarrierRate,
+} from '../../domains/logistics/hooks/useCarrier';
+export type { CarrierService, CarrierRate, CarrierFilters } from '../../domains/logistics/hooks/useCarrier';
+export {
+  useThreePlContractList,
+  useThreePlContract,
+  useCreateThreePlContract,
+  useUpdateThreePlContract,
+  useActivateThreePlContract,
+  useSuspendThreePlContract,
+  useTerminateThreePlContract,
+  useDeleteThreePlContract,
+  useThreePlChargeList,
+  useThreePlCharge,
+  useCreateThreePlCharge,
+  useUpdateThreePlCharge,
+  useDeleteThreePlCharge,
+} from '../../domains/logistics/hooks/use3pl';
+export type {
+  ThreePlContract,
+  ThreePlCharge,
+  ThreePlContractFilters,
+  ThreePlChargeFilters,
+} from '../../domains/logistics/hooks/use3pl';
 
 // ── Equipment ───────────────────────────────────────────────────────────
 export {
@@ -363,6 +398,64 @@ export {
   useUpdateWarehouseZone,
   useDeleteWarehouseZone,
 } from '../../domains/warehouse-ops/hooks/useWarehouseZones';
+export {
+  useLpnList,
+  useLpn,
+  useCreateLpn,
+  useUpdateLpn,
+  useCloseLpn,
+  useDeleteLpn,
+} from '../../domains/warehouse-ops/hooks/useLpn';
+export type { LicensePlate, LpnContent } from '../../domains/warehouse-ops/hooks/useLpn';
+export {
+  useRfidTagList,
+  useRfidTag,
+  useCreateRfidTag,
+  useUpdateRfidTag,
+  useAssignRfidTag,
+  useDeactivateRfidTag,
+  useDeleteRfidTag,
+  useRfidScanEvents,
+} from '../../domains/warehouse-ops/hooks/useRfid';
+export type { RfidTag, RfidScanEvent } from '../../domains/warehouse-ops/hooks/useRfid';
+export {
+  useWmsTaskList,
+  useWmsTask,
+  useCreateWmsTask,
+  useUpdateWmsTask,
+  useAssignWmsTask,
+  useStartWmsTask,
+  useCompleteWmsTask,
+  useCancelWmsTask,
+  useDeleteWmsTask,
+} from '../../domains/warehouse-ops/hooks/useWmsTask';
+export type { WmsTask, WmsTaskFilters } from '../../domains/warehouse-ops/hooks/useWmsTask';
+export {
+  useWaveList,
+  useWave,
+  useCreateWave,
+  useUpdateWave,
+  useReleaseWave,
+  useCompleteWave,
+  useCancelWave,
+  useDeleteWave,
+} from '../../domains/warehouse-ops/hooks/useWave';
+export type { WaveHeader, WaveLine, WaveFilters } from '../../domains/warehouse-ops/hooks/useWave';
+export {
+  useStockAllocationList,
+  useStockAllocation,
+  useCreateStockAllocation,
+  useUpdateStockAllocation,
+  useReleaseStockAllocation,
+  useCancelStockAllocation,
+  useDeleteStockAllocation,
+  useAllocationSummary,
+} from '../../domains/warehouse-ops/hooks/useStockAllocation';
+export type {
+  StockAllocation,
+  AllocationSummary,
+  StockAllocationFilters,
+} from '../../domains/warehouse-ops/hooks/useStockAllocation';
 
 // ── Workflow ────────────────────────────────────────────────────────────
 export * from '../../domains/workflow/hooks/useApprovalWorkflows';

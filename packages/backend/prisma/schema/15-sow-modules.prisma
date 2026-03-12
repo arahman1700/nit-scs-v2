@@ -99,6 +99,9 @@ model Asset {
   transfers           AssetTransfer[]
   depreciationRecords AssetDepreciation[]
 
+  // Reverse relations — Logistics Enhancement (P6)
+  rfidTags RfidTag[]
+
   @@index([status], map: "idx_assets_status")
   @@index([category], map: "idx_assets_category")
   @@index([locationWarehouseId], map: "idx_assets_warehouse")

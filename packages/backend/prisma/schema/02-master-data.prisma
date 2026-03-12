@@ -266,6 +266,14 @@ model Employee {
   // Reverse relations — Digital Signatures (L6)
   digitalSignatures DigitalSignature[] @relation("DigitalSignatures")
 
+  // Reverse relations — Logistics Enhancement (P6)
+  lpnsCreated        LicensePlate[]     @relation("LpnCreatedBy")
+  wmsTasksAssigned   WmsTask[]          @relation("TaskAssignedTo")
+  wavesCreated       WaveHeader[]       @relation("WaveCreatedBy")
+  waveLinesPicked    WaveLine[]         @relation("WaveLinePicker")
+  allocationsCreated StockAllocation[]  @relation("AllocatedBy")
+  chargesApproved    ThirdPartyCharge[] @relation("ChargeApprovedBy")
+
   @@index([systemRole], map: "idx_employees_system_role")
   @@index([isActive], map: "idx_employees_active")
   @@index([assignedProjectId], map: "idx_employees_project")
@@ -313,6 +321,9 @@ model Supplier {
   advanceShippingNotices     AdvanceShippingNotice[]
   supplierEvaluations        SupplierEvaluation[]
   annualMaintenanceContracts AnnualMaintenanceContract[]
+
+  // Reverse relations — Logistics Enhancement (P6)
+  thirdPartyContracts ThirdPartyContract[]
 
   @@index([cityId], map: "idx_suppliers_city")
   @@map("FND_SUPPLIERS")
@@ -386,6 +397,14 @@ model Warehouse {
   assetTransfersFrom AssetTransfer[] @relation("AssetTransferFrom")
   assetTransfersTo   AssetTransfer[] @relation("AssetTransferTo")
 
+  // Reverse relations — Logistics Enhancement (P6)
+  licensePlates     LicensePlate[]
+  rfidTags          RfidTag[]
+  wmsTasks          WmsTask[]
+  waveHeaders       WaveHeader[]
+  stockAllocations  StockAllocation[]
+  thirdPartyCharges ThirdPartyCharge[]
+
   @@index([warehouseTypeId], map: "idx_warehouses_type")
   @@index([projectId], map: "idx_warehouses_project")
   @@index([regionId], map: "idx_warehouses_region")
@@ -444,6 +463,13 @@ model Item {
   packingLines        PackingLine[]
   stagingAssignments  StagingAssignment[]
   transportOrderItems TransportOrderItem[]
+
+  // Reverse relations — Logistics Enhancement (P6)
+  lpnContents      LpnContent[]
+  rfidTags         RfidTag[]
+  wmsTasks         WmsTask[]         @relation("TaskItem")
+  waveLines        WaveLine[]
+  stockAllocations StockAllocation[]
 
   @@index([status], map: "idx_items_status")
   @@index([category], map: "idx_items_category")

@@ -374,6 +374,10 @@ model WarehouseZone {
   sensors            Sensor[]
   stagingAssignments StagingAssignment[]
   binLocations       BinLocation[]
+  licensePlates      LicensePlate[]
+  wmsTasksFrom       WmsTask[]           @relation("TaskFromZone")
+  wmsTasksTo         WmsTask[]           @relation("TaskToZone")
+  waveLinesFrom      WaveLine[]          @relation("WaveLineFromZone")
 
   @@unique([warehouseId, zoneCode])
   @@map("WMS_ZONES")
@@ -400,7 +404,12 @@ model BinLocation {
   zone WarehouseZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
 
   // Reverse relations
-  inventoryLots InventoryLot[]
+  inventoryLots    InventoryLot[]
+  licensePlates    LicensePlate[]
+  wmsTasksFrom     WmsTask[]         @relation("TaskFromBin")
+  wmsTasksTo       WmsTask[]         @relation("TaskToBin")
+  waveLinesFrom    WaveLine[]        @relation("WaveLineFromBin")
+  stockAllocations StockAllocation[]
 
   @@unique([zoneId, locationCode], map: "uq_bin_location_zone_code")
   @@index([zoneId, locationType], map: "idx_bin_location_zone_type")

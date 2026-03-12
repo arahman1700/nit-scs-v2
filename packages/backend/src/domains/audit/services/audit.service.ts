@@ -4,7 +4,32 @@ import { prisma } from '../../../utils/prisma.js';
 export interface AuditEntry {
   tableName: string;
   recordId: string;
-  action: 'create' | 'update' | 'delete' | 'approve' | 'reject' | 'execute' | 'complete' | 'cancel';
+  action:
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'approve'
+    | 'reject'
+    | 'execute'
+    | 'complete'
+    | 'cancel'
+    | 'activate'
+    | 'suspend'
+    | 'terminate'
+    | 'invoice'
+    | 'pay'
+    | 'dispute'
+    | 'release'
+    | 'pick'
+    | 'assign'
+    | 'start'
+    | 'hold'
+    | 'resume'
+    | 'add_lines'
+    | 'start_picking'
+    | 'confirm_pick'
+    | 'bulk_allocate'
+    | 'bulk_assign';
   changedFields?: Record<string, unknown>;
   oldValues?: Record<string, unknown>;
   newValues?: Record<string, unknown>;

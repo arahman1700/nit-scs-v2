@@ -45,6 +45,7 @@ model Mirv {
   stockTransfersDest   StockTransfer[]       @relation("StockTransferDestMirv")
   leftoverMaterials    LeftoverMaterial[]
   packingSessions      PackingSession[]
+  waveLines            WaveLine[]
 
   @@index([status], map: "idx_mirv_status")
   @@index([projectId], map: "idx_mirv_project")

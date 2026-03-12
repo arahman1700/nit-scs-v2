@@ -1,0 +1,353 @@
+// ############################################################################
+// SECTION: P6 — LOGISTICS BUSINESS ENHANCEMENT
+// New WMS models: LPN, WMS Tasks, Wave Picking, Stock Allocation, 3PL, Carriers
+// ############################################################################
+
+// ────────────────────────────────────────────────────────────────────────────
+// LPN (License Plate Number) — container/pallet tracking
+// ────────────────────────────────────────────────────────────────────────────
+
+/// License Plate Number — unique container identifier for tracking pallets,
+/// cartons, or totes through receiving, storage, picking, and shipping.
+model LicensePlate {
+  id            String   @id @default(uuid()) @db.Uuid
+  lpnNumber     String   @unique @map("lpn_number") @db.VarChar(30)
+  warehouseId   String   @map("warehouse_id") @db.Uuid
+  zoneId        String?  @map("zone_id") @db.Uuid
+  binId         String?  @map("bin_id") @db.Uuid
+  /// CHECK: lpn_type IN ('pallet', 'carton', 'tote', 'crate', 'mixed')
+  lpnType       String   @map("lpn_type") @db.VarChar(20)
+  /// CHECK: status IN ('created', 'in_receiving', 'stored', 'in_picking', 'in_packing', 'shipped', 'dissolved')
+  status        String   @default("created") @db.VarChar(20)
+  parentLpnId   String?  @map("parent_lpn_id") @db.Uuid
+  weight        Decimal? @db.Decimal(12, 3)
+  volume        Decimal? @db.Decimal(12, 3)
+  sourceDocType String?  @map("source_doc_type") @db.VarChar(20)
+  sourceDocId   String?  @map("source_doc_id") @db.Uuid
+  createdById   String?  @map("created_by_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouse Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  zone      WarehouseZone? @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  bin       BinLocation?   @relation(fields: [binId], references: [id], onDelete: SetNull)
+  parentLpn LicensePlate?  @relation("LpnParent", fields: [parentLpnId], references: [id], onDelete: SetNull)
+  createdBy Employee?      @relation("LpnCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Reverse
+  childLpns LicensePlate[] @relation("LpnParent")
+  contents  LpnContent[]
+  rfidTags  RfidTag[]
+
+  @@index([warehouseId, status], map: "idx_wms_lpn_wh_status")
+  @@index([zoneId], map: "idx_wms_lpn_zone")
+  @@index([binId], map: "idx_wms_lpn_bin")
+  @@index([parentLpnId], map: "idx_wms_lpn_parent")
+  @@index([sourceDocType, sourceDocId], map: "idx_wms_lpn_source")
+  @@map("WMS_LICENSE_PLATES")
+}
+
+/// Contents of a License Plate — item-level detail within a container
+model LpnContent {
+  id         String    @id @default(uuid()) @db.Uuid
+  lpnId      String    @map("lpn_id") @db.Uuid
+  itemId     String    @map("item_id") @db.Uuid
+  lotId      String?   @map("lot_id") @db.Uuid
+  quantity   Decimal   @db.Decimal(12, 3)
+  uomId      String?   @map("uom_id") @db.Uuid
+  expiryDate DateTime? @map("expiry_date") @db.Date
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  lpn  LicensePlate  @relation(fields: [lpnId], references: [id], onDelete: Cascade)
+  item Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  lot  InventoryLot? @relation(fields: [lotId], references: [id], onDelete: SetNull)
+
+  @@index([lpnId, itemId], map: "idx_wms_lpn_content_lpn_item")
+  @@map("WMS_LPN_CONTENTS")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RFID Tag Tracking
+// ────────────────────────────────────────────────────────────────────────────
+
+/// RFID tag assignment — maps an RFID EPC to an LPN, item, or asset
+model RfidTag {
+  id           String    @id @default(uuid()) @db.Uuid
+  epc          String    @unique @db.VarChar(96)
+  /// CHECK: tag_type IN ('lpn', 'item', 'asset', 'zone_gate')
+  tagType      String    @map("tag_type") @db.VarChar(20)
+  lpnId        String?   @map("lpn_id") @db.Uuid
+  itemId       String?   @map("item_id") @db.Uuid
+  assetId      String?   @map("asset_id") @db.Uuid
+  warehouseId  String    @map("warehouse_id") @db.Uuid
+  isActive     Boolean   @default(true) @map("is_active")
+  lastSeenAt   DateTime? @map("last_seen_at") @db.Timestamptz
+  lastReaderId String?   @map("last_reader_id") @db.VarChar(50)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  lpn       LicensePlate? @relation(fields: [lpnId], references: [id], onDelete: SetNull)
+  item      Item?         @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  asset     Asset?        @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  warehouse Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+
+  @@index([warehouseId, isActive], map: "idx_wms_rfid_wh_active")
+  @@index([lpnId], map: "idx_wms_rfid_lpn")
+  @@index([tagType, isActive], map: "idx_wms_rfid_type_active")
+  @@map("WMS_RFID_TAGS")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// WMS Task Queue — directed warehouse worker tasks
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Warehouse task — directed work for receiving, put-away, picking, replenishment, count
+model WmsTask {
+  id            String    @id @default(uuid()) @db.Uuid
+  taskNumber    String    @unique @map("task_number") @db.VarChar(30)
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  /// CHECK: task_type IN ('receive', 'putaway', 'pick', 'pack', 'replenish', 'count', 'move', 'load', 'unload')
+  taskType      String    @map("task_type") @db.VarChar(20)
+  /// CHECK: priority IN (1, 2, 3, 4, 5) — 1=urgent, 5=low
+  priority      Int       @default(3)
+  /// CHECK: status IN ('pending', 'assigned', 'in_progress', 'completed', 'cancelled', 'on_hold')
+  status        String    @default("pending") @db.VarChar(20)
+  assignedToId  String?   @map("assigned_to_id") @db.Uuid
+  assignedAt    DateTime? @map("assigned_at") @db.Timestamptz
+  startedAt     DateTime? @map("started_at") @db.Timestamptz
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz
+  /// Source document reference
+  sourceDocType String?   @map("source_doc_type") @db.VarChar(20)
+  sourceDocId   String?   @map("source_doc_id") @db.Uuid
+  /// From / To locations
+  fromZoneId    String?   @map("from_zone_id") @db.Uuid
+  fromBinId     String?   @map("from_bin_id") @db.Uuid
+  toZoneId      String?   @map("to_zone_id") @db.Uuid
+  toBinId       String?   @map("to_bin_id") @db.Uuid
+  itemId        String?   @map("item_id") @db.Uuid
+  lpnId         String?   @map("lpn_id") @db.Uuid
+  quantity      Decimal?  @db.Decimal(12, 3)
+  /// Estimated minutes from labor standards
+  estimatedMins Decimal?  @map("estimated_mins") @db.Decimal(8, 2)
+  /// Actual minutes (auto-calculated from start/complete)
+  actualMins    Decimal?  @map("actual_mins") @db.Decimal(8, 2)
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouse  Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  assignedTo Employee?      @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  fromZone   WarehouseZone? @relation("TaskFromZone", fields: [fromZoneId], references: [id], onDelete: SetNull)
+  toZone     WarehouseZone? @relation("TaskToZone", fields: [toZoneId], references: [id], onDelete: SetNull)
+  fromBin    BinLocation?   @relation("TaskFromBin", fields: [fromBinId], references: [id], onDelete: SetNull)
+  toBin      BinLocation?   @relation("TaskToBin", fields: [toBinId], references: [id], onDelete: SetNull)
+  item       Item?          @relation("TaskItem", fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([warehouseId, status, priority], map: "idx_wms_task_wh_status_pri")
+  @@index([assignedToId, status], map: "idx_wms_task_assignee_status")
+  @@index([taskType, status], map: "idx_wms_task_type_status")
+  @@index([sourceDocType, sourceDocId], map: "idx_wms_task_source")
+  @@map("WMS_TASK_QUEUE")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Wave Picking — batch-based pick optimization
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Wave header — groups multiple MIs for optimized picking
+model WaveHeader {
+  id          String    @id @default(uuid()) @db.Uuid
+  waveNumber  String    @unique @map("wave_number") @db.VarChar(30)
+  warehouseId String    @map("warehouse_id") @db.Uuid
+  /// CHECK: status IN ('planning', 'released', 'picking', 'completed', 'cancelled')
+  status      String    @default("planning") @db.VarChar(20)
+  /// CHECK: wave_type IN ('manual', 'auto', 'priority')
+  waveType    String    @default("manual") @map("wave_type") @db.VarChar(20)
+  releasedAt  DateTime? @map("released_at") @db.Timestamptz
+  completedAt DateTime? @map("completed_at") @db.Timestamptz
+  totalLines  Int       @default(0) @map("total_lines")
+  pickedLines Int       @default(0) @map("picked_lines")
+  createdById String?   @map("created_by_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy Employee? @relation("WaveCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  // Reverse
+  lines WaveLine[]
+
+  @@index([warehouseId, status], map: "idx_wms_wave_wh_status")
+  @@map("WMS_WAVE_HEADERS")
+}
+
+/// Wave line — individual pick line within a wave
+model WaveLine {
+  id          String    @id @default(uuid()) @db.Uuid
+  waveId      String    @map("wave_id") @db.Uuid
+  mirvId      String    @map("mirv_id") @db.Uuid
+  mirvLineId  String?   @map("mirv_line_id") @db.Uuid
+  itemId      String    @map("item_id") @db.Uuid
+  qtyRequired Decimal   @map("qty_required") @db.Decimal(12, 3)
+  qtyPicked   Decimal   @default(0) @map("qty_picked") @db.Decimal(12, 3)
+  fromZoneId  String?   @map("from_zone_id") @db.Uuid
+  fromBinId   String?   @map("from_bin_id") @db.Uuid
+  lotId       String?   @map("lot_id") @db.Uuid
+  /// CHECK: status IN ('pending', 'picking', 'picked', 'short', 'cancelled')
+  status      String    @default("pending") @db.VarChar(20)
+  pickedById  String?   @map("picked_by_id") @db.Uuid
+  pickedAt    DateTime? @map("picked_at") @db.Timestamptz
+  sequence    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  wave     WaveHeader     @relation(fields: [waveId], references: [id], onDelete: Cascade)
+  mirv     Mirv           @relation(fields: [mirvId], references: [id], onDelete: Restrict)
+  item     Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  fromZone WarehouseZone? @relation("WaveLineFromZone", fields: [fromZoneId], references: [id], onDelete: SetNull)
+  fromBin  BinLocation?   @relation("WaveLineFromBin", fields: [fromBinId], references: [id], onDelete: SetNull)
+  lot      InventoryLot?  @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  pickedBy Employee?      @relation("WaveLinePicker", fields: [pickedById], references: [id], onDelete: SetNull)
+
+  @@index([waveId, status], map: "idx_wms_wave_line_wave_status")
+  @@index([itemId], map: "idx_wms_wave_line_item")
+  @@index([mirvId], map: "idx_wms_wave_line_mirv")
+  @@map("WMS_WAVE_LINES")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Stock Allocation — real-time reservation engine
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Stock allocation — hard reservation of specific lots/bins for a demand document
+model StockAllocation {
+  id            String    @id @default(uuid()) @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  itemId        String    @map("item_id") @db.Uuid
+  lotId         String?   @map("lot_id") @db.Uuid
+  binId         String?   @map("bin_id") @db.Uuid
+  lpnId         String?   @map("lpn_id") @db.Uuid
+  qtyAllocated  Decimal   @map("qty_allocated") @db.Decimal(12, 3)
+  /// CHECK: alloc_type IN ('soft', 'hard', 'pick_confirmed')
+  allocType     String    @default("soft") @map("alloc_type") @db.VarChar(20)
+  /// Demand document reference
+  demandDocType String    @map("demand_doc_type") @db.VarChar(20)
+  demandDocId   String    @map("demand_doc_id") @db.Uuid
+  /// CHECK: status IN ('active', 'picked', 'released', 'cancelled')
+  status        String    @default("active") @db.VarChar(20)
+  allocatedById String?   @map("allocated_by_id") @db.Uuid
+  allocatedAt   DateTime  @default(now()) @map("allocated_at") @db.Timestamptz
+  releasedAt    DateTime? @map("released_at") @db.Timestamptz
+
+  // Relations
+  warehouse   Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  item        Item          @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  lot         InventoryLot? @relation(fields: [lotId], references: [id], onDelete: SetNull)
+  bin         BinLocation?  @relation(fields: [binId], references: [id], onDelete: SetNull)
+  allocatedBy Employee?     @relation("AllocatedBy", fields: [allocatedById], references: [id], onDelete: SetNull)
+
+  @@index([warehouseId, itemId, status], map: "idx_wms_alloc_wh_item_status")
+  @@index([demandDocType, demandDocId], map: "idx_wms_alloc_demand")
+  @@index([lotId, status], map: "idx_wms_alloc_lot_status")
+  @@index([status, allocatedAt], map: "idx_wms_alloc_status_date")
+  @@map("WMS_STOCK_ALLOCATIONS")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 3PL Billing — third-party logistics cost management
+// ────────────────────────────────────────────────────────────────────────────
+
+/// 3PL contract — agreement with a third-party logistics provider
+model ThirdPartyContract {
+  id           String    @id @default(uuid()) @db.Uuid
+  contractCode String    @unique @map("contract_code") @db.VarChar(30)
+  supplierId   String    @map("supplier_id") @db.Uuid
+  /// CHECK: service_type IN ('warehousing', 'transportation', 'customs_brokerage', 'freight_forwarding', 'full_3pl')
+  serviceType  String    @map("service_type") @db.VarChar(30)
+  startDate    DateTime  @map("start_date") @db.Date
+  endDate      DateTime? @map("end_date") @db.Date
+  /// CHECK: status IN ('draft', 'active', 'suspended', 'expired', 'terminated')
+  status       String    @default("draft") @db.VarChar(20)
+  /// Rate schedule: { storage_per_pallet_day, handling_per_unit, transport_per_km, ... }
+  rateSchedule Json      @map("rate_schedule") @db.JsonB
+  /// SLA terms: { receiving_hours, shipping_hours, accuracy_pct, damage_pct_max }
+  slaTerms     Json?     @map("sla_terms") @db.JsonB
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+
+  // Reverse
+  charges ThirdPartyCharge[]
+
+  @@index([supplierId, status], map: "idx_wms_3pl_supplier_status")
+  @@index([status, endDate], map: "idx_wms_3pl_status_expiry")
+  @@map("WMS_3PL_CONTRACTS")
+}
+
+/// 3PL charge — individual billable activity line item
+model ThirdPartyCharge {
+  id           String    @id @default(uuid()) @db.Uuid
+  contractId   String    @map("contract_id") @db.Uuid
+  warehouseId  String?   @map("warehouse_id") @db.Uuid
+  /// CHECK: charge_type IN ('storage', 'handling_in', 'handling_out', 'transport', 'customs_fee', 'value_added', 'penalty', 'other')
+  chargeType   String    @map("charge_type") @db.VarChar(30)
+  description  String?   @db.VarChar(200)
+  quantity     Decimal   @db.Decimal(12, 3)
+  unitRate     Decimal   @map("unit_rate") @db.Decimal(12, 4)
+  totalAmount  Decimal   @map("total_amount") @db.Decimal(14, 2)
+  currency     String    @default("SAR") @db.VarChar(3)
+  /// Reference document
+  refDocType   String?   @map("ref_doc_type") @db.VarChar(20)
+  refDocId     String?   @map("ref_doc_id") @db.Uuid
+  /// CHECK: status IN ('draft', 'approved', 'invoiced', 'paid', 'disputed')
+  status       String    @default("draft") @db.VarChar(20)
+  periodFrom   DateTime? @map("period_from") @db.Date
+  periodTo     DateTime? @map("period_to") @db.Date
+  approvedById String?   @map("approved_by_id") @db.Uuid
+  approvedAt   DateTime? @map("approved_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  contract   ThirdPartyContract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse?         @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  approvedBy Employee?          @relation("ChargeApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([contractId, status], map: "idx_wms_3pl_charge_contract_status")
+  @@index([chargeType, status], map: "idx_wms_3pl_charge_type_status")
+  @@index([warehouseId, periodFrom], map: "idx_wms_3pl_charge_wh_period")
+  @@map("WMS_3PL_CHARGES")
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Carrier Service — shipping carrier rate management
+// ────────────────────────────────────────────────────────────────────────────
+
+/// Carrier service level — defines shipping options and rates per carrier
+model CarrierService {
+  id          String   @id @default(uuid()) @db.Uuid
+  carrierName String   @map("carrier_name") @db.VarChar(200)
+  serviceCode String   @unique @map("service_code") @db.VarChar(30)
+  serviceName String   @map("service_name") @db.VarChar(200)
+  /// CHECK: mode IN ('sea_fcl', 'sea_lcl', 'air', 'land', 'courier', 'rail')
+  mode        String   @db.VarChar(20)
+  transitDays Int?     @map("transit_days")
+  /// Rate per kg/cbm/unit
+  ratePerUnit Decimal? @map("rate_per_unit") @db.Decimal(12, 4)
+  rateUnit    String?  @map("rate_unit") @db.VarChar(20)
+  minCharge   Decimal? @map("min_charge") @db.Decimal(12, 2)
+  currency    String   @default("SAR") @db.VarChar(3)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([mode, isActive], map: "idx_wms_carrier_mode_active")
+  @@map("WMS_CARRIER_SERVICES")
+}

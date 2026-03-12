@@ -57,8 +57,8 @@ describe('P5: Oracle Table Naming Convention', () => {
   const schemas = readSchemaFiles();
   const allMaps = schemas.flatMap(s => extractMapDirectives(s.content));
 
-  it('should have 16 schema files', () => {
-    expect(schemas.length).toBe(16);
+  it('should have at least 16 schema files', () => {
+    expect(schemas.length).toBeGreaterThanOrEqual(16);
   });
 
   it('every @@map directive uses a valid Oracle module prefix', () => {
