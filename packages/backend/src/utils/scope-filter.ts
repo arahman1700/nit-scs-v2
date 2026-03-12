@@ -194,6 +194,21 @@ export function canAccessRecord(
  *
  * @param mapping  Optional field mapping override (defaults to warehouseId / projectId).
  */
+/**
+ * Resolves a warehouse ID considering the user's scope restrictions.
+ * Returns the effective warehouseId, or null if the user requested a warehouse
+ * they don't have access to.
+ */
+export function resolveWarehouseScope(user: JwtPayload, warehouseId: string | undefined): string | undefined | null {
+  const scopeFilter = buildScopeFilter(user, { warehouseField: 'warehouseId' });
+  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
+  if (scopedWarehouseId) {
+    if (warehouseId && warehouseId !== scopedWarehouseId) return null;
+    return scopedWarehouseId;
+  }
+  return warehouseId;
+}
+
 export function applyScopeFilter(mapping: ScopeFieldMapping = DEFAULT_MAPPING) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (req.user) {

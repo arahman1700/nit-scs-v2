@@ -14,7 +14,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
-import { buildScopeFilter } from '../../../utils/scope-filter.js';
+import { resolveWarehouseScope as _resolveWarehouseScope } from '../../../utils/scope-filter.js';
 import * as stagingService from '../services/staging.service.js';
 
 const router = Router();
@@ -23,20 +23,8 @@ const router = Router();
 router.use(authenticate);
 router.use(requirePermission('warehouse_zone', 'read'));
 
-/**
- * If the user is warehouse-scoped, return their assigned warehouseId,
- * overriding any explicit warehouseId query param. Returns `null` on
- * scope violation (user requests a different warehouse than assigned).
- */
-function resolveWarehouseScope(req: Request, warehouseId: string | undefined): string | undefined | null {
-  const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
-  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
-  if (scopedWarehouseId) {
-    // Scoped user — override or verify
-    if (warehouseId && warehouseId !== scopedWarehouseId) return null; // violation
-    return scopedWarehouseId;
-  }
-  return warehouseId;
+function resolveWarehouseScope(req: Request, warehouseId: string | undefined) {
+  return _resolveWarehouseScope(req.user!, warehouseId);
 }
 
 // ############################################################################

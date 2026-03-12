@@ -11,7 +11,7 @@ import { validate } from '../../../middleware/validate.js';
 import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
 import { createAuditLog } from '../../audit/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
-import { buildScopeFilter } from '../../../utils/scope-filter.js';
+import { resolveWarehouseScope as _resolveWarehouseScope } from '../../../utils/scope-filter.js';
 import {
   allocate,
   release,
@@ -55,14 +55,8 @@ const bulkAllocateSchema = z.object({
 
 const router = Router();
 
-function resolveWarehouseScope(req: Request, warehouseId: string | undefined): string | undefined | null {
-  const scopeFilter = buildScopeFilter(req.user!, { warehouseField: 'warehouseId' });
-  const scopedWarehouseId = scopeFilter.warehouseId as string | undefined;
-  if (scopedWarehouseId) {
-    if (warehouseId && warehouseId !== scopedWarehouseId) return null;
-    return scopedWarehouseId;
-  }
-  return warehouseId;
+function resolveWarehouseScope(req: Request, warehouseId: string | undefined) {
+  return _resolveWarehouseScope(req.user!, warehouseId);
 }
 
 // ── GET /available — Available vs allocated for item ────────────────────

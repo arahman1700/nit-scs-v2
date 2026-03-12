@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildScopeFilter, canAccessRecord } from './scope-filter.js';
+import { buildScopeFilter, canAccessRecord, resolveWarehouseScope } from './scope-filter.js';
 import type { JwtPayload } from './jwt.js';
 
 // ── Test user payloads ──────────────────────────────────────────────────
@@ -255,5 +255,37 @@ describe('canAccessRecord', () => {
   it('manager always has access (unrestricted)', () => {
     const record = { warehouseId: 'wh-99' };
     expect(canAccessRecord(managerUser, record)).toBe(true);
+  });
+});
+
+// ── resolveWarehouseScope tests ───────────────────────────────────────
+
+describe('resolveWarehouseScope', () => {
+  it('returns requested warehouseId for unrestricted user', () => {
+    expect(resolveWarehouseScope(adminUser, 'wh-99')).toBe('wh-99');
+  });
+
+  it('returns undefined when unrestricted user provides no warehouseId', () => {
+    expect(resolveWarehouseScope(adminUser, undefined)).toBeUndefined();
+  });
+
+  it('returns assigned warehouseId for scoped user regardless of request', () => {
+    expect(resolveWarehouseScope(warehouseSupervisor, undefined)).toBe('wh-1');
+  });
+
+  it('returns assigned warehouseId when scoped user requests their own warehouse', () => {
+    expect(resolveWarehouseScope(warehouseSupervisor, 'wh-1')).toBe('wh-1');
+  });
+
+  it('returns null when scoped user requests a different warehouse', () => {
+    expect(resolveWarehouseScope(warehouseSupervisor, 'wh-99')).toBeNull();
+  });
+
+  it('returns requested warehouseId for warehouse_staff matching assignment', () => {
+    expect(resolveWarehouseScope(warehouseStaff, 'wh-2')).toBe('wh-2');
+  });
+
+  it('returns null for warehouse_staff requesting wrong warehouse', () => {
+    expect(resolveWarehouseScope(warehouseStaff, 'wh-99')).toBeNull();
   });
 });
