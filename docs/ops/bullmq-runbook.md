@@ -8,14 +8,22 @@ NIT SCS V2 uses BullMQ (Redis-backed) for all background job scheduling. Jobs ar
 
 | Queue | Oracle Module | Purpose | Jobs |
 |-------|--------------|---------|------|
-| `SCM_QUEUE` | SCM | SLA checks, reconciliation, reports, workflow rules | 5 |
+| `WMS_QUEUE` | WMS | Core WMS operations, SLA checks, reconciliation, asset management | 8 |
+| `RCV_QUEUE` | RCV | Receiving — GRN, ASN, putaway processing | 0* |
 | `INV_QUEUE` | INV | Stock alerts, expiry, ABC, cycle counts, anomaly detection | 9 |
-| `HR_QUEUE` | HR | Token cleanup, security monitoring, visitor checks | 3 |
-| `EAM_QUEUE` | EAM | Asset depreciation, AMC expiry, vehicle maintenance | 3 |
-| `ONT_QUEUE` | ONT | Email retry, equipment return, shipment alerts, contract renewal | 8 |
+| `SHIP_QUEUE` | WSH | Shipping execution — shipments, gate passes, dispatch | 0* |
+| `CUST_QUEUE` | CUST | Customs clearance — tariffs, compliance documents | 0* |
+| `ASN_QUEUE` | ASN | Advanced shipping notice processing | 0* |
+| `GRN_QUEUE` | GRN | Goods receipt note processing | 0* |
+| `PICK_QUEUE` | PICK | Picking — wave planning, pick optimization | 0* |
+| `PUT_QUEUE` | PUT | Putaway — directed putaway, slotting | 0* |
+| `AUD_QUEUE` | AUD | Audit & compliance — security, tokens, visitors | 3 |
+| `NOTIF_QUEUE` | NOTIF | Notifications — email, push, scheduled alerts | 9 |
 | `DEAD_LETTER_QUEUE` | — | Failed jobs after max retries | — |
 
-**Total: 28 jobs across 5 queues + 1 DLQ**
+*\* Queues provisioned for future domain-specific jobs.*
+
+**Total: 29 jobs across 11 queues + 1 DLQ**
 
 ## Dashboard Access
 
@@ -31,21 +39,21 @@ NIT SCS V2 uses BullMQ (Redis-backed) for all background job scheduling. Jobs ar
 open http://localhost:4000/admin/queues
 
 # Via Redis CLI
-redis-cli KEYS "bull:SCM_QUEUE:*" | head -20
-redis-cli HGETALL "bull:SCM_QUEUE:meta"
+redis-cli KEYS "bull:WMS_QUEUE:*" | head -20
+redis-cli HGETALL "bull:WMS_QUEUE:meta"
 ```
 
 ### Check repeatable jobs
 ```bash
-redis-cli ZRANGE "bull:SCM_QUEUE:repeat" 0 -1
+redis-cli ZRANGE "bull:WMS_QUEUE:repeat" 0 -1
 redis-cli ZRANGE "bull:INV_QUEUE:repeat" 0 -1
 ```
 
 ### Clear a stuck queue
 ```bash
 # Remove all waiting jobs
-redis-cli DEL "bull:SCM_QUEUE:wait"
-redis-cli DEL "bull:SCM_QUEUE:active"
+redis-cli DEL "bull:WMS_QUEUE:wait"
+redis-cli DEL "bull:WMS_QUEUE:active"
 
 # Or use Bull Board UI: select queue -> Clean All
 ```

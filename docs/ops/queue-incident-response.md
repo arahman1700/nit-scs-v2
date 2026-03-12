@@ -30,7 +30,7 @@
 **Symptoms**: No SLA notifications being generated, documents exceeding deadlines without alerts
 
 **Response**:
-1. Check Bull Board: `/admin/queues` → SCM_QUEUE
+1. Check Bull Board: `/admin/queues` → WMS_QUEUE
 2. Look for active/waiting jobs named `SCM_SLA_BREACH_CHECK`
 3. If no repeatable registered: restart the backend (re-registers all jobs)
 4. If job is failing: check DLQ for error details
@@ -79,7 +79,7 @@
 ```bash
 # Stop the application first
 # Clear all BullMQ keys for a specific queue
-redis-cli KEYS "bull:SCM_QUEUE:*" | xargs redis-cli DEL
+redis-cli KEYS "bull:WMS_QUEUE:*" | xargs redis-cli DEL
 
 # Restart application — jobs will be re-registered as repeatables
 ```
@@ -94,6 +94,6 @@ Restart the backend. `startScheduler()` is idempotent — it removes existing re
 
 After resolution:
 1. Clear any test/debug data from DLQ
-2. Verify all 5 queues have active repeatable jobs (Bull Board)
+2. Verify all 11 queues have active repeatable jobs (Bull Board)
 3. Monitor for 30 minutes to confirm stability
 4. Document root cause and update this playbook if needed

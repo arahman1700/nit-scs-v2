@@ -45,11 +45,17 @@ Reconnect:   Auto on READONLY, ECONNRESET, ETIMEDOUT errors
 
 | Prefix | Purpose | TTL |
 |--------|---------|-----|
-| `bull:SCM_QUEUE:*` | SCM job queue data | Managed by BullMQ |
-| `bull:INV_QUEUE:*` | Inventory job queue data | Managed by BullMQ |
-| `bull:HR_QUEUE:*` | HR job queue data | Managed by BullMQ |
-| `bull:EAM_QUEUE:*` | Asset management job data | Managed by BullMQ |
-| `bull:ONT_QUEUE:*` | Notification job data | Managed by BullMQ |
+| `bull:WMS_QUEUE:*` | WMS core operations queue | Managed by BullMQ |
+| `bull:RCV_QUEUE:*` | Receiving queue | Managed by BullMQ |
+| `bull:INV_QUEUE:*` | Inventory queue | Managed by BullMQ |
+| `bull:SHIP_QUEUE:*` | Shipping queue | Managed by BullMQ |
+| `bull:CUST_QUEUE:*` | Customs queue | Managed by BullMQ |
+| `bull:ASN_QUEUE:*` | ASN processing queue | Managed by BullMQ |
+| `bull:GRN_QUEUE:*` | GRN processing queue | Managed by BullMQ |
+| `bull:PICK_QUEUE:*` | Picking queue | Managed by BullMQ |
+| `bull:PUT_QUEUE:*` | Putaway queue | Managed by BullMQ |
+| `bull:AUD_QUEUE:*` | Audit & compliance queue | Managed by BullMQ |
+| `bull:NOTIF_QUEUE:*` | Notifications queue | Managed by BullMQ |
 | `bull:DEAD_LETTER_QUEUE:*` | Failed jobs | No auto-expire |
 | `rl:*` | Rate limiter counters | 60s sliding window |
 | `token:blacklist:*` | Revoked JWT tokens | Matches token expiry |

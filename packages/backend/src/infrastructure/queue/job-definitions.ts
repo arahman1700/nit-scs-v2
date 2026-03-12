@@ -139,11 +139,11 @@ const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
 
 export const JOB_DEFINITIONS: JobDefinition[] = [
-  // ── SCM Jobs ──────────────────────────────────────────────────────────
+  // ── SCM Jobs → WMS_QUEUE (core WMS operations, SLA, reconciliation) ─
   {
     name: JOB_NAMES.SCM_SLA_BREACH_CHECK,
     legacyName: 'sla_breach',
-    queue: QUEUE_NAMES.SCM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 5 * MIN },
     priority: 1,
     attempts: 3,
@@ -152,7 +152,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.SCM_SLA_WARNING_CHECK,
     legacyName: 'sla_warning',
-    queue: QUEUE_NAMES.SCM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 5 * MIN },
     priority: 1,
     attempts: 3,
@@ -161,7 +161,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.SCM_SCHEDULED_RULES,
     legacyName: 'scheduled_rules',
-    queue: QUEUE_NAMES.SCM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 1 * MIN },
     priority: 2,
     attempts: 3,
@@ -170,7 +170,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.SCM_SCHEDULED_REPORTS,
     legacyName: 'scheduled_reports',
-    queue: QUEUE_NAMES.SCM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 1 * HOUR },
     priority: 5,
     attempts: 3,
@@ -179,7 +179,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.SCM_DAILY_RECONCILIATION,
     legacyName: 'daily_reconciliation',
-    queue: QUEUE_NAMES.SCM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 3,
     attempts: 5,
@@ -269,11 +269,11 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
     backoff: { type: 'exponential', delay: 30_000 },
   },
 
-  // ── HR Jobs ───────────────────────────────────────────────────────────
+  // ── HR Jobs → AUD_QUEUE (audit & compliance, security, tokens, visitors)
   {
     name: JOB_NAMES.HR_TOKEN_CLEANUP,
     legacyName: 'token_cleanup',
-    queue: QUEUE_NAMES.HR_QUEUE,
+    queue: QUEUE_NAMES.AUD_QUEUE,
     repeat: { every: 6 * HOUR },
     priority: 7,
     attempts: 3,
@@ -282,7 +282,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.HR_SECURITY_MONITOR,
     legacyName: 'security_monitor',
-    queue: QUEUE_NAMES.HR_QUEUE,
+    queue: QUEUE_NAMES.AUD_QUEUE,
     repeat: { every: 1 * HOUR },
     priority: 2,
     attempts: 3,
@@ -291,18 +291,18 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.HR_VISITOR_OVERSTAY,
     legacyName: 'visitor_overstay',
-    queue: QUEUE_NAMES.HR_QUEUE,
+    queue: QUEUE_NAMES.AUD_QUEUE,
     repeat: { every: 30 * MIN },
     priority: 4,
     attempts: 3,
     backoff: { type: 'exponential', delay: 10_000 },
   },
 
-  // ── EAM Jobs ──────────────────────────────────────────────────────────
+  // ── EAM Jobs → WMS_QUEUE (asset management under WMS umbrella) ──────
   {
     name: JOB_NAMES.EAM_ASSET_DEPRECIATION,
     legacyName: 'asset_depreciation',
-    queue: QUEUE_NAMES.EAM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 6,
     attempts: 5,
@@ -311,7 +311,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.EAM_AMC_EXPIRY,
     legacyName: 'amc_expiry',
-    queue: QUEUE_NAMES.EAM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 5,
     attempts: 3,
@@ -320,18 +320,18 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.EAM_VEHICLE_MAINTENANCE,
     legacyName: 'vehicle_maintenance',
-    queue: QUEUE_NAMES.EAM_QUEUE,
+    queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 12 * HOUR },
     priority: 4,
     attempts: 3,
     backoff: { type: 'exponential', delay: 30_000 },
   },
 
-  // ── ONT Jobs ──────────────────────────────────────────────────────────
+  // ── ONT Jobs → NOTIF_QUEUE (notifications, email, push, alerts) ─────
   {
     name: JOB_NAMES.ONT_EMAIL_RETRY,
     legacyName: 'email_retry',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 2 * MIN },
     priority: 1,
     attempts: 5,
@@ -340,7 +340,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_EQUIPMENT_RETURN,
     legacyName: 'sow_equipment_return',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 5,
     attempts: 3,
@@ -349,7 +349,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_SHIPMENT_DELAYS,
     legacyName: 'sow_shipment_delays',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 6 * HOUR },
     priority: 3,
     attempts: 3,
@@ -358,7 +358,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_CYCLE_COUNT_ALERT,
     legacyName: 'sow_cycle_count',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 5,
     attempts: 3,
@@ -367,7 +367,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_RATE_CARD_EXPIRY,
     legacyName: 'sow_rate_card_expiry',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 5,
     attempts: 3,
@@ -376,7 +376,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_VEHICLE_MAINT_ALERT,
     legacyName: 'sow_vehicle_maint',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 12 * HOUR },
     priority: 4,
     attempts: 3,
@@ -385,7 +385,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_NCR_DEADLINE,
     legacyName: 'sow_ncr_deadline',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 4,
     attempts: 3,
@@ -394,7 +394,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_CONTRACT_RENEWAL,
     legacyName: 'sow_contract_renewal',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 1 * DAY },
     priority: 5,
     attempts: 3,
@@ -403,7 +403,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
   {
     name: JOB_NAMES.ONT_OVERDUE_TOOLS,
     legacyName: 'sow_overdue_tools',
-    queue: QUEUE_NAMES.ONT_QUEUE,
+    queue: QUEUE_NAMES.NOTIF_QUEUE,
     repeat: { every: 12 * HOUR },
     priority: 4,
     attempts: 3,

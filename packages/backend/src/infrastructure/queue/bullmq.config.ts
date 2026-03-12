@@ -1,13 +1,18 @@
 /**
- * BullMQ Configuration — Oracle-Compatible Queue Infrastructure
+ * BullMQ Configuration — Oracle WMS-Compatible Queue Infrastructure
  *
- * Queue naming follows Oracle WMS/SCM module conventions:
- * - WMS_QUEUE: Warehouse Management System jobs (cycle counts, putaway, slotting)
- * - INV_QUEUE: Inventory Management jobs (ABC, stock alerts, expiry)
- * - SCM_QUEUE: Supply Chain jobs (SLA, reconciliation, reports)
- * - HR_QUEUE:  Human Resources jobs (security, tokens, visitors)
- * - EAM_QUEUE: Enterprise Asset Management jobs (depreciation, AMC, vehicles)
- * - ONT_QUEUE: Order & Notification Transport jobs (email, push, notifications)
+ * Queue naming follows Oracle WMS / Receiving / Shipping / Inventory modules:
+ * - WMS_QUEUE:   Warehouse Management System — core WMS operations, SLA, reconciliation
+ * - RCV_QUEUE:   Receiving — GRN, ASN, putaway processing
+ * - INV_QUEUE:   Inventory — ABC, stock alerts, expiry, cycle counts
+ * - SHIP_QUEUE:  Shipping Execution — shipment processing, gate passes
+ * - CUST_QUEUE:  Customs Clearance — tariffs, compliance
+ * - ASN_QUEUE:   ASN Processing — advanced shipping notices
+ * - GRN_QUEUE:   GRN Processing — goods receipt notes
+ * - PICK_QUEUE:  Picking — wave planning, pick optimization
+ * - PUT_QUEUE:   Putaway — directed putaway, slotting
+ * - AUD_QUEUE:   Audit & Compliance — security, tokens, visitors
+ * - NOTIF_QUEUE: Notifications — email, push, alerts
  */
 
 import { Queue, Worker, type ConnectionOptions, type Processor } from 'bullmq';
@@ -37,18 +42,28 @@ export function getQueueConnection(): ConnectionOptions {
 // ── Queue Names (Oracle Module Alignment) ───────────────────────────────────
 
 export const QUEUE_NAMES = {
-  /** Oracle INV — Inventory Management */
-  INV_QUEUE: 'INV_QUEUE',
-  /** Oracle WMS — Warehouse Management */
+  /** Oracle WMS — Warehouse Management System (core operations, SLA, reconciliation) */
   WMS_QUEUE: 'WMS_QUEUE',
-  /** Oracle SCM — Supply Chain Management */
-  SCM_QUEUE: 'SCM_QUEUE',
-  /** Oracle HR — Human Resources / Security */
-  HR_QUEUE: 'HR_QUEUE',
-  /** Oracle EAM — Enterprise Asset Management */
-  EAM_QUEUE: 'EAM_QUEUE',
-  /** Oracle ONT — Order & Notification Transport */
-  ONT_QUEUE: 'ONT_QUEUE',
+  /** Oracle RCV — Receiving (GRN, ASN, putaway processing) */
+  RCV_QUEUE: 'RCV_QUEUE',
+  /** Oracle INV — Inventory Management (ABC, stock, expiry, cycle counts) */
+  INV_QUEUE: 'INV_QUEUE',
+  /** Oracle WSH — Shipping Execution (shipments, gate passes, dispatch) */
+  SHIP_QUEUE: 'SHIP_QUEUE',
+  /** Oracle CUST — Customs Clearance (tariffs, compliance documents) */
+  CUST_QUEUE: 'CUST_QUEUE',
+  /** Oracle ASN — Advanced Shipping Notice Processing */
+  ASN_QUEUE: 'ASN_QUEUE',
+  /** Oracle GRN — Goods Receipt Note Processing */
+  GRN_QUEUE: 'GRN_QUEUE',
+  /** Oracle PICK — Picking (wave planning, pick optimization) */
+  PICK_QUEUE: 'PICK_QUEUE',
+  /** Oracle PUT — Putaway (directed putaway, slotting) */
+  PUT_QUEUE: 'PUT_QUEUE',
+  /** Oracle AUD — Audit & Compliance (security, tokens, visitors) */
+  AUD_QUEUE: 'AUD_QUEUE',
+  /** Oracle NOTIF — Notifications (email, push, scheduled alerts) */
+  NOTIF_QUEUE: 'NOTIF_QUEUE',
   /** Dead Letter Queue — Failed jobs after max retries */
   DLQ: 'DEAD_LETTER_QUEUE',
 } as const;

@@ -73,14 +73,23 @@ describe('bullmq.config', () => {
   });
 
   describe('QUEUE_NAMES', () => {
-    it('should define Oracle-compatible queue names', () => {
-      expect(QUEUE_NAMES.INV_QUEUE).toBe('INV_QUEUE');
+    it('should define Oracle WMS-compatible queue names', () => {
       expect(QUEUE_NAMES.WMS_QUEUE).toBe('WMS_QUEUE');
-      expect(QUEUE_NAMES.SCM_QUEUE).toBe('SCM_QUEUE');
-      expect(QUEUE_NAMES.HR_QUEUE).toBe('HR_QUEUE');
-      expect(QUEUE_NAMES.EAM_QUEUE).toBe('EAM_QUEUE');
-      expect(QUEUE_NAMES.ONT_QUEUE).toBe('ONT_QUEUE');
+      expect(QUEUE_NAMES.RCV_QUEUE).toBe('RCV_QUEUE');
+      expect(QUEUE_NAMES.INV_QUEUE).toBe('INV_QUEUE');
+      expect(QUEUE_NAMES.SHIP_QUEUE).toBe('SHIP_QUEUE');
+      expect(QUEUE_NAMES.CUST_QUEUE).toBe('CUST_QUEUE');
+      expect(QUEUE_NAMES.ASN_QUEUE).toBe('ASN_QUEUE');
+      expect(QUEUE_NAMES.GRN_QUEUE).toBe('GRN_QUEUE');
+      expect(QUEUE_NAMES.PICK_QUEUE).toBe('PICK_QUEUE');
+      expect(QUEUE_NAMES.PUT_QUEUE).toBe('PUT_QUEUE');
+      expect(QUEUE_NAMES.AUD_QUEUE).toBe('AUD_QUEUE');
+      expect(QUEUE_NAMES.NOTIF_QUEUE).toBe('NOTIF_QUEUE');
       expect(QUEUE_NAMES.DLQ).toBe('DEAD_LETTER_QUEUE');
+    });
+
+    it('should have exactly 12 queue names (11 operational + DLQ)', () => {
+      expect(Object.keys(QUEUE_NAMES)).toHaveLength(12);
     });
   });
 
@@ -130,14 +139,14 @@ describe('bullmq.config', () => {
     });
 
     it('should return the same instance on subsequent calls (singleton)', () => {
-      const q1 = getQueue(QUEUE_NAMES.SCM_QUEUE);
-      const q2 = getQueue(QUEUE_NAMES.SCM_QUEUE);
+      const q1 = getQueue(QUEUE_NAMES.WMS_QUEUE);
+      const q2 = getQueue(QUEUE_NAMES.WMS_QUEUE);
       expect(q1).toBe(q2);
     });
 
     it('should return different instances for different queue names', () => {
       const q1 = getQueue(QUEUE_NAMES.INV_QUEUE);
-      const q2 = getQueue(QUEUE_NAMES.HR_QUEUE);
+      const q2 = getQueue(QUEUE_NAMES.AUD_QUEUE);
       expect(q1).not.toBe(q2);
     });
   });
@@ -145,8 +154,8 @@ describe('bullmq.config', () => {
   describe('getAllQueues', () => {
     it('should return all created queues', () => {
       getQueue(QUEUE_NAMES.INV_QUEUE);
-      getQueue(QUEUE_NAMES.SCM_QUEUE);
-      getQueue(QUEUE_NAMES.EAM_QUEUE);
+      getQueue(QUEUE_NAMES.WMS_QUEUE);
+      getQueue(QUEUE_NAMES.AUD_QUEUE);
 
       const all = getAllQueues();
       expect(all.length).toBe(3);
@@ -175,11 +184,11 @@ describe('bullmq.config', () => {
         data: { legacyName: 'sla_breach' },
         failedReason: 'Connection timeout',
         attemptsMade: 3,
-        queueName: 'SCM_QUEUE',
+        queueName: 'WMS_QUEUE',
       });
 
       expect(mockQueueAdd).toHaveBeenCalledWith('DLQ_ENTRY', {
-        originalQueue: 'SCM_QUEUE',
+        originalQueue: 'WMS_QUEUE',
         originalJobName: 'SCM_SLA_BREACH_CHECK',
         originalJobId: 'job-123',
         data: { legacyName: 'sla_breach' },
@@ -206,7 +215,7 @@ describe('bullmq.config', () => {
     it('should close all workers and queues', async () => {
       // Create some queues and workers first
       getQueue(QUEUE_NAMES.INV_QUEUE);
-      getQueue(QUEUE_NAMES.SCM_QUEUE);
+      getQueue(QUEUE_NAMES.WMS_QUEUE);
       createWorker(QUEUE_NAMES.INV_QUEUE, vi.fn());
       getDeadLetterQueue();
 

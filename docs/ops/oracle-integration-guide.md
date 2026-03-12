@@ -6,14 +6,14 @@ NIT SCS V2 follows Oracle EBS/Fusion naming conventions for all background jobs,
 
 ## Module Prefix Reference
 
-| Prefix | Oracle Module | NIT SCS Domain | Description |
-|--------|--------------|----------------|-------------|
-| `INV_` | Inventory | inventory | Stock management, cycle counts, ABC, expiry |
-| `WMS_` | Warehouse Management | warehouse-ops | Zones, slotting, put-away, staging |
-| `SCM_` | Supply Chain Management | inbound, outbound, compliance | SLA, reconciliation, workflow |
-| `EAM_` | Enterprise Asset Management | equipment | Depreciation, AMC, vehicles |
-| `ONT_` | Order & Notification Transport | notifications, system | Email, push, alerts |
-| `HR_` | Human Resources | auth | Tokens, security, visitors |
+| Prefix | Oracle Module | NIT SCS Domain | Queue | Description |
+|--------|--------------|----------------|-------|-------------|
+| `SCM_` | Supply Chain Management | inbound, outbound, compliance | WMS_QUEUE | SLA, reconciliation, workflow |
+| `INV_` | Inventory | inventory | INV_QUEUE | Stock management, cycle counts, ABC, expiry |
+| `WMS_` | Warehouse Management | warehouse-ops | WMS_QUEUE | Zones, slotting, put-away, staging |
+| `EAM_` | Enterprise Asset Management | equipment | WMS_QUEUE | Depreciation, AMC, vehicles |
+| `ONT_` | Order & Notification Transport | notifications, system | NOTIF_QUEUE | Email, push, alerts |
+| `HR_` | Human Resources | auth | AUD_QUEUE | Tokens, security, visitors |
 
 ## Naming Convention
 
@@ -25,10 +25,22 @@ Examples:
 - `EAM_ASSET_DEPRECIATION` — Asset Management: asset entity, depreciation action
 - `ONT_EMAIL_RETRY` — Notifications: email entity, retry action
 
-### Queues: `{MODULE}_QUEUE`
+### Queues: Oracle WMS Module Alignment
 
-- `INV_QUEUE`, `SCM_QUEUE`, `HR_QUEUE`, `EAM_QUEUE`, `ONT_QUEUE`
-- Special: `DEAD_LETTER_QUEUE` (cross-module failed jobs)
+| Queue | Oracle Module | Purpose |
+|-------|--------------|---------|
+| `WMS_QUEUE` | WMS | Core WMS operations, SLA, reconciliation, assets |
+| `RCV_QUEUE` | RCV | Receiving — GRN, ASN, putaway |
+| `INV_QUEUE` | INV | Inventory management |
+| `SHIP_QUEUE` | WSH | Shipping execution |
+| `CUST_QUEUE` | CUST | Customs clearance |
+| `ASN_QUEUE` | ASN | Advanced shipping notices |
+| `GRN_QUEUE` | GRN | Goods receipt notes |
+| `PICK_QUEUE` | PICK | Picking, wave planning |
+| `PUT_QUEUE` | PUT | Putaway, slotting |
+| `AUD_QUEUE` | AUD | Audit & compliance |
+| `NOTIF_QUEUE` | NOTIF | Notifications, email, alerts |
+| `DEAD_LETTER_QUEUE` | — | Failed jobs (cross-module) |
 
 ### Rules
 
@@ -44,11 +56,11 @@ Every Oracle-named job maps to a legacy handler name for backward compatibility:
 
 | Oracle Job Name | Legacy Handler | Queue |
 |----------------|----------------|-------|
-| `SCM_SLA_BREACH_CHECK` | `sla_breach` | SCM_QUEUE |
-| `SCM_SLA_WARNING_CHECK` | `sla_warning` | SCM_QUEUE |
-| `SCM_DAILY_RECONCILIATION` | `daily_reconciliation` | SCM_QUEUE |
-| `SCM_SCHEDULED_REPORTS` | `scheduled_reports` | SCM_QUEUE |
-| `SCM_SCHEDULED_RULES` | `scheduled_rules` | SCM_QUEUE |
+| `SCM_SLA_BREACH_CHECK` | `sla_breach` | WMS_QUEUE |
+| `SCM_SLA_WARNING_CHECK` | `sla_warning` | WMS_QUEUE |
+| `SCM_DAILY_RECONCILIATION` | `daily_reconciliation` | WMS_QUEUE |
+| `SCM_SCHEDULED_REPORTS` | `scheduled_reports` | WMS_QUEUE |
+| `SCM_SCHEDULED_RULES` | `scheduled_rules` | WMS_QUEUE |
 | `INV_ABC_CLASSIFICATION` | `abc_classification` | INV_QUEUE |
 | `INV_LOW_STOCK_ALERT` | `low_stock` | INV_QUEUE |
 | `INV_EXPIRED_LOT_CHECK` | `expired_lots` | INV_QUEUE |
@@ -58,21 +70,21 @@ Every Oracle-named job maps to a legacy handler name for backward compatibility:
 | `INV_REORDER_UPDATE` | `reorder_update` | INV_QUEUE |
 | `INV_EXPIRY_ALERT` | `expiry_alerts` | INV_QUEUE |
 | `INV_EXPIRY_QUARANTINE` | `expiry_quarantine` | INV_QUEUE |
-| `HR_TOKEN_CLEANUP` | `token_cleanup` | HR_QUEUE |
-| `HR_SECURITY_MONITOR` | `security_monitor` | HR_QUEUE |
-| `HR_VISITOR_OVERSTAY` | `visitor_overstay` | HR_QUEUE |
-| `EAM_ASSET_DEPRECIATION` | `asset_depreciation` | EAM_QUEUE |
-| `EAM_AMC_EXPIRY` | `amc_expiry` | EAM_QUEUE |
-| `EAM_VEHICLE_MAINTENANCE` | `vehicle_maintenance` | EAM_QUEUE |
-| `ONT_EMAIL_RETRY` | `email_retry` | ONT_QUEUE |
-| `ONT_EQUIPMENT_RETURN` | `sow_equipment_return` | ONT_QUEUE |
-| `ONT_SHIPMENT_DELAYS` | `sow_shipment_delays` | ONT_QUEUE |
-| `ONT_CYCLE_COUNT_ALERT` | `sow_cycle_count` | ONT_QUEUE |
-| `ONT_RATE_CARD_EXPIRY` | `sow_rate_card_expiry` | ONT_QUEUE |
-| `ONT_VEHICLE_MAINT_ALERT` | `sow_vehicle_maint` | ONT_QUEUE |
-| `ONT_NCR_DEADLINE` | `sow_ncr_deadline` | ONT_QUEUE |
-| `ONT_CONTRACT_RENEWAL` | `sow_contract_renewal` | ONT_QUEUE |
-| `ONT_OVERDUE_TOOLS` | `sow_overdue_tools` | ONT_QUEUE |
+| `HR_TOKEN_CLEANUP` | `token_cleanup` | AUD_QUEUE |
+| `HR_SECURITY_MONITOR` | `security_monitor` | AUD_QUEUE |
+| `HR_VISITOR_OVERSTAY` | `visitor_overstay` | AUD_QUEUE |
+| `EAM_ASSET_DEPRECIATION` | `asset_depreciation` | WMS_QUEUE |
+| `EAM_AMC_EXPIRY` | `amc_expiry` | WMS_QUEUE |
+| `EAM_VEHICLE_MAINTENANCE` | `vehicle_maintenance` | WMS_QUEUE |
+| `ONT_EMAIL_RETRY` | `email_retry` | NOTIF_QUEUE |
+| `ONT_EQUIPMENT_RETURN` | `sow_equipment_return` | NOTIF_QUEUE |
+| `ONT_SHIPMENT_DELAYS` | `sow_shipment_delays` | NOTIF_QUEUE |
+| `ONT_CYCLE_COUNT_ALERT` | `sow_cycle_count` | NOTIF_QUEUE |
+| `ONT_RATE_CARD_EXPIRY` | `sow_rate_card_expiry` | NOTIF_QUEUE |
+| `ONT_VEHICLE_MAINT_ALERT` | `sow_vehicle_maint` | NOTIF_QUEUE |
+| `ONT_NCR_DEADLINE` | `sow_ncr_deadline` | NOTIF_QUEUE |
+| `ONT_CONTRACT_RENEWAL` | `sow_contract_renewal` | NOTIF_QUEUE |
+| `ONT_OVERDUE_TOOLS` | `sow_overdue_tools` | NOTIF_QUEUE |
 
 ## Adding New Jobs
 

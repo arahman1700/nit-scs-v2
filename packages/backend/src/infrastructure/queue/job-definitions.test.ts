@@ -64,13 +64,13 @@ describe('job-definitions', () => {
       }
     });
 
-    it('should assign jobs to domain-appropriate queues', () => {
+    it('should assign jobs to Oracle WMS-appropriate queues', () => {
       for (const def of JOB_DEFINITIONS) {
         if (def.name.startsWith('INV_')) expect(def.queue).toBe(QUEUE_NAMES.INV_QUEUE);
-        if (def.name.startsWith('SCM_')) expect(def.queue).toBe(QUEUE_NAMES.SCM_QUEUE);
-        if (def.name.startsWith('HR_')) expect(def.queue).toBe(QUEUE_NAMES.HR_QUEUE);
-        if (def.name.startsWith('EAM_')) expect(def.queue).toBe(QUEUE_NAMES.EAM_QUEUE);
-        if (def.name.startsWith('ONT_')) expect(def.queue).toBe(QUEUE_NAMES.ONT_QUEUE);
+        if (def.name.startsWith('SCM_')) expect(def.queue).toBe(QUEUE_NAMES.WMS_QUEUE);
+        if (def.name.startsWith('HR_')) expect(def.queue).toBe(QUEUE_NAMES.AUD_QUEUE);
+        if (def.name.startsWith('EAM_')) expect(def.queue).toBe(QUEUE_NAMES.WMS_QUEUE);
+        if (def.name.startsWith('ONT_')) expect(def.queue).toBe(QUEUE_NAMES.NOTIF_QUEUE);
       }
     });
 
@@ -114,7 +114,7 @@ describe('job-definitions', () => {
       const def = getJobDefinition('SCM_SLA_BREACH_CHECK');
       expect(def).toBeDefined();
       expect(def!.name).toBe('SCM_SLA_BREACH_CHECK');
-      expect(def!.queue).toBe(QUEUE_NAMES.SCM_QUEUE);
+      expect(def!.queue).toBe(QUEUE_NAMES.WMS_QUEUE);
     });
 
     it('should return undefined for an unknown job', () => {
