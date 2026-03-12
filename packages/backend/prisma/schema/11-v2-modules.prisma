@@ -32,7 +32,7 @@ model Imsf {
   @@index([senderProjectId], map: "idx_imsf_sender")
   @@index([receiverProjectId], map: "idx_imsf_receiver")
   @@index([status, createdAt], map: "idx_imsf_status_created")
-  @@map("imsf")
+  @@map("MTL_INTERNAL_TRANSFERS")
 }
 
 /// IMSF line items
@@ -54,7 +54,7 @@ model ImsfLine {
   @@index([imsfId], map: "idx_imsf_lines_imsf")
   @@index([itemId], map: "idx_imsf_lines_item")
   @@index([uomId], map: "idx_imsf_lines_uom")
-  @@map("imsf_lines")
+  @@map("MTL_INTERNAL_TRANSFER_LINES")
 }
 
 /// Physical bin card — per item per location tracking
@@ -79,7 +79,7 @@ model BinCard {
   transactions BinCardTransaction[]
 
   @@unique([itemId, warehouseId, binNumber])
-  @@map("bin_cards")
+  @@map("WMS_BIN_CARDS")
 }
 
 /// Bin card transaction history
@@ -103,7 +103,7 @@ model BinCardTransaction {
   performedBy Employee @relation("BinCardTxPerformedBy", fields: [performedById], references: [id], onDelete: Restrict)
 
   @@index([binCardId, performedAt], map: "idx_bin_card_tx_card_date")
-  @@map("bin_card_transactions")
+  @@map("WMS_BIN_CARD_TRANSACTIONS")
 }
 
 /// Rental contract management
@@ -136,7 +136,7 @@ model RentalContract {
 
   @@index([status], map: "idx_rental_contracts_status")
   @@index([status, endDate], map: "idx_rental_contracts_status_end")
-  @@map("rental_contracts")
+  @@map("EAM_RENTAL_CONTRACTS")
 }
 
 /// Rental contract line items
@@ -152,7 +152,7 @@ model RentalContractLine {
   contract RentalContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@index([contractId], map: "idx_rental_contract_lines_contract")
-  @@map("rental_contract_lines")
+  @@map("EAM_RENTAL_CONTRACT_LINES")
 }
 
 /// Generator fuel consumption log
@@ -173,7 +173,7 @@ model GeneratorFuelLog {
   loggedBy  Employee  @relation("FuelLoggedBy", fields: [loggedById], references: [id], onDelete: Restrict)
 
   @@index([generatorId, fuelDate], map: "idx_fuel_log_gen_date")
-  @@map("generator_fuel_logs")
+  @@map("EAM_GENERATOR_FUEL_LOGS")
 }
 
 /// Generator maintenance schedule and records
@@ -198,7 +198,7 @@ model GeneratorMaintenance {
   performedBy Employee? @relation("MaintenancePerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
 
   @@index([generatorId, scheduledDate], map: "idx_gen_maint_gen_date")
-  @@map("generator_maintenance")
+  @@map("EAM_GENERATOR_MAINTENANCE")
 }
 
 /// Surplus item identification and disposition
@@ -230,7 +230,7 @@ model SurplusItem {
   @@index([status], map: "idx_surplus_status")
   @@index([status, createdAt], map: "idx_surplus_status_created")
   @@index([warehouseId, status], map: "idx_surplus_warehouse_status")
-  @@map("surplus_items")
+  @@map("MTL_SURPLUS_ITEMS")
 }
 
 /// Scrap item identification and disposal tracking
@@ -272,7 +272,7 @@ model ScrapItem {
   @@index([status], map: "idx_scrap_status")
   @@index([projectId], map: "idx_scrap_project")
   @@index([status, createdAt], map: "idx_scrap_status_created")
-  @@map("scrap_items")
+  @@map("MTL_SCRAP_ITEMS")
 }
 
 /// Scrap Selling Committee (SSC) bid
@@ -294,7 +294,7 @@ model SscBid {
   scrapItem ScrapItem @relation(fields: [scrapItemId], references: [id], onDelete: Cascade)
 
   @@index([scrapItemId], map: "idx_ssc_bids_scrap")
-  @@map("ssc_bids")
+  @@map("MTL_SSC_BIDS")
 }
 
 /// Tool registry
@@ -320,7 +320,7 @@ model Tool {
   // Reverse relations
   toolIssues ToolIssue[]
 
-  @@map("tools")
+  @@map("EAM_TOOL_REGISTRY")
 }
 
 /// Tool issue and return tracking
@@ -348,7 +348,8 @@ model ToolIssue {
   @@index([toolId], map: "idx_tool_issues_tool")
   @@index([status], map: "idx_tool_issues_status")
   @@index([issuedToId, status], map: "idx_tool_issues_user_status")
-  @@map("tool_issues")
+  @@index([status, expectedReturnDate], map: "idx_eam_tool_issues_overdue")
+  @@map("EAM_TOOL_ISSUES")
 }
 
 /// Warehouse zone configuration
@@ -375,7 +376,7 @@ model WarehouseZone {
   binLocations       BinLocation[]
 
   @@unique([warehouseId, zoneCode])
-  @@map("warehouse_zones")
+  @@map("WMS_ZONES")
 }
 
 /// Physical storage position within a warehouse zone (rack/shelf/bin)
@@ -404,7 +405,8 @@ model BinLocation {
   @@unique([zoneId, locationCode], map: "uq_bin_location_zone_code")
   @@index([zoneId, locationType], map: "idx_bin_location_zone_type")
   @@index([isActive], map: "idx_bin_location_active")
-  @@map("bin_locations")
+  @@index([zoneId, isActive, currentOccupancy], map: "idx_wms_bin_loc_avail")
+  @@map("WMS_BIN_LOCATIONS")
 }
 
 /// Storekeeper handover process
@@ -430,7 +432,7 @@ model StorekeeperHandover {
   @@index([warehouseId, status], map: "idx_handovers_warehouse_status")
   @@index([outgoingEmployeeId], map: "idx_handovers_outgoing")
   @@index([incomingEmployeeId], map: "idx_handovers_incoming")
-  @@map("storekeeper_handovers")
+  @@map("WMS_STOREKEEPER_HANDOVERS")
 }
 
 /// Put-away rules engine — determines optimal zone placement for incoming items
@@ -452,7 +454,7 @@ model PutAwayRule {
   targetZone WarehouseZone? @relation(fields: [targetZoneId], references: [id], onDelete: SetNull)
 
   @@index([warehouseId, priority], map: "idx_put_away_rules_wh_priority")
-  @@map("put_away_rules")
+  @@map("WMS_PUT_AWAY_RULES")
 }
 
 // ############################################################################
@@ -485,7 +487,7 @@ model CycleCount {
   @@index([status], map: "idx_cycle_count_status")
   @@index([warehouseId], map: "idx_cycle_count_warehouse")
   @@index([status, scheduledDate], map: "idx_cycle_count_status_scheduled")
-  @@map("cycle_counts")
+  @@map("MTL_CYCLE_COUNT_HEADERS")
 }
 
 /// Cycle count line — one per item to be counted
@@ -509,7 +511,7 @@ model CycleCountLine {
   countedBy  Employee?  @relation("CycleCountLineCounter", fields: [countedById], references: [id], onDelete: SetNull)
 
   @@index([cycleCountId], map: "idx_ccl_cycle_count")
-  @@map("cycle_count_lines")
+  @@map("MTL_CYCLE_COUNT_LINES")
 }
 
 model AdvanceShippingNotice {
@@ -528,15 +530,18 @@ model AdvanceShippingNotice {
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
-  supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
-  warehouse  Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  supplier   Supplier   @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse  Warehouse  @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
   lines      AsnLine[]
   gatePasses GatePass[]
 
   @@index([supplierId], map: "idx_asn_supplier")
   @@index([warehouseId], map: "idx_asn_warehouse")
   @@index([status], map: "idx_asn_status")
-  @@map("advance_shipping_notices")
+  @@index([warehouseId, status], map: "idx_rcv_asn_wh_status")
+  @@index([supplierId, expectedArrival], map: "idx_rcv_asn_supplier_arrival")
+  @@index([status, expectedArrival], map: "idx_rcv_asn_status_arrival")
+  @@map("RCV_ASN_HEADERS")
 }
 
 model AsnLine {
@@ -552,7 +557,8 @@ model AsnLine {
   item Item                  @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
   @@index([asnId], map: "idx_asn_line_asn")
-  @@map("asn_lines")
+  @@index([asnId, itemId], map: "idx_rcv_asn_line_asn_item")
+  @@map("RCV_ASN_LINES")
 }
 
 /// Cross-docking — bypass put-away by routing inbound items directly to outbound
@@ -575,7 +581,9 @@ model CrossDock {
 
   @@index([warehouseId], map: "idx_cross_dock_warehouse")
   @@index([status], map: "idx_cross_dock_status")
-  @@map("cross_docks")
+  @@index([warehouseId, status], map: "idx_wms_crossdock_wh_status")
+  @@index([itemId, status], map: "idx_wms_crossdock_item_status")
+  @@map("WMS_CROSS_DOCKS")
 }
 
 // ############################################################################
@@ -595,7 +603,7 @@ model InspectionChecklist {
   items InspectionChecklistItem[]
 
   @@index([category, isActive], map: "idx_inspection_checklists_cat_active")
-  @@map("inspection_checklists")
+  @@map("QA_INSPECTION_CHECKLISTS")
 }
 
 /// Individual items within an inspection checklist
@@ -611,7 +619,7 @@ model InspectionChecklistItem {
   checklist InspectionChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
 
   @@index([checklistId], map: "idx_checklist_items_checklist")
-  @@map("inspection_checklist_items")
+  @@map("QA_INSPECTION_CHECKLIST_ITEMS")
 }
 
 // ############################################################################

@@ -12,7 +12,7 @@ model Region {
   projects   Project[]
   warehouses Warehouse[]
 
-  @@map("regions")
+  @@map("FND_REGIONS")
 }
 
 /// Cities within regions
@@ -30,7 +30,7 @@ model City {
 
   @@unique([cityName, regionId], map: "uq_city_name_region")
   @@index([regionId], map: "idx_cities_region")
-  @@map("cities")
+  @@map("FND_CITIES")
 }
 
 /// Ports of entry (sea, air, land)
@@ -47,7 +47,7 @@ model Port {
   shipments Shipment[]
 
   @@index([cityId], map: "idx_ports_city")
-  @@map("ports")
+  @@map("WSH_PORTS")
 }
 
 /// Units of measure (EA, KG, M, etc.)
@@ -70,7 +70,7 @@ model UnitOfMeasure {
   imsfLines           ImsfLine[]
   transportOrderItems TransportOrderItem[]
 
-  @@map("units_of_measure")
+  @@map("MTL_UNITS_OF_MEASURE")
 }
 
 /// Warehouse type classifications
@@ -82,7 +82,7 @@ model WarehouseType {
   // Relations
   warehouses Warehouse[]
 
-  @@map("warehouse_types")
+  @@map("WMS_WAREHOUSE_TYPES")
 }
 
 /// Equipment category groupings
@@ -93,7 +93,7 @@ model EquipmentCategory {
   // Relations
   equipmentTypes EquipmentType[]
 
-  @@map("equipment_categories")
+  @@map("EAM_EQUIPMENT_CATEGORIES")
 }
 
 /// Equipment type definitions
@@ -103,15 +103,15 @@ model EquipmentType {
   categoryId String? @map("category_id") @db.Uuid
 
   // Relations
-  category               EquipmentCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  generators             Generator[]
-  equipmentFleet         EquipmentFleet[]
-  joEquipmentLines       JoEquipmentLine[]
-  supplierEquipmentRates         SupplierEquipmentRate[]
-  annualMaintenanceContracts     AnnualMaintenanceContract[]
+  category                   EquipmentCategory?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  generators                 Generator[]
+  equipmentFleet             EquipmentFleet[]
+  joEquipmentLines           JoEquipmentLine[]
+  supplierEquipmentRates     SupplierEquipmentRate[]
+  annualMaintenanceContracts AnnualMaintenanceContract[]
 
   @@index([categoryId], map: "idx_equipment_types_category")
-  @@map("equipment_types")
+  @@map("EAM_EQUIPMENT_TYPES")
 }
 
 /// Approval workflow rules per document type and amount threshold
@@ -126,5 +126,5 @@ model ApprovalWorkflow {
   slaHours     Int      @map("sla_hours")
 
   @@index([documentType], map: "idx_approval_workflows_doc_type")
-  @@map("approval_workflows")
+  @@map("AME_APPROVAL_WORKFLOWS")
 }

@@ -17,7 +17,7 @@ model EmailTemplate {
   // Relations
   emailLogs EmailLog[]
 
-  @@map("email_templates")
+  @@map("FND_EMAIL_TEMPLATES")
 }
 
 /// Email delivery tracking
@@ -47,7 +47,7 @@ model EmailLog {
   @@index([status], map: "idx_email_log_status")
   @@index([templateId], map: "idx_email_log_template")
   @@index([createdAt], map: "idx_email_log_date")
-  @@map("email_logs")
+  @@map("FND_EMAIL_LOGS")
 }
 
 // ############################################################################
@@ -72,7 +72,7 @@ model Dashboard {
 
   @@index([ownerId], map: "idx_dashboards_owner")
   @@index([defaultForRole], map: "idx_dashboards_role")
-  @@map("dashboards")
+  @@map("FND_DASHBOARDS")
 }
 
 /// Single widget on a dashboard
@@ -98,7 +98,7 @@ model DashboardWidget {
   dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
 
   @@index([dashboardId], map: "idx_widgets_dashboard")
-  @@map("dashboard_widgets")
+  @@map("FND_DASHBOARD_WIDGETS")
 }
 
 /// User-built report configurations
@@ -135,7 +135,7 @@ model SavedReport {
   @@index([ownerId], map: "idx_reports_owner")
   @@index([isTemplate, category], map: "idx_reports_template_category")
   @@index([scheduleFrequency, nextRunAt], map: "idx_reports_schedule")
-  @@map("saved_reports")
+  @@map("FND_SAVED_REPORTS")
 }
 
 // ############################################################################
@@ -155,7 +155,7 @@ model RefreshToken {
 
   @@index([userId], map: "idx_refresh_tokens_user")
   @@index([expiresAt], map: "idx_refresh_tokens_expiry")
-  @@map("refresh_tokens")
+  @@map("FND_REFRESH_TOKENS")
 }
 
 // ############################################################################
@@ -179,7 +179,7 @@ model DocumentComment {
 
   @@index([documentType, documentId], map: "idx_doc_comments_doc")
   @@index([authorId], map: "idx_doc_comments_author")
-  @@map("document_comments")
+  @@map("AME_DOCUMENT_COMMENTS")
 }
 
 // ############################################################################
@@ -209,7 +209,7 @@ model ApprovalStep {
   @@index([documentType, documentId], map: "idx_approval_steps_doc")
   @@index([approverId], map: "idx_approval_steps_approver")
   @@index([status], map: "idx_approval_steps_status")
-  @@map("approval_steps")
+  @@map("AME_APPROVAL_STEPS")
 }
 
 // ############################################################################
@@ -238,7 +238,7 @@ model DelegationRule {
   @@index([delegatorId], map: "idx_delegation_delegator")
   @@index([delegateId], map: "idx_delegation_delegate")
   @@index([startDate, endDate], map: "idx_delegation_dates")
-  @@map("delegation_rules")
+  @@map("AME_DELEGATION_RULES")
 }
 
 // ############################################################################
@@ -264,7 +264,7 @@ model Attachment {
 
   @@index([entityType, recordId], map: "idx_attachment_entity")
   @@index([uploadedById], map: "idx_attachment_uploader")
-  @@map("attachments")
+  @@map("FND_ATTACHMENTS")
 }
 
 // ############################################################################
@@ -287,5 +287,5 @@ model UserView {
   user Employee @relation("UserViewOwner", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, entityType], map: "idx_user_view_user_entity")
-  @@map("user_views")
+  @@map("FND_USER_VIEWS")
 }

@@ -19,7 +19,7 @@ model ParallelApprovalGroup {
   @@unique([documentType, documentId, approvalLevel], map: "uq_parallel_approval_doc_level")
   @@index([documentType, documentId], map: "idx_parallel_approval_doc")
   @@index([status], map: "idx_parallel_approval_status")
-  @@map("parallel_approval_groups")
+  @@map("AME_PARALLEL_APPROVAL_GROUPS")
 }
 
 /// Individual responses within a parallel approval group
@@ -38,7 +38,7 @@ model ParallelApprovalResponse {
   @@unique([groupId, approverId], map: "uq_parallel_response_group_approver")
   @@index([groupId], map: "idx_parallel_response_group")
   @@index([approverId], map: "idx_parallel_response_approver")
-  @@map("parallel_approval_responses")
+  @@map("AME_PARALLEL_APPROVAL_RESPONSES")
 }
 
 // ############################################################################
@@ -63,7 +63,7 @@ model DockDoor {
 
   @@unique([warehouseId, doorNumber])
   @@index([warehouseId], map: "idx_dock_door_warehouse")
-  @@map("dock_doors")
+  @@map("WMS_DOCK_DOORS")
 }
 
 /// Yard appointment — scheduled delivery/pickup at a dock
@@ -93,7 +93,9 @@ model YardAppointment {
   @@index([warehouseId], map: "idx_yard_appt_warehouse")
   @@index([status], map: "idx_yard_appt_status")
   @@index([scheduledStart], map: "idx_yard_appt_start")
-  @@map("yard_appointments")
+  @@index([warehouseId, scheduledStart, status], map: "idx_wms_yard_wh_start_status")
+  @@index([referenceType, referenceId], map: "idx_wms_yard_ref")
+  @@map("WMS_YARD_APPOINTMENTS")
 }
 
 /// Truck visit — tracks a vehicle from yard check-in to departure
@@ -119,7 +121,9 @@ model TruckVisit {
 
   @@index([warehouseId], map: "idx_truck_visit_warehouse")
   @@index([status], map: "idx_truck_visit_status")
-  @@map("truck_visits")
+  @@index([warehouseId, status], map: "idx_wms_truck_wh_status")
+  @@index([warehouseId, checkInAt], map: "idx_wms_truck_wh_checkin")
+  @@map("WMS_TRUCK_VISITS")
 }
 
 // ############################################################################
@@ -154,7 +158,7 @@ model Sensor {
 
   @@index([warehouseId], map: "idx_sensors_warehouse")
   @@index([zoneId], map: "idx_sensors_zone")
-  @@map("sensors")
+  @@map("WMS_SENSORS")
 }
 
 /// Time-series sensor readings
@@ -168,7 +172,7 @@ model SensorReading {
   sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
 
   @@index([sensorId, recordedAt], map: "idx_sensor_readings_sensor_time")
-  @@map("sensor_readings")
+  @@map("WMS_SENSOR_READINGS")
 }
 
 /// Sensor alerts (threshold breaches, offline detection)
@@ -190,7 +194,8 @@ model SensorAlert {
 
   @@index([sensorId], map: "idx_sensor_alerts_sensor")
   @@index([acknowledged], map: "idx_sensor_alerts_ack")
-  @@map("sensor_alerts")
+  @@index([sensorId, acknowledged], map: "idx_wms_alerts_sensor_ack")
+  @@map("WMS_SENSOR_ALERTS")
 }
 
 // ############################################################################
@@ -211,7 +216,7 @@ model RolePermission {
 
   @@unique([role, resource], map: "uq_role_permission")
   @@index([role], map: "idx_role_permissions_role")
-  @@map("role_permissions")
+  @@map("FND_ROLE_PERMISSIONS")
 }
 
 // ############################################################################
@@ -250,7 +255,7 @@ model DynamicDocumentType {
   documents DynamicDocument[]
 
   @@index([category, isActive], map: "idx_dyn_types_category_active")
-  @@map("dynamic_document_types")
+  @@map("FND_DYNAMIC_DOCUMENT_TYPES")
 }
 
 /// Field definition for a dynamic document type
@@ -287,7 +292,7 @@ model DynamicFieldDefinition {
 
   @@unique([documentTypeId, fieldKey], map: "uq_dyn_field_type_key")
   @@index([documentTypeId, sortOrder], map: "idx_dyn_fields_type_order")
-  @@map("dynamic_field_definitions")
+  @@map("FND_DYNAMIC_FIELD_DEFINITIONS")
 }
 
 /// Instance of a dynamic document
@@ -320,7 +325,7 @@ model DynamicDocument {
   @@index([projectId], map: "idx_dyn_docs_project")
   @@index([warehouseId], map: "idx_dyn_docs_warehouse")
   @@index([createdById], map: "idx_dyn_docs_created_by")
-  @@map("dynamic_documents")
+  @@map("FND_DYNAMIC_DOCUMENTS")
 }
 
 /// Line item for a dynamic document
@@ -335,7 +340,7 @@ model DynamicDocumentLine {
   document DynamicDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@unique([documentId, lineNumber], map: "uq_dyn_line_doc_num")
-  @@map("dynamic_document_lines")
+  @@map("FND_DYNAMIC_DOCUMENT_LINES")
 }
 
 /// Status change history for dynamic documents
@@ -353,7 +358,7 @@ model DynamicDocumentHistory {
   performedBy Employee?       @relation("DynHistoryPerformedBy", fields: [performedById], references: [id], onDelete: SetNull)
 
   @@index([documentId], map: "idx_dyn_history_doc")
-  @@map("dynamic_document_history")
+  @@map("FND_DYNAMIC_DOCUMENT_HISTORY")
 }
 
 // ############################################################################
@@ -382,7 +387,7 @@ model CustomDataSource {
   // Relations
   createdBy Employee? @relation("DataSourceCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  @@map("custom_data_sources")
+  @@map("FND_CUSTOM_DATA_SOURCES")
 }
 
 /// Custom field definition for extending existing document types
@@ -405,7 +410,7 @@ model CustomFieldDefinition {
   values CustomFieldValue[]
 
   @@unique([entityType, fieldKey], map: "uq_custom_field_entity_key")
-  @@map("custom_field_definitions")
+  @@map("FND_CUSTOM_FIELD_DEFINITIONS")
 }
 
 /// Custom field value for an entity instance
@@ -421,7 +426,7 @@ model CustomFieldValue {
 
   @@unique([definitionId, entityId], map: "uq_custom_field_value")
   @@index([entityType, entityId], map: "idx_custom_field_values_entity")
-  @@map("custom_field_values")
+  @@map("FND_CUSTOM_FIELD_VALUES")
 }
 
 // ############################################################################
@@ -442,7 +447,7 @@ model WorkflowTemplate {
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("workflow_templates")
+  @@map("AME_WORKFLOW_TEMPLATES")
 }
 
 // ############################################################################
@@ -462,7 +467,7 @@ model AiConversation {
   messages AiMessage[]
 
   @@index([userId], map: "idx_ai_conv_user")
-  @@map("ai_conversations")
+  @@map("FND_AI_CONVERSATIONS")
 }
 
 /// AI chat message within a conversation
@@ -482,7 +487,7 @@ model AiMessage {
   conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId], map: "idx_ai_msg_conv")
-  @@map("ai_messages")
+  @@map("FND_AI_MESSAGES")
 }
 
 /// AI-generated suggestion for system optimization
@@ -504,7 +509,7 @@ model AiSuggestion {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([status, priority], map: "idx_ai_suggestions_status")
-  @@map("ai_suggestions")
+  @@map("FND_AI_SUGGESTIONS")
 }
 
 // ############################################################################

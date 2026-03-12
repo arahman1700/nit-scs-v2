@@ -54,7 +54,7 @@ model Mirv {
   @@index([warehouseId, status], map: "idx_mirv_warehouse_status")
   @@index([projectId, status], map: "idx_mirv_project_status")
   @@index([status, createdAt], map: "idx_mirv_status_created")
-  @@map("mirv")
+  @@map("ONT_ISSUE_HEADERS")
 }
 
 /// MIRV line items
@@ -81,7 +81,7 @@ model MirvLine {
 
   @@index([mirvId], map: "idx_mirv_lines_mirv")
   @@index([itemId], map: "idx_mirv_lines_item")
-  @@map("mirv_lines")
+  @@map("ONT_ISSUE_LINES")
 }
 
 /// Material Return Voucher (MRV)
@@ -125,7 +125,7 @@ model Mrv {
   @@index([status, createdAt], map: "idx_mrv_status_created")
   @@index([fromWarehouseId], map: "idx_mrv_from_warehouse")
   @@index([originalMirvId], map: "idx_mrv_original_mirv")
-  @@map("mrv")
+  @@map("ONT_RETURN_HEADERS")
 }
 
 /// MRV line items
@@ -148,7 +148,7 @@ model MrvLine {
   @@index([mrvId], map: "idx_mrv_lines_mrv")
   @@index([itemId], map: "idx_mrv_lines_item")
   @@index([uomId], map: "idx_mrv_lines_uom")
-  @@map("mrv_lines")
+  @@map("ONT_RETURN_LINES")
 }
 
 /// Gate pass for material entry/exit
@@ -187,14 +187,14 @@ model GatePass {
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  mirv      Mirv?     @relation(fields: [mirvId], references: [id], onDelete: SetNull)
-  imsf      Imsf?     @relation(fields: [imsfId], references: [id], onDelete: SetNull)
+  mirv         Mirv?                  @relation(fields: [mirvId], references: [id], onDelete: SetNull)
+  imsf         Imsf?                  @relation(fields: [imsfId], references: [id], onDelete: SetNull)
   jobOrder     JobOrder?              @relation(fields: [jobOrderId], references: [id], onDelete: SetNull)
   asn          AdvanceShippingNotice? @relation(fields: [asnId], references: [id], onDelete: SetNull)
-  expectedMrrv Mrrv?                 @relation("GatePassExpectedMrrv", fields: [expectedMrrvId], references: [id], onDelete: SetNull)
-  project      Project?              @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  issuedBy  Employee? @relation("GatePassIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
+  expectedMrrv Mrrv?                  @relation("GatePassExpectedMrrv", fields: [expectedMrrvId], references: [id], onDelete: SetNull)
+  project      Project?               @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  warehouse    Warehouse              @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  issuedBy     Employee?              @relation("GatePassIssuedBy", fields: [issuedById], references: [id], onDelete: SetNull)
 
   // Reverse relations
   gatePassItems   GatePassItem[]
@@ -212,7 +212,9 @@ model GatePass {
   @@index([createdAt], map: "idx_gate_passes_created")
   @@index([warehouseId, status], map: "idx_gate_passes_warehouse_status")
   @@index([status, createdAt], map: "idx_gate_passes_status_created")
-  @@map("gate_passes")
+  @@index([warehouseId, passType, status], map: "idx_wms_gp_wh_type_status")
+  @@index([validUntil, status], map: "idx_wms_gp_expiry_check")
+  @@map("WMS_GATE_PASSES")
 }
 
 /// Gate pass line items
@@ -232,7 +234,7 @@ model GatePassItem {
 
   @@index([gatePassId], map: "idx_gate_pass_items_gate_pass")
   @@index([itemId], map: "idx_gate_pass_items_item")
-  @@map("gate_pass_items")
+  @@map("WMS_GATE_PASS_ITEMS")
 }
 
 /// Material Requisition Form (MRF)
@@ -281,7 +283,7 @@ model MaterialRequisition {
   @@index([status], map: "idx_mrf_status")
   @@index([requestedById], map: "idx_mrf_requested_by")
   @@index([status, createdAt], map: "idx_mrf_status_created")
-  @@map("material_requisitions")
+  @@map("ONT_REQUISITION_HEADERS")
 }
 
 /// MRF line items
@@ -311,7 +313,7 @@ model MrfLine {
 
   @@index([mrfId], map: "idx_mrf_lines_mrf")
   @@index([itemId], map: "idx_mrf_lines_item")
-  @@map("mrf_lines")
+  @@map("ONT_REQUISITION_LINES")
 }
 
 /// Inter-warehouse and inter-project stock transfers
@@ -361,7 +363,7 @@ model StockTransfer {
   @@index([requestedById], map: "idx_stock_transfers_requested_by")
   @@index([fromProjectId], map: "idx_stock_transfers_from_project")
   @@index([toProjectId], map: "idx_stock_transfers_to_project")
-  @@map("stock_transfers")
+  @@map("MTL_TRANSFER_HEADERS")
 }
 
 /// Stock transfer line items
@@ -381,7 +383,7 @@ model StockTransferLine {
 
   @@index([transferId], map: "idx_stock_transfer_lines_transfer")
   @@index([itemId], map: "idx_stock_transfer_lines_item")
-  @@map("stock_transfer_lines")
+  @@map("MTL_TRANSFER_LINES")
 }
 
 // ############################################################################

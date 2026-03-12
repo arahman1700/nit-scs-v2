@@ -75,7 +75,7 @@ model JobOrder {
   @@index([createdAt], map: "idx_job_orders_created")
   @@index([projectId, status], map: "idx_job_orders_project_status")
   @@index([status, createdAt], map: "idx_job_orders_status_created")
-  @@map("job_orders")
+  @@map("WMS_JOB_ORDERS")
 }
 
 /// Transport-type job order details
@@ -102,7 +102,7 @@ model JoTransportDetail {
   // Relations
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
-  @@map("jo_transport_details")
+  @@map("WMS_JO_TRANSPORT_DETAILS")
 }
 
 /// Rental-type job order details (monthly and daily)
@@ -120,7 +120,7 @@ model JoRentalDetail {
   // Relations
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
-  @@map("jo_rental_details")
+  @@map("WMS_JO_RENTAL_DETAILS")
 }
 
 /// Generator rental and maintenance job order details
@@ -138,7 +138,7 @@ model JoGeneratorDetail {
   jobOrder  JobOrder   @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
   generator Generator? @relation(fields: [generatorId], references: [id], onDelete: SetNull)
 
-  @@map("jo_generator_details")
+  @@map("WMS_JO_GENERATOR_DETAILS")
 }
 
 /// Scrap disposal job order details
@@ -154,7 +154,7 @@ model JoScrapDetail {
   // Relations
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
-  @@map("jo_scrap_details")
+  @@map("WMS_JO_SCRAP_DETAILS")
 }
 
 /// Equipment request line items for job orders
@@ -174,7 +174,7 @@ model JoEquipmentLine {
   equipmentType EquipmentType @relation(fields: [equipmentTypeId], references: [id], onDelete: Restrict)
 
   @@index([jobOrderId], map: "idx_jo_equipment_lines_jo")
-  @@map("jo_equipment_lines")
+  @@map("WMS_JO_EQUIPMENT_LINES")
 }
 
 /// Service Level Agreement tracking for job orders
@@ -192,7 +192,7 @@ model JoSlaTracking {
   // Relations
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
-  @@map("jo_sla_tracking")
+  @@map("WMS_JO_SLA_TRACKING")
 }
 
 /// Job order approval records
@@ -211,7 +211,7 @@ model JoApproval {
   approver Employee @relation(fields: [approverId], references: [id], onDelete: Restrict)
 
   @@index([jobOrderId], map: "idx_jo_approvals_jo")
-  @@map("jo_approvals")
+  @@map("WMS_JO_APPROVALS")
 }
 
 /// Job order invoice and payment tracking
@@ -234,7 +234,7 @@ model JoPayment {
   jobOrder JobOrder @relation(fields: [jobOrderId], references: [id], onDelete: Cascade)
 
   @@index([jobOrderId], map: "idx_jo_payments_jo")
-  @@map("jo_payments")
+  @@map("WMS_JO_PAYMENTS")
 }
 
 // ############################################################################

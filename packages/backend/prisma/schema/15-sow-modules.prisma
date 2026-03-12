@@ -17,7 +17,7 @@ model LoginAttempt {
 
   @@index([employeeId, createdAt], map: "idx_login_attempts_employee")
   @@index([ipAddress, createdAt], map: "idx_login_attempts_ip")
-  @@map("login_attempts")
+  @@map("FND_LOGIN_ATTEMPTS")
 }
 
 // ############################################################################
@@ -26,27 +26,27 @@ model LoginAttempt {
 
 /// Annual Maintenance Contracts (AMC) — SOW M1
 model AnnualMaintenanceContract {
-  id                              String   @id @default(uuid()) @db.Uuid
-  contractNumber                  String   @unique @map("contract_number") @db.VarChar(20)
-  supplierId                      String   @map("supplier_id") @db.Uuid
-  equipmentTypeId                 String   @map("equipment_type_id") @db.Uuid
-  startDate                       DateTime @map("start_date") @db.Date
-  endDate                         DateTime @map("end_date") @db.Date
-  contractValue                   Decimal  @map("contract_value") @db.Decimal(15, 2)
+  id                             String   @id @default(uuid()) @db.Uuid
+  contractNumber                 String   @unique @map("contract_number") @db.VarChar(20)
+  supplierId                     String   @map("supplier_id") @db.Uuid
+  equipmentTypeId                String   @map("equipment_type_id") @db.Uuid
+  startDate                      DateTime @map("start_date") @db.Date
+  endDate                        DateTime @map("end_date") @db.Date
+  contractValue                  Decimal  @map("contract_value") @db.Decimal(15, 2)
   /// CHECK: status IN ('draft', 'active', 'expired', 'terminated')
-  status                          String   @default("draft") @map("status") @db.VarChar(20)
+  status                         String   @default("draft") @map("status") @db.VarChar(20)
   /// CHECK: coverage_type IN ('comprehensive', 'parts_only', 'labor_only')
-  coverageType                    String   @map("coverage_type") @db.VarChar(50)
-  responseTimeSlaHours            Int      @map("response_time_sla_hours")
+  coverageType                   String   @map("coverage_type") @db.VarChar(50)
+  responseTimeSlaHours           Int      @map("response_time_sla_hours")
   /// CHECK: preventive_maintenance_frequency IN ('weekly', 'monthly', 'quarterly', 'yearly')
-  preventiveMaintenanceFrequency  String   @map("preventive_maintenance_frequency") @db.VarChar(30)
-  includesSpares                  Boolean  @default(false) @map("includes_spares")
-  maxCallouts                     Int?     @map("max_callouts")
-  notes                           String?
-  terminationReason               String?  @map("termination_reason")
-  createdById                     String   @map("created_by_id") @db.Uuid
-  createdAt                       DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt                       DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  preventiveMaintenanceFrequency String   @map("preventive_maintenance_frequency") @db.VarChar(30)
+  includesSpares                 Boolean  @default(false) @map("includes_spares")
+  maxCallouts                    Int?     @map("max_callouts")
+  notes                          String?
+  terminationReason              String?  @map("termination_reason")
+  createdById                    String   @map("created_by_id") @db.Uuid
+  createdAt                      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
   supplier      Supplier      @relation(fields: [supplierId], references: [id], onDelete: Restrict)
@@ -56,7 +56,7 @@ model AnnualMaintenanceContract {
   @@index([status], map: "idx_amc_status")
   @@index([supplierId], map: "idx_amc_supplier")
   @@index([endDate], map: "idx_amc_end_date")
-  @@map("annual_maintenance_contracts")
+  @@map("EAM_MAINTENANCE_CONTRACTS")
 }
 
 // ############################################################################
@@ -65,71 +65,73 @@ model AnnualMaintenanceContract {
 
 /// Fixed asset register — full lifecycle tracking with depreciation
 model Asset {
-  id                   String    @id @default(uuid()) @db.Uuid
-  assetCode            String    @unique @map("asset_code") @db.VarChar(30)
-  description          String    @db.VarChar(500)
+  id                  String    @id @default(uuid()) @db.Uuid
+  assetCode           String    @unique @map("asset_code") @db.VarChar(30)
+  description         String    @db.VarChar(500)
   /// CHECK: category IN ('equipment', 'vehicle', 'furniture', 'it_hardware', 'tools', 'other')
-  category             String    @db.VarChar(50)
-  serialNumber         String?   @map("serial_number") @db.VarChar(100)
-  manufacturer         String?   @db.VarChar(200)
-  model                String?   @db.VarChar(200)
-  purchaseDate         DateTime? @map("purchase_date") @db.Date
-  purchaseCost         Decimal?  @map("purchase_cost") @db.Decimal(15, 2)
-  currentValue         Decimal?  @map("current_value") @db.Decimal(15, 2)
+  category            String    @db.VarChar(50)
+  serialNumber        String?   @map("serial_number") @db.VarChar(100)
+  manufacturer        String?   @db.VarChar(200)
+  model               String?   @db.VarChar(200)
+  purchaseDate        DateTime? @map("purchase_date") @db.Date
+  purchaseCost        Decimal?  @map("purchase_cost") @db.Decimal(15, 2)
+  currentValue        Decimal?  @map("current_value") @db.Decimal(15, 2)
   /// CHECK: depreciation_method IN ('straight_line', 'declining_balance', 'none')
-  depreciationMethod   String?   @map("depreciation_method") @db.VarChar(30)
-  usefulLifeYears      Int?      @map("useful_life_years")
-  salvageValue         Decimal?  @map("salvage_value") @db.Decimal(15, 2)
+  depreciationMethod  String?   @map("depreciation_method") @db.VarChar(30)
+  usefulLifeYears     Int?      @map("useful_life_years")
+  salvageValue        Decimal?  @map("salvage_value") @db.Decimal(15, 2)
   /// CHECK: status IN ('active', 'maintenance', 'retired', 'disposed', 'lost')
-  status               String    @default("active") @db.VarChar(20)
-  locationWarehouseId  String?   @map("location_warehouse_id") @db.Uuid
-  assignedToId         String?   @map("assigned_to_id") @db.Uuid
+  status              String    @default("active") @db.VarChar(20)
+  locationWarehouseId String?   @map("location_warehouse_id") @db.Uuid
+  assignedToId        String?   @map("assigned_to_id") @db.Uuid
   /// CHECK: condition IN ('new', 'good', 'fair', 'poor')
-  condition            String?   @db.VarChar(20)
-  lastAuditDate        DateTime? @map("last_audit_date") @db.Date
-  notes                String?
-  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  condition           String?   @db.VarChar(20)
+  lastAuditDate       DateTime? @map("last_audit_date") @db.Date
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relations
-  locationWarehouse    Warehouse? @relation("AssetLocation", fields: [locationWarehouseId], references: [id], onDelete: SetNull)
-  assignedTo           Employee?  @relation("AssetAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  locationWarehouse Warehouse? @relation("AssetLocation", fields: [locationWarehouseId], references: [id], onDelete: SetNull)
+  assignedTo        Employee?  @relation("AssetAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
 
   // Reverse relations
-  transfers            AssetTransfer[]
-  depreciationRecords  AssetDepreciation[]
+  transfers           AssetTransfer[]
+  depreciationRecords AssetDepreciation[]
 
   @@index([status], map: "idx_assets_status")
   @@index([category], map: "idx_assets_category")
   @@index([locationWarehouseId], map: "idx_assets_warehouse")
   @@index([assignedToId], map: "idx_assets_assigned_to")
-  @@map("assets")
+  @@index([status, category], map: "idx_eam_assets_status_category")
+  @@index([locationWarehouseId, status], map: "idx_eam_assets_wh_status")
+  @@map("EAM_ASSET_REGISTER")
 }
 
 /// Asset transfer history — tracks movement between warehouses and employees
 model AssetTransfer {
-  id              String    @id @default(uuid()) @db.Uuid
-  assetId         String    @map("asset_id") @db.Uuid
-  fromWarehouseId String?   @map("from_warehouse_id") @db.Uuid
-  toWarehouseId   String?   @map("to_warehouse_id") @db.Uuid
-  fromEmployeeId  String?   @map("from_employee_id") @db.Uuid
-  toEmployeeId    String?   @map("to_employee_id") @db.Uuid
-  transferDate    DateTime  @map("transfer_date") @db.Date
+  id              String   @id @default(uuid()) @db.Uuid
+  assetId         String   @map("asset_id") @db.Uuid
+  fromWarehouseId String?  @map("from_warehouse_id") @db.Uuid
+  toWarehouseId   String?  @map("to_warehouse_id") @db.Uuid
+  fromEmployeeId  String?  @map("from_employee_id") @db.Uuid
+  toEmployeeId    String?  @map("to_employee_id") @db.Uuid
+  transferDate    DateTime @map("transfer_date") @db.Date
   reason          String?
-  transferredById String    @map("transferred_by_id") @db.Uuid
-  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  transferredById String   @map("transferred_by_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  asset           Asset      @relation(fields: [assetId], references: [id], onDelete: Restrict)
-  fromWarehouse   Warehouse? @relation("AssetTransferFrom", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
-  toWarehouse     Warehouse? @relation("AssetTransferTo", fields: [toWarehouseId], references: [id], onDelete: SetNull)
-  fromEmployee    Employee?  @relation("AssetTransferFromEmp", fields: [fromEmployeeId], references: [id], onDelete: SetNull)
-  toEmployee      Employee?  @relation("AssetTransferToEmp", fields: [toEmployeeId], references: [id], onDelete: SetNull)
-  transferredBy   Employee   @relation("AssetTransferredBy", fields: [transferredById], references: [id], onDelete: Restrict)
+  asset         Asset      @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  fromWarehouse Warehouse? @relation("AssetTransferFrom", fields: [fromWarehouseId], references: [id], onDelete: SetNull)
+  toWarehouse   Warehouse? @relation("AssetTransferTo", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+  fromEmployee  Employee?  @relation("AssetTransferFromEmp", fields: [fromEmployeeId], references: [id], onDelete: SetNull)
+  toEmployee    Employee?  @relation("AssetTransferToEmp", fields: [toEmployeeId], references: [id], onDelete: SetNull)
+  transferredBy Employee   @relation("AssetTransferredBy", fields: [transferredById], references: [id], onDelete: Restrict)
 
   @@index([assetId], map: "idx_asset_transfers_asset")
   @@index([transferDate], map: "idx_asset_transfers_date")
-  @@map("asset_transfers")
+  @@map("EAM_ASSET_TRANSFERS")
 }
 
 /// Asset depreciation records — quarterly depreciation calculations
@@ -148,7 +150,7 @@ model AssetDepreciation {
 
   @@unique([assetId, period], map: "uq_asset_depreciation_period")
   @@index([assetId], map: "idx_asset_depreciations_asset")
-  @@map("asset_depreciations")
+  @@map("EAM_ASSET_DEPRECIATIONS")
 }
 
 // ############################################################################
@@ -180,7 +182,9 @@ model CustomsDocument {
   @@index([shipmentId], map: "idx_customs_documents_shipment")
   @@index([status], map: "idx_customs_documents_status")
   @@index([documentType], map: "idx_customs_documents_type")
-  @@map("customs_documents")
+  @@index([shipmentId, status], map: "idx_wsh_customs_docs_shipment_status")
+  @@index([shipmentId, documentType], map: "idx_wsh_customs_docs_shipment_type")
+  @@map("WSH_CUSTOMS_DOCUMENTS")
 }
 
 // ############################################################################
@@ -220,7 +224,9 @@ model VehicleMaintenance {
   @@index([vehicleId], map: "idx_vehicle_maint_vehicle")
   @@index([status], map: "idx_vehicle_maint_status")
   @@index([scheduledDate], map: "idx_vehicle_maint_scheduled")
-  @@map("vehicle_maintenance")
+  @@index([vehicleId, status], map: "idx_eam_vehicle_maint_vehicle_status")
+  @@index([status, scheduledDate], map: "idx_eam_vehicle_maint_status_sched")
+  @@map("EAM_VEHICLE_MAINTENANCE")
 }
 
 // ############################################################################
@@ -248,7 +254,7 @@ model ComplianceChecklist {
   @@index([standard], map: "idx_compliance_checklists_standard")
   @@index([category], map: "idx_compliance_checklists_category")
   @@index([isActive], map: "idx_compliance_checklists_active")
-  @@map("compliance_checklists")
+  @@map("QA_COMPLIANCE_CHECKLISTS")
 }
 
 /// Individual checklist questions/items within a compliance checklist
@@ -268,7 +274,7 @@ model ComplianceChecklistItem {
   responses ComplianceAuditResponse[]
 
   @@index([checklistId], map: "idx_compliance_checklist_items_checklist")
-  @@map("compliance_checklist_items")
+  @@map("QA_COMPLIANCE_CHECKLIST_ITEMS")
 }
 
 /// A compliance audit conducted against a checklist at a specific warehouse
@@ -302,7 +308,9 @@ model ComplianceAudit {
   @@index([auditorId], map: "idx_compliance_audits_auditor")
   @@index([status], map: "idx_compliance_audits_status")
   @@index([auditDate], map: "idx_compliance_audits_date")
-  @@map("compliance_audits")
+  @@index([warehouseId, status], map: "idx_qa_audit_wh_status")
+  @@index([warehouseId, auditDate], map: "idx_qa_audit_wh_date")
+  @@map("QA_COMPLIANCE_AUDITS")
 }
 
 /// Individual responses to checklist items within an audit
@@ -322,7 +330,7 @@ model ComplianceAuditResponse {
 
   @@index([auditId], map: "idx_compliance_audit_responses_audit")
   @@index([checklistItemId], map: "idx_compliance_audit_responses_item")
-  @@map("compliance_audit_responses")
+  @@map("QA_COMPLIANCE_AUDIT_RESPONSES")
 }
 
 // ############################################################################
@@ -348,5 +356,5 @@ model DigitalSignature {
 
   @@index([documentType, documentId], map: "idx_digital_signatures_document")
   @@index([signedById], map: "idx_digital_signatures_signed_by")
-  @@map("digital_signatures")
+  @@map("FND_DIGITAL_SIGNATURES")
 }

@@ -10,7 +10,7 @@ model DocumentCounter {
   lastNumber   Int    @default(0) @map("last_number")
 
   @@unique([documentType, year], map: "uq_doc_counter_type_year")
-  @@map("document_counters")
+  @@map("FND_DOCUMENT_COUNTERS")
 }
 
 /// Comprehensive audit trail for all data changes
@@ -33,7 +33,7 @@ model AuditLog {
   @@index([tableName, recordId], map: "idx_audit_log_table")
   @@index([performedAt(sort: Desc)], map: "idx_audit_log_date")
   @@index([performedById], map: "idx_audit_log_user")
-  @@map("audit_log")
+  @@map("FND_AUDIT_LOG")
 }
 
 /// User notification messages
@@ -54,7 +54,7 @@ model Notification {
   @@index([recipientId, isRead], map: "idx_notifications_recipient")
   @@index([createdAt(sort: Desc)], map: "idx_notifications_date")
   @@index([referenceTable, referenceId], map: "idx_notifications_reference")
-  @@map("notifications")
+  @@map("FND_NOTIFICATIONS")
 }
 
 /// Web push notification subscriptions (per user, per device/browser)
@@ -72,7 +72,7 @@ model PushSubscription {
   user Employee @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, endpoint])
-  @@map("push_subscriptions")
+  @@map("FND_PUSH_SUBSCRIPTIONS")
 }
 
 // ############################################################################
@@ -108,7 +108,7 @@ model Task {
 
   @@index([status], map: "idx_tasks_status")
   @@index([assigneeId], map: "idx_tasks_assignee")
-  @@map("tasks")
+  @@map("FND_TASKS")
 }
 
 /// Comments on tasks
@@ -123,7 +123,7 @@ model TaskComment {
   task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   author Employee @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
-  @@map("task_comments")
+  @@map("FND_TASK_COMMENTS")
 }
 
 /// Password reset codes (database-backed, replaces in-memory Map)
@@ -135,7 +135,7 @@ model PasswordResetCode {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([email, code], map: "idx_password_reset_email_code")
-  @@map("password_reset_codes")
+  @@map("FND_PASSWORD_RESET_CODES")
 }
 
 /// Company-level documents (policies, SOPs, templates)
@@ -162,5 +162,5 @@ model CompanyDocument {
   uploadedBy Employee @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
 
   @@index([category], map: "idx_company_docs_category")
-  @@map("company_documents")
+  @@map("FND_COMPANY_DOCUMENTS")
 }

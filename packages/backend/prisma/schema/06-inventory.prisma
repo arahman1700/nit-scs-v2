@@ -23,37 +23,39 @@ model InventoryLevel {
   warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
 
   @@unique([itemId, warehouseId], map: "uq_inventory_item_wh")
-  @@map("inventory_levels")
+  @@index([warehouseId, itemId, qtyOnHand], map: "idx_mtl_onhand_avail_lookup")
+  @@index([itemId, alertSent], map: "idx_mtl_onhand_reorder_alert")
+  @@map("MTL_ONHAND_QUANTITIES")
 }
 
 /// Inventory lot tracking for FIFO costing and expiry management
 model InventoryLot {
-  id           String    @id @default(uuid()) @db.Uuid
-  lotNumber    String    @unique @map("lot_number") @db.VarChar(20)
-  itemId       String    @map("item_id") @db.Uuid
-  warehouseId  String    @map("warehouse_id") @db.Uuid
-  mrrvLineId   String?   @map("mrrv_line_id") @db.Uuid
-  receiptDate  DateTime  @map("receipt_date") @db.Timestamptz
-  expiryDate   DateTime? @map("expiry_date") @db.Date
-  initialQty   Decimal   @map("initial_qty") @db.Decimal(12, 3)
+  id            String    @id @default(uuid()) @db.Uuid
+  lotNumber     String    @unique @map("lot_number") @db.VarChar(20)
+  itemId        String    @map("item_id") @db.Uuid
+  warehouseId   String    @map("warehouse_id") @db.Uuid
+  mrrvLineId    String?   @map("mrrv_line_id") @db.Uuid
+  receiptDate   DateTime  @map("receipt_date") @db.Timestamptz
+  expiryDate    DateTime? @map("expiry_date") @db.Date
+  initialQty    Decimal   @map("initial_qty") @db.Decimal(12, 3)
   /// CHECK: available_qty >= 0
-  availableQty Decimal   @map("available_qty") @db.Decimal(12, 3)
+  availableQty  Decimal   @map("available_qty") @db.Decimal(12, 3)
   /// CHECK: reserved_qty >= 0
-  reservedQty  Decimal?  @default(0) @map("reserved_qty") @db.Decimal(12, 3)
-  unitCost     Decimal?  @map("unit_cost") @db.Decimal(15, 2)
-  supplierId   String?   @map("supplier_id") @db.Uuid
-  binLocation   String?  @map("bin_location") @db.VarChar(50)
-  binLocationId String?  @map("bin_location_id") @db.Uuid
+  reservedQty   Decimal?  @default(0) @map("reserved_qty") @db.Decimal(12, 3)
+  unitCost      Decimal?  @map("unit_cost") @db.Decimal(15, 2)
+  supplierId    String?   @map("supplier_id") @db.Uuid
+  binLocation   String?   @map("bin_location") @db.VarChar(50)
+  binLocationId String?   @map("bin_location_id") @db.Uuid
   /// CHECK: status IN ('active', 'depleted', 'expired', 'blocked')
-  status       String    @default("active") @map("status") @db.VarChar(20)
+  status        String    @default("active") @map("status") @db.VarChar(20)
   /// Optimistic locking version for concurrent reservation safety
-  version      Int       @default(0)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  version       Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   // Relations
-  item      Item      @relation(fields: [itemId], references: [id], onDelete: Restrict)
-  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
-  mrrvLine  MrrvLine? @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
+  item           Item         @relation(fields: [itemId], references: [id], onDelete: Restrict)
+  warehouse      Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  mrrvLine       MrrvLine?    @relation(fields: [mrrvLineId], references: [id], onDelete: SetNull)
   supplier       Supplier?    @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   binLocationRef BinLocation? @relation(fields: [binLocationId], references: [id], onDelete: SetNull)
 
@@ -63,7 +65,10 @@ model InventoryLot {
   @@index([itemId, warehouseId, status], map: "idx_inventory_lots_item")
   @@index([itemId, warehouseId, receiptDate], map: "idx_inventory_lots_fifo")
   @@index([status], map: "idx_inventory_lots_status")
-  @@map("inventory_lots")
+  @@index([expiryDate, status], map: "idx_mtl_lots_expiry_check")
+  @@index([warehouseId, status, availableQty], map: "idx_mtl_lots_wh_avail")
+  @@index([supplierId, receiptDate], map: "idx_mtl_lots_supplier_receipt")
+  @@map("MTL_LOT_NUMBERS")
 }
 
 /// Lot consumption log for FIFO tracking
@@ -84,7 +89,7 @@ model LotConsumption {
   mirvLine MirvLine?    @relation(fields: [mirvLineId], references: [id], onDelete: SetNull)
 
   @@index([referenceType, referenceId], map: "idx_lot_consumption_ref")
-  @@map("lot_consumptions")
+  @@map("MTL_LOT_CONSUMPTIONS")
 }
 
 /// Leftover materials from projects requiring disposition
@@ -123,7 +128,7 @@ model LeftoverMaterial {
 
   @@index([status, createdAt], map: "idx_leftover_status_created")
   @@index([projectId], map: "idx_leftover_project")
-  @@map("leftover_materials")
+  @@map("MTL_LEFTOVER_MATERIALS")
 }
 
 // ############################################################################

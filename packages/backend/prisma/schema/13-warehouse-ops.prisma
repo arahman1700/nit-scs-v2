@@ -30,7 +30,8 @@ model PackingSession {
   @@index([mirvId], map: "idx_packing_session_mirv")
   @@index([warehouseId], map: "idx_packing_session_warehouse")
   @@index([status], map: "idx_packing_session_status")
-  @@map("packing_sessions")
+  @@index([warehouseId, status], map: "idx_wms_packing_wh_status")
+  @@map("WMS_PACKING_SESSIONS")
 }
 
 /// Packing line — one packed item within a packing session
@@ -52,7 +53,7 @@ model PackingLine {
   item    Item           @relation(fields: [itemId], references: [id], onDelete: Restrict)
 
   @@index([packingSessionId], map: "idx_packing_line_session")
-  @@map("packing_lines")
+  @@map("WMS_PACKING_LINES")
 }
 
 // ############################################################################
@@ -90,7 +91,9 @@ model StagingAssignment {
   @@index([warehouseId, status], map: "idx_staging_warehouse_status")
   @@index([zoneId], map: "idx_staging_zone")
   @@index([direction], map: "idx_staging_direction")
-  @@map("staging_assignments")
+  @@index([warehouseId, direction, status], map: "idx_wms_staging_wh_dir_status")
+  @@index([sourceDocType, sourceDocId], map: "idx_wms_staging_source_ref")
+  @@map("WMS_STAGING_ASSIGNMENTS")
 }
 
 // ############################################################################
@@ -106,7 +109,7 @@ model LaborStandard {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("labor_standards")
+  @@map("WMS_LABOR_STANDARDS")
 }
 
 // ############################################################################
@@ -124,7 +127,7 @@ model NavigationOverride {
   updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
   @@unique([role, path])
-  @@map("navigation_overrides")
+  @@map("FND_NAVIGATION_OVERRIDES")
 }
 
 // ############################################################################
@@ -146,7 +149,7 @@ model SemanticMeasure {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("semantic_measures")
+  @@map("FND_SEMANTIC_MEASURES")
 }
 
 model SemanticDimension {
@@ -162,7 +165,7 @@ model SemanticDimension {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@map("semantic_dimensions")
+  @@map("FND_SEMANTIC_DIMENSIONS")
 }
 
 // ############################################################################
@@ -183,7 +186,7 @@ model NotificationPreference {
   employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, templateCode])
-  @@map("notification_preferences")
+  @@map("FND_NOTIFICATION_PREFERENCES")
 }
 
 // ############################################################################

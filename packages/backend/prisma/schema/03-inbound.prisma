@@ -34,11 +34,11 @@ model Mrrv {
   qcInspector Employee? @relation("MrrvQcInspector", fields: [qcInspectorId], references: [id], onDelete: SetNull)
 
   // Reverse relations
-  mrrvLines           MrrvLine[]
-  rfims               Rfim[]
-  osdReports          OsdReport[]
-  shipments           Shipment[]
-  gatePassesExpected  GatePass[] @relation("GatePassExpectedMrrv")
+  mrrvLines          MrrvLine[]
+  rfims              Rfim[]
+  osdReports         OsdReport[]
+  shipments          Shipment[]
+  gatePassesExpected GatePass[]  @relation("GatePassExpectedMrrv")
 
   @@index([status], map: "idx_mrrv_status")
   @@index([supplierId], map: "idx_mrrv_supplier")
@@ -49,7 +49,7 @@ model Mrrv {
   @@index([warehouseId, status], map: "idx_mrrv_warehouse_status")
   @@index([supplierId, createdAt], map: "idx_mrrv_supplier_created")
   @@index([status, createdAt], map: "idx_mrrv_status_created")
-  @@map("mrrv")
+  @@map("RCV_RECEIPT_HEADERS")
 }
 
 /// MRRV line items
@@ -82,7 +82,9 @@ model MrrvLine {
   @@index([mrrvId], map: "idx_mrrv_lines_mrrv")
   @@index([itemId], map: "idx_mrrv_lines_item")
   @@index([uomId], map: "idx_mrrv_lines_uom")
-  @@map("mrrv_lines")
+  @@index([mrrvId, itemId], map: "idx_rcv_lines_mrrv_item")
+  @@index([itemId, expiryDate], map: "idx_rcv_lines_item_expiry")
+  @@map("RCV_RECEIPT_LINES")
 }
 
 /// Request for Inspection of Materials (RFIM)
@@ -118,7 +120,7 @@ model Rfim {
   @@index([mrrvId], map: "idx_rfim_mrrv")
   @@index([status], map: "idx_rfim_status")
   @@index([status, createdAt], map: "idx_rfim_status_created")
-  @@map("rfim")
+  @@map("QA_INSPECTION_HEADERS")
 }
 
 /// Over/Short/Damage reports linked to MRRVs
@@ -165,7 +167,7 @@ model OsdReport {
   @@index([createdAt], map: "idx_osd_created")
   @@index([status, createdAt], map: "idx_osd_status_created")
   @@index([warehouseId, status], map: "idx_osd_warehouse_status")
-  @@map("osd_reports")
+  @@map("RCV_DISCREPANCY_HEADERS")
 }
 
 /// OSD report line items
@@ -191,5 +193,5 @@ model OsdLine {
 
   @@index([osdId], map: "idx_osd_lines_osd")
   @@index([itemId], map: "idx_osd_lines_item")
-  @@map("osd_lines")
+  @@map("RCV_DISCREPANCY_LINES")
 }

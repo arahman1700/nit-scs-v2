@@ -17,7 +17,7 @@ model SystemSetting {
 
   @@unique([key, userId], map: "uq_setting_key_user")
   @@index([category], map: "idx_settings_category")
-  @@map("system_settings")
+  @@map("FND_SYSTEM_SETTINGS")
 }
 
 /// Named workflow definition
@@ -37,7 +37,7 @@ model Workflow {
   rules WorkflowRule[]
 
   @@index([entityType, isActive], map: "idx_workflows_entity_active")
-  @@map("workflows")
+  @@map("AME_WORKFLOWS")
 }
 
 /// IF-THEN rule within a workflow
@@ -69,7 +69,7 @@ model WorkflowRule {
 
   @@index([workflowId, isActive], map: "idx_rules_workflow_active")
   @@index([triggerEvent], map: "idx_rules_trigger")
-  @@map("workflow_rules")
+  @@map("AME_WORKFLOW_RULES")
 }
 
 /// Audit trail of every rule execution
@@ -97,5 +97,5 @@ model WorkflowExecutionLog {
   @@index([ruleId], map: "idx_exec_log_rule")
   @@index([entityType, entityId], map: "idx_exec_log_entity")
   @@index([executedAt], map: "idx_exec_log_date")
-  @@map("workflow_execution_logs")
+  @@map("AME_WORKFLOW_EXECUTION_LOGS")
 }

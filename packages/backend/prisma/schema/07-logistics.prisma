@@ -68,7 +68,10 @@ model Shipment {
   @@index([supplierId, createdAt], map: "idx_shipments_supplier_created")
   @@index([freightForwarderId], map: "idx_shipments_freight_forwarder")
   @@index([destinationWarehouseId], map: "idx_shipments_dest_warehouse")
-  @@map("shipments")
+  @@index([destinationWarehouseId, status], map: "idx_wsh_ship_dest_status")
+  @@index([modeOfShipment, status], map: "idx_wsh_ship_mode_status")
+  @@index([etaPort, status], map: "idx_wsh_ship_eta_status")
+  @@map("WSH_DELIVERY_HEADERS")
 }
 
 /// Customs clearance stage tracking per shipment
@@ -98,7 +101,9 @@ model CustomsTracking {
   shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
 
   @@index([shipmentId], map: "idx_customs_tracking_shipment")
-  @@map("customs_tracking")
+  @@index([shipmentId, stage], map: "idx_wsh_customs_shipment_stage")
+  @@index([paymentStatus], map: "idx_wsh_customs_payment_status")
+  @@map("WSH_CUSTOMS_TRACKING")
 }
 
 /// Shipment line items (packing list)
@@ -119,7 +124,8 @@ model ShipmentLine {
   uom      UnitOfMeasure? @relation(fields: [uomId], references: [id], onDelete: SetNull)
 
   @@index([shipmentId], map: "idx_shipment_lines_shipment")
-  @@map("shipment_lines")
+  @@index([shipmentId, itemId], map: "idx_wsh_lines_shipment_item")
+  @@map("WSH_DELIVERY_LINES")
 }
 
 // ############################################################################
@@ -154,7 +160,7 @@ model SupplierEquipmentRate {
 
   @@index([supplierId, equipmentTypeId], map: "idx_supplier_equipment_rates_lookup")
   @@index([status], map: "idx_supplier_equipment_rates_status")
-  @@map("supplier_equipment_rates")
+  @@map("AP_SUPPLIER_EQUIPMENT_RATES")
 }
 
 /// Generator depreciation journal entries
@@ -174,7 +180,7 @@ model DepreciationEntry {
   generator Generator @relation(fields: [generatorId], references: [id], onDelete: Restrict)
 
   @@unique([generatorId, period], map: "uq_depreciation_gen_period")
-  @@map("depreciation_entries")
+  @@map("EAM_DEPRECIATION_ENTRIES")
 }
 
 // ############################################################################
@@ -202,5 +208,6 @@ model TariffRate {
   @@unique([hsCode, country, effectiveFrom], map: "uq_tariff_hs_country_effective")
   @@index([hsCode], map: "idx_tariff_rates_hs_code")
   @@index([isActive], map: "idx_tariff_rates_active")
-  @@map("tariff_rates")
+  @@index([hsCode, isActive, effectiveFrom], map: "idx_wsh_tariff_lookup")
+  @@map("WSH_TARIFF_RATES")
 }

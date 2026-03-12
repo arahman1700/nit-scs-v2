@@ -21,7 +21,7 @@ model Entity {
   projects  Project[]
   jobOrders JobOrder[]
 
-  @@map("entities")
+  @@map("HR_LEGAL_ENTITIES")
 }
 
 /// Construction projects and sites
@@ -71,7 +71,7 @@ model Project {
   dynamicDocuments     DynamicDocument[]     @relation("DynDocProject")
   transportOrders      TransportOrder[]
 
-  @@map("projects")
+  @@map("PA_PROJECTS")
 }
 
 /// System users and employees
@@ -258,10 +258,10 @@ model Employee {
   customsDocsVerified CustomsDocument[] @relation("CustomsDocVerifiedBy")
 
   // Reverse relations — Asset Register (M10)
-  assetsAssigned       Asset[]          @relation("AssetAssignedTo")
-  assetTransfersFrom   AssetTransfer[]  @relation("AssetTransferFromEmp")
-  assetTransfersTo     AssetTransfer[]  @relation("AssetTransferToEmp")
-  assetTransfersDone   AssetTransfer[]  @relation("AssetTransferredBy")
+  assetsAssigned     Asset[]         @relation("AssetAssignedTo")
+  assetTransfersFrom AssetTransfer[] @relation("AssetTransferFromEmp")
+  assetTransfersTo   AssetTransfer[] @relation("AssetTransferToEmp")
+  assetTransfersDone AssetTransfer[] @relation("AssetTransferredBy")
 
   // Reverse relations — Digital Signatures (L6)
   digitalSignatures DigitalSignature[] @relation("DigitalSignatures")
@@ -271,7 +271,7 @@ model Employee {
   @@index([assignedProjectId], map: "idx_employees_project")
   @@index([assignedWarehouseId], map: "idx_employees_warehouse")
   @@index([department], map: "idx_employees_department")
-  @@map("employees")
+  @@map("PER_ALL_PEOPLE")
 }
 
 /// Suppliers, vendors, and freight forwarders
@@ -302,20 +302,20 @@ model Supplier {
   city City? @relation(fields: [cityId], references: [id], onDelete: SetNull)
 
   // Reverse relations
-  mrrv                   Mrrv[]
-  osdReports             OsdReport[]
-  jobOrders              JobOrder[]
-  inventoryLots          InventoryLot[]
-  supplierEquipmentRates SupplierEquipmentRate[]
-  shipmentsAsSupplier    Shipment[]              @relation("ShipmentSupplier")
-  shipmentsAsForwarder   Shipment[]              @relation("ShipmentForwarder")
-  rentalContracts        RentalContract[]
-  advanceShippingNotices AdvanceShippingNotice[]
-  supplierEvaluations    SupplierEvaluation[]
+  mrrv                       Mrrv[]
+  osdReports                 OsdReport[]
+  jobOrders                  JobOrder[]
+  inventoryLots              InventoryLot[]
+  supplierEquipmentRates     SupplierEquipmentRate[]
+  shipmentsAsSupplier        Shipment[]                  @relation("ShipmentSupplier")
+  shipmentsAsForwarder       Shipment[]                  @relation("ShipmentForwarder")
+  rentalContracts            RentalContract[]
+  advanceShippingNotices     AdvanceShippingNotice[]
+  supplierEvaluations        SupplierEvaluation[]
   annualMaintenanceContracts AnnualMaintenanceContract[]
 
   @@index([cityId], map: "idx_suppliers_city")
-  @@map("suppliers")
+  @@map("AP_SUPPLIERS")
 }
 
 /// Warehouse and storage locations
@@ -382,16 +382,16 @@ model Warehouse {
   complianceAudits       ComplianceAudit[]
 
   // Reverse relations — Asset Register (M10)
-  assets                 Asset[]                 @relation("AssetLocation")
-  assetTransfersFrom     AssetTransfer[]         @relation("AssetTransferFrom")
-  assetTransfersTo       AssetTransfer[]         @relation("AssetTransferTo")
+  assets             Asset[]         @relation("AssetLocation")
+  assetTransfersFrom AssetTransfer[] @relation("AssetTransferFrom")
+  assetTransfersTo   AssetTransfer[] @relation("AssetTransferTo")
 
   @@index([warehouseTypeId], map: "idx_warehouses_type")
   @@index([projectId], map: "idx_warehouses_project")
   @@index([regionId], map: "idx_warehouses_region")
   @@index([cityId], map: "idx_warehouses_city")
   @@index([managerId], map: "idx_warehouses_manager")
-  @@map("warehouses")
+  @@map("WMS_WAREHOUSES")
 }
 
 /// Material and item master catalog
@@ -448,7 +448,7 @@ model Item {
   @@index([status], map: "idx_items_status")
   @@index([category], map: "idx_items_category")
   @@index([uomId], map: "idx_items_uom")
-  @@map("items")
+  @@map("MTL_SYSTEM_ITEMS")
 }
 
 /// Generator asset register
@@ -488,7 +488,7 @@ model Generator {
   @@index([currentProjectId], map: "idx_generators_project")
   @@index([currentWarehouseId], map: "idx_generators_warehouse")
   @@index([equipmentTypeId], map: "idx_generators_equipment_type")
-  @@map("generators")
+  @@map("EAM_GENERATORS")
 }
 
 /// Vehicle and heavy equipment fleet
@@ -516,5 +516,5 @@ model EquipmentFleet {
 
   @@index([equipmentTypeId], map: "idx_equipment_fleet_type")
   @@index([driverId], map: "idx_equipment_fleet_driver")
-  @@map("equipment_fleet")
+  @@map("EAM_FLEET_VEHICLES")
 }

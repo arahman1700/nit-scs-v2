@@ -37,7 +37,7 @@ model EquipmentDeliveryNote {
   @@index([jobOrderId], map: "idx_equip_delivery_notes_jo")
   @@index([rentalContractId], map: "idx_equip_delivery_notes_rental")
   @@index([status], map: "idx_equip_delivery_notes_status")
-  @@map("equipment_delivery_notes")
+  @@map("EAM_DELIVERY_NOTES")
 }
 
 /// Equipment Return Note — records equipment being returned from a job site
@@ -79,7 +79,7 @@ model EquipmentReturnNote {
   @@index([jobOrderId], map: "idx_equip_return_notes_jo")
   @@index([deliveryNoteId], map: "idx_equip_return_notes_delivery")
   @@index([status], map: "idx_equip_return_notes_status")
-  @@map("equipment_return_notes")
+  @@map("EAM_RETURN_NOTES")
 }
 
 // ############################################################################
@@ -113,7 +113,7 @@ model SupplierEvaluation {
   @@index([status], map: "idx_supplier_eval_status")
   @@index([periodStart, periodEnd], map: "idx_supplier_eval_period")
   @@index([createdAt], map: "idx_supplier_eval_created")
-  @@map("supplier_evaluations")
+  @@map("AP_SUPPLIER_EVALUATIONS")
 }
 
 /// Individual metric scores within a supplier evaluation
@@ -133,7 +133,7 @@ model SupplierEvaluationMetric {
   evaluation SupplierEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
 
   @@index([evaluationId], map: "idx_supplier_eval_metric_eval")
-  @@map("supplier_evaluation_metrics")
+  @@map("AP_SUPPLIER_EVALUATION_METRICS")
 }
 
 // ############################################################################
@@ -189,7 +189,7 @@ model TransportOrder {
   @@index([jobOrderId], map: "idx_transport_orders_jo")
   @@index([gatePassId], map: "idx_transport_orders_gate_pass")
   @@index([createdAt], map: "idx_transport_orders_created")
-  @@map("transport_orders")
+  @@map("WSH_TRANSPORT_ORDERS")
 }
 
 /// Transport order line items — items being transported
@@ -209,7 +209,7 @@ model TransportOrderItem {
 
   @@index([transportOrderId], map: "idx_transport_order_items_order")
   @@index([itemId], map: "idx_transport_order_items_item")
-  @@map("transport_order_items")
+  @@map("WSH_TRANSPORT_ORDER_ITEMS")
 }
 
 // ############################################################################
@@ -251,5 +251,5 @@ model VisitorPass {
   @@index([warehouseId], map: "idx_visitor_passes_warehouse")
   @@index([visitDate], map: "idx_visitor_passes_visit_date")
   @@index([hostEmployeeId], map: "idx_visitor_passes_host")
-  @@map("visitor_passes")
+  @@map("FND_VISITOR_PASSES")
 }
