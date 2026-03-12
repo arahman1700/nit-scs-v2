@@ -7,6 +7,7 @@
  * Each model delegate is a plain object whose methods are vi.fn() stubs.
  * The $transaction helper supports both callback-style and array-style.
  */
+import { vi } from 'vitest';
 
 type MockFn = ReturnType<typeof vi.fn>;
 

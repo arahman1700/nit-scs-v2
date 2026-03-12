@@ -1,12 +1,12 @@
 /**
- * Background Job Scheduler — Thin Orchestrator
+ * Background Job Scheduler — BullMQ Orchestrator
  *
- * Runs periodic maintenance tasks using simple setInterval.
- * No external dependency required (no node-cron, no bull).
- *
- * Job handler functions are registered by domain modules via the job registry.
- * This file keeps the scheduler lifecycle (acquireLock, scheduleLoop, start/stop)
- * and all shared helper functions used by domain job handlers.
+ * Registers all domain jobs as BullMQ repeatable jobs with:
+ * - Automatic retry with exponential backoff
+ * - Dead-letter queue for permanently failed jobs
+ * - Priority-based execution
+ * - Redis-backed distributed coordination (no setInterval)
+ * - Oracle-compatible job naming (INV_, SCM_, EAM_, ONT_, HR_)
  *
  * Domain job modules (imported for side-effect registration):
  * - domains/scheduler/jobs/sla-jobs.ts
@@ -29,73 +29,31 @@ import { getAllJobs, clearJobs } from '../../../utils/job-registry.js';
 import type { PrismaDelegate, JobContext } from '../../../utils/job-registry.js';
 import type { Server as SocketIOServer } from 'socket.io';
 
+import { getQueue, shutdownQueues } from '../../../infrastructure/queue/bullmq.config.js';
+import { JOB_DEFINITIONS } from '../../../infrastructure/queue/job-definitions.js';
+import { startWorkers } from '../../../infrastructure/queue/queue-worker.js';
+
 // ── Import domain job modules for side-effect registration ───────────────
 import '../jobs/sla-jobs.js';
 import '../jobs/maintenance-jobs.js';
 import '../../notifications/jobs/notification-jobs.js';
 import '../../inventory/jobs/expiry-jobs.js';
 
-const timers: ReturnType<typeof setTimeout>[] = [];
 let io: SocketIOServer | null = null;
 let running = false;
 
-// ── Distributed Lock (Redis-based) ─────────────────────────────────────────
-
-/**
- * Attempts to acquire a Redis-based distributed lock.
- * Returns true if acquired, false otherwise.
- * Uses SET NX EX for atomic lock acquisition.
- */
-async function acquireLock(lockName: string, ttlSec: number): Promise<boolean> {
-  const redis = getRedis();
-  if (!redis) return true; // No Redis = single instance, always proceed
-  try {
-    const result = await redis.set(`scheduler:lock:${lockName}`, process.pid.toString(), 'EX', ttlSec, 'NX');
-    return result === 'OK';
-  } catch {
-    return true; // On Redis failure, proceed (single-instance fallback)
-  }
-}
-
-/**
- * Sequential loop: run function → wait interval → repeat.
- * Prevents overlapping executions unlike setInterval.
- */
-function scheduleLoop(name: string, fn: () => Promise<void>, intervalMs: number, lockTtlSec: number): void {
-  async function tick() {
-    if (!running) return;
-    const hasLock = await acquireLock(name, lockTtlSec);
-    if (hasLock) {
-      await fn().catch(err => log('error', `[Scheduler] ${name} failed: ${(err as Error).message}`));
-    }
-    if (running) {
-      const timer = setTimeout(tick, intervalMs);
-      timers.push(timer);
-    }
-  }
-  const timer = setTimeout(tick, intervalMs);
-  timers.push(timer);
-}
-
 // ── Helpers (shared across domain job handlers via JobContext) ────────────
 
-/** Prisma delegate for dynamic model access */
 export function getDelegate(modelName: string): PrismaDelegate {
   return getPrismaDelegate<PrismaDelegate>(prisma, modelName);
 }
 
-/** Convert SLA hours to milliseconds */
 export function slaHoursToMs(hours: number): number {
   return hours * 60 * 60 * 1000;
 }
 
-/**
- * Module-level SLA config cache. Refreshed from DB on each scheduler cycle
- * (every 5 min). Falls back to hardcoded SLA_HOURS if DB fetch fails.
- */
 let _slaConfig: Record<string, number> = { ...SLA_HOURS };
 
-/** Refresh SLA config from DB. Call once per scheduler cycle. */
 export async function refreshSlaConfig(): Promise<void> {
   try {
     _slaConfig = await getAllSlaHours();
@@ -104,16 +62,10 @@ export async function refreshSlaConfig(): Promise<void> {
   }
 }
 
-/** Get the current SLA config (read-only snapshot). */
 export function getSlaConfig(): Record<string, number> {
   return _slaConfig;
 }
 
-/**
- * Compute the SLA deadline from a reference date and SLA key.
- * Uses DB-backed SLA config (refreshed each scheduler cycle).
- * Returns null if SLA key not found.
- */
 export function _computeSlaDeadline(referenceDate: Date | string, slaKey: string): Date | null {
   const hours = _slaConfig[slaKey] ?? SLA_HOURS[slaKey];
   if (!hours) return null;
@@ -121,10 +73,6 @@ export function _computeSlaDeadline(referenceDate: Date | string, slaKey: string
   return new Date(ref.getTime() + slaHoursToMs(hours));
 }
 
-/**
- * Check for duplicate notification within the last hour.
- * Returns true if a notification already exists (should skip).
- */
 export async function hasRecentNotification(
   referenceTable: string,
   referenceId: string,
@@ -142,10 +90,6 @@ export async function hasRecentNotification(
   return !!existing;
 }
 
-/**
- * Batch check for recent notifications across multiple document IDs.
- * Returns a Set of referenceIds that already have a recent notification (should skip).
- */
 export async function getRecentNotificationRefs(
   referenceTable: string,
   referenceIds: string[],
@@ -165,7 +109,6 @@ export async function getRecentNotificationRefs(
   return new Set(existing.map(n => n.referenceId).filter((id): id is string => id !== null));
 }
 
-/** Fetch admin employee IDs */
 export async function getAdminIds(): Promise<string[]> {
   const admins = await prisma.employee.findMany({
     where: { systemRole: 'admin', isActive: true },
@@ -174,7 +117,6 @@ export async function getAdminIds(): Promise<string[]> {
   return admins.map(a => a.id);
 }
 
-/** Fetch employee IDs by role */
 export async function getEmployeeIdsByRole(role: string): Promise<string[]> {
   const employees = await prisma.employee.findMany({
     where: { systemRole: role, isActive: true },
@@ -183,10 +125,6 @@ export async function getEmployeeIdsByRole(role: string): Promise<string[]> {
   return employees.map(e => e.id);
 }
 
-/**
- * Send SLA notifications to a set of recipients and emit socket events.
- * Uses createMany for batch DB insert, then emits socket + push per recipient.
- */
 export async function notifySla(params: {
   recipientIds: string[];
   title: string;
@@ -199,7 +137,6 @@ export async function notifySla(params: {
 }): Promise<void> {
   if (params.recipientIds.length === 0) return;
 
-  // Batch insert all notifications in a single DB call
   await prisma.notification.createMany({
     data: params.recipientIds.map(recipientId => ({
       recipientId,
@@ -211,7 +148,6 @@ export async function notifySla(params: {
     })),
   });
 
-  // Emit per-recipient socket events + push notifications (fire-and-forget)
   if (io) {
     for (const recipientId of params.recipientIds) {
       emitToUser(io, recipientId, 'notification:new', {
@@ -225,7 +161,6 @@ export async function notifySla(params: {
     }
   }
 
-  // Send push notifications per recipient (fire-and-forget)
   for (const recipientId of params.recipientIds) {
     sendPushToUser(recipientId, {
       title: params.title,
@@ -240,7 +175,6 @@ export async function notifySla(params: {
     });
   }
 
-  // Emit socket event to relevant roles
   if (io) {
     for (const role of params.socketRoles) {
       emitToRole(io, role, params.socketEvent, {
@@ -275,52 +209,117 @@ function buildJobContext(): JobContext {
 
 // ── Scheduler Lifecycle ──────────────────────────────────────────────────
 
-export function startScheduler(socketIo?: SocketIOServer): void {
+export async function startScheduler(socketIo?: SocketIOServer): Promise<void> {
   io = socketIo ?? null;
   running = true;
 
-  log('info', '[Scheduler] Starting background job scheduler');
+  log('info', '[Scheduler] Starting BullMQ-based job scheduler');
 
   const ctx = buildJobContext();
 
-  // Register all domain jobs via the job registry and start their loops
-  const jobs = getAllJobs();
-  for (const job of jobs) {
-    scheduleLoop(job.name, () => job.handler(ctx), job.intervalMs, job.lockTtlSec);
-  }
+  // Ensure domain job modules are loaded (side-effect imports above)
+  const legacyJobs = getAllJobs();
+  log('info', `[Scheduler] ${legacyJobs.length} legacy job handlers registered`);
 
-  // Initialize nextRunAt for any scheduled rules that don't have one
+  // Initialize scheduled rules (runs regardless of BullMQ or fallback mode)
   initializeScheduledRules().catch(err =>
     log('error', `[Scheduler] Failed to initialize scheduled rules: ${(err as Error).message}`),
   );
 
-  // Run initial checks after a short delay (let server finish starting up)
-  const initTimer = setTimeout(async () => {
-    if (!running) return;
-    const hasLock = await acquireLock('initial_run', 30);
-    if (hasLock) {
-      // Find initial jobs by name from the registry
-      const initialJobNames = ['sla_breach', 'sla_warning', 'email_retry', 'expired_lots'];
-      const initialJobs = jobs.filter(j => initialJobNames.includes(j.name));
-      const results = await Promise.allSettled(initialJobs.map(j => j.handler(ctx)));
-      results.forEach((r, i) => {
-        if (r.status === 'rejected') {
-          log('error', `[Scheduler] Initial ${initialJobs[i].name} failed: ${(r.reason as Error).message}`);
-        }
-      });
-    }
-  }, 10_000);
-  timers.push(initTimer);
+  // Check if Redis is available for BullMQ
+  const redis = getRedis();
+  if (!redis) {
+    log('warn', '[Scheduler] Redis unavailable — falling back to setInterval mode');
+    startFallbackScheduler(ctx);
+    return;
+  }
 
-  log('info', '[Scheduler] All jobs registered');
+  // Register all jobs as BullMQ repeatables
+  for (const def of JOB_DEFINITIONS) {
+    const queue = getQueue(def.queue);
+
+    // Remove any existing repeatable with the same name (idempotent re-registration)
+    const existing = await queue.getRepeatableJobs();
+    for (const rep of existing) {
+      if (rep.name === def.name) {
+        await queue.removeRepeatableByKey(rep.key);
+      }
+    }
+
+    // Add repeatable job
+    await queue.add(
+      def.name,
+      { legacyName: def.legacyName },
+      {
+        repeat: def.repeat,
+        priority: def.priority,
+        attempts: def.attempts,
+        backoff: def.backoff,
+        removeOnComplete: { count: 50 },
+        removeOnFail: { count: 200 },
+      },
+    );
+
+    log('debug', `[Scheduler] Registered BullMQ job: ${def.name} (legacy: ${def.legacyName})`);
+  }
+
+  // Start workers to process jobs
+  startWorkers(ctx);
+
+  log(
+    'info',
+    `[Scheduler] ${JOB_DEFINITIONS.length} BullMQ jobs registered across ${new Set(JOB_DEFINITIONS.map(j => j.queue)).size} queues`,
+  );
 }
 
-export function stopScheduler(): void {
+// ── Fallback: setInterval mode (when Redis unavailable) ──────────────────
+
+const fallbackTimers: ReturnType<typeof setTimeout>[] = [];
+
+function startFallbackScheduler(ctx: JobContext): void {
+  const jobs = getAllJobs();
+
+  function scheduleLoop(name: string, fn: () => Promise<void>, intervalMs: number): void {
+    async function tick() {
+      if (!running) return;
+      await fn().catch(err => log('error', `[Scheduler:fallback] ${name} failed: ${(err as Error).message}`));
+      if (running) {
+        const timer = setTimeout(tick, intervalMs);
+        fallbackTimers.push(timer);
+      }
+    }
+    const timer = setTimeout(tick, intervalMs);
+    fallbackTimers.push(timer);
+  }
+
+  for (const job of jobs) {
+    scheduleLoop(job.name, () => job.handler(ctx), job.intervalMs);
+  }
+
+  // Initial run
+  const initTimer = setTimeout(async () => {
+    if (!running) return;
+    const initialJobNames = ['sla_breach', 'sla_warning', 'email_retry', 'expired_lots'];
+    const initialJobs = jobs.filter(j => initialJobNames.includes(j.name));
+    await Promise.allSettled(initialJobs.map(j => j.handler(ctx)));
+  }, 10_000);
+  fallbackTimers.push(initTimer);
+
+  log('info', `[Scheduler:fallback] ${jobs.length} jobs running with setInterval`);
+}
+
+export async function stopScheduler(): Promise<void> {
   running = false;
-  for (const timer of timers) {
+
+  // Stop fallback timers if used
+  for (const timer of fallbackTimers) {
     clearTimeout(timer);
   }
-  timers.length = 0;
+  fallbackTimers.length = 0;
+
+  // Shutdown BullMQ workers and queues
+  await shutdownQueues();
+
   io = null;
   clearJobs();
   log('info', '[Scheduler] Scheduler stopped');

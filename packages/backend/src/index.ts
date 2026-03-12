@@ -30,6 +30,7 @@ import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
 import { startNotificationDispatcher } from './domains/notifications/services/notification-dispatcher.service.js';
 import { startScheduler, stopScheduler } from './domains/scheduler/services/scheduler.service.js';
+import { mountQueueDashboard } from './infrastructure/queue/queue-dashboard.js';
 import {
   registerDynamicDataSources,
   register as registerDataSource,
@@ -136,6 +137,11 @@ app.use('/api', (req, res, next) => {
 setupSocketIO(io);
 app.set('io', io); // Accessible via req.app.get('io')
 
+// ── Queue Dashboard (admin only, disabled in production unless QUEUE_DASHBOARD=true) ──
+if (process.env.NODE_ENV !== 'production' || process.env.QUEUE_DASHBOARD === 'true') {
+  mountQueueDashboard(app);
+}
+
 // ── Sentry Error Handler (captures errors before our handler) ─────────────
 if (Sentry.isInitialized()) {
   Sentry.setupExpressErrorHandler(app);
@@ -182,7 +188,7 @@ httpServer.listen(PORT, () => {
   startRuleEngine();
   startChainNotifications();
   startNotificationDispatcher();
-  startScheduler(io);
+  startScheduler(io).catch(err => logger.error({ err }, 'Failed to start scheduler'));
   registerDynamicDataSources().catch(err => logger.error({ err }, 'Failed to register dynamic data sources'));
   loadCustomDataSources(registerDataSource as (key: string, fn: (config: unknown) => Promise<unknown>) => void).catch(
     err => logger.error({ err }, 'Failed to load custom data sources'),
