@@ -66,8 +66,8 @@ export async function getProductivitySummary(days: number = 30, _warehouseId?: s
       e.system_role,
       al.table_name,
       COUNT(*) as cnt
-    FROM audit_log al
-    JOIN employees e ON e.id = al.performed_by_id
+    FROM "FND_AUDIT_LOG" al
+    JOIN "FND_EMPLOYEES" e ON e.id = al.performed_by_id
     WHERE al.performed_at >= ${fromDate}
       AND al.performed_at <= ${toDate}
       AND al.table_name IN ('mrrv', 'mirv', 'stock_transfers')
@@ -93,8 +93,8 @@ export async function getProductivitySummary(days: number = 30, _warehouseId?: s
       e.system_role,
       COUNT(*) as completed_count,
       AVG(EXTRACT(EPOCH FROM (t.completed_at - t.started_at)) / 60)::float as avg_duration_minutes
-    FROM tasks t
-    JOIN employees e ON e.id = t.assignee_id
+    FROM "FND_TASKS" t
+    JOIN "FND_EMPLOYEES" e ON e.id = t.assignee_id
     WHERE t.status = 'completed'
       AND t.completed_at >= ${fromDate}
       AND t.completed_at <= ${toDate}
@@ -108,7 +108,7 @@ export async function getProductivitySummary(days: number = 30, _warehouseId?: s
       TO_CHAR(al.performed_at, 'YYYY-MM-DD') as day,
       al.table_name,
       COUNT(*) as cnt
-    FROM audit_log al
+    FROM "FND_AUDIT_LOG" al
     WHERE al.performed_at >= ${fromDate}
       AND al.performed_at <= ${toDate}
       AND al.table_name IN ('mrrv', 'mirv', 'stock_transfers', 'tasks')
@@ -123,7 +123,7 @@ export async function getProductivitySummary(days: number = 30, _warehouseId?: s
     SELECT
       TO_CHAR(completed_at, 'YYYY-MM-DD') as day,
       COUNT(*) as cnt
-    FROM tasks
+    FROM "FND_TASKS"
     WHERE status = 'completed'
       AND completed_at >= ${fromDate}
       AND completed_at <= ${toDate}

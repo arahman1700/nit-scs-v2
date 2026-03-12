@@ -54,7 +54,7 @@ register('stats/pending_approvals', async () => {
 register('stats/low_stock', async () => {
   const result = await prisma.$queryRaw<{ count: bigint }[]>`
     SELECT COUNT(*) as count
-    FROM inventory_levels
+    FROM "MTL_ONHAND_QUANTITIES"
     WHERE qty_on_hand <= COALESCE(reorder_point, 0)
       AND reorder_point IS NOT NULL
       AND reorder_point > 0
@@ -125,8 +125,8 @@ register('grouped/jo_by_status', async () => {
 register('grouped/inventory_by_warehouse', async () => {
   const result = await prisma.$queryRaw<{ warehouse_name: string; total_qty: number }[]>`
     SELECT w.warehouse_name, COALESCE(SUM(il.qty_on_hand), 0)::float as total_qty
-    FROM warehouses w
-    LEFT JOIN inventory_levels il ON il.warehouse_id = w.id
+    FROM "WMS_WAREHOUSES" w
+    LEFT JOIN "MTL_ONHAND_QUANTITIES" il ON il.warehouse_id = w.id
     WHERE w.status = 'active'
     GROUP BY w.id, w.warehouse_name
     ORDER BY total_qty DESC
@@ -142,7 +142,7 @@ register('grouped/inventory_by_warehouse', async () => {
 register('timeseries/mrrv', async () => {
   const rows = await prisma.$queryRaw<{ month: Date; count: number }[]>`
     SELECT date_trunc('month', created_at) as month, count(*)::int as count
-    FROM mrrv
+    FROM "RCV_RECEIPT_HEADERS"
     WHERE created_at >= NOW() - INTERVAL '12 months'
     GROUP BY month ORDER BY month
   `;
@@ -156,7 +156,7 @@ register('timeseries/mrrv', async () => {
 register('timeseries/mirv', async () => {
   const rows = await prisma.$queryRaw<{ month: Date; count: number }[]>`
     SELECT date_trunc('month', created_at) as month, count(*)::int as count
-    FROM mirv
+    FROM "ONT_ISSUE_HEADERS"
     WHERE created_at >= NOW() - INTERVAL '12 months'
     GROUP BY month ORDER BY month
   `;
@@ -170,7 +170,7 @@ register('timeseries/mirv', async () => {
 register('timeseries/jo', async () => {
   const rows = await prisma.$queryRaw<{ month: Date; count: number }[]>`
     SELECT date_trunc('month', created_at) as month, count(*)::int as count
-    FROM job_orders
+    FROM "WMS_JOB_ORDERS"
     WHERE created_at >= NOW() - INTERVAL '12 months'
     GROUP BY month ORDER BY month
   `;
@@ -290,7 +290,7 @@ register('sla/compliance', async () => {
 register('inventory/value', async () => {
   const result = await prisma.$queryRaw<{ total_value: number }[]>`
     SELECT COALESCE(SUM(available_qty * unit_cost), 0)::float as total_value
-    FROM inventory_lots
+    FROM "MTL_LOT_NUMBERS"
     WHERE status = 'active'
   `;
   return {
@@ -308,9 +308,9 @@ register('cross-department/inventory_by_warehouse', async () => {
       w.warehouse_name,
       COALESCE(SUM(lot.available_qty * lot.unit_cost), 0)::float as total_value,
       COUNT(DISTINCT il.item_id)::bigint as item_count
-    FROM warehouses w
-    LEFT JOIN inventory_levels il ON il.warehouse_id = w.id
-    LEFT JOIN inventory_lots lot ON lot.warehouse_id = w.id AND lot.status = 'active'
+    FROM "WMS_WAREHOUSES" w
+    LEFT JOIN "MTL_ONHAND_QUANTITIES" il ON il.warehouse_id = w.id
+    LEFT JOIN "MTL_LOT_NUMBERS" lot ON lot.warehouse_id = w.id AND lot.status = 'active'
     WHERE w.status = 'active'
     GROUP BY w.id, w.warehouse_name
     ORDER BY total_value DESC

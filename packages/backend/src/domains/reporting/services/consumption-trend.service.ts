@@ -92,9 +92,9 @@ export async function getItemConsumptionTrend(
         COALESCE(ml.unit_cost, 0)::float
       ), 0)                                          AS total_value,
       COUNT(DISTINCT m.id)::int                      AS issue_count
-    FROM mirv_lines ml
-    JOIN mirv m  ON m.id  = ml.mirv_id
-    JOIN items i ON i.id  = ml.item_id
+    FROM "ONT_ISSUE_LINES" ml
+    JOIN "ONT_ISSUE_HEADERS" m  ON m.id  = ml.mirv_id
+    JOIN "MTL_SYSTEM_ITEMS" i ON i.id  = ml.item_id
     WHERE ml.item_id  = ${itemId}::uuid
       AND m.request_date >= ${cutoff}
       AND m.status NOT IN ('draft', 'cancelled', 'rejected')
@@ -173,9 +173,9 @@ export async function getTopConsumptionItems(
           COALESCE(ml.unit_cost, 0)::float
         ), 0)             AS total_value,
         COUNT(DISTINCT m.id)::int AS issue_count
-      FROM mirv_lines ml
-      JOIN mirv m  ON m.id  = ml.mirv_id
-      JOIN items i ON i.id  = ml.item_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m  ON m.id  = ml.mirv_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id  = ml.item_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND m.warehouse_id = ${warehouseId}::uuid
@@ -197,9 +197,9 @@ export async function getTopConsumptionItems(
           COALESCE(ml.unit_cost, 0)::float
         ), 0)             AS total_value,
         COUNT(DISTINCT m.id)::int AS issue_count
-      FROM mirv_lines ml
-      JOIN mirv m  ON m.id  = ml.mirv_id
-      JOIN items i ON i.id  = ml.item_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m  ON m.id  = ml.mirv_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id  = ml.item_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND i.status = 'active'

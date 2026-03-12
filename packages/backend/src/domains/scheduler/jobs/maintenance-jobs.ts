@@ -81,9 +81,9 @@ async function checkLowStock(ctx: JobContext): Promise<void> {
         i.item_code,
         i.item_description,
         w.warehouse_code
-      FROM inventory_levels il
-      JOIN items i ON i.id = il.item_id
-      JOIN warehouses w ON w.id = il.warehouse_id
+      FROM "MTL_ONHAND_QUANTITIES" il
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = il.item_id
+      JOIN "WMS_WAREHOUSES" w ON w.id = il.warehouse_id
       WHERE il.alert_sent = false
         AND (
           (il.min_level IS NOT NULL AND (il.qty_on_hand - il.qty_reserved) <= il.min_level)
@@ -260,7 +260,7 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
         il."item_id",
         il."warehouse_id",
         COALESCE(SUM(il."available_qty"), 0)::numeric AS lot_total
-      FROM inventory_lots il
+      FROM "MTL_LOT_NUMBERS" il
       WHERE il.status IN ('active', 'blocked')
       GROUP BY il."item_id", il."warehouse_id"
     `;
@@ -342,8 +342,8 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
     const [gateOutbound, miIssued] = await Promise.all([
       ctx.prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; total_qty: number }>>`
         SELECT gpi.item_id, gp.warehouse_id, COALESCE(SUM(gpi.quantity), 0)::float AS total_qty
-        FROM gate_pass_items gpi
-        JOIN gate_passes gp ON gp.id = gpi.gate_pass_id
+        FROM "WMS_GATE_PASS_ITEMS" gpi
+        JOIN "WMS_GATE_PASSES" gp ON gp.id = gpi.gate_pass_id
         WHERE gp.status = 'released'
           AND gp.pass_type = 'outbound'
           AND gp.exit_time >= ${oneDayAgo}
@@ -351,8 +351,8 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
       `,
       ctx.prisma.$queryRaw<Array<{ item_id: string; warehouse_id: string; total_qty: number }>>`
         SELECT ml.item_id, m.warehouse_id, COALESCE(SUM(ml.qty_issued), 0)::float AS total_qty
-        FROM mirv_lines ml
-        JOIN mirv m ON m.id = ml.mirv_id
+        FROM "ONT_ISSUE_LINES" ml
+        JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
         WHERE m.status IN ('issued', 'partially_issued')
           AND m.issued_date >= ${oneDayAgo}
         GROUP BY ml.item_id, m.warehouse_id

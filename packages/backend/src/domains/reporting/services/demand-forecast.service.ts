@@ -152,9 +152,9 @@ async function fetchMonthlyConsumption(warehouseId?: string, itemId?: string): P
         i.item_description,
         to_char(m.request_date, 'YYYY-MM') AS month_key,
         COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-      FROM mirv_lines ml
-      JOIN mirv m ON m.id = ml.mirv_id
-      JOIN items i ON i.id = ml.item_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = ml.item_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND m.warehouse_id = ${warehouseId}::uuid
@@ -173,9 +173,9 @@ async function fetchMonthlyConsumption(warehouseId?: string, itemId?: string): P
         i.item_description,
         to_char(m.request_date, 'YYYY-MM') AS month_key,
         COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-      FROM mirv_lines ml
-      JOIN mirv m ON m.id = ml.mirv_id
-      JOIN items i ON i.id = ml.item_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = ml.item_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND m.warehouse_id = ${warehouseId}::uuid
@@ -193,9 +193,9 @@ async function fetchMonthlyConsumption(warehouseId?: string, itemId?: string): P
         i.item_description,
         to_char(m.request_date, 'YYYY-MM') AS month_key,
         COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-      FROM mirv_lines ml
-      JOIN mirv m ON m.id = ml.mirv_id
-      JOIN items i ON i.id = ml.item_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = ml.item_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND ml.item_id = ${itemId}::uuid
@@ -212,9 +212,9 @@ async function fetchMonthlyConsumption(warehouseId?: string, itemId?: string): P
       i.item_description,
       to_char(m.request_date, 'YYYY-MM') AS month_key,
       COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-    FROM mirv_lines ml
-    JOIN mirv m ON m.id = ml.mirv_id
-    JOIN items i ON i.id = ml.item_id
+    FROM "ONT_ISSUE_LINES" ml
+    JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
+    JOIN "MTL_SYSTEM_ITEMS" i ON i.id = ml.item_id
     WHERE m.request_date >= ${cutoff}
       AND m.status NOT IN ('draft', 'cancelled', 'rejected')
       AND i.status = 'active'
@@ -233,7 +233,7 @@ async function fetchCurrentStock(warehouseId?: string): Promise<Map<string, numb
 
   const rows = await prisma.$queryRaw<StockRow[]>`
     SELECT item_id, qty_on_hand::float AS qty_on_hand
-    FROM inventory_levels
+    FROM "MTL_ONHAND_QUANTITIES"
     WHERE warehouse_id = ${warehouseId}::uuid
   `;
 
@@ -616,8 +616,8 @@ export async function generateReorderSuggestions(
         il.warehouse_id,
         il.qty_on_hand::float    AS qty_on_hand,
         COALESCE(il.reorder_point, i.reorder_point, 0)::float AS reorder_point
-      FROM inventory_levels il
-      JOIN items i ON i.id = il.item_id
+      FROM "MTL_ONHAND_QUANTITIES" il
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = il.item_id
       WHERE il.warehouse_id = ${warehouseId}::uuid
         AND i.status = 'active'
     `;
@@ -630,8 +630,8 @@ export async function generateReorderSuggestions(
         il.warehouse_id,
         il.qty_on_hand::float    AS qty_on_hand,
         COALESCE(il.reorder_point, i.reorder_point, 0)::float AS reorder_point
-      FROM inventory_levels il
-      JOIN items i ON i.id = il.item_id
+      FROM "MTL_ONHAND_QUANTITIES" il
+      JOIN "MTL_SYSTEM_ITEMS" i ON i.id = il.item_id
       WHERE i.status = 'active'
     `;
   }
@@ -649,8 +649,8 @@ export async function generateReorderSuggestions(
           SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float) / ${safeLookback}::float,
           0
         ) AS avg_monthly
-      FROM mirv_lines ml
-      JOIN mirv m ON m.id = ml.mirv_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         AND m.warehouse_id = ${warehouseId}::uuid
@@ -664,8 +664,8 @@ export async function generateReorderSuggestions(
           SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float) / ${safeLookback}::float,
           0
         ) AS avg_monthly
-      FROM mirv_lines ml
-      JOIN mirv m ON m.id = ml.mirv_id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
       WHERE m.request_date >= ${cutoff}
         AND m.status NOT IN ('draft', 'cancelled', 'rejected')
       GROUP BY ml.item_id
@@ -754,7 +754,7 @@ export async function getItemForecastProjection(
   // Fetch current stock
   const stockRows = await prisma.$queryRaw<Array<{ qty_on_hand: number }>>`
     SELECT qty_on_hand::float AS qty_on_hand
-    FROM inventory_levels
+    FROM "MTL_ONHAND_QUANTITIES"
     WHERE item_id = ${itemId}::uuid
       AND warehouse_id = ${warehouseId}::uuid
   `;
@@ -770,8 +770,8 @@ export async function getItemForecastProjection(
     SELECT
       to_char(m.request_date, 'YYYY-MM') AS month_key,
       COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-    FROM mirv_lines ml
-    JOIN mirv m ON m.id = ml.mirv_id
+    FROM "ONT_ISSUE_LINES" ml
+    JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
     WHERE ml.item_id = ${itemId}::uuid
       AND m.warehouse_id = ${warehouseId}::uuid
       AND m.request_date >= ${cutoff}

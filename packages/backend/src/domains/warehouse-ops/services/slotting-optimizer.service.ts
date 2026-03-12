@@ -126,9 +126,9 @@ export async function getItemPickFrequencies(warehouseId: string): Promise<ItemP
       i.abc_class,
       COUNT(DISTINCT ml.id) AS pick_count,
       COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS total_qty
-    FROM items i
-    INNER JOIN mirv_lines ml ON ml.item_id = i.id
-    INNER JOIN mirv m ON m.id = ml.mirv_id
+    FROM "MTL_SYSTEM_ITEMS" i
+    INNER JOIN "ONT_ISSUE_LINES" ml ON ml.item_id = i.id
+    INNER JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
     WHERE m.warehouse_id = ${warehouseId}::uuid
       AND m.request_date >= ${sixMonthsAgo}
       AND m.status NOT IN ('draft', 'cancelled', 'rejected')

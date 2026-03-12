@@ -35,8 +35,8 @@ async function getMostUsedWarehouses(userId: string, limit = 5) {
   try {
     const results = await prisma.$queryRaw<Array<{ id: string; warehouseName: string; usage_count: bigint }>>`
       SELECT w.id, w."warehouseName", COUNT(*)::bigint AS usage_count
-      FROM audit_log al
-      JOIN warehouses w ON (al.new_values->>'warehouseId') = w.id::text
+      FROM "FND_AUDIT_LOG" al
+      JOIN "WMS_WAREHOUSES" w ON (al.new_values->>'warehouseId') = w.id::text
       WHERE al.performed_by_id = ${userId}::uuid
         AND al.action = 'create'
         AND al.new_values->>'warehouseId' IS NOT NULL
@@ -62,8 +62,8 @@ async function getMostUsedProjects(userId: string, limit = 5) {
   try {
     const results = await prisma.$queryRaw<Array<{ id: string; projectName: string; usage_count: bigint }>>`
       SELECT p.id, p."projectName", COUNT(*)::bigint AS usage_count
-      FROM audit_log al
-      JOIN projects p ON (al.new_values->>'projectId') = p.id::text
+      FROM "FND_AUDIT_LOG" al
+      JOIN "FND_PROJECTS" p ON (al.new_values->>'projectId') = p.id::text
       WHERE al.performed_by_id = ${userId}::uuid
         AND al.action = 'create'
         AND al.new_values->>'projectId' IS NOT NULL
@@ -89,8 +89,8 @@ async function getMostUsedSuppliers(userId: string, limit = 5) {
   try {
     const results = await prisma.$queryRaw<Array<{ id: string; supplierName: string; usage_count: bigint }>>`
       SELECT s.id, s."supplierName", COUNT(*)::bigint AS usage_count
-      FROM audit_log al
-      JOIN suppliers s ON (al.new_values->>'supplierId') = s.id::text
+      FROM "FND_AUDIT_LOG" al
+      JOIN "FND_SUPPLIERS" s ON (al.new_values->>'supplierId') = s.id::text
       WHERE al.performed_by_id = ${userId}::uuid
         AND al.action = 'create'
         AND al.new_values->>'supplierId' IS NOT NULL
@@ -125,19 +125,19 @@ async function getRecentItems(userId: string, limit = 10) {
     >`
       SELECT DISTINCT ON (i.id) i.id, i."itemCode", i."itemDescription",
         GREATEST(
-          (SELECT MAX(ml."createdAt") FROM mrf_lines ml WHERE ml."itemId" = i.id),
-          (SELECT MAX(il."createdAt") FROM mirv_lines il WHERE il."itemId" = i.id),
-          (SELECT MAX(gl."createdAt") FROM mrrv_lines gl WHERE gl."itemId" = i.id)
+          (SELECT MAX(ml."createdAt") FROM "ONT_REQUISITION_LINES" ml WHERE ml."itemId" = i.id),
+          (SELECT MAX(il."createdAt") FROM "ONT_ISSUE_LINES" il WHERE il."itemId" = i.id),
+          (SELECT MAX(gl."createdAt") FROM "RCV_RECEIPT_LINES" gl WHERE gl."itemId" = i.id)
         ) AS last_used
-      FROM items i
+      FROM "MTL_SYSTEM_ITEMS" i
       WHERE i.id IN (
-        SELECT DISTINCT ml."itemId" FROM mrf_lines ml
-        JOIN material_requisitions mr ON ml."mrfId" = mr.id
+        SELECT DISTINCT ml."itemId" FROM "ONT_REQUISITION_LINES" ml
+        JOIN "ONT_REQUISITION_HEADERS" mr ON ml."mrfId" = mr.id
         WHERE mr."requestedById" = ${userId}::uuid
           AND mr."createdAt" > NOW() - INTERVAL '90 days'
         UNION
-        SELECT DISTINCT il."itemId" FROM mirv_lines il
-        JOIN mirv m ON il."mirvId" = m.id
+        SELECT DISTINCT il."itemId" FROM "ONT_ISSUE_LINES" il
+        JOIN "ONT_ISSUE_HEADERS" m ON il."mirvId" = m.id
         WHERE m."requestedById" = ${userId}::uuid
           AND m."createdAt" > NOW() - INTERVAL '90 days'
       )

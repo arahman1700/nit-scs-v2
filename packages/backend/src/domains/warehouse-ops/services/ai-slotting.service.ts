@@ -95,11 +95,11 @@ export async function analyzeCoLocation(warehouseId: string): Promise<CoLocation
       ib.item_code AS item_b_code,
       ib.item_description AS item_b_name,
       COUNT(DISTINCT a.mirv_id) AS co_count
-    FROM mirv_lines a
-    INNER JOIN mirv_lines b ON a.mirv_id = b.mirv_id AND a.item_id < b.item_id
-    INNER JOIN mirv m ON m.id = a.mirv_id
-    INNER JOIN items ia ON ia.id = a.item_id
-    INNER JOIN items ib ON ib.id = b.item_id
+    FROM "ONT_ISSUE_LINES" a
+    INNER JOIN "ONT_ISSUE_LINES" b ON a.mirv_id = b.mirv_id AND a.item_id < b.item_id
+    INNER JOIN "ONT_ISSUE_HEADERS" m ON m.id = a.mirv_id
+    INNER JOIN "MTL_SYSTEM_ITEMS" ia ON ia.id = a.item_id
+    INNER JOIN "MTL_SYSTEM_ITEMS" ib ON ib.id = b.item_id
     WHERE m.warehouse_id = ${warehouseId}::uuid
       AND m.request_date >= ${sixMonthsAgo}
       AND m.status NOT IN ('draft', 'cancelled', 'rejected')
@@ -184,9 +184,9 @@ export async function analyzeSeasonalTrends(warehouseId: string): Promise<Season
       i.abc_class,
       to_char(m.request_date, 'YYYY-MM') AS month_key,
       COALESCE(SUM(COALESCE(ml.qty_issued, ml.qty_requested)::float), 0) AS month_qty
-    FROM items i
-    INNER JOIN mirv_lines ml ON ml.item_id = i.id
-    INNER JOIN mirv m ON m.id = ml.mirv_id
+    FROM "MTL_SYSTEM_ITEMS" i
+    INNER JOIN "ONT_ISSUE_LINES" ml ON ml.item_id = i.id
+    INNER JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
     WHERE m.warehouse_id = ${warehouseId}::uuid
       AND m.request_date >= ${twelveMonthsAgo}
       AND m.status NOT IN ('draft', 'cancelled', 'rejected')

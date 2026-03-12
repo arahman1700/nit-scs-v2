@@ -971,23 +971,23 @@ export async function getCrossDepartmentInventorySummary() {
         COUNT(DISTINCT il.item_id)::bigint as item_count,
         COALESCE(SUM(il.qty_on_hand), 0)::float as total_qty,
         COALESCE(SUM(lot.available_qty * lot.unit_cost), 0)::float as total_value
-      FROM warehouses w
-      LEFT JOIN inventory_levels il ON il.warehouse_id = w.id
-      LEFT JOIN inventory_lots lot ON lot.warehouse_id = w.id AND lot.status = 'active'
+      FROM "WMS_WAREHOUSES" w
+      LEFT JOIN "MTL_ONHAND_QUANTITIES" il ON il.warehouse_id = w.id
+      LEFT JOIN "MTL_LOT_NUMBERS" lot ON lot.warehouse_id = w.id AND lot.status = 'active'
       WHERE w.status = 'active'
       GROUP BY w.id, w.warehouse_name, w.warehouse_code
       ORDER BY total_value DESC
     `,
     prisma.$queryRaw<{ total: number }[]>`
       SELECT COALESCE(SUM(available_qty * unit_cost), 0)::float as total
-      FROM inventory_lots WHERE status = 'active'
+      FROM "MTL_LOT_NUMBERS" WHERE status = 'active'
     `,
     prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*) as count FROM inventory_levels
+      SELECT COUNT(*) as count FROM "MTL_ONHAND_QUANTITIES"
       WHERE qty_on_hand <= COALESCE(min_level, 0) AND min_level IS NOT NULL AND min_level > 0
     `,
     prisma.$queryRaw<{ count: bigint }[]>`
-      SELECT COUNT(*) as count FROM inventory_lots WHERE status = 'blocked'
+      SELECT COUNT(*) as count FROM "MTL_LOT_NUMBERS" WHERE status = 'blocked'
     `,
   ]);
 

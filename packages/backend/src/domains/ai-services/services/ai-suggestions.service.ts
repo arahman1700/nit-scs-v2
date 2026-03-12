@@ -37,10 +37,10 @@ async function analyzeSlowMoving(): Promise<Suggestion[]> {
   >`
     SELECT il.item_id, i.item_name, w.warehouse_name, il.qty_on_hand as qty,
       EXTRACT(DAY FROM NOW() - MAX(lot.received_date))::int as days_since
-    FROM inventory_levels il
-    JOIN items i ON i.id = il.item_id
-    JOIN warehouses w ON w.id = il.warehouse_id
-    LEFT JOIN inventory_lots lot ON lot.item_id = il.item_id AND lot.warehouse_id = il.warehouse_id
+    FROM "MTL_ONHAND_QUANTITIES" il
+    JOIN "MTL_SYSTEM_ITEMS" i ON i.id = il.item_id
+    JOIN "WMS_WAREHOUSES" w ON w.id = il.warehouse_id
+    LEFT JOIN "MTL_LOT_NUMBERS" lot ON lot.item_id = il.item_id AND lot.warehouse_id = il.warehouse_id
     WHERE il.qty_on_hand > 0
     GROUP BY il.item_id, i.item_name, w.warehouse_name, il.qty_on_hand
     HAVING MAX(lot.received_date) < NOW() - INTERVAL '90 days'
@@ -68,13 +68,13 @@ async function analyzeDelays(): Promise<Suggestion[]> {
   >`
     SELECT 'MI' as doc_type, mirv_number as doc_number, id as doc_id,
       EXTRACT(DAY FROM NOW() - created_at)::int as days_pending
-    FROM mirv WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
+    FROM "ONT_ISSUE_HEADERS" WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
     UNION ALL
     SELECT 'JO', jo_number, id, EXTRACT(DAY FROM NOW() - created_at)::int
-    FROM job_orders WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
+    FROM "WMS_JOB_ORDERS" WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
     UNION ALL
     SELECT 'GRN', mrrv_number, id, EXTRACT(DAY FROM NOW() - created_at)::int
-    FROM mrrv WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
+    FROM "RCV_RECEIPT_HEADERS" WHERE status = 'pending_approval' AND created_at < NOW() - INTERVAL '3 days'
     ORDER BY days_pending DESC
     LIMIT 15
   `;
@@ -100,9 +100,9 @@ async function analyzeLowStock(): Promise<Suggestion[]> {
     { item_name: string; warehouse_name: string; qty: number; reorder_point: number; item_id: string }[]
   >`
     SELECT i.item_name, w.warehouse_name, il.qty_on_hand as qty, il.reorder_point, il.item_id
-    FROM inventory_levels il
-    JOIN items i ON i.id = il.item_id
-    JOIN warehouses w ON w.id = il.warehouse_id
+    FROM "MTL_ONHAND_QUANTITIES" il
+    JOIN "MTL_SYSTEM_ITEMS" i ON i.id = il.item_id
+    JOIN "WMS_WAREHOUSES" w ON w.id = il.warehouse_id
     WHERE il.reorder_point IS NOT NULL AND il.reorder_point > 0
       AND il.qty_on_hand <= il.reorder_point
     ORDER BY (il.qty_on_hand::float / NULLIF(il.reorder_point, 0)) ASC
@@ -126,7 +126,7 @@ async function analyzeSlaBreaches(): Promise<Suggestion[]> {
   const breached = await prisma.$queryRaw<{ doc_type: string; doc_number: string; days_overdue: number }[]>`
     SELECT 'MI' as doc_type, mirv_number as doc_number,
       EXTRACT(DAY FROM NOW() - sla_due_date)::int as days_overdue
-    FROM mirv
+    FROM "ONT_ISSUE_HEADERS"
     WHERE sla_due_date IS NOT NULL AND sla_due_date < NOW()
       AND status NOT IN ('completed', 'issued', 'cancelled', 'rejected')
     LIMIT 10

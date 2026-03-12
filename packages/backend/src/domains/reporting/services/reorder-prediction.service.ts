@@ -107,8 +107,8 @@ async function getConsumptionStats(): Promise<
           m."warehouseId",
           DATE(m."createdAt") AS issue_date,
           SUM(ml."qtyIssued")::float AS daily_qty
-        FROM mirv_lines ml
-        JOIN mirv m ON ml."mirvId" = m.id
+        FROM "ONT_ISSUE_LINES" ml
+        JOIN "ONT_ISSUE_HEADERS" m ON ml."mirvId" = m.id
         WHERE m.status IN ('issued', 'completed', 'partially_issued')
           AND m."createdAt" > NOW() - INTERVAL '${CONFIG.analysisWindowDays} days'
           AND ml."qtyIssued" > 0
@@ -139,9 +139,9 @@ async function getConsumptionStats(): Promise<
         cs.total_issued AS "totalIssued",
         cs.active_days AS "activeDays"
       FROM consumption_stats cs
-      JOIN inventory_levels il ON cs."itemId" = il.item_id AND cs."warehouseId" = il.warehouse_id
-      JOIN items i ON cs."itemId" = i.id
-      JOIN warehouses w ON cs."warehouseId" = w.id
+      JOIN "MTL_ONHAND_QUANTITIES" il ON cs."itemId" = il.item_id AND cs."warehouseId" = il.warehouse_id
+      JOIN "MTL_SYSTEM_ITEMS" i ON cs."itemId" = i.id
+      JOIN "WMS_WAREHOUSES" w ON cs."warehouseId" = w.id
       WHERE il.qty_on_hand > 0
       ORDER BY cs.avg_daily DESC
     `;
@@ -163,8 +163,8 @@ async function getLeadTimeEstimate(itemId: string): Promise<number> {
       SELECT AVG(
         EXTRACT(EPOCH FROM (m."receivedDate" - m."createdAt")) / 86400
       )::float AS avg_lead_days
-      FROM mrrv_lines ml
-      JOIN mrrv m ON ml."mrrvId" = m.id
+      FROM "RCV_RECEIPT_LINES" ml
+      JOIN "RCV_RECEIPT_HEADERS" m ON ml."mrrvId" = m.id
       WHERE ml."itemId" = ${itemId}::uuid
         AND m."receivedDate" IS NOT NULL
         AND m."createdAt" > NOW() - INTERVAL '365 days'

@@ -50,9 +50,9 @@ export async function calculateABCClassification(warehouseId?: string): Promise<
             COALESCE(ml.qty_issued, ml.qty_requested)::float *
             COALESCE(ml.unit_cost, 0)::float
           ), 0) AS annual_value
-        FROM items i
-        LEFT JOIN mirv_lines ml ON ml.item_id = i.id
-        LEFT JOIN mirv m ON m.id = ml.mirv_id
+        FROM "MTL_SYSTEM_ITEMS" i
+        LEFT JOIN "ONT_ISSUE_LINES" ml ON ml.item_id = i.id
+        LEFT JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
           AND m.request_date >= ${twelveMonthsAgo}
           AND m.status NOT IN ('draft', 'cancelled', 'rejected')
           AND m.warehouse_id = ${warehouseId}::uuid
@@ -75,9 +75,9 @@ export async function calculateABCClassification(warehouseId?: string): Promise<
             COALESCE(ml.qty_issued, ml.qty_requested)::float *
             COALESCE(ml.unit_cost, 0)::float
           ), 0) AS annual_value
-        FROM items i
-        LEFT JOIN mirv_lines ml ON ml.item_id = i.id
-        LEFT JOIN mirv m ON m.id = ml.mirv_id
+        FROM "MTL_SYSTEM_ITEMS" i
+        LEFT JOIN "ONT_ISSUE_LINES" ml ON ml.item_id = i.id
+        LEFT JOIN "ONT_ISSUE_HEADERS" m ON m.id = ml.mirv_id
           AND m.request_date >= ${twelveMonthsAgo}
           AND m.status NOT IN ('draft', 'cancelled', 'rejected')
         WHERE i.status = 'active'

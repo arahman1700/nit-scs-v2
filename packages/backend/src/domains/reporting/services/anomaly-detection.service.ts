@@ -79,23 +79,23 @@ async function detectQuantitySpikes(since: Date): Promise<Anomaly[]> {
           AVG(ml."qtyIssued") AS avg_qty,
           STDDEV_POP(ml."qtyIssued") AS stddev_qty,
           COUNT(*) AS txn_count
-        FROM mirv_lines ml
-        JOIN mirv m ON ml."mirvId" = m.id
+        FROM "ONT_ISSUE_LINES" ml
+        JOIN "ONT_ISSUE_HEADERS" m ON ml."mirvId" = m.id
         WHERE m."createdAt" > NOW() - INTERVAL '${CONFIG.analysisWindowDays} days'
           AND ml."qtyIssued" > 0
         GROUP BY ml."itemId", m."warehouseId"
         HAVING COUNT(*) >= 5
       )
-      SELECT 
+      SELECT
         ml.id, ml."itemId", i."itemCode", i."itemDescription",
         m."warehouseId", w."warehouseName",
         ml."qtyIssued"::float AS "qtyIssued",
         s.avg_qty::float AS "avgQty",
         COALESCE(s.stddev_qty, 0)::float AS "stddevQty"
-      FROM mirv_lines ml
-      JOIN mirv m ON ml."mirvId" = m.id
-      JOIN items i ON ml."itemId" = i.id
-      JOIN warehouses w ON m."warehouseId" = w.id
+      FROM "ONT_ISSUE_LINES" ml
+      JOIN "ONT_ISSUE_HEADERS" m ON ml."mirvId" = m.id
+      JOIN "MTL_SYSTEM_ITEMS" i ON ml."itemId" = i.id
+      JOIN "WMS_WAREHOUSES" w ON m."warehouseId" = w.id
       JOIN item_stats s ON ml."itemId" = s."itemId" AND m."warehouseId" = s."warehouseId"
       WHERE m."createdAt" > ${since}
         AND s.stddev_qty > 0
@@ -146,8 +146,8 @@ async function detectOffHoursActivity(since: Date): Promise<Anomaly[]> {
     >`
       SELECT al.table_name, al.record_id, al.performed_at, e."fullName" AS full_name,
         EXTRACT(HOUR FROM al.performed_at AT TIME ZONE 'Asia/Riyadh')::int AS hour
-      FROM audit_log al
-      JOIN employees e ON al.performed_by_id = e.id
+      FROM "FND_AUDIT_LOG" al
+      JOIN "FND_EMPLOYEES" e ON al.performed_by_id = e.id
       WHERE al.performed_at > ${since}
         AND al.action = 'create'
         AND (
@@ -199,9 +199,9 @@ async function detectNegativeStock(): Promise<Anomaly[]> {
         il.qty_on_hand::float AS quantity,
         il.qty_reserved::float AS "reservedQty",
         (il.qty_on_hand - il.qty_reserved)::float AS effective
-      FROM inventory_levels il
-      JOIN items i ON il.item_id = i.id
-      JOIN warehouses w ON il.warehouse_id = w.id
+      FROM "MTL_ONHAND_QUANTITIES" il
+      JOIN "MTL_SYSTEM_ITEMS" i ON il.item_id = i.id
+      JOIN "WMS_WAREHOUSES" w ON il.warehouse_id = w.id
       WHERE il.qty_on_hand < 0 OR (il.qty_on_hand - il.qty_reserved) < 0
       ORDER BY (il.qty_on_hand - il.qty_reserved) ASC
       LIMIT 50
@@ -306,12 +306,12 @@ export async function getInventoryHealthSummary(): Promise<{
       }),
       // Overstock: qty > 3x reorder point (no maxStockLevel field — heuristic)
       prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(*)::bigint AS count FROM inventory_levels 
+        SELECT COUNT(*)::bigint AS count FROM "MTL_ONHAND_QUANTITIES"
         WHERE qty_on_hand > 0 AND reorder_point IS NOT NULL AND qty_on_hand > reorder_point * 3
       `.then(r => Number(r[0].count)),
       prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT COUNT(DISTINCT il."itemId")::bigint AS count 
-        FROM inventory_levels il
+        SELECT COUNT(DISTINCT il."itemId")::bigint AS count
+        FROM "MTL_ONHAND_QUANTITIES" il
         WHERE il.qty_on_hand > 0
           AND il.updated_at < NOW() - INTERVAL '${CONFIG.dormantDays} days'
       `.then(r => Number(r[0].count)),

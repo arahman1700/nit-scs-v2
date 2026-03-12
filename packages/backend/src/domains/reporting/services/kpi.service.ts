@@ -95,7 +95,7 @@ async function calcInventoryTurnover(dateFrom: Date, dateTo: Date): Promise<{ cu
     }),
     prisma.$queryRaw<{ total: number }[]>`
       SELECT COALESCE(SUM(available_qty * COALESCE(unit_cost, 0)), 0)::float AS total
-      FROM inventory_lots
+      FROM "MTL_LOT_NUMBERS"
       WHERE status = 'active'
     `,
   ]);
@@ -113,7 +113,7 @@ async function calcStockAccuracy(): Promise<{ current: number }> {
     SELECT
       COUNT(*) FILTER (WHERE ABS(variance_percent) < 2) AS accurate,
       COUNT(*) AS total
-    FROM cycle_count_lines
+    FROM "MTL_CYCLE_COUNT_LINES"
     WHERE status IN ('counted', 'verified', 'adjusted')
       AND counted_qty IS NOT NULL
   `;
@@ -130,7 +130,7 @@ async function calcDeadStock(): Promise<{ current: number }> {
   // Items with no movement in 180 days
   const [result] = await prisma.$queryRaw<{ count: bigint }[]>`
     SELECT COUNT(*) AS count
-    FROM inventory_levels il
+    FROM "MTL_ONHAND_QUANTITIES" il
     WHERE il.qty_on_hand > 0
       AND (il.last_movement_date IS NULL OR il.last_movement_date < ${sixMonthsAgo})
   `;
@@ -144,7 +144,7 @@ async function calcWarehouseUtilization(): Promise<{ current: number }> {
     SELECT
       COALESCE(SUM(current_occupancy), 0) AS occupied,
       COALESCE(SUM(capacity), 0) AS capacity
-    FROM warehouse_zones
+    FROM "WMS_ZONES"
     WHERE capacity IS NOT NULL AND capacity > 0
   `;
 
@@ -161,8 +161,8 @@ async function calcGrnProcessingTime(dateFrom: Date, dateTo: Date): Promise<{ cu
   // Avg hours from GRN (mrrv) creation to QCI (rfim) completion
   const [currentResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (r.updated_at - m.created_at)) / 3600), 0)::float AS avg_hours
-    FROM rfim r
-    JOIN mrrv m ON r.mrrv_id = m.id
+    FROM "RCV_INSPECTION_HEADERS" r
+    JOIN "RCV_RECEIPT_HEADERS" m ON r.mrrv_id = m.id
     WHERE r.status = 'completed'
       AND r.updated_at >= ${dateFrom}
       AND r.updated_at <= ${dateTo}
@@ -170,8 +170,8 @@ async function calcGrnProcessingTime(dateFrom: Date, dateTo: Date): Promise<{ cu
 
   const [priorResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (r.updated_at - m.created_at)) / 3600), 0)::float AS avg_hours
-    FROM rfim r
-    JOIN mrrv m ON r.mrrv_id = m.id
+    FROM "RCV_INSPECTION_HEADERS" r
+    JOIN "RCV_RECEIPT_HEADERS" m ON r.mrrv_id = m.id
     WHERE r.status = 'completed'
       AND r.updated_at >= ${priorFrom}
       AND r.updated_at <= ${priorTo}
@@ -191,7 +191,7 @@ async function calcSupplierOnTimeDelivery(dateFrom: Date, dateTo: Date): Promise
     SELECT
       COUNT(*) FILTER (WHERE delivery_date <= eta_port OR actual_arrival_date <= eta_port) AS on_time,
       COUNT(*) AS total
-    FROM shipments
+    FROM "WSH_DELIVERY_HEADERS"
     WHERE status = 'delivered'
       AND delivery_date >= ${dateFrom}
       AND delivery_date <= ${dateTo}
@@ -202,7 +202,7 @@ async function calcSupplierOnTimeDelivery(dateFrom: Date, dateTo: Date): Promise
     SELECT
       COUNT(*) FILTER (WHERE delivery_date <= eta_port OR actual_arrival_date <= eta_port) AS on_time,
       COUNT(*) AS total
-    FROM shipments
+    FROM "WSH_DELIVERY_HEADERS"
     WHERE status = 'delivered'
       AND delivery_date >= ${priorFrom}
       AND delivery_date <= ${priorTo}
@@ -223,8 +223,8 @@ async function calcPoFulfillmentRate(dateFrom: Date, dateTo: Date): Promise<{ cu
     SELECT
       COALESCE(SUM(ml.qty_received), 0)::float AS received,
       COALESCE(SUM(COALESCE(ml.qty_ordered, ml.qty_received)), 0)::float AS ordered
-    FROM mrrv_lines ml
-    JOIN mrrv m ON ml.mrrv_id = m.id
+    FROM "RCV_RECEIPT_LINES" ml
+    JOIN "RCV_RECEIPT_HEADERS" m ON ml.mrrv_id = m.id
     WHERE m.created_at >= ${dateFrom}
       AND m.created_at <= ${dateTo}
   `;
@@ -233,8 +233,8 @@ async function calcPoFulfillmentRate(dateFrom: Date, dateTo: Date): Promise<{ cu
     SELECT
       COALESCE(SUM(ml.qty_received), 0)::float AS received,
       COALESCE(SUM(COALESCE(ml.qty_ordered, ml.qty_received)), 0)::float AS ordered
-    FROM mrrv_lines ml
-    JOIN mrrv m ON ml.mrrv_id = m.id
+    FROM "RCV_RECEIPT_LINES" ml
+    JOIN "RCV_RECEIPT_HEADERS" m ON ml.mrrv_id = m.id
     WHERE m.created_at >= ${priorFrom}
       AND m.created_at <= ${priorTo}
   `;
@@ -254,7 +254,7 @@ async function calcJoCompletionRate(dateFrom: Date, dateTo: Date): Promise<{ cur
     SELECT
       COUNT(*) FILTER (WHERE status IN ('completed', 'invoiced', 'closure_pending', 'closure_approved')) AS completed,
       COUNT(*) AS total
-    FROM job_orders
+    FROM "WMS_JOB_ORDERS"
     WHERE status != 'cancelled'
       AND created_at >= ${dateFrom}
       AND created_at <= ${dateTo}
@@ -264,7 +264,7 @@ async function calcJoCompletionRate(dateFrom: Date, dateTo: Date): Promise<{ cur
     SELECT
       COUNT(*) FILTER (WHERE status IN ('completed', 'invoiced', 'closure_pending', 'closure_approved')) AS completed,
       COUNT(*) AS total
-    FROM job_orders
+    FROM "WMS_JOB_ORDERS"
     WHERE status != 'cancelled'
       AND created_at >= ${priorFrom}
       AND created_at <= ${priorTo}
@@ -282,8 +282,8 @@ async function calcJoAvgResponseTime(dateFrom: Date, dateTo: Date): Promise<{ cu
   // Avg hours from JO submission (request_date) to first approval
   const [currentResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (ja.approved_date - jo.request_date)) / 3600), 0)::float AS avg_hours
-    FROM jo_approvals ja
-    JOIN job_orders jo ON ja.job_order_id = jo.id
+    FROM "WMS_JO_APPROVALS" ja
+    JOIN "WMS_JOB_ORDERS" jo ON ja.job_order_id = jo.id
     WHERE ja.approved = true
       AND ja.approved_date >= ${dateFrom}
       AND ja.approved_date <= ${dateTo}
@@ -291,8 +291,8 @@ async function calcJoAvgResponseTime(dateFrom: Date, dateTo: Date): Promise<{ cu
 
   const [priorResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (ja.approved_date - jo.request_date)) / 3600), 0)::float AS avg_hours
-    FROM jo_approvals ja
-    JOIN job_orders jo ON ja.job_order_id = jo.id
+    FROM "WMS_JO_APPROVALS" ja
+    JOIN "WMS_JOB_ORDERS" jo ON ja.job_order_id = jo.id
     WHERE ja.approved = true
       AND ja.approved_date >= ${priorFrom}
       AND ja.approved_date <= ${priorTo}
@@ -310,7 +310,7 @@ async function calcGatePassTurnaround(dateFrom: Date, dateTo: Date): Promise<{ c
   // Avg hours from gate pass creation to return_time (for completed passes)
   const [currentResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (return_time - created_at)) / 3600), 0)::float AS avg_hours
-    FROM gate_passes
+    FROM "WMS_GATE_PASSES"
     WHERE return_time IS NOT NULL
       AND return_time >= ${dateFrom}
       AND return_time <= ${dateTo}
@@ -318,7 +318,7 @@ async function calcGatePassTurnaround(dateFrom: Date, dateTo: Date): Promise<{ c
 
   const [priorResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (return_time - created_at)) / 3600), 0)::float AS avg_hours
-    FROM gate_passes
+    FROM "WMS_GATE_PASSES"
     WHERE return_time IS NOT NULL
       AND return_time >= ${priorFrom}
       AND return_time <= ${priorTo}
@@ -339,7 +339,7 @@ async function calcQciPassRate(dateFrom: Date, dateTo: Date): Promise<{ current:
     SELECT
       COUNT(*) FILTER (WHERE result = 'pass') AS passed,
       COUNT(*) AS total
-    FROM rfim
+    FROM "RCV_INSPECTION_HEADERS"
     WHERE status = 'completed'
       AND updated_at >= ${dateFrom}
       AND updated_at <= ${dateTo}
@@ -349,7 +349,7 @@ async function calcQciPassRate(dateFrom: Date, dateTo: Date): Promise<{ current:
     SELECT
       COUNT(*) FILTER (WHERE result = 'pass') AS passed,
       COUNT(*) AS total
-    FROM rfim
+    FROM "RCV_INSPECTION_HEADERS"
     WHERE status = 'completed'
       AND updated_at >= ${priorFrom}
       AND updated_at <= ${priorTo}
@@ -367,7 +367,7 @@ async function calcDrResolutionTime(dateFrom: Date, dateTo: Date): Promise<{ cur
   // Avg hours from DR (osd_reports) creation to resolution_date
   const [currentResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (resolution_date - created_at)) / 3600), 0)::float AS avg_hours
-    FROM osd_reports
+    FROM "RCV_DISCREPANCY_HEADERS"
     WHERE resolution_date IS NOT NULL
       AND resolution_date >= ${dateFrom}
       AND resolution_date <= ${dateTo}
@@ -375,7 +375,7 @@ async function calcDrResolutionTime(dateFrom: Date, dateTo: Date): Promise<{ cur
 
   const [priorResult] = await prisma.$queryRaw<{ avg_hours: number }[]>`
     SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (resolution_date - created_at)) / 3600), 0)::float AS avg_hours
-    FROM osd_reports
+    FROM "RCV_DISCREPANCY_HEADERS"
     WHERE resolution_date IS NOT NULL
       AND resolution_date >= ${priorFrom}
       AND resolution_date <= ${priorTo}
@@ -393,15 +393,15 @@ async function calcNcrRate(dateFrom: Date, dateTo: Date): Promise<{ current: num
   // DRs (osd_reports) flagged / total GRN lines received in the period
   const [currentResult] = await prisma.$queryRaw<{ dr_count: bigint; grn_lines: bigint }[]>`
     SELECT
-      (SELECT COUNT(*) FROM osd_reports WHERE created_at >= ${dateFrom} AND created_at <= ${dateTo}) AS dr_count,
-      (SELECT COUNT(*) FROM mrrv_lines ml JOIN mrrv m ON ml.mrrv_id = m.id
+      (SELECT COUNT(*) FROM "RCV_DISCREPANCY_HEADERS" WHERE created_at >= ${dateFrom} AND created_at <= ${dateTo}) AS dr_count,
+      (SELECT COUNT(*) FROM "RCV_RECEIPT_LINES" ml JOIN "RCV_RECEIPT_HEADERS" m ON ml.mrrv_id = m.id
        WHERE m.created_at >= ${dateFrom} AND m.created_at <= ${dateTo}) AS grn_lines
   `;
 
   const [priorResult] = await prisma.$queryRaw<{ dr_count: bigint; grn_lines: bigint }[]>`
     SELECT
-      (SELECT COUNT(*) FROM osd_reports WHERE created_at >= ${priorFrom} AND created_at <= ${priorTo}) AS dr_count,
-      (SELECT COUNT(*) FROM mrrv_lines ml JOIN mrrv m ON ml.mrrv_id = m.id
+      (SELECT COUNT(*) FROM "RCV_DISCREPANCY_HEADERS" WHERE created_at >= ${priorFrom} AND created_at <= ${priorTo}) AS dr_count,
+      (SELECT COUNT(*) FROM "RCV_RECEIPT_LINES" ml JOIN "RCV_RECEIPT_HEADERS" m ON ml.mrrv_id = m.id
        WHERE m.created_at >= ${priorFrom} AND m.created_at <= ${priorTo}) AS grn_lines
   `;
 

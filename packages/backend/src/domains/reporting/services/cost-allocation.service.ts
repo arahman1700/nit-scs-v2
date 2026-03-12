@@ -336,26 +336,26 @@ async function getMonthlyBreakdownForProject(
     SELECT month, SUM(total)::numeric AS total FROM (
       SELECT to_char(m.created_at, 'YYYY-MM') AS month,
              COALESCE(m.total_value, 0) AS total
-        FROM mrrv m
+        FROM "RCV_RECEIPT_HEADERS" m
        WHERE m.project_id = ${projectId}::uuid
          AND m.created_at >= ${dFrom} AND m.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(mi.created_at, 'YYYY-MM') AS month,
              COALESCE(mi.estimated_value, 0) AS total
-        FROM mirv mi
+        FROM "ONT_ISSUE_HEADERS" mi
        WHERE mi.project_id = ${projectId}::uuid
          AND mi.created_at >= ${dFrom} AND mi.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(jo.created_at, 'YYYY-MM') AS month,
              COALESCE(jo.total_amount, 0) AS total
-        FROM job_orders jo
+        FROM "WMS_JOB_ORDERS" jo
        WHERE jo.project_id = ${projectId}::uuid
          AND jo.status IN ('approved','assigned','in_progress','on_hold','completed','closure_pending','closure_approved','invoiced')
          AND jo.created_at >= ${dFrom} AND jo.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(s.created_at, 'YYYY-MM') AS month,
              COALESCE(s.commercial_value, 0) + COALESCE(s.freight_cost, 0) AS total
-        FROM shipments s
+        FROM "WSH_DELIVERY_HEADERS" s
        WHERE s.project_id = ${projectId}::uuid
          AND s.created_at >= ${dFrom} AND s.created_at <= ${dTo}
     ) sub
@@ -377,23 +377,23 @@ async function getMonthlyBreakdownGlobal(dateFrom?: Date, dateTo?: Date): Promis
     SELECT month, SUM(total)::numeric AS total FROM (
       SELECT to_char(m.created_at, 'YYYY-MM') AS month,
              COALESCE(m.total_value, 0) AS total
-        FROM mrrv m
+        FROM "RCV_RECEIPT_HEADERS" m
        WHERE m.created_at >= ${dFrom} AND m.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(mi.created_at, 'YYYY-MM') AS month,
              COALESCE(mi.estimated_value, 0) AS total
-        FROM mirv mi
+        FROM "ONT_ISSUE_HEADERS" mi
        WHERE mi.created_at >= ${dFrom} AND mi.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(jo.created_at, 'YYYY-MM') AS month,
              COALESCE(jo.total_amount, 0) AS total
-        FROM job_orders jo
+        FROM "WMS_JOB_ORDERS" jo
        WHERE jo.status IN ('approved','assigned','in_progress','on_hold','completed','closure_pending','closure_approved','invoiced')
          AND jo.created_at >= ${dFrom} AND jo.created_at <= ${dTo}
       UNION ALL
       SELECT to_char(s.created_at, 'YYYY-MM') AS month,
              COALESCE(s.commercial_value, 0) + COALESCE(s.freight_cost, 0) AS total
-        FROM shipments s
+        FROM "WSH_DELIVERY_HEADERS" s
        WHERE s.created_at >= ${dFrom} AND s.created_at <= ${dTo}
     ) sub
     GROUP BY month
@@ -425,20 +425,20 @@ async function getPerProjectBreakdown(dateFrom?: Date, dateTo?: Date): Promise<P
   >`
     WITH grn_costs AS (
       SELECT project_id, COALESCE(SUM(total_value), 0)::numeric AS total
-        FROM mrrv
+        FROM "RCV_RECEIPT_HEADERS"
        WHERE project_id IS NOT NULL
          AND created_at >= ${dFrom} AND created_at <= ${dTo}
        GROUP BY project_id
     ),
     mi_costs AS (
       SELECT project_id, COALESCE(SUM(estimated_value), 0)::numeric AS total
-        FROM mirv
+        FROM "ONT_ISSUE_HEADERS"
        WHERE created_at >= ${dFrom} AND created_at <= ${dTo}
        GROUP BY project_id
     ),
     jo_costs AS (
       SELECT project_id, COALESCE(SUM(total_amount), 0)::numeric AS total
-        FROM job_orders
+        FROM "WMS_JOB_ORDERS"
        WHERE jo_type NOT IN ('rental_monthly','rental_daily','generator_rental')
          AND status IN ('approved','assigned','in_progress','on_hold','completed','closure_pending','closure_approved','invoiced')
          AND created_at >= ${dFrom} AND created_at <= ${dTo}
@@ -446,14 +446,14 @@ async function getPerProjectBreakdown(dateFrom?: Date, dateTo?: Date): Promise<P
     ),
     ship_costs AS (
       SELECT project_id, (COALESCE(SUM(commercial_value), 0) + COALESCE(SUM(freight_cost), 0))::numeric AS total
-        FROM shipments
+        FROM "WSH_DELIVERY_HEADERS"
        WHERE project_id IS NOT NULL
          AND created_at >= ${dFrom} AND created_at <= ${dTo}
        GROUP BY project_id
     ),
     rental_costs AS (
       SELECT project_id, COALESCE(SUM(total_amount), 0)::numeric AS total
-        FROM job_orders
+        FROM "WMS_JOB_ORDERS"
        WHERE jo_type IN ('rental_monthly','rental_daily','generator_rental')
          AND status IN ('approved','assigned','in_progress','on_hold','completed','closure_pending','closure_approved','invoiced')
          AND created_at >= ${dFrom} AND created_at <= ${dTo}
@@ -477,7 +477,7 @@ async function getPerProjectBreakdown(dateFrom?: Date, dateTo?: Date): Promise<P
       COALESCE(r.total, 0)::numeric AS "rentalEquipment",
       (COALESCE(g.total, 0) + COALESCE(mi.total, 0) + COALESCE(jo.total, 0) + COALESCE(s.total, 0) + COALESCE(r.total, 0))::numeric AS "grandTotal"
     FROM all_project_ids api
-    JOIN projects p ON p.id = api.project_id
+    JOIN "FND_PROJECTS" p ON p.id = api.project_id
     LEFT JOIN grn_costs g ON g.project_id = api.project_id
     LEFT JOIN mi_costs mi ON mi.project_id = api.project_id
     LEFT JOIN jo_costs jo ON jo.project_id = api.project_id

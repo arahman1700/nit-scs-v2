@@ -5,7 +5,7 @@ import { getDocPrefix, getDocNumberFormat, getDocNumberPadding } from './system-
  * Generate a sequential document number.
  * Format is DB-configurable (default: PREFIX-YYYY-NNNN).
  * Prefix and padding are also configurable via SystemSetting.
- * Uses upsert on document_counters for concurrency safety.
+ * Uses upsert on "FND_DOCUMENT_COUNTERS" for concurrency safety.
  */
 export async function generateDocumentNumber(documentType: string): Promise<string> {
   const [prefix, format, padding] = await Promise.all([
@@ -17,10 +17,10 @@ export async function generateDocumentNumber(documentType: string): Promise<stri
 
   // Atomically increment the counter
   const counter = await prisma.$queryRaw<{ last_number: number }[]>`
-    INSERT INTO document_counters (id, document_type, prefix, year, last_number)
+    INSERT INTO "FND_DOCUMENT_COUNTERS" (id, document_type, prefix, year, last_number)
     VALUES (gen_random_uuid(), ${documentType}, ${prefix}, ${year}, 1)
     ON CONFLICT (document_type, year)
-    DO UPDATE SET last_number = document_counters.last_number + 1
+    DO UPDATE SET last_number = "FND_DOCUMENT_COUNTERS".last_number + 1
     RETURNING last_number
   `;
 

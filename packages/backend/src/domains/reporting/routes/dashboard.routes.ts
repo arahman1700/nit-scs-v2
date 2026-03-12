@@ -28,7 +28,7 @@ router.get('/stats', async (req: Request, res: Response, next: NextFunction) => 
           prisma.jobOrder.count({ where: { status: 'pending_approval' } }),
           prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM inventory_levels
+          FROM "MTL_ONHAND_QUANTITIES"
           WHERE qty_on_hand <= COALESCE(min_level, 0)
             AND min_level IS NOT NULL
             AND min_level > 0
@@ -99,24 +99,24 @@ router.get('/inventory-summary', async (req: Request, res: Response, next: NextF
       const [totalValueResult, totalItems, lowStockCount, expiringCount] = await Promise.all([
         prisma.$queryRaw<{ total_value: number }[]>`
           SELECT COALESCE(SUM(available_qty * unit_cost), 0)::float as total_value
-          FROM inventory_lots
+          FROM "MTL_LOT_NUMBERS"
           WHERE status = 'active'
         `,
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(DISTINCT item_id) as count
-          FROM inventory_levels
+          FROM "MTL_ONHAND_QUANTITIES"
           WHERE qty_on_hand > 0
         `,
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM inventory_levels
+          FROM "MTL_ONHAND_QUANTITIES"
           WHERE qty_on_hand <= COALESCE(min_level, 0)
             AND min_level IS NOT NULL
             AND min_level > 0
         `,
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM inventory_lots
+          FROM "MTL_LOT_NUMBERS"
           WHERE expiry_date <= ${thirtyDaysFromNow}
             AND status = 'active'
         `,
@@ -193,14 +193,14 @@ router.get('/sla-compliance', async (req: Request, res: Response, next: NextFunc
         }),
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM mirv
+          FROM "ONT_ISSUE_HEADERS"
           WHERE sla_due_date IS NOT NULL
             AND sla_due_date < ${now}
             AND status NOT IN ('issued', 'completed', 'cancelled', 'rejected')
         `,
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM mirv
+          FROM "ONT_ISSUE_HEADERS"
           WHERE sla_due_date IS NOT NULL
             AND sla_due_date >= ${now}
             AND status IN ('draft', 'pending_approval', 'approved', 'partially_issued')
@@ -214,8 +214,8 @@ router.get('/sla-compliance', async (req: Request, res: Response, next: NextFunc
         prisma.joSlaTracking.count({ where: { slaMet: false } }),
         prisma.$queryRaw<{ count: bigint }[]>`
           SELECT COUNT(*) as count
-          FROM jo_sla_tracking jst
-          JOIN job_orders jo ON jo.id = jst.job_order_id
+          FROM "WMS_JO_SLA_TRACKING" jst
+          JOIN "WMS_JOB_ORDERS" jo ON jo.id = jst.job_order_id
           WHERE jst.sla_due_date IS NOT NULL
             AND jst.sla_due_date >= ${now}
             AND jst.sla_met IS NULL
@@ -266,16 +266,16 @@ router.get('/top-projects', async (req: Request, res: Response, next: NextFuncti
           (
             COALESCE(jo_cnt.cnt, 0) + COALESCE(mirv_cnt.cnt, 0)
           ) as doc_count
-        FROM projects p
+        FROM "FND_PROJECTS" p
         LEFT JOIN (
           SELECT project_id, COUNT(*) as cnt
-          FROM job_orders
+          FROM "WMS_JOB_ORDERS"
           WHERE status NOT IN ('completed', 'invoiced', 'cancelled', 'rejected')
           GROUP BY project_id
         ) jo_cnt ON jo_cnt.project_id = p.id
         LEFT JOIN (
           SELECT project_id, COUNT(*) as cnt
-          FROM mirv
+          FROM "ONT_ISSUE_HEADERS"
           WHERE status NOT IN ('completed', 'cancelled', 'rejected')
           GROUP BY project_id
         ) mirv_cnt ON mirv_cnt.project_id = p.id
@@ -393,13 +393,13 @@ router.get('/exceptions', async (req: Request, res: Response, next: NextFunction
       const [overdueApprovals, slaBreaches, lowStock, stalledDocuments, expiringInventory] = await Promise.all([
         // 1. Overdue Approvals — pending_approval for > 3 days
         prisma.$queryRaw<{ type: string; id: string; status: string; created_at: Date }[]>`
-          SELECT 'mirv' as type, id, status, created_at FROM mirv
+          SELECT 'mirv' as type, id, status, created_at FROM "ONT_ISSUE_HEADERS"
           WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
           UNION ALL
-          SELECT 'jo' as type, id, status, created_at FROM job_orders
+          SELECT 'jo' as type, id, status, created_at FROM "WMS_JOB_ORDERS"
           WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
           UNION ALL
-          SELECT 'mrf' as type, id, status, created_at FROM material_requisitions
+          SELECT 'mrf' as type, id, status, created_at FROM "ONT_REQUISITION_HEADERS"
           WHERE status = 'pending_approval' AND created_at < ${threeDaysAgo}
           LIMIT 50
         `,
@@ -426,19 +426,19 @@ router.get('/exceptions', async (req: Request, res: Response, next: NextFunction
           }[]
         >`
           SELECT il.item_id, i.item_code, i.item_description, il.qty_on_hand::float, il.min_level::float, w.warehouse_name
-          FROM inventory_levels il
-          JOIN items i ON il.item_id = i.id
-          JOIN warehouses w ON il.warehouse_id = w.id
+          FROM "MTL_ONHAND_QUANTITIES" il
+          JOIN "MTL_SYSTEM_ITEMS" i ON il.item_id = i.id
+          JOIN "WMS_WAREHOUSES" w ON il.warehouse_id = w.id
           WHERE il.qty_on_hand <= COALESCE(il.min_level, 0) AND il.min_level > 0
           LIMIT 20
         `,
 
         // 4. Stalled Documents — no status change in 7+ days
         prisma.$queryRaw<{ type: string; id: string; status: string; updated_at: Date }[]>`
-          SELECT 'mrrv' as type, id, status, updated_at FROM mrrv
+          SELECT 'mrrv' as type, id, status, updated_at FROM "RCV_RECEIPT_HEADERS"
           WHERE status NOT IN ('completed', 'cancelled', 'stored') AND updated_at < ${sevenDaysAgo}
           UNION ALL
-          SELECT 'mirv' as type, id, status, updated_at FROM mirv
+          SELECT 'mirv' as type, id, status, updated_at FROM "ONT_ISSUE_HEADERS"
           WHERE status NOT IN ('issued', 'completed', 'cancelled') AND updated_at < ${sevenDaysAgo}
           LIMIT 20
         `,
