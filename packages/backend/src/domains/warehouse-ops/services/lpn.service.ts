@@ -64,6 +64,7 @@ const DETAIL_INCLUDE = {
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new license plate record with warehouse/zone/bin associations. */
 export async function createLpn(data: Prisma.LicensePlateUncheckedCreateInput): Promise<LicensePlate> {
   return prisma.licensePlate.create({
     data,
@@ -71,6 +72,7 @@ export async function createLpn(data: Prisma.LicensePlateUncheckedCreateInput): 
   }) as unknown as LicensePlate;
 }
 
+/** Retrieves a single LPN by ID, throwing NotFoundError if missing. */
 export async function getLpnById(id: string) {
   const record = await prisma.licensePlate.findUnique({
     where: { id },
@@ -80,6 +82,7 @@ export async function getLpnById(id: string) {
   return record;
 }
 
+/** Lists LPNs with optional warehouse/status/type filters and pagination. */
 export async function getLpns(filters: LpnFilters) {
   const where: Prisma.LicensePlateWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -108,6 +111,7 @@ export async function getLpns(filters: LpnFilters) {
 // State transitions
 // ---------------------------------------------------------------------------
 
+/** Transitions LPN from 'created' to 'in_receiving'. */
 export async function receiveLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -122,6 +126,7 @@ export async function receiveLpn(id: string): Promise<LicensePlate> {
   }) as unknown as LicensePlate;
 }
 
+/** Transitions LPN from 'in_receiving' to 'stored'. */
 export async function storeLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -136,6 +141,7 @@ export async function storeLpn(id: string): Promise<LicensePlate> {
   }) as unknown as LicensePlate;
 }
 
+/** Transitions LPN from 'stored' to 'in_picking'. */
 export async function pickLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -150,6 +156,7 @@ export async function pickLpn(id: string): Promise<LicensePlate> {
   }) as unknown as LicensePlate;
 }
 
+/** Transitions LPN from 'in_picking' to 'in_packing'. */
 export async function packLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -164,6 +171,7 @@ export async function packLpn(id: string): Promise<LicensePlate> {
   }) as unknown as LicensePlate;
 }
 
+/** Transitions LPN from 'in_packing' to 'shipped'. */
 export async function shipLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -178,6 +186,7 @@ export async function shipLpn(id: string): Promise<LicensePlate> {
   }) as unknown as LicensePlate;
 }
 
+/** Dissolves an LPN (allowed from any non-terminal state). */
 export async function dissolveLpn(id: string): Promise<LicensePlate> {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -199,6 +208,7 @@ export async function dissolveLpn(id: string): Promise<LicensePlate> {
 // Move LPN
 // ---------------------------------------------------------------------------
 
+/** Relocates an LPN to a different zone and/or bin. */
 export async function moveLpn(id: string, input: MoveLpnInput) {
   const record = await prisma.licensePlate.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('LicensePlate', id);
@@ -218,6 +228,7 @@ export async function moveLpn(id: string, input: MoveLpnInput) {
 // Content management
 // ---------------------------------------------------------------------------
 
+/** Adds an item/lot content line to an existing LPN. */
 export async function addContent(lpnId: string, input: AddContentInput) {
   const record = await prisma.licensePlate.findUnique({ where: { id: lpnId } });
   if (!record) throw new NotFoundError('LicensePlate', lpnId);
@@ -237,6 +248,7 @@ export async function addContent(lpnId: string, input: AddContentInput) {
   });
 }
 
+/** Removes a content line from an LPN by content ID. */
 export async function removeContent(contentId: string) {
   const content = await prisma.lpnContent.findUnique({ where: { id: contentId } });
   if (!content) throw new NotFoundError('LpnContent', contentId);
@@ -248,6 +260,7 @@ export async function removeContent(contentId: string) {
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns LPN counts grouped by status, optionally filtered by warehouse. */
 export async function getStats(warehouseId?: string): Promise<LpnStats> {
   const where: Prisma.LicensePlateWhereInput = {};
   if (warehouseId) where.warehouseId = warehouseId;

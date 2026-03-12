@@ -287,7 +287,7 @@ describe('wave.service', () => {
 
   describe('release', () => {
     it('should release a planning wave', async () => {
-      waveHeader().findUnique.mockResolvedValue(makeWaveRecord({ status: 'planning' }));
+      waveHeader().findUnique.mockResolvedValue(makeWaveRecord({ status: 'planning', totalLines: 5 }));
       waveHeader().update.mockResolvedValue(makeWaveRecord({ status: 'released', releasedAt: new Date() }));
 
       const result = await release('wave-001');
@@ -494,7 +494,7 @@ describe('wave.service', () => {
   describe('full lifecycle', () => {
     it('should transition through all happy-path states', async () => {
       // planning -> released
-      waveHeader().findUnique.mockResolvedValue(makeWaveRecord({ status: 'planning' }));
+      waveHeader().findUnique.mockResolvedValue(makeWaveRecord({ status: 'planning', totalLines: 5 }));
       waveHeader().update.mockResolvedValue(makeWaveRecord({ status: 'released' }));
       const r1 = await release('wave-001');
       expect(r1.status).toBe('released');

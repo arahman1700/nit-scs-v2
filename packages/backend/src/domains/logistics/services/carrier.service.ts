@@ -23,16 +23,19 @@ export interface CarrierFilters {
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new carrier service record. */
 export async function createCarrier(data: Prisma.CarrierServiceUncheckedCreateInput): Promise<CarrierService> {
   return prisma.carrierService.create({ data });
 }
 
+/** Retrieves a carrier service by ID or throws NotFoundError. */
 export async function getCarrierById(id: string): Promise<CarrierService> {
   const carrier = await prisma.carrierService.findUnique({ where: { id } });
   if (!carrier) throw new NotFoundError('CarrierService', id);
   return carrier;
 }
 
+/** Lists carrier services with optional mode/active/name filters and pagination. */
 export async function getCarriers(filters: CarrierFilters) {
   const where: Prisma.CarrierServiceWhereInput = {};
   if (filters.mode) where.mode = filters.mode;
@@ -56,6 +59,7 @@ export async function getCarriers(filters: CarrierFilters) {
   return { data, total, page, pageSize };
 }
 
+/** Updates an existing carrier service by ID. */
 export async function updateCarrier(
   id: string,
   data: Prisma.CarrierServiceUncheckedUpdateInput,
@@ -64,6 +68,7 @@ export async function updateCarrier(
   return prisma.carrierService.update({ where: { id }, data });
 }
 
+/** Deletes a carrier service by ID. */
 export async function deleteCarrier(id: string): Promise<void> {
   await getCarrierById(id);
   await prisma.carrierService.delete({ where: { id } });
@@ -73,6 +78,7 @@ export async function deleteCarrier(id: string): Promise<void> {
 // Rate Lookup — find best carrier for a given mode
 // ---------------------------------------------------------------------------
 
+/** Finds active carriers for a given transport mode, sorted by lowest rate, with optional cost estimates. */
 export async function findBestRate(mode: string, weightKg?: number) {
   const carriers = await prisma.carrierService.findMany({
     where: { mode, isActive: true },

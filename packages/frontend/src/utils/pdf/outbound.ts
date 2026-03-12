@@ -1,6 +1,5 @@
 import { createNitPdf, addInfoSection, addTable, downloadPdf, getStartY, PRIMARY_BLUE } from './core';
 import type { GrnLineItem } from './inbound';
-import type { TableColumn } from './core';
 
 // ---------------------------------------------------------------------------
 // MI (Material Issuance)

@@ -9,6 +9,9 @@
  */
 import { prisma } from '../../../utils/prisma.js';
 import { NotFoundError } from '@nit-scs-v2/shared';
+import { eventBus } from '../../../events/event-bus.js';
+
+type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,6 +40,7 @@ export interface ReceivingLinePlan {
 // Generate Receiving Plan — suggests LPN + putaway for each GRN line
 // ---------------------------------------------------------------------------
 
+/** Generates a receiving plan with LPN type and putaway zone/bin suggestions for each GRN line. */
 export async function generateReceivingPlan(grnId: string): Promise<ReceivingPlan> {
   const grn = await prisma.mrrv.findUnique({
     where: { id: grnId },
@@ -124,72 +128,78 @@ export async function generateReceivingPlan(grnId: string): Promise<ReceivingPla
 }
 
 // ---------------------------------------------------------------------------
-// Execute Receiving — create LPNs + WMS tasks from a plan
+// Execute Receiving — create LPNs + WMS tasks from a plan (transactional)
 // ---------------------------------------------------------------------------
 
+/** Creates LPNs and putaway WMS tasks from a receiving plan in a single transaction. */
 export async function executeReceiving(plan: ReceivingPlan, createdById?: string) {
-  const results: {
-    lpnId: string;
-    lpnNumber: string;
-    taskId: string;
-    taskNumber: string;
-    lineId: string;
-  }[] = [];
-
-  // Generate sequential numbers
   const timestamp = Date.now().toString(36).toUpperCase();
 
-  for (let i = 0; i < plan.lines.length; i++) {
-    const line = plan.lines[i];
-    const seq = String(i + 1).padStart(3, '0');
+  // Wrap all creates in a single transaction to avoid partial data on failure
+  const results = await prisma.$transaction(async (tx: TransactionClient) => {
+    const txResults: {
+      lpnId: string;
+      lpnNumber: string;
+      taskId: string;
+      taskNumber: string;
+      lineId: string;
+    }[] = [];
 
-    // 1. Create LPN
-    const lpn = await prisma.licensePlate.create({
-      data: {
-        lpnNumber: `LPN-${timestamp}-${seq}`,
-        warehouseId: plan.warehouseId,
-        lpnType: line.suggestedLpnType,
-        status: 'in_receiving',
-        sourceDocType: 'grn',
-        sourceDocId: plan.grnId,
-        createdById,
-      },
-    });
+    for (let i = 0; i < plan.lines.length; i++) {
+      const line = plan.lines[i];
+      const seq = String(i + 1).padStart(3, '0');
 
-    // 2. Add content to LPN
-    await prisma.lpnContent.create({
-      data: {
+      // 1. Create LPN
+      const lpn = await tx.licensePlate.create({
+        data: {
+          lpnNumber: `LPN-${timestamp}-${seq}`,
+          warehouseId: plan.warehouseId,
+          lpnType: line.suggestedLpnType,
+          status: 'in_receiving',
+          sourceDocType: 'grn',
+          sourceDocId: plan.grnId,
+          createdById,
+        },
+      });
+
+      // 2. Add content to LPN
+      await tx.lpnContent.create({
+        data: {
+          lpnId: lpn.id,
+          itemId: line.itemId,
+          quantity: line.quantity,
+        },
+      });
+
+      // 3. Create putaway WMS task linked to the LPN
+      const task = await tx.wmsTask.create({
+        data: {
+          taskNumber: `TSK-PA-${timestamp}-${seq}`,
+          warehouseId: plan.warehouseId,
+          taskType: 'putaway',
+          priority: line.requiresInspection ? 2 : 3,
+          status: 'pending',
+          sourceDocType: 'grn',
+          sourceDocId: plan.grnId,
+          lpnId: lpn.id,
+          toZoneId: line.suggestedZoneId,
+          toBinId: line.suggestedBinId,
+          itemId: line.itemId,
+          quantity: line.quantity,
+        },
+      });
+
+      txResults.push({
         lpnId: lpn.id,
-        itemId: line.itemId,
-        quantity: line.quantity,
-      },
-    });
+        lpnNumber: lpn.lpnNumber,
+        taskId: task.id,
+        taskNumber: task.taskNumber,
+        lineId: line.lineId,
+      });
+    }
 
-    // 3. Create putaway WMS task
-    const task = await prisma.wmsTask.create({
-      data: {
-        taskNumber: `TSK-PA-${timestamp}-${seq}`,
-        warehouseId: plan.warehouseId,
-        taskType: 'putaway',
-        priority: line.requiresInspection ? 2 : 3,
-        status: 'pending',
-        sourceDocType: 'grn',
-        sourceDocId: plan.grnId,
-        toZoneId: line.suggestedZoneId,
-        toBinId: line.suggestedBinId,
-        itemId: line.itemId,
-        quantity: line.quantity,
-      },
-    });
-
-    results.push({
-      lpnId: lpn.id,
-      lpnNumber: lpn.lpnNumber,
-      taskId: task.id,
-      taskNumber: task.taskNumber,
-      lineId: line.lineId,
-    });
-  }
+    return txResults;
+  });
 
   return results;
 }
@@ -198,16 +208,34 @@ export async function executeReceiving(plan: ReceivingPlan, createdById?: string
 // Auto-receive GRN — full automation: plan + execute in one call
 // ---------------------------------------------------------------------------
 
+/** Full automation: generates a plan, executes it, and transitions GRN to 'received'. */
 export async function autoReceiveGrn(grnId: string, createdById?: string) {
   const plan = await generateReceivingPlan(grnId);
   const results = await executeReceiving(plan, createdById);
 
-  // Update GRN status to received if not already
+  // Update GRN status to received if currently qc_approved
+  // (only transition forward, never backward)
   const grn = await prisma.mrrv.findUnique({ where: { id: grnId } });
-  if (grn && grn.status !== 'received') {
+  if (grn && grn.status === 'qc_approved') {
     await prisma.mrrv.update({
       where: { id: grnId },
       data: { status: 'received' },
+    });
+
+    eventBus.publish({
+      type: 'document:status_changed',
+      entityType: 'mrrv',
+      entityId: grnId,
+      action: 'status_change',
+      payload: {
+        from: 'qc_approved',
+        to: 'received',
+        automated: true,
+        lpnsCreated: results.length,
+        tasksCreated: results.length,
+      },
+      performedById: createdById,
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -225,6 +253,7 @@ export async function autoReceiveGrn(grnId: string, createdById?: string) {
 // Calculate customs duties for an ASN (tariff integration)
 // ---------------------------------------------------------------------------
 
+/** Calculates estimated customs duties and VAT for each line item on an ASN. */
 export async function calculateAsnDuties(asnId: string) {
   const asn = await prisma.advanceShippingNotice.findUnique({
     where: { id: asnId },

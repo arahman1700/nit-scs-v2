@@ -44,7 +44,7 @@ async function getAuthTokens(): Promise<{ token: string; refreshToken: string }>
   const json = await res.json();
   const data = json.data || json;
   const token = data.accessToken || data.token;
-  const refreshToken = data.refreshToken;
+  const _refreshToken = data.refreshToken;
 
   const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
   tokenExpiresAt = payload.exp * 1000;
@@ -62,7 +62,7 @@ let navCount = 0;
  * Uses addInitScript to inject tokens BEFORE any app JS runs.
  */
 export async function gotoAuth(page: Page, url: string) {
-  const { token, refreshToken } = await getAuthTokens();
+  const { token, refreshToken: _refreshToken } = await getAuthTokens();
 
   navCount++;
   if (navCount % 30 === 0) {

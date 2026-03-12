@@ -146,6 +146,25 @@ export interface PrismaMock {
   transportOrderItem: PrismaModelMock;
   warehouseZone: PrismaModelMock;
   cycleCountLine: PrismaModelMock;
+  // P6: LPN, WMS Tasks, Wave, Stock Allocation, Cross-dock
+  licensePlate: PrismaModelMock;
+  lpnContent: PrismaModelMock;
+  wmsTask: PrismaModelMock;
+  waveHeader: PrismaModelMock;
+  waveLine: PrismaModelMock;
+  stockAllocation: PrismaModelMock;
+  crossDock: PrismaModelMock;
+  rfidTag: PrismaModelMock;
+  advanceShippingNotice: PrismaModelMock;
+  asnLine: PrismaModelMock;
+  putAwayRule: PrismaModelMock;
+  binLocation: PrismaModelMock;
+  dockDoor: PrismaModelMock;
+  yardAppointment: PrismaModelMock;
+  truckVisit: PrismaModelMock;
+  thirdPartyContract: PrismaModelMock;
+  thirdPartyCharge: PrismaModelMock;
+  carrierService: PrismaModelMock;
 
   // Prisma utilities
   $transaction: MockFn;
@@ -262,6 +281,25 @@ export function createPrismaMock(): PrismaMock {
     transportOrderItem: createModelMock(),
     warehouseZone: createModelMock(),
     cycleCountLine: createModelMock(),
+    // P6: LPN, WMS Tasks, Wave, Stock Allocation, Cross-dock
+    licensePlate: createModelMock(),
+    lpnContent: createModelMock(),
+    wmsTask: createModelMock(),
+    waveHeader: createModelMock(),
+    waveLine: createModelMock(),
+    stockAllocation: createModelMock(),
+    crossDock: createModelMock(),
+    rfidTag: createModelMock(),
+    advanceShippingNotice: createModelMock(),
+    asnLine: createModelMock(),
+    putAwayRule: createModelMock(),
+    binLocation: createModelMock(),
+    dockDoor: createModelMock(),
+    yardAppointment: createModelMock(),
+    truckVisit: createModelMock(),
+    thirdPartyContract: createModelMock(),
+    thirdPartyCharge: createModelMock(),
+    carrierService: createModelMock(),
 
     $transaction: vi.fn(),
     $queryRaw: vi.fn(),

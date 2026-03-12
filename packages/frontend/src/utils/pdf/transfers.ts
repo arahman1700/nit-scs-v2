@@ -1,5 +1,4 @@
 import { createNitPdf, addInfoSection, addTable, downloadPdf, getStartY, PRIMARY_BLUE } from './core';
-import type { TableColumn } from './core';
 
 // ---------------------------------------------------------------------------
 // IMSF (Inter-project Material Shifting Form)

@@ -59,12 +59,15 @@ const DETAIL_INCLUDE = {
 // Identify Opportunities
 // ---------------------------------------------------------------------------
 
+/** Scans GRNs (qc_approved/received) and matches their items against pending MI/WT demand to find cross-dock candidates. */
 export async function identifyOpportunities(warehouseId: string): Promise<CrossDockOpportunity[]> {
-  // 1. Find approved GRNs (Mrrv) with pending items at this warehouse
+  // 1. Find QC-approved or received GRNs (Mrrv) with pending items at this warehouse
+  //    Mrrv statuses: draft | pending_qc | qc_approved | received | stored | rejected
+  //    Cross-dock candidates are GRNs that passed QC but haven't been fully stored yet
   const grns = await prisma.mrrv.findMany({
     where: {
       warehouseId,
-      status: 'approved',
+      status: { in: ['qc_approved', 'received'] },
     },
     select: {
       id: true,
@@ -187,6 +190,7 @@ export async function identifyOpportunities(warehouseId: string): Promise<CrossD
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new cross-dock record in 'identified' status. */
 export async function createCrossDock(data: Prisma.CrossDockUncheckedCreateInput): Promise<CrossDock> {
   return prisma.crossDock.create({
     data,
@@ -194,6 +198,7 @@ export async function createCrossDock(data: Prisma.CrossDockUncheckedCreateInput
   }) as unknown as CrossDock;
 }
 
+/** Retrieves a single cross-dock record by ID, throwing NotFoundError if missing. */
 export async function getCrossDockById(id: string) {
   const record = await prisma.crossDock.findUnique({
     where: { id },
@@ -203,6 +208,7 @@ export async function getCrossDockById(id: string) {
   return record;
 }
 
+/** Lists cross-dock records with optional warehouse/status filters and pagination. */
 export async function getCrossDocks(filters: CrossDockFilters) {
   const where: Prisma.CrossDockWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -230,6 +236,7 @@ export async function getCrossDocks(filters: CrossDockFilters) {
 // State transitions
 // ---------------------------------------------------------------------------
 
+/** Approves an identified cross-dock, transitioning to 'approved'. */
 export async function approveCrossDock(id: string): Promise<CrossDock> {
   const record = await prisma.crossDock.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('CrossDock', id);
@@ -244,20 +251,73 @@ export async function approveCrossDock(id: string): Promise<CrossDock> {
   }) as unknown as CrossDock;
 }
 
+/** Executes an approved cross-dock: atomically creates LPN, LPN content, and WMS move task, then transitions to 'in_progress'. */
 export async function executeCrossDock(id: string): Promise<CrossDock> {
-  const record = await prisma.crossDock.findUnique({ where: { id } });
+  const record = await prisma.crossDock.findUnique({
+    where: { id },
+    include: { item: { select: { id: true, itemCode: true } } },
+  });
   if (!record) throw new NotFoundError('CrossDock', id);
   if (record.status !== 'approved') {
     throw new Error(`Cannot execute cross-dock in status '${record.status}'. Must be 'approved'.`);
   }
 
-  return prisma.crossDock.update({
-    where: { id },
-    data: { status: 'in_progress' },
-    include: DETAIL_INCLUDE,
-  }) as unknown as CrossDock;
+  // Wrap in transaction: update status + create LPN + create WMS move task
+  const result = await prisma.$transaction(async tx => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+
+    // Create an LPN to track the cross-docked goods
+    const lpn = await tx.licensePlate.create({
+      data: {
+        lpnNumber: `LPN-XD-${timestamp}`,
+        warehouseId: record.warehouseId,
+        lpnType: Number(record.quantity) > 100 ? 'pallet' : 'carton',
+        status: 'in_receiving',
+        sourceDocType: 'cross_dock',
+        sourceDocId: record.id,
+      },
+    });
+
+    // Add content to LPN
+    await tx.lpnContent.create({
+      data: {
+        lpnId: lpn.id,
+        itemId: record.itemId,
+        quantity: record.quantity,
+      },
+    });
+
+    // Create a WMS move task to route goods from receiving to staging/outbound
+    await tx.wmsTask.create({
+      data: {
+        taskNumber: `TSK-XD-${timestamp}`,
+        warehouseId: record.warehouseId,
+        taskType: 'move',
+        priority: 1, // Cross-dock is urgent — bypasses putaway
+        status: 'pending',
+        sourceDocType: 'cross_dock',
+        sourceDocId: record.id,
+        lpnId: lpn.id,
+        itemId: record.itemId,
+        quantity: record.quantity,
+        notes: `Cross-dock move — bypass putaway`,
+      },
+    });
+
+    // Update cross-dock status
+    const updated = await tx.crossDock.update({
+      where: { id },
+      data: { status: 'in_progress' },
+      include: DETAIL_INCLUDE,
+    });
+
+    return updated;
+  });
+
+  return result as unknown as CrossDock;
 }
 
+/** Completes an in-progress cross-dock, recording completedAt timestamp. */
 export async function completeCrossDock(id: string): Promise<CrossDock> {
   const record = await prisma.crossDock.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('CrossDock', id);
@@ -272,6 +332,7 @@ export async function completeCrossDock(id: string): Promise<CrossDock> {
   }) as unknown as CrossDock;
 }
 
+/** Cancels a cross-dock from any non-terminal state (identified/approved/in_progress). */
 export async function cancelCrossDock(id: string): Promise<CrossDock> {
   const record = await prisma.crossDock.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('CrossDock', id);
@@ -290,6 +351,7 @@ export async function cancelCrossDock(id: string): Promise<CrossDock> {
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns cross-dock statistics: counts by status, total items bypassed, and average completion time. */
 export async function getStats(warehouseId?: string): Promise<CrossDockStats> {
   const where: Prisma.CrossDockWhereInput = {};
   if (warehouseId) where.warehouseId = warehouseId;

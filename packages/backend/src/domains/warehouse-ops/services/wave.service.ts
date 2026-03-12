@@ -64,6 +64,7 @@ const DETAIL_INCLUDE = {
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new wave header in 'planning' status. */
 export async function createWave(data: Prisma.WaveHeaderUncheckedCreateInput) {
   return prisma.waveHeader.create({
     data,
@@ -71,6 +72,7 @@ export async function createWave(data: Prisma.WaveHeaderUncheckedCreateInput) {
   });
 }
 
+/** Retrieves a single wave by ID with lines, throwing NotFoundError if missing. */
 export async function getWaveById(id: string) {
   const record = await prisma.waveHeader.findUnique({
     where: { id },
@@ -80,6 +82,7 @@ export async function getWaveById(id: string) {
   return record;
 }
 
+/** Lists waves with optional warehouse/status/type filters and pagination. */
 export async function getWaves(filters: WaveFilters) {
   const where: Prisma.WaveHeaderWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -108,6 +111,7 @@ export async function getWaves(filters: WaveFilters) {
 // Line management
 // ---------------------------------------------------------------------------
 
+/** Adds pick lines to a wave in 'planning' status and increments totalLines. */
 export async function addLines(waveId: string, lines: WaveLineInput[]) {
   const wave = await prisma.waveHeader.findUnique({ where: { id: waveId } });
   if (!wave) throw new NotFoundError('WaveHeader', waveId);
@@ -138,6 +142,7 @@ export async function addLines(waveId: string, lines: WaveLineInput[]) {
   return created;
 }
 
+/** Confirms a pick for a wave line, recording quantity picked and picker. */
 export async function confirmPick(lineId: string, input: ConfirmPickInput) {
   const line = await prisma.waveLine.findUnique({
     where: { id: lineId },
@@ -168,11 +173,15 @@ export async function confirmPick(lineId: string, input: ConfirmPickInput) {
 // State transitions
 // ---------------------------------------------------------------------------
 
+/** Releases a wave from 'planning' to 'released' for floor execution. */
 export async function release(waveId: string) {
   const record = await prisma.waveHeader.findUnique({ where: { id: waveId } });
   if (!record) throw new NotFoundError('WaveHeader', waveId);
   if (record.status !== 'planning') {
     throw new Error(`Cannot release wave in status '${record.status}'. Must be 'planning'.`);
+  }
+  if ((record.totalLines ?? 0) === 0) {
+    throw new Error('Cannot release wave with 0 lines.');
   }
 
   return prisma.waveHeader.update({
@@ -182,6 +191,7 @@ export async function release(waveId: string) {
   });
 }
 
+/** Transitions a released wave to 'picking' status. */
 export async function startPicking(waveId: string) {
   const record = await prisma.waveHeader.findUnique({ where: { id: waveId } });
   if (!record) throw new NotFoundError('WaveHeader', waveId);
@@ -196,6 +206,7 @@ export async function startPicking(waveId: string) {
   });
 }
 
+/** Completes a wave, validating all lines are in a terminal state. */
 export async function complete(waveId: string) {
   const record = await prisma.waveHeader.findUnique({
     where: { id: waveId },
@@ -219,6 +230,7 @@ export async function complete(waveId: string) {
   });
 }
 
+/** Cancels a wave (allowed from any non-terminal state). */
 export async function cancel(waveId: string) {
   const record = await prisma.waveHeader.findUnique({ where: { id: waveId } });
   if (!record) throw new NotFoundError('WaveHeader', waveId);
@@ -237,6 +249,7 @@ export async function cancel(waveId: string) {
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns wave counts grouped by status, optionally filtered by warehouse. */
 export async function getStats(warehouseId?: string): Promise<WaveStats> {
   const where: Prisma.WaveHeaderWhereInput = {};
   if (warehouseId) where.warehouseId = warehouseId;

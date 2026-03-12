@@ -69,6 +69,15 @@ describe('cross-dock.service', () => {
     vi.clearAllMocks();
     Object.assign(mockPrisma, createPrismaMock());
     (mockPrisma as Record<string, unknown>).crossDock = createModelMock();
+
+    // Re-bind $transaction to pass mockPrisma itself so that
+    // overridden model mocks (e.g. crossDock) are visible inside tx callbacks.
+    mockPrisma.$transaction.mockImplementation(async (arg: unknown) => {
+      if (typeof arg === 'function') {
+        return (arg as (tx: PrismaMock) => Promise<unknown>)(mockPrisma);
+      }
+      return Promise.all(arg as Promise<unknown>[]);
+    });
   });
 
   const crossDock = () => (mockPrisma as unknown as { crossDock: PrismaModelMock }).crossDock;
@@ -422,7 +431,7 @@ describe('cross-dock.service', () => {
       expect(result).toEqual([]);
     });
 
-    it('should query GRNs with approved status at the given warehouse', async () => {
+    it('should query GRNs with qc_approved/received status at the given warehouse', async () => {
       mockPrisma.mrrv.findMany.mockResolvedValue([]);
       mockPrisma.mirv.findMany.mockResolvedValue([]);
       mockPrisma.stockTransfer.findMany.mockResolvedValue([]);
@@ -431,7 +440,7 @@ describe('cross-dock.service', () => {
 
       expect(mockPrisma.mrrv.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { warehouseId: WH_ID, status: 'approved' },
+          where: { warehouseId: WH_ID, status: { in: ['qc_approved', 'received'] } },
         }),
       );
     });
@@ -604,13 +613,47 @@ describe('cross-dock.service', () => {
   // ########################################################################
 
   describe('executeCrossDock', () => {
-    it('should execute an approved cross-dock', async () => {
+    /**
+     * Helper: set up mocks required by executeCrossDock (LPN, content, task).
+     * The $transaction mock passes the mock itself as `tx`, so the same
+     * licensePlate/lpnContent/wmsTask/crossDock stubs are used.
+     */
+    function setupExecuteMocks() {
+      mockPrisma.licensePlate.create.mockResolvedValue({ id: 'lpn-001', lpnNumber: 'LPN-XD-TEST' });
+      mockPrisma.lpnContent.create.mockResolvedValue({ id: 'lc-001' });
+      mockPrisma.wmsTask.create.mockResolvedValue({ id: 'task-001', taskNumber: 'TSK-XD-TEST' });
+    }
+
+    it('should execute an approved cross-dock with LPN and WMS task creation', async () => {
       const record = makeCrossDockRecord({ status: 'approved' });
       const executed = makeCrossDockRecord({ status: 'in_progress' });
       crossDock().findUnique.mockResolvedValue(record);
       crossDock().update.mockResolvedValue(executed);
+      setupExecuteMocks();
 
       const result = await executeCrossDock('cd-001');
+
+      // Should create LPN for cross-docked goods
+      expect(mockPrisma.licensePlate.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            warehouseId: WH_ID,
+            sourceDocType: 'cross_dock',
+            sourceDocId: 'cd-001',
+          }),
+        }),
+      );
+
+      // Should create WMS move task
+      expect(mockPrisma.wmsTask.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            taskType: 'move',
+            priority: 1,
+            sourceDocType: 'cross_dock',
+          }),
+        }),
+      );
 
       expect(crossDock().update).toHaveBeenCalledWith({
         where: { id: 'cd-001' },
@@ -876,9 +919,12 @@ describe('cross-dock.service', () => {
       const r1 = await approveCrossDock('cd-001');
       expect(r1.status).toBe('approved');
 
-      // approved -> in_progress
+      // approved -> in_progress (executeCrossDock now creates LPN + WMS task)
       crossDock().findUnique.mockResolvedValue(makeCrossDockRecord({ status: 'approved' }));
       crossDock().update.mockResolvedValue(makeCrossDockRecord({ status: 'in_progress' }));
+      mockPrisma.licensePlate.create.mockResolvedValue({ id: 'lpn-001', lpnNumber: 'LPN-XD-TEST' });
+      mockPrisma.lpnContent.create.mockResolvedValue({ id: 'lc-001' });
+      mockPrisma.wmsTask.create.mockResolvedValue({ id: 'task-001', taskNumber: 'TSK-XD-TEST' });
       const r2 = await executeCrossDock('cd-001');
       expect(r2.status).toBe('in_progress');
 

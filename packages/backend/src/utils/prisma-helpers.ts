@@ -3,7 +3,7 @@ import type { PrismaClient } from '@prisma/client';
 /**
  * Default delegate shape returned when no generic is provided.
  */
-type DefaultDelegate = Record<string, (...args: any[]) => Promise<unknown>>;
+type DefaultDelegate = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 /**
  * Type-safe dynamic Prisma delegate accessor.

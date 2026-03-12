@@ -1,5 +1,4 @@
 import { URL } from 'node:url';
-import { log } from '../config/logger.js';
 
 // Private/internal IP ranges that should never be accessed via webhooks
 const BLOCKED_IP_PATTERNS = [

@@ -61,7 +61,12 @@ const DETAIL_INCLUDE = {
 // Allocate
 // ---------------------------------------------------------------------------
 
+/** Creates a new stock allocation (hard or soft reservation) against a demand document. */
 export async function allocate(input: AllocateInput) {
+  if (input.qtyAllocated <= 0) {
+    throw new Error('Allocated quantity must be greater than zero.');
+  }
+
   return prisma.stockAllocation.create({
     data: {
       warehouseId: input.warehouseId,
@@ -83,6 +88,7 @@ export async function allocate(input: AllocateInput) {
 // State transitions
 // ---------------------------------------------------------------------------
 
+/** Releases an active allocation, freeing reserved stock. */
 export async function release(allocationId: string) {
   const record = await prisma.stockAllocation.findUnique({ where: { id: allocationId } });
   if (!record) throw new NotFoundError('StockAllocation', allocationId);
@@ -97,6 +103,7 @@ export async function release(allocationId: string) {
   });
 }
 
+/** Confirms pick fulfillment for an active allocation. */
 export async function confirmPick(allocationId: string) {
   const record = await prisma.stockAllocation.findUnique({ where: { id: allocationId } });
   if (!record) throw new NotFoundError('StockAllocation', allocationId);
@@ -111,6 +118,7 @@ export async function confirmPick(allocationId: string) {
   });
 }
 
+/** Cancels an active allocation and records the release timestamp. */
 export async function cancel(allocationId: string) {
   const record = await prisma.stockAllocation.findUnique({ where: { id: allocationId } });
   if (!record) throw new NotFoundError('StockAllocation', allocationId);
@@ -129,6 +137,7 @@ export async function cancel(allocationId: string) {
 // Queries
 // ---------------------------------------------------------------------------
 
+/** Retrieves all allocations for a specific demand document (MI, WT, MR). */
 export async function getByDemand(demandDocType: string, demandDocId: string) {
   return prisma.stockAllocation.findMany({
     where: { demandDocType, demandDocId },
@@ -137,6 +146,7 @@ export async function getByDemand(demandDocType: string, demandDocId: string) {
   });
 }
 
+/** Returns the total actively allocated quantity for an item in a warehouse. */
 export async function getAvailable(warehouseId: string, itemId: string) {
   const result = await prisma.stockAllocation.aggregate({
     where: { warehouseId, itemId, status: 'active' },
@@ -150,6 +160,7 @@ export async function getAvailable(warehouseId: string, itemId: string) {
   };
 }
 
+/** Lists allocations with optional warehouse/status/demand filters and pagination. */
 export async function getAllocations(filters: AllocationFilters) {
   const where: Prisma.StockAllocationWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -179,6 +190,7 @@ export async function getAllocations(filters: AllocationFilters) {
 // Bulk FIFO allocation
 // ---------------------------------------------------------------------------
 
+/** FIFO bulk allocation: reserves inventory lots in creation-date order for multiple demand lines. */
 export async function bulkAllocate(
   demandDocType: string,
   demandDocId: string,
@@ -233,6 +245,7 @@ export async function bulkAllocate(
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns active allocation count and total allocated quantity, optionally filtered by warehouse. */
 export async function getStats(warehouseId?: string): Promise<AllocationStats> {
   const where: Prisma.StockAllocationWhereInput = { status: 'active' };
   if (warehouseId) where.warehouseId = warehouseId;

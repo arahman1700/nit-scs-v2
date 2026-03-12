@@ -65,6 +65,7 @@ const CHARGE_DETAIL_INCLUDE = {
 // Contract CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new 3PL contract with supplier details. */
 export async function createContract(data: Prisma.ThirdPartyContractUncheckedCreateInput) {
   return prisma.thirdPartyContract.create({
     data,
@@ -72,6 +73,7 @@ export async function createContract(data: Prisma.ThirdPartyContractUncheckedCre
   });
 }
 
+/** Retrieves a 3PL contract by ID with supplier and charges, or throws NotFoundError. */
 export async function getContractById(id: string) {
   const record = await prisma.thirdPartyContract.findUnique({
     where: { id },
@@ -81,6 +83,7 @@ export async function getContractById(id: string) {
   return record;
 }
 
+/** Lists 3PL contracts with optional supplier/status/serviceType filters and pagination. */
 export async function getContracts(filters: ContractFilters) {
   const where: Prisma.ThirdPartyContractWhereInput = {};
   if (filters.supplierId) where.supplierId = filters.supplierId;
@@ -109,6 +112,7 @@ export async function getContracts(filters: ContractFilters) {
 // Contract State Transitions
 // ---------------------------------------------------------------------------
 
+/** Transitions a draft contract to active status. */
 export async function activateContract(id: string) {
   const record = await prisma.thirdPartyContract.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyContract', id);
@@ -123,6 +127,7 @@ export async function activateContract(id: string) {
   });
 }
 
+/** Suspends an active contract. */
 export async function suspendContract(id: string) {
   const record = await prisma.thirdPartyContract.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyContract', id);
@@ -137,6 +142,7 @@ export async function suspendContract(id: string) {
   });
 }
 
+/** Terminates a contract that is not already terminated. */
 export async function terminateContract(id: string) {
   const record = await prisma.thirdPartyContract.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyContract', id);
@@ -155,13 +161,24 @@ export async function terminateContract(id: string) {
 // Charge CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new charge record against a 3PL contract. Rejects terminated contracts. */
 export async function createCharge(data: Prisma.ThirdPartyChargeUncheckedCreateInput) {
+  if (data.contractId) {
+    const contract = await prisma.thirdPartyContract.findUnique({
+      where: { id: data.contractId },
+    });
+    if (contract && contract.status === 'terminated') {
+      throw new Error('Cannot create charge on a terminated contract.');
+    }
+  }
+
   return prisma.thirdPartyCharge.create({
     data,
     include: CHARGE_DETAIL_INCLUDE,
   });
 }
 
+/** Lists 3PL charges with optional contract/status/type/warehouse filters and pagination. */
 export async function getCharges(filters: ChargeFilters) {
   const where: Prisma.ThirdPartyChargeWhereInput = {};
   if (filters.contractId) where.contractId = filters.contractId;
@@ -191,6 +208,7 @@ export async function getCharges(filters: ChargeFilters) {
 // Charge State Transitions
 // ---------------------------------------------------------------------------
 
+/** Approves a draft charge and records the approver. */
 export async function approveCharge(id: string, approvedById: string) {
   const record = await prisma.thirdPartyCharge.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyCharge', id);
@@ -205,6 +223,7 @@ export async function approveCharge(id: string, approvedById: string) {
   });
 }
 
+/** Marks an approved charge as invoiced. */
 export async function invoiceCharge(id: string) {
   const record = await prisma.thirdPartyCharge.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyCharge', id);
@@ -219,6 +238,7 @@ export async function invoiceCharge(id: string) {
   });
 }
 
+/** Marks an invoiced charge as paid. */
 export async function payCharge(id: string) {
   const record = await prisma.thirdPartyCharge.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyCharge', id);
@@ -233,6 +253,7 @@ export async function payCharge(id: string) {
   });
 }
 
+/** Flags a non-paid charge as disputed. */
 export async function disputeCharge(id: string) {
   const record = await prisma.thirdPartyCharge.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('ThirdPartyCharge', id);
@@ -254,6 +275,7 @@ export async function disputeCharge(id: string) {
 // Contract Summary
 // ---------------------------------------------------------------------------
 
+/** Returns an aggregated billing summary for a contract, broken down by charge status. */
 export async function getContractSummary(contractId: string): Promise<ContractSummary> {
   const contract = await prisma.thirdPartyContract.findUnique({ where: { id: contractId } });
   if (!contract) throw new NotFoundError('ThirdPartyContract', contractId);

@@ -9,7 +9,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { validate } from '../../../middleware/validate.js';
-import { sendSuccess, sendError } from '../../../utils/response.js';
+import { sendSuccess } from '../../../utils/response.js';
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ router.post('/calculate', validate(roiCalculateSchema), (req: Request, res: Resp
   try {
     const {
       monthlyOrders = 5000,
-      warehouseWorkers = 20,
+      warehouseWorkers: _warehouseWorkers = 20,
       avgPickTimeMinutes = 3.5,
       currentAccuracyPercent = 95,
       avgShippingCostPerOrder = 12,

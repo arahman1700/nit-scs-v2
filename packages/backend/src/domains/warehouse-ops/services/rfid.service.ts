@@ -42,6 +42,7 @@ const DETAIL_INCLUDE = {
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Registers a new RFID tag with EPC, type, and optional entity associations. */
 export async function registerTag(data: {
   epc: string;
   tagType: string;
@@ -56,6 +57,7 @@ export async function registerTag(data: {
   }) as unknown as RfidTag;
 }
 
+/** Retrieves an RFID tag by ID, throwing NotFoundError if missing. */
 export async function getTagById(id: string) {
   const tag = await prisma.rfidTag.findUnique({
     where: { id },
@@ -65,6 +67,7 @@ export async function getTagById(id: string) {
   return tag;
 }
 
+/** Retrieves an RFID tag by EPC code, throwing NotFoundError if missing. */
 export async function getTagByEpc(epc: string) {
   const tag = await prisma.rfidTag.findUnique({
     where: { epc },
@@ -74,6 +77,7 @@ export async function getTagByEpc(epc: string) {
   return tag;
 }
 
+/** Lists RFID tags with optional warehouse/type/active/LPN filters and pagination. */
 export async function getTags(filters: RfidFilters) {
   const where: Prisma.RfidTagWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -103,6 +107,7 @@ export async function getTags(filters: RfidFilters) {
 // Scan Event — update lastSeenAt + lastReaderId
 // ---------------------------------------------------------------------------
 
+/** Records a scan event, updating lastSeenAt and lastReaderId. Rejects deactivated tags. */
 export async function recordScan(epc: string, readerId: string) {
   const tag = await prisma.rfidTag.findUnique({ where: { epc } });
   if (!tag) throw new NotFoundError('RfidTag', epc);
@@ -122,6 +127,7 @@ export async function recordScan(epc: string, readerId: string) {
 // Bulk scan — process multiple EPCs from a reader
 // ---------------------------------------------------------------------------
 
+/** Processes multiple RFID scan events from a reader, returning found/not-found results. */
 export async function bulkScan(scans: { epc: string; readerId: string }[]) {
   const results: { epc: string; found: boolean; tagType?: string }[] = [];
 
@@ -145,6 +151,7 @@ export async function bulkScan(scans: { epc: string; readerId: string }[]) {
 // Associate / Dissociate
 // ---------------------------------------------------------------------------
 
+/** Associates an RFID tag with an LPN, setting tagType to 'lpn'. */
 export async function associateWithLpn(id: string, lpnId: string) {
   const tag = await prisma.rfidTag.findUnique({ where: { id } });
   if (!tag) throw new NotFoundError('RfidTag', id);
@@ -156,6 +163,7 @@ export async function associateWithLpn(id: string, lpnId: string) {
   });
 }
 
+/** Deactivates an RFID tag, preventing future scan events. */
 export async function deactivate(id: string) {
   const tag = await prisma.rfidTag.findUnique({ where: { id } });
   if (!tag) throw new NotFoundError('RfidTag', id);
@@ -171,6 +179,7 @@ export async function deactivate(id: string) {
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns active/inactive tag counts and breakdown by type, optionally filtered by warehouse. */
 export async function getStats(warehouseId?: string): Promise<RfidStats> {
   const where: Prisma.RfidTagWhereInput = {};
   if (warehouseId) where.warehouseId = warehouseId;

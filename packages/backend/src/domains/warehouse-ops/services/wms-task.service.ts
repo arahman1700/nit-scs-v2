@@ -51,6 +51,7 @@ const DETAIL_INCLUDE = {
 // CRUD
 // ---------------------------------------------------------------------------
 
+/** Creates a new WMS task (putaway, pick, pack, etc.) in 'pending' status. */
 export async function createTask(data: Prisma.WmsTaskUncheckedCreateInput): Promise<WmsTask> {
   return prisma.wmsTask.create({
     data,
@@ -58,6 +59,7 @@ export async function createTask(data: Prisma.WmsTaskUncheckedCreateInput): Prom
   }) as unknown as WmsTask;
 }
 
+/** Retrieves a single WMS task by ID, throwing NotFoundError if missing. */
 export async function getTaskById(id: string) {
   const record = await prisma.wmsTask.findUnique({
     where: { id },
@@ -67,6 +69,7 @@ export async function getTaskById(id: string) {
   return record;
 }
 
+/** Lists WMS tasks with optional warehouse/status/type/assignee/priority filters and pagination. */
 export async function getTasks(filters: WmsTaskFilters) {
   const where: Prisma.WmsTaskWhereInput = {};
   if (filters.warehouseId) where.warehouseId = filters.warehouseId;
@@ -97,12 +100,16 @@ export async function getTasks(filters: WmsTaskFilters) {
 // State transitions
 // ---------------------------------------------------------------------------
 
+/** Assigns a pending task to an employee, transitioning to 'assigned'. */
 export async function assignTask(id: string, employeeId: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
   if (record.status !== 'pending') {
     throw new Error(`Cannot assign task in status '${record.status}'. Must be 'pending'.`);
   }
+
+  const employee = await prisma.employee.findUnique({ where: { id: employeeId } });
+  if (!employee) throw new NotFoundError('Employee', employeeId);
 
   return prisma.wmsTask.update({
     where: { id },
@@ -115,6 +122,7 @@ export async function assignTask(id: string, employeeId: string): Promise<WmsTas
   }) as unknown as WmsTask;
 }
 
+/** Starts an assigned task, transitioning to 'in_progress' and recording startedAt. */
 export async function startTask(id: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
@@ -132,6 +140,7 @@ export async function startTask(id: string): Promise<WmsTask> {
   }) as unknown as WmsTask;
 }
 
+/** Completes an in-progress task, computing actualMins from startedAt. */
 export async function completeTask(id: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
@@ -157,6 +166,7 @@ export async function completeTask(id: string): Promise<WmsTask> {
   }) as unknown as WmsTask;
 }
 
+/** Cancels a task (allowed from any non-terminal state). */
 export async function cancelTask(id: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
@@ -171,6 +181,7 @@ export async function cancelTask(id: string): Promise<WmsTask> {
   }) as unknown as WmsTask;
 }
 
+/** Places an in-progress task on hold. */
 export async function holdTask(id: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
@@ -185,6 +196,7 @@ export async function holdTask(id: string): Promise<WmsTask> {
   }) as unknown as WmsTask;
 }
 
+/** Resumes an on-hold task back to 'in_progress'. */
 export async function resumeTask(id: string): Promise<WmsTask> {
   const record = await prisma.wmsTask.findUnique({ where: { id } });
   if (!record) throw new NotFoundError('WmsTask', id);
@@ -203,6 +215,7 @@ export async function resumeTask(id: string): Promise<WmsTask> {
 // My Tasks
 // ---------------------------------------------------------------------------
 
+/** Retrieves all tasks assigned to a specific employee, optionally filtered by status. */
 export async function getMyTasks(employeeId: string, status?: string) {
   const where: Prisma.WmsTaskWhereInput = { assignedToId: employeeId };
   if (status) where.status = status;
@@ -218,6 +231,7 @@ export async function getMyTasks(employeeId: string, status?: string) {
 // Statistics
 // ---------------------------------------------------------------------------
 
+/** Returns task counts by status and average completion time, optionally filtered by warehouse. */
 export async function getStats(warehouseId?: string): Promise<WmsTaskStats> {
   const where: Prisma.WmsTaskWhereInput = {};
   if (warehouseId) where.warehouseId = warehouseId;
@@ -259,6 +273,7 @@ export async function getStats(warehouseId?: string): Promise<WmsTaskStats> {
 // Bulk Assign
 // ---------------------------------------------------------------------------
 
+/** Assigns multiple pending tasks to a single employee in batch. */
 export async function bulkAssign(taskIds: string[], employeeId: string): Promise<WmsTask[]> {
   const now = new Date();
   const results: WmsTask[] = [];

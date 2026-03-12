@@ -26,6 +26,11 @@ vi.mock('../../../socket/setup.js', () => ({
 }));
 vi.mock('../../../utils/routeHelpers.js', () => ({ auditAndEmit: vi.fn() }));
 
+// Mock permission service to allow admin through requirePermission
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockResolvedValue(true),
+}));
+
 // ── Service mocks ─────────────────────────────────────────────────────────
 vi.mock('../services/bulk.service.js', () => ({
   executeBulkAction: vi.fn(),

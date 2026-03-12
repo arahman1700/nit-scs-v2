@@ -559,7 +559,7 @@ describe('asn.service', () => {
           qtyReceived: 100,
           uomId: 'uom-1',
           condition: 'good',
-          lotNumber: 'LOT-001',
+          notes: 'Lot: LOT-001',
         }),
       );
       expect(grnLines[1]).toEqual(
@@ -569,7 +569,7 @@ describe('asn.service', () => {
           qtyReceived: 50,
           uomId: 'uom-2',
           condition: 'good',
-          lotNumber: null,
+          notes: null,
         }),
       );
     });

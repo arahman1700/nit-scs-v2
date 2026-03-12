@@ -92,6 +92,9 @@ describe('wms-task.service', () => {
     vi.clearAllMocks();
     Object.assign(mockPrisma, createPrismaMock());
     (mockPrisma as Record<string, unknown>).wmsTask = createModelMock();
+
+    // assignTask validates the employee exists — provide a default mock
+    mockPrisma.employee.findUnique.mockResolvedValue({ id: EMP_ID, fullName: 'Test Employee' });
   });
 
   const wmsTask = () => (mockPrisma as unknown as { wmsTask: PrismaModelMock }).wmsTask;

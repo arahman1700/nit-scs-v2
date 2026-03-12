@@ -261,15 +261,11 @@ export async function receiveAsn(id: string, userId: string) {
             qtyReceived: Number(line.qtyExpected),
             uomId: itemUomMap.get(line.itemId) ?? line.itemId, // use item's default UOM
             condition: 'good',
-            lotNumber: line.lotNumber || null,
+            // lotNumber lives on AsnLine, not MrrvLine — stored via notes for traceability
+            notes: line.lotNumber ? `Lot: ${line.lotNumber}` : null,
           })),
         },
       },
-    });
-
-    await tx.asnLine.updateMany({
-      where: { asnId: id },
-      data: { qtyReceived: undefined },
     });
 
     for (const line of existing.lines) {

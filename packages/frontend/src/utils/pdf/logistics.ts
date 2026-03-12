@@ -1,5 +1,4 @@
 import { createNitPdf, addInfoSection, addTable, downloadPdf, getStartY } from './core';
-import type { TableColumn } from './core';
 
 // ---------------------------------------------------------------------------
 // Gate Pass

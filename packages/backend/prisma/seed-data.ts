@@ -93,7 +93,7 @@ async function main() {
   const whYard = await whType('Open Yard');
 
   // Employees – looked up by email from seed.ts
-  const empAdmin = await employee('admin@nit.sa');
+  const _empAdmin = await employee('admin@nit.sa');
   const empAhmed = await employee('ahmed@nit.sa'); // warehouse_staff
   const empMohammed = await employee('mohammed@nit.sa'); // logistics_coordinator
   const empKhalid = await employee('khalid@nit.sa'); // site_engineer

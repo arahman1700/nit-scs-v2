@@ -21,7 +21,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-empty-object-type': 'off',
       '@typescript-eslint/no-require-imports': 'off',
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
       'prefer-const': 'error',
       'no-var': 'error',
       'no-restricted-properties': [
@@ -55,6 +55,15 @@ export default tseslint.config(
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off'
+    },
+  },
+
+  // Relax rules for seed scripts and CLI scripts
+  {
+    files: ['**/prisma/seed*.ts', '**/scripts/**/*.ts', '**/scripts/**/*.js'],
+    rules: {
+      'no-console': 'off',
     },
   },
 
