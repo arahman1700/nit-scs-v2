@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
       pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
     });
     res.json(result);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to fetch RFID tags' });
   }
 });
@@ -29,7 +29,7 @@ router.get('/stats', async (req, res) => {
   try {
     const stats = await rfidService.getStats(req.query.warehouseId as string);
     res.json(stats);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to fetch RFID stats' });
   }
 });
@@ -61,9 +61,10 @@ router.post('/', async (req, res) => {
   try {
     const tag = await rfidService.registerTag(req.body);
     res.status(201).json(tag);
-  } catch (err: any) {
-    if (err.code === 'P2002') return res.status(409).json({ error: 'EPC already registered' });
-    res.status(400).json({ error: err.message || 'Failed to register tag' });
+  } catch (err: unknown) {
+    const e = err as Record<string, unknown>;
+    if (e.code === 'P2002') return res.status(409).json({ error: 'EPC already registered' });
+    res.status(400).json({ error: (err as Error).message || 'Failed to register tag' });
   }
 });
 
@@ -87,7 +88,7 @@ router.post('/bulk-scan', async (req, res) => {
     if (!Array.isArray(scans)) return res.status(400).json({ error: 'scans array required' });
     const results = await rfidService.bulkScan(scans);
     res.json({ results });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to process bulk scan' });
   }
 });

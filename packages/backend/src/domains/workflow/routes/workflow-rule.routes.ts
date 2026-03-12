@@ -132,10 +132,9 @@ router.put('/:id', async (req, res, next) => {
       updateData.nextRunAt = null;
     }
 
-     
     const rule = await prisma.workflowRule.update({
       where: { id },
-      data: updateData as any,
+      data: updateData as Record<string, unknown>,
     });
 
     invalidateRuleCache();

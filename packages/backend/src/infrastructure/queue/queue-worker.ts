@@ -6,7 +6,7 @@
  */
 
 import type { Job } from 'bullmq';
-import { QUEUE_NAMES, createWorker, moveToDeadLetter, type QueueName } from './bullmq.config.js';
+import { createWorker, moveToDeadLetter } from './bullmq.config.js';
 import { JOB_DEFINITIONS, JOB_LEGACY_MAP, type JobName } from './job-definitions.js';
 import { getAllJobs, type JobContext } from '../../utils/job-registry.js';
 import { logger } from '../../config/logger.js';

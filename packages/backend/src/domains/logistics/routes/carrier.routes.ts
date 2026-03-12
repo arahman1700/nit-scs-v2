@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
       pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
     });
     res.json(result);
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to fetch carriers' });
   }
 });
@@ -30,7 +30,7 @@ router.get('/best-rate', async (req, res) => {
     if (!mode) return res.status(400).json({ error: 'mode query parameter required' });
     const rates = await carrierService.findBestRate(mode as string, weightKg ? Number(weightKg) : undefined);
     res.json({ rates });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Failed to find rates' });
   }
 });
@@ -51,9 +51,10 @@ router.post('/', async (req, res) => {
   try {
     const carrier = await carrierService.createCarrier(req.body);
     res.status(201).json(carrier);
-  } catch (err: any) {
-    if (err.code === 'P2002') return res.status(409).json({ error: 'Service code already exists' });
-    res.status(400).json({ error: err.message || 'Failed to create carrier' });
+  } catch (err: unknown) {
+    const e = err as Record<string, unknown>;
+    if (e.code === 'P2002') return res.status(409).json({ error: 'Service code already exists' });
+    res.status(400).json({ error: (err as Error).message || 'Failed to create carrier' });
   }
 });
 

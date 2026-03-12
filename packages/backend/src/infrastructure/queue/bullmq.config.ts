@@ -16,7 +16,6 @@
  */
 
 import { Queue, Worker, type ConnectionOptions, type Processor } from 'bullmq';
-import { getRedis } from '../../config/redis.js';
 import { logger } from '../../config/logger.js';
 
 // ── Connection ──────────────────────────────────────────────────────────────

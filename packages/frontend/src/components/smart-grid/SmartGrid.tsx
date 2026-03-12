@@ -237,7 +237,7 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
       const state: ColumnState[] = table
         .getAllColumns()
         .filter(c => c.id !== '_select')
-        .map((c, i) => ({
+        .map((c, _i) => ({
           colId: c.id,
           width: c.getSize(),
           visible: c.getIsVisible(),

@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { authenticate } from '../../../middleware/auth.js';
 import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
-import { sendSuccess, sendCreated, sendError } from '../../../utils/response.js';
+import { sendSuccess, sendCreated } from '../../../utils/response.js';
 import { createAuditLog } from '../../audit/services/audit.service.js';
 import { clientIp } from '../../../utils/helpers.js';
 import {

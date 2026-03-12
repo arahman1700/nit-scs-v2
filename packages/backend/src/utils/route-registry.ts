@@ -395,8 +395,8 @@ export class RouteRegistry {
     if (segsA.length !== segsB.length) return null;
 
     // Walk segments; both must match at every position
-    let aHasParam = false;
-    let bHasParam = false;
+    let _aHasParam = false;
+    let _bHasParam = false;
     let hasStaticVsParam = false;
 
     for (let k = 0; k < segsA.length; k++) {
@@ -405,8 +405,8 @@ export class RouteRegistry {
       const aIsParam = isParamSegment(sa);
       const bIsParam = isParamSegment(sb);
 
-      if (aIsParam) aHasParam = true;
-      if (bIsParam) bHasParam = true;
+      if (aIsParam) _aHasParam = true;
+      if (bIsParam) _bHasParam = true;
 
       if (aIsParam || bIsParam) {
         // At least one is a param — they could match the same request
@@ -497,11 +497,11 @@ export class RouteRegistry {
   private logDiagnostics(): void {
     const totalRoutes = this.domains.reduce((n, d) => n + d.routes.length, 0);
 
-    console.log(`[RouteRegistry] Mounted ${this.domains.length} domain(s), ${totalRoutes} route(s).`);
-    console.log(`[RouteRegistry] Mount order: ${this.domains.map(d => d.name).join(' > ')}`);
+    console.info(`[RouteRegistry] Mounted ${this.domains.length} domain(s), ${totalRoutes} route(s).`);
+    console.info(`[RouteRegistry] Mount order: ${this.domains.map(d => d.name).join(' > ')}`);
 
     if (this.conflicts.length === 0) {
-      console.log('[RouteRegistry] No route shadowing conflicts detected.');
+      console.info('[RouteRegistry] No route shadowing conflicts detected.');
     } else {
       console.warn(
         `[RouteRegistry] ${this.conflicts.length} potential shadowing conflict(s) detected ` +
