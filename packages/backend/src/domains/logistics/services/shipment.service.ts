@@ -398,7 +398,7 @@ export async function cancel(id: string) {
 
   assertTransition('shipment', shipment.status, 'cancelled');
 
-  await safeStatusUpdate(prisma.shipment, shipment.id, shipment.status, { status: 'cancelled' });
+  await safeStatusUpdate(prisma.shipment, shipment.id, shipment.status, { status: 'cancelled' }, shipment.version);
   const updated = await prisma.shipment.findUnique({ where: { id: shipment.id } });
 
   eventBus.publish({
