@@ -298,14 +298,24 @@ export async function update(id: string, data: JoUpdateDto) {
   if (!existing) throw new NotFoundError('Job Order', id);
   if (existing.status !== 'draft') throw new BusinessRuleError('Only draft Job Orders can be updated');
 
-  const updated = await prisma.jobOrder.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.requestDate ? { requestDate: new Date(data.requestDate) } : {}),
-      ...(data.requiredDate ? { requiredDate: new Date(data.requiredDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.requestDate ? { requestDate: new Date(rest.requestDate) } : {}),
+    ...(rest.requiredDate ? { requiredDate: new Date(rest.requiredDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
+
+  if (version !== undefined) {
+    const result = await prisma.jobOrder.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.jobOrder.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.jobOrder.findUnique({ where: { id } });
   return { existing, updated };
 }
 

@@ -133,14 +133,24 @@ export async function update(id: string, data: MiUpdateDto) {
   if (!existing) throw new NotFoundError('MI', id);
   if (existing.status !== 'draft') throw new BusinessRuleError('Only draft MIs can be updated');
 
-  const updated = await prisma.mirv.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.requestDate ? { requestDate: new Date(data.requestDate) } : {}),
-      ...(data.requiredDate ? { requiredDate: new Date(data.requiredDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.requestDate ? { requestDate: new Date(rest.requestDate) } : {}),
+    ...(rest.requiredDate ? { requiredDate: new Date(rest.requiredDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
+
+  if (version !== undefined) {
+    const result = await prisma.mirv.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.mirv.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.mirv.findUnique({ where: { id } });
   return { existing, updated };
 }
 

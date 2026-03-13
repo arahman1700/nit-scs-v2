@@ -6,7 +6,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { getStockLevelsBatch } from '../../inventory/services/inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
@@ -139,14 +139,24 @@ export async function update(id: string, data: MrUpdateDto) {
   if (!existing) throw new NotFoundError('MR', id);
   if (existing.status !== 'draft') throw new BusinessRuleError('Only draft MRs can be updated');
 
-  const updated = await prisma.materialRequisition.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.requestDate ? { requestDate: new Date(data.requestDate) } : {}),
-      ...(data.requiredDate ? { requiredDate: new Date(data.requiredDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.requestDate ? { requestDate: new Date(rest.requestDate) } : {}),
+    ...(rest.requiredDate ? { requiredDate: new Date(rest.requiredDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
+
+  if (version !== undefined) {
+    const result = await prisma.materialRequisition.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.materialRequisition.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.materialRequisition.findUnique({ where: { id } });
   return { existing, updated };
 }
 

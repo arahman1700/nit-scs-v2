@@ -112,13 +112,23 @@ export async function update(id: string, data: MrnUpdateDto) {
   if (!existing) throw new NotFoundError('MRN', id);
   if (existing.status !== 'draft') throw new BusinessRuleError('Only draft MRNs can be updated');
 
-  const updated = await prisma.mrv.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.returnDate ? { returnDate: new Date(data.returnDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.returnDate ? { returnDate: new Date(rest.returnDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
+
+  if (version !== undefined) {
+    const result = await prisma.mrv.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.mrv.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.mrv.findUnique({ where: { id } });
   return { existing, updated };
 }
 

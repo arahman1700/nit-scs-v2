@@ -70,7 +70,19 @@ export async function update(id: string, data: QciUpdateDto) {
   const existing = await prisma.rfim.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('QCI', id);
 
-  const updated = await prisma.rfim.update({ where: { id }, data });
+  const { version, ...rest } = data;
+  const updateData = { ...rest, version: (existing.version ?? 0) + 1 };
+
+  if (version !== undefined) {
+    const result = await prisma.rfim.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.rfim.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.rfim.findUnique({ where: { id } });
   return { existing, updated };
 }
 

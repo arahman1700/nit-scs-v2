@@ -129,13 +129,23 @@ export async function update(id: string, data: DrUpdateDto) {
   const existing = await prisma.osdReport.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('DR', id);
 
-  const updated = await prisma.osdReport.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.reportDate ? { reportDate: new Date(data.reportDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.reportDate ? { reportDate: new Date(rest.reportDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
+
+  if (version !== undefined) {
+    const result = await prisma.osdReport.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.osdReport.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.osdReport.findUnique({ where: { id } });
   return { existing, updated };
 }
 
