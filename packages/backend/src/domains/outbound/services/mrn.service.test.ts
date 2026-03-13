@@ -206,7 +206,7 @@ describe('submit', () => {
     const result = await submit(MRN_ID);
 
     expect(assertTransition).toHaveBeenCalledWith('mrn', 'draft', 'pending');
-    expect(safeStatusUpdate).toHaveBeenCalledWith(mockPrisma.mrv, MRN_ID, 'draft', { status: 'pending' });
+    expect(safeStatusUpdate).toHaveBeenCalledWith(mockPrisma.mrv, MRN_ID, 'draft', { status: 'pending' }, undefined);
     expect(result.status).toBe('pending');
   });
 
@@ -246,6 +246,7 @@ describe('receive', () => {
         receivedById: USER_ID,
         receivedDate: expect.any(Date),
       }),
+      undefined,
     );
     expect(result).toEqual(received);
   });
@@ -274,7 +275,13 @@ describe('complete', () => {
 
     // complete() uses $transaction which passes the mock as tx
     expect(mockPrisma.$transaction).toHaveBeenCalledOnce();
-    expect(safeStatusUpdateTx).toHaveBeenCalledWith(mockPrisma.mrv, MRN_ID, 'received', { status: 'completed' });
+    expect(safeStatusUpdateTx).toHaveBeenCalledWith(
+      mockPrisma.mrv,
+      MRN_ID,
+      'received',
+      { status: 'completed' },
+      undefined,
+    );
 
     // addStockBatch receives both good (active) and damaged (blocked) items, plus the tx
     expect(addStockBatch).toHaveBeenCalledTimes(1);

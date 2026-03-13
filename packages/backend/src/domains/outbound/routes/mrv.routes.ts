@@ -15,6 +15,7 @@ export default createDocumentRouter({
   docType: 'mrv',
   tableName: 'mrv',
   resource: 'mrn',
+  requiresVersion: true,
   scopeMapping: { warehouseField: 'toWarehouseId', projectField: 'projectId', createdByField: 'returnedById' },
 
   list: mrvService.list,

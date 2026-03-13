@@ -20,6 +20,7 @@ const baseRouter = createDocumentRouter({
   docType: 'job-orders',
   tableName: 'job_orders',
   resource: 'jo',
+  requiresVersion: true,
   scopeMapping: { projectField: 'projectId', createdByField: 'requestedById' },
 
   list: joService.list,

@@ -15,6 +15,7 @@ export default createDocumentRouter({
   docType: 'stock-transfers',
   tableName: 'stock_transfers',
   resource: 'wt',
+  requiresVersion: true,
   // StockTransfer uses fromWarehouseId/toWarehouseId — the service handles OR logic
   scopeMapping: { warehouseField: 'fromWarehouseId', createdByField: 'requestedById' },
 

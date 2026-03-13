@@ -219,7 +219,7 @@ describe('update', () => {
   it('updates a draft Stock Transfer and returns existing + updated', async () => {
     const existing = makeStockTransfer({ status: 'draft' });
     const updated = { ...existing, notes: 'updated' };
-    mockPrisma.stockTransfer.findUnique.mockResolvedValue(existing);
+    mockPrisma.stockTransfer.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
     mockPrisma.stockTransfer.update.mockResolvedValue(updated);
 
     const result = await update(ST_ID, { notes: 'updated' } as any);

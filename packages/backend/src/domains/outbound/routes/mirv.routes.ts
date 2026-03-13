@@ -15,6 +15,7 @@ export default createDocumentRouter({
   docType: 'mirv',
   tableName: 'mirv',
   resource: 'mi',
+  requiresVersion: true,
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'requestedById' },
 
   list: mirvService.list,

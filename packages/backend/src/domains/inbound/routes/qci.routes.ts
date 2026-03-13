@@ -16,6 +16,7 @@ export default createDocumentRouter({
   docType: 'qci',
   tableName: 'rfim',
   resource: 'qci',
+  requiresVersion: true,
   scopeMapping: { warehouseField: 'warehouseId', createdByField: 'inspectorId' },
 
   list: qciService.list,

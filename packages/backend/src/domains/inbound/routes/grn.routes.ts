@@ -15,6 +15,7 @@ export default createDocumentRouter({
   docType: 'grn',
   tableName: 'mrrv',
   resource: 'grn',
+  requiresVersion: true,
   scopeMapping: { warehouseField: 'warehouseId', projectField: 'projectId', createdByField: 'receivedById' },
 
   list: grnService.list,

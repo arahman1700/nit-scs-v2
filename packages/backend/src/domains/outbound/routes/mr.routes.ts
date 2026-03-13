@@ -16,6 +16,7 @@ export default createDocumentRouter({
   docType: 'mr',
   tableName: 'material_requisitions',
   resource: 'mr',
+  requiresVersion: true,
   scopeMapping: { projectField: 'projectId', createdByField: 'requestedById' },
 
   list: mrService.list,

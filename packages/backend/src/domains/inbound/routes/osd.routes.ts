@@ -14,6 +14,7 @@ export default createDocumentRouter({
   docType: 'osd',
   tableName: 'osd_reports',
   resource: 'dr',
+  requiresVersion: true,
   scopeMapping: { warehouseField: 'warehouseId' },
 
   list: osdService.list,
