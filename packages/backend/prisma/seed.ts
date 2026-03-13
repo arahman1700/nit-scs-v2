@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { seedSemanticLayer } from './seed-semantic-layer.js';
+import { seedDemo } from './seed-demo.js';
 
 const prisma = new PrismaClient();
 
@@ -518,6 +519,13 @@ async function main() {
 
   // ── Semantic Analytics Layer ─────────────────────────────────────────
   await seedSemanticLayer(prisma);
+
+  // ── Demo Data (optional — set SEED_SKIP_DEMO=1 to skip) ─────────────
+  if (process.env.SEED_SKIP_DEMO !== '1') {
+    await seedDemo();
+  } else {
+    console.log('  [SEED_SKIP_DEMO=1] Skipping demo data.');
+  }
 
   console.log('\nSeed completed successfully.');
 }
