@@ -35,6 +35,11 @@ const updateSavedReportSchema = z.object({
   isPublic: z.boolean().optional(),
 });
 
+const scheduleReportSchema = z.object({
+  scheduleFrequency: z.enum(['daily', 'weekly', 'monthly', 'quarterly']).nullable().optional(),
+  scheduleRecipients: z.array(z.string().email()).optional(),
+});
+
 const router = Router();
 
 router.use(authenticate);
@@ -251,6 +256,66 @@ router.put('/:id', validate(updateSavedReportSchema), async (req: Request, res: 
     next(err);
   }
 });
+
+// ── PATCH /api/reports/saved/:id/schedule — set schedule ───────────────
+
+router.patch(
+  '/:id/schedule',
+  validate(scheduleReportSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+      const existing = await prisma.savedReport.findUnique({ where: { id } });
+      if (!existing) {
+        sendError(res, 404, 'Report not found');
+        return;
+      }
+      if (existing.ownerId !== userId && req.user!.systemRole !== 'admin') {
+        sendError(res, 403, 'Not authorized to schedule this report');
+        return;
+      }
+
+      const { scheduleFrequency, scheduleRecipients } = req.body as {
+        scheduleFrequency?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | null;
+        scheduleRecipients?: string[];
+      };
+
+      let nextRunAt: Date | null = null;
+      if (scheduleFrequency) {
+        const now = new Date();
+        switch (scheduleFrequency) {
+          case 'daily':
+            nextRunAt = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            break;
+          case 'weekly':
+            nextRunAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'monthly':
+            nextRunAt = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+            break;
+          case 'quarterly':
+            nextRunAt = new Date(now.getFullYear(), now.getMonth() + 3, now.getDate());
+            break;
+        }
+      }
+
+      const report = await prisma.savedReport.update({
+        where: { id },
+        data: {
+          scheduleFrequency: scheduleFrequency ?? null,
+          nextRunAt,
+          scheduleRecipients: scheduleRecipients ?? [],
+        },
+      });
+
+      sendSuccess(res, report);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ── DELETE /api/reports/saved/:id — delete report ───────────────────────
 

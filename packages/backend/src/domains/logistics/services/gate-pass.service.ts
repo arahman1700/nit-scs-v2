@@ -121,7 +121,7 @@ export async function submit(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'pending');
-  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'pending' });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'pending' }, gp.version);
   const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
@@ -140,7 +140,7 @@ export async function approve(id: string) {
   const gp = await prisma.gatePass.findUnique({ where: { id } });
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'approved');
-  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'approved' });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'approved' }, gp.version);
   const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
@@ -160,11 +160,17 @@ export async function release(id: string, securityOfficer?: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'released');
 
-  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, {
-    status: 'released',
-    exitTime: new Date(),
-    securityOfficer: securityOfficer ?? null,
-  });
+  await safeStatusUpdate(
+    prisma.gatePass,
+    gp.id,
+    gp.status,
+    {
+      status: 'released',
+      exitTime: new Date(),
+      securityOfficer: securityOfficer ?? null,
+    },
+    gp.version,
+  );
   const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
@@ -184,7 +190,7 @@ export async function returnPass(id: string) {
   if (!gp) throw new NotFoundError('Gate Pass', id);
   assertTransition(DOC_TYPE, gp.status, 'returned');
 
-  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'returned', returnTime: new Date() });
+  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, { status: 'returned', returnTime: new Date() }, gp.version);
   const updated = await prisma.gatePass.findUnique({ where: { id: gp.id } });
 
   eventBus.publish({
@@ -231,14 +237,20 @@ export async function verifyOutbound(
     ? `Verified ${body.itemChecks.length}/${gp.gatePassItems.length} items. ${body.verificationNotes || ''}`
     : body.verificationNotes || 'Gate verification completed';
 
-  await safeStatusUpdate(prisma.gatePass, gp.id, gp.status, {
-    status: 'released',
-    exitTime: new Date(),
-    securityOfficer: body.securityOfficer ?? null,
-    notes: gp.notes
-      ? `${gp.notes}\n[OUTBOUND VERIFICATION] ${verificationSummary}`
-      : `[OUTBOUND VERIFICATION] ${verificationSummary}`,
-  });
+  await safeStatusUpdate(
+    prisma.gatePass,
+    gp.id,
+    gp.status,
+    {
+      status: 'released',
+      exitTime: new Date(),
+      securityOfficer: body.securityOfficer ?? null,
+      notes: gp.notes
+        ? `${gp.notes}\n[OUTBOUND VERIFICATION] ${verificationSummary}`
+        : `[OUTBOUND VERIFICATION] ${verificationSummary}`,
+    },
+    gp.version,
+  );
   const updated = await prisma.gatePass.findUnique({ where: { id: gp.id }, include: DETAIL_INCLUDE });
 
   eventBus.publish({

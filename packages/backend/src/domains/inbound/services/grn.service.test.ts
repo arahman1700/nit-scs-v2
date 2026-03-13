@@ -164,9 +164,9 @@ describe('grn.service', () => {
   // ─────────────────────────────────────────────────────────────────────────
   describe('update', () => {
     it('should update a draft GRN', async () => {
-      const existing = { id: 'grn-1', status: 'draft' };
-      const updated = { id: 'grn-1', status: 'draft', notes: 'Updated' };
-      mockPrisma.mrrv.findUnique.mockResolvedValue(existing);
+      const existing = { id: 'grn-1', status: 'draft', version: 0 };
+      const updated = { id: 'grn-1', status: 'draft', notes: 'Updated', version: 1 };
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.mrrv.update.mockResolvedValue(updated);
 
       const result = await update('grn-1', { notes: 'Updated' });

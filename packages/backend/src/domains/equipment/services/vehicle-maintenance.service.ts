@@ -147,14 +147,20 @@ export async function complete(id: string, userId: string, body: VehicleMaintena
   assertTransition(DOC_TYPE, record.status, 'completed');
 
   const updated = await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.vehicleMaintenance, record.id, record.status, {
-      status: 'completed',
-      completedDate: new Date(),
-      performedById: userId,
-      workPerformed: body.workPerformed,
-      partsUsed: body.partsUsed ?? null,
-      cost: body.cost ?? null,
-    });
+    await safeStatusUpdateTx(
+      tx.vehicleMaintenance,
+      record.id,
+      record.status,
+      {
+        status: 'completed',
+        completedDate: new Date(),
+        performedById: userId,
+        workPerformed: body.workPerformed,
+        partsUsed: body.partsUsed ?? null,
+        cost: body.cost ?? null,
+      },
+      record.version,
+    );
     const result = await tx.vehicleMaintenance.findUnique({ where: { id: record.id }, include: DETAIL_INCLUDE });
 
     // Update the vehicle's next maintenance date if provided on the record
@@ -178,7 +184,7 @@ export async function cancel(id: string, userId: string) {
   if (!record) throw new NotFoundError('VehicleMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'cancelled');
 
-  await safeStatusUpdate(prisma.vehicleMaintenance, record.id, record.status, { status: 'cancelled' });
+  await safeStatusUpdate(prisma.vehicleMaintenance, record.id, record.status, { status: 'cancelled' }, record.version);
   const updated = await prisma.vehicleMaintenance.findUnique({ where: { id: record.id }, include: DETAIL_INCLUDE });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'cancelled' }, userId);

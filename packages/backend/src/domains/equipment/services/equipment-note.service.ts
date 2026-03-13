@@ -199,11 +199,17 @@ export async function confirmDeliveryNote(id: string, userId: string) {
   if (!note) throw new NotFoundError('EquipmentDeliveryNote', id);
   assertTransition('equipment_delivery_note', note.status, 'confirmed');
 
-  await safeStatusUpdate(prisma.equipmentDeliveryNote, id, note.status, {
-    status: 'confirmed',
-    confirmedAt: new Date(),
-    confirmedById: userId,
-  });
+  await safeStatusUpdate(
+    prisma.equipmentDeliveryNote,
+    id,
+    note.status,
+    {
+      status: 'confirmed',
+      confirmedAt: new Date(),
+      confirmedById: userId,
+    },
+    note.version,
+  );
   const updated = await prisma.equipmentDeliveryNote.findUnique({ where: { id } });
 
   emitDeliveryEvent('status_change', id, { from: note.status, to: 'confirmed' }, userId);
@@ -223,7 +229,7 @@ export async function cancelDeliveryNote(id: string, userId: string) {
     throw new BusinessRuleError('Cannot cancel delivery note that has active return notes');
   }
 
-  await safeStatusUpdate(prisma.equipmentDeliveryNote, id, note.status, { status: 'cancelled' });
+  await safeStatusUpdate(prisma.equipmentDeliveryNote, id, note.status, { status: 'cancelled' }, note.version);
   const updated = await prisma.equipmentDeliveryNote.findUnique({ where: { id } });
 
   emitDeliveryEvent('status_change', id, { from: note.status, to: 'cancelled' }, userId);
@@ -335,11 +341,17 @@ export async function inspectReturnNote(id: string, userId: string) {
   if (!note) throw new NotFoundError('EquipmentReturnNote', id);
   assertTransition('equipment_return_note', note.status, 'inspected');
 
-  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
-    status: 'inspected',
-    inspectedAt: new Date(),
-    inspectedById: userId,
-  });
+  await safeStatusUpdate(
+    prisma.equipmentReturnNote,
+    id,
+    note.status,
+    {
+      status: 'inspected',
+      inspectedAt: new Date(),
+      inspectedById: userId,
+    },
+    note.version,
+  );
   const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent('status_change', id, { from: note.status, to: 'inspected' }, userId);
@@ -380,13 +392,19 @@ export async function confirmReturnNote(id: string, userId: string) {
     }
   }
 
-  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
-    status: 'confirmed',
-    confirmedAt: new Date(),
-    confirmedById: userId,
-    actualDays,
-    ...(actualCost !== null && actualCost !== undefined ? { actualCost } : {}),
-  });
+  await safeStatusUpdate(
+    prisma.equipmentReturnNote,
+    id,
+    note.status,
+    {
+      status: 'confirmed',
+      confirmedAt: new Date(),
+      confirmedById: userId,
+      actualDays,
+      ...(actualCost !== null && actualCost !== undefined ? { actualCost } : {}),
+    },
+    note.version,
+  );
   const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent(
@@ -409,10 +427,16 @@ export async function disputeReturnNote(id: string, userId: string, reason?: str
   if (!note) throw new NotFoundError('EquipmentReturnNote', id);
   assertTransition('equipment_return_note', note.status, 'disputed');
 
-  await safeStatusUpdate(prisma.equipmentReturnNote, id, note.status, {
-    status: 'disputed',
-    ...(reason ? { notes: reason } : {}),
-  });
+  await safeStatusUpdate(
+    prisma.equipmentReturnNote,
+    id,
+    note.status,
+    {
+      status: 'disputed',
+      ...(reason ? { notes: reason } : {}),
+    },
+    note.version,
+  );
   const updated = await prisma.equipmentReturnNote.findUnique({ where: { id } });
 
   emitReturnEvent('status_change', id, { from: note.status, to: 'disputed', reason }, userId);

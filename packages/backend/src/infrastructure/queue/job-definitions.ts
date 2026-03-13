@@ -65,6 +65,10 @@ export const JOB_NAMES = {
   /** Check vehicle maintenance due (usage-based) */
   EAM_VEHICLE_MAINTENANCE: 'EAM_VEHICLE_MAINTENANCE',
 
+  // ── SCM: Customs & Logistics ───────────────────────────────────────────
+  /** Customs document expiry warnings (7/3/1 day) */
+  SCM_CUSTOMS_EXPIRY: 'SCM_CUSTOMS_EXPIRY',
+
   // ── ONT: Order & Notification Transport ───────────────────────────────
   /** Retry failed email sends */
   ONT_EMAIL_RETRY: 'ONT_EMAIL_RETRY',

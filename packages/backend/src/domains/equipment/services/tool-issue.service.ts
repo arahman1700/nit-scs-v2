@@ -121,12 +121,18 @@ export async function returnTool(id: string, returnData: ToolIssueReturnDto, use
   assertTransition(DOC_TYPE, issue.status, 'returned');
 
   const result = await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.toolIssue, issue.id, issue.status, {
-      status: 'returned',
-      actualReturnDate: new Date(),
-      returnCondition: returnData.returnCondition,
-      returnVerifiedById: userId,
-    });
+    await safeStatusUpdateTx(
+      tx.toolIssue,
+      issue.id,
+      issue.status,
+      {
+        status: 'returned',
+        actualReturnDate: new Date(),
+        returnCondition: returnData.returnCondition,
+        returnVerifiedById: userId,
+      },
+      issue.version,
+    );
     const updated = await tx.toolIssue.findUnique({ where: { id: issue.id } });
 
     // Update tool condition based on return condition

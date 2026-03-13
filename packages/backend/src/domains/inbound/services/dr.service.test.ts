@@ -185,9 +185,9 @@ describe('dr.service', () => {
   // ─────────────────────────────────────────────────────────────────────────
   describe('update', () => {
     it('should update an existing DR', async () => {
-      const existing = { id: 'osd-1', status: 'draft' };
-      const updated = { id: 'osd-1', status: 'draft', poNumber: 'PO-123' };
-      mockPrisma.osdReport.findUnique.mockResolvedValue(existing);
+      const existing = { id: 'osd-1', status: 'draft', version: 0 };
+      const updated = { id: 'osd-1', status: 'draft', poNumber: 'PO-123', version: 1 };
+      mockPrisma.osdReport.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.osdReport.update.mockResolvedValue(updated);
 
       const result = await update('osd-1', { poNumber: 'PO-123' });

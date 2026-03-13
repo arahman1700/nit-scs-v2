@@ -157,7 +157,7 @@ async function createGrnRecord(headerData: Omit<GrnCreateDto, 'lines'>, lines: G
   });
 }
 
-export async function update(id: string, data: GrnUpdateDto) {
+export async function update(id: string, data: GrnUpdateDto & { version?: number }) {
   const existing = await prisma.mrrv.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('GRN', id);
   if (existing.status !== 'draft') {
@@ -173,6 +173,7 @@ export async function update(id: string, data: GrnUpdateDto) {
 
   if (version !== undefined) {
     const result = await prisma.mrrv.updateMany({ where: { id, version }, data: updateData });
+
     if (result.count === 0) {
       throw new ConflictError('Document was modified by another user. Please refresh and try again.');
     }

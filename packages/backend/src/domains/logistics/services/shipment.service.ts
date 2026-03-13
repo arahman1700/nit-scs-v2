@@ -146,7 +146,7 @@ export async function updateStatus(
   if (extra.etaPort) updateData.etaPort = new Date(extra.etaPort);
   if (extra.actualArrivalDate) updateData.actualArrivalDate = new Date(extra.actualArrivalDate);
 
-  await safeStatusUpdate(prisma.shipment, id, existing.status, updateData);
+  await safeStatusUpdate(prisma.shipment, id, existing.status, updateData, existing.version);
   const updated = await prisma.shipment.findUnique({ where: { id } });
 
   eventBus.publish({
@@ -245,10 +245,16 @@ export async function deliver(id: string, userId?: string) {
   assertTransition('shipment', shipment.status, 'delivered');
 
   const result = await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.shipment, shipment.id, shipment.status, {
-      status: 'delivered',
-      deliveryDate: new Date(),
-    });
+    await safeStatusUpdateTx(
+      tx.shipment,
+      shipment.id,
+      shipment.status,
+      {
+        status: 'delivered',
+        deliveryDate: new Date(),
+      },
+      shipment.version,
+    );
     const updated = await tx.shipment.findUnique({ where: { id: shipment.id } });
 
     let grnId: string | null = null;

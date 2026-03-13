@@ -146,7 +146,13 @@ export async function submit(id: string) {
     throw new BusinessRuleError('Cannot submit rental contract with no line items');
   }
 
-  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'pending_approval' });
+  await safeStatusUpdate(
+    prisma.rentalContract,
+    contract.id,
+    contract.status,
+    { status: 'pending_approval' },
+    contract.version,
+  );
   const updated = await prisma.rentalContract.findUnique({ where: { id: contract.id } });
 
   emitEvent('status_change', contract.id, { from: contract.status, to: 'pending_approval' });
@@ -159,7 +165,7 @@ export async function approve(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'active');
 
-  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'active' });
+  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'active' }, contract.version);
   const updated = await prisma.rentalContract.findUnique({ where: { id: contract.id } });
 
   emitEvent('status_change', contract.id, { from: contract.status, to: 'active' });
@@ -172,7 +178,7 @@ export async function activate(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'active');
 
-  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'active' });
+  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'active' }, contract.version);
   const updated = await prisma.rentalContract.findUnique({ where: { id: contract.id } });
 
   emitEvent('status_change', contract.id, { from: contract.status, to: 'active' });
@@ -185,10 +191,16 @@ export async function extend(id: string, newEndDate: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'extended');
 
-  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, {
-    status: 'extended',
-    endDate: new Date(newEndDate),
-  });
+  await safeStatusUpdate(
+    prisma.rentalContract,
+    contract.id,
+    contract.status,
+    {
+      status: 'extended',
+      endDate: new Date(newEndDate),
+    },
+    contract.version,
+  );
   const updated = await prisma.rentalContract.findUnique({ where: { id: contract.id } });
 
   emitEvent('status_change', contract.id, { from: contract.status, to: 'extended', newEndDate });
@@ -201,7 +213,13 @@ export async function terminate(id: string) {
   if (!contract) throw new NotFoundError('RentalContract', id);
   assertTransition(DOC_TYPE, contract.status, 'terminated');
 
-  await safeStatusUpdate(prisma.rentalContract, contract.id, contract.status, { status: 'terminated' });
+  await safeStatusUpdate(
+    prisma.rentalContract,
+    contract.id,
+    contract.status,
+    { status: 'terminated' },
+    contract.version,
+  );
   const updated = await prisma.rentalContract.findUnique({ where: { id: contract.id } });
 
   emitEvent('status_change', contract.id, { from: contract.status, to: 'terminated' });
