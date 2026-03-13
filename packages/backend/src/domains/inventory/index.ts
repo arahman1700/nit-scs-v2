@@ -6,6 +6,7 @@ import scrapRoutes from './routes/scrap.routes.js';
 import sscRoutes from './routes/ssc.routes.js';
 import expiryAlertRoutes from './routes/expiry-alert.routes.js';
 import abcAnalysisRoutes from './routes/abc-analysis.routes.js';
+import reorderSuggestionsRoutes from './routes/reorder-suggestions.routes.js';
 
 export function registerInventoryRoutes(router: Router) {
   router.use('/bin-cards', binCardRoutes);
@@ -14,5 +15,6 @@ export function registerInventoryRoutes(router: Router) {
   router.use('/scrap', scrapRoutes);
   router.use('/ssc', sscRoutes);
   router.use('/inventory', expiryAlertRoutes);
+  router.use('/inventory', reorderSuggestionsRoutes);
   router.use('/abc-analysis', abcAnalysisRoutes);
 }
