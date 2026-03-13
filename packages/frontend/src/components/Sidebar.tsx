@@ -6,6 +6,7 @@ import { SECTION_NAVIGATION } from '@/config/navigation';
 import { useNavigation } from '@/domains/system/hooks/useNavigation';
 import { LogOut, Search, ChevronRight } from 'lucide-react';
 import { getIcon } from '@/config/iconRegistry';
+import { useDirection } from '@/contexts/DirectionContext';
 
 // ── LocalStorage helpers ─────────────────────────────────────────────────
 
@@ -97,17 +98,23 @@ const SidebarNavItem: React.FC<{
 }> = ({ item, isActive, isOpen, indent = false }) => {
   const Icon = getIcon(item.icon);
   const active = isActive(item.path);
+  const { isRTL } = useDirection();
+
+  // Active indicator border flips side in RTL
+  const activeClass = isRTL
+    ? 'bg-nesma-primary/30 text-nesma-secondary font-medium border-r-[3px] border-nesma-secondary pr-[9px] pl-3'
+    : 'bg-nesma-primary/30 text-nesma-secondary font-medium border-l-[3px] border-nesma-secondary pl-[9px]';
+  const inactiveClass = isRTL
+    ? 'text-gray-400 hover:text-white hover:bg-white/5 border-r-[3px] border-transparent pr-[9px] pl-3'
+    : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent pl-[9px]';
+  const indentClass = indent && isOpen ? (isRTL ? 'mr-2' : 'ml-2') : '';
 
   return (
     <Link
       to={item.path || '#'}
       className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] transition-all duration-200 group relative
-        ${indent && isOpen ? 'ml-2' : ''}
-        ${
-          active
-            ? 'bg-nesma-primary/30 text-nesma-secondary font-medium border-l-[3px] border-nesma-secondary pl-[9px]'
-            : 'text-gray-400 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent pl-[9px]'
-        }
+        ${indentClass}
+        ${active ? activeClass : inactiveClass}
       `}
     >
       {Icon && (
@@ -120,7 +127,7 @@ const SidebarNavItem: React.FC<{
         <>
           <span className="truncate">{item.label}</span>
           {item.badge !== undefined && item.badge > 0 && (
-            <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
+            <span className="ms-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center leading-none">
               {item.badge > 99 ? '99+' : item.badge}
             </span>
           )}
@@ -139,7 +146,7 @@ const SidebarSubGroup: React.FC<{
 }> = ({ group, isActive, isOpen }) => (
   <div className="mt-1">
     {isOpen && (
-      <div className="pl-6 pt-2 pb-1">
+      <div className="ps-6 pt-2 pb-1">
         <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide">{group.label}</span>
       </div>
     )}
@@ -164,6 +171,7 @@ const SidebarSection: React.FC<{
   const isAlwaysExpanded = section.alwaysExpanded === true;
   const shouldExpand = isAlwaysExpanded || isExpanded;
   const itemCount = getSectionItemCount(section);
+  const { isRTL } = useDirection();
 
   return (
     <div className="mb-1">
@@ -190,7 +198,8 @@ const SidebarSection: React.FC<{
             {!isAlwaysExpanded && (
               <ChevronRight
                 size={14}
-                className={`text-gray-400 transition-transform duration-300 ${shouldExpand ? 'rotate-90' : ''}`}
+                className={`text-gray-400 transition-transform duration-300
+                  ${isRTL ? (shouldExpand ? '-rotate-90' : 'rotate-180') : shouldExpand ? 'rotate-90' : ''}`}
               />
             )}
           </div>
@@ -226,6 +235,7 @@ const SidebarSection: React.FC<{
 
 export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogout, userName }) => {
   const isActive = useActiveCheck();
+  const { isRTL } = useDirection();
 
   // Use dynamic nav from backend if available, fall back to static config
   const { data: dynamicNav } = useNavigation();
@@ -286,7 +296,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
 
   return (
     <aside
-      className={`${isOpen ? 'w-72' : 'w-20 hidden lg:flex'} transition-all duration-500 ease-in-out flex flex-col z-50 h-full border-r border-white/5 bg-nesma-dark/95 backdrop-blur-xl shadow-2xl`}
+      className={`${isOpen ? 'w-72' : 'w-20 hidden lg:flex'} transition-all duration-500 ease-in-out flex flex-col z-50 h-full bg-nesma-dark/95 backdrop-blur-xl shadow-2xl
+        ${isRTL ? 'border-l border-white/5' : 'border-r border-white/5'}`}
     >
       {/* ── Logo Area (compact) ── */}
       <div className="h-16 flex items-center px-4 border-b border-white/5 relative overflow-hidden">
@@ -315,7 +326,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ role, isOpen, setRole, onLogou
           <div className="flex items-center gap-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 text-[13px] cursor-pointer hover:bg-white/8 hover:border-white/15 transition-all">
             <Search size={14} />
             <span>Search...</span>
-            <kbd className="ml-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-400">&#8984;K</kbd>
+            <kbd className="ms-auto text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-gray-400">&#8984;K</kbd>
           </div>
         </div>
       )}

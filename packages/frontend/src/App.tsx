@@ -1,11 +1,14 @@
 import { BrowserRouter } from 'react-router-dom';
 import { AuthGuard } from '@/components/AuthGuard';
+import { DirectionProvider } from '@/contexts/DirectionContext';
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthGuard />
-    </BrowserRouter>
+    <DirectionProvider>
+      <BrowserRouter>
+        <AuthGuard />
+      </BrowserRouter>
+    </DirectionProvider>
   );
 }
 

@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 import { BREADCRUMB_LABELS } from '@/config/breadcrumbMap';
+import { useDirection } from '@/contexts/DirectionContext';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -14,6 +15,7 @@ function labelFor(segment: string): string {
 
 export const Breadcrumbs: React.FC = memo(() => {
   const { pathname } = useLocation();
+  const { isRTL } = useDirection();
   const segments = pathname.split('/').filter(Boolean);
 
   // Hide on root dashboard pages (single segment like /admin, /warehouse)
@@ -35,7 +37,10 @@ export const Breadcrumbs: React.FC = memo(() => {
 
         return (
           <React.Fragment key={path}>
-            <ChevronRight size={12} className="text-gray-400 flex-shrink-0" />
+            <ChevronRight
+              size={12}
+              className={`text-gray-400 flex-shrink-0 transition-transform ${isRTL ? 'rotate-180' : ''}`}
+            />
             {isLast ? (
               <span aria-current="page" className="text-white font-medium truncate max-w-[200px]">
                 {label}

@@ -102,6 +102,124 @@
   }
 }
 
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RTL (Right-to-Left) Arabic support
+   Applied when <html dir="rtl"> is set by DirectionContext
+   ───────────────────────────────────────────── */
+
+/* Arabic font stack — load Noto Kufi or fall back to system Arabic fonts */
+[dir='rtl'] body {
+  font-family: 'Noto Kufi Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* Sidebar: flip from left to right */
+[dir='rtl'] .sidebar-fixed {
+  left: auto;
+  right: 0;
+}
+
+/* Sidebar slide direction: in RTL mode the sidebar is on the right */
+[dir='rtl'] .sidebar-translate-hidden {
+  transform: translateX(100%);
+}
+
+[dir='rtl'] .sidebar-translate-visible {
+  transform: translateX(0);
+}
+
+/* Skip-nav link: flip to top-right */
+[dir='rtl'] a[href='#main-content'] {
+  left: auto;
+  right: 8px;
+}
+
+/* Reverse flex row direction for top-level header children */
+[dir='rtl'] .header-flex {
+  flex-direction: row-reverse;
+}
+
+/* Breadcrumb chevrons: flip 180° */
+[dir='rtl'] .breadcrumb-chevron {
+  transform: scaleX(-1);
+}
+
+/* Nav item active indicator: move left border to right */
+[dir='rtl'] .nav-item-active,
+[dir='rtl'] .nav-item-inactive {
+  border-left: none;
+  border-right-width: 3px;
+  border-right-style: solid;
+  padding-left: 12px;
+  padding-right: 9px;
+}
+
+[dir='rtl'] .nav-item-active {
+  border-right-color: theme('colors.nesma-secondary', #80D1E9);
+}
+
+[dir='rtl'] .nav-item-inactive {
+  border-right-color: transparent;
+}
+
+/* Chevron rotation in sidebar sections — flip direction */
+[dir='rtl'] .sidebar-chevron {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .sidebar-chevron.expanded {
+  transform: scaleX(-1) rotate(90deg);
+}
+
+/* Indent: flip ml-2 → mr-2 for sub-items */
+[dir='rtl'] .sidebar-indent {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* Sub-group label: flip pl-6 → pr-6 */
+[dir='rtl'] .sidebar-subgroup-label {
+  padding-left: 0;
+  padding-right: 1.5rem;
+}
+
+/* Search input inside sidebar — icon on right in RTL */
+[dir='rtl'] .sidebar-search-kbd {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Badge on nav items — flip ml-auto → mr-auto */
+[dir='rtl'] .nav-badge {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Glass-card: no physical changes needed — uses border, not border-left */
+
+/* Forms: text align start = right in RTL */
+[dir='rtl'] input,
+[dir='rtl'] textarea,
+[dir='rtl'] select {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Toast slide-in: flip for RTL — slide from left */
+[dir='rtl'] .animate-slide-in-right {
+  animation: slide-in-left 0.25s ease-out;
+}
+
 /* Idaratech electric gradient text */
 @keyframes electric-gradient {
   0% { background-position: 0% 50%; }

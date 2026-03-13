@@ -2,6 +2,9 @@ import type { Config } from 'tailwindcss';
 
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  // Enable built-in RTL/LTR variants (Tailwind CSS 3.3+)
+  // Use rtl: and ltr: prefixes in className for direction-aware utilities
+  // e.g. rtl:ml-0 rtl:mr-4, rtl:rotate-180
   theme: {
     extend: {
       colors: {

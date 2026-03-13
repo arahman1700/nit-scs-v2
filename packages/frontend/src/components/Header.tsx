@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Settings } from 'lucide-react';
+import { Search, Settings, Globe } from 'lucide-react';
 import type { User, UserRole } from '@nit-scs-v2/shared/types';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
 import { GlobalSearchDropdown } from '@/components/GlobalSearchDropdown';
 import { useGlobalSearch } from '@/domains/system/hooks/useSearch';
 import { useClickOutside } from '@/hooks/useClickOutside';
+import { useDirection } from '@/contexts/DirectionContext';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -16,6 +17,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, user, role: _role }) => {
   const navigate = useNavigate();
+  const { dir, toggleDirection } = useDirection();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +89,19 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar: _toggleSidebar, u
         </button>
 
         <div className="flex items-center gap-1 md:gap-2">
+          {/* Direction toggle — LTR / RTL */}
+          <button
+            onClick={toggleDirection}
+            className="p-2 rounded-full hover:bg-white/10 transition-colors text-gray-300 hover:text-white relative"
+            aria-label={dir === 'ltr' ? 'Switch to Arabic (RTL)' : 'Switch to English (LTR)'}
+            title={dir === 'ltr' ? 'Switch to Arabic (RTL)' : 'Switch to English (LTR)'}
+          >
+            <Globe size={20} />
+            <span className="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold leading-none bg-nesma-primary text-white rounded px-0.5">
+              {dir === 'ltr' ? 'AR' : 'EN'}
+            </span>
+          </button>
+
           {/* Notifications */}
           <NotificationCenter />
 

@@ -17,6 +17,7 @@ import { NAVIGATION_LINKS, SECTION_NAVIGATION } from '@/config/navigation';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AI_ENABLED } from '@/modules/ai/index';
 import type { NavItem, NavSection } from '@nit-scs-v2/shared/types';
+import { useDirection } from '@/contexts/DirectionContext';
 
 const AiChatWidget = AI_ENABLED
   ? React.lazy(() => import('@/components/ai/AiChatWidget').then(m => ({ default: m.AiChatWidget })))
@@ -34,6 +35,7 @@ export const MainLayout: React.FC<{
   const [showShortcuts, setShowShortcuts] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isRTL } = useDirection();
 
   // Real-time: invalidate React Query caches on Socket.IO events
   useRealtimeSync();
@@ -153,7 +155,7 @@ export const MainLayout: React.FC<{
       {/* Skip Navigation — Accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-nesma-primary focus:text-white focus:rounded-lg focus:text-sm"
+        className={`sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:px-4 focus:py-2 focus:bg-nesma-primary focus:text-white focus:rounded-lg focus:text-sm ${isRTL ? 'focus:right-2' : 'focus:left-2'}`}
       >
         Skip to main content
       </a>
@@ -176,9 +178,12 @@ export const MainLayout: React.FC<{
         ></div>
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar — position flips in RTL (left → right) */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out h-full`}
+        className={`fixed inset-y-0 z-50 transform transition-transform duration-300 ease-in-out h-full
+          ${isRTL ? 'right-0' : 'left-0'}
+          ${isSidebarOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'}
+          lg:relative lg:translate-x-0 lg:right-auto lg:left-auto`}
       >
         <Sidebar
           role={role}
