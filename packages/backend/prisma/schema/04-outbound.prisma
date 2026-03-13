@@ -26,6 +26,7 @@ model Mirv {
   qcSignatureId       String?   @map("qc_signature_id") @db.Uuid
   gatePassAutoCreated Boolean   @default(false) @map("gate_pass_auto_created")
   pickWaveId          String?   @map("pick_wave_id") @db.VarChar(50)
+  version             Int       @default(0)
   createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -103,6 +104,7 @@ model Mrv {
   receivedDate    DateTime? @map("received_date") @db.Timestamptz
   originalMirvId  String?   @map("original_mirv_id") @db.Uuid
   notes           String?
+  version         Int       @default(0)
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -266,6 +268,7 @@ model MaterialRequisition {
   stockVerificationSla DateTime? @map("stock_verification_sla") @db.Timestamptz
   slaBreached          Boolean   @default(false) @map("sla_breached")
   convertedToImsfId    String?   @map("converted_to_imsf_id") @db.Uuid
+  version              Int       @default(0)
   createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -338,6 +341,7 @@ model StockTransfer {
   transportJoId     String?   @map("transport_jo_id") @db.Uuid
   gatePassId        String?   @map("gate_pass_id") @db.Uuid
   notes             String?
+  version           Int       @default(0)
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 

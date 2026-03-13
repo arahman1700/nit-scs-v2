@@ -38,6 +38,7 @@ model JobOrder {
   shiftStartTime        DateTime? @map("shift_start_time") @db.Timestamptz
   completedById         String?   @map("completed_by_id") @db.Uuid
   gatePassAutoCreated   Boolean   @default(false) @map("gate_pass_auto_created")
+  version               Int       @default(0)
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 

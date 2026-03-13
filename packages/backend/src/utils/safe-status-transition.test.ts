@@ -16,7 +16,7 @@ describe('safeStatusUpdate', () => {
       status: 'submitted',
     });
 
-    expect(result).toBe(1);
+    expect(result).toEqual({ count: 1, newVersion: undefined });
     expect(delegate.updateMany).toHaveBeenCalledWith({
       where: { id: 'rec-1', status: 'draft' },
       data: { status: 'submitted' },
@@ -69,6 +69,52 @@ describe('safeStatusUpdate', () => {
     expect(callArgs.where).toHaveProperty('id', 'abc-123');
     expect(callArgs.where).toHaveProperty('status', 'approved');
   });
+
+  // --- Optimistic locking (version) tests ---
+
+  it('includes version in WHERE and increments in data when expectedVersion provided', async () => {
+    const delegate = createMockDelegate(1);
+
+    const result = await safeStatusUpdate(delegate, 'rec-1', 'draft', { status: 'submitted' }, 3);
+
+    expect(result).toEqual({ count: 1, newVersion: 4 });
+    expect(delegate.updateMany).toHaveBeenCalledWith({
+      where: { id: 'rec-1', status: 'draft', version: 3 },
+      data: { status: 'submitted', version: 4 },
+    });
+  });
+
+  it('returns newVersion as undefined when expectedVersion is not provided', async () => {
+    const delegate = createMockDelegate(1);
+
+    const result = await safeStatusUpdate(delegate, 'rec-1', 'draft', { status: 'submitted' });
+
+    expect(result.newVersion).toBeUndefined();
+  });
+
+  it('throws version-specific ConflictError when expectedVersion provided and count=0', async () => {
+    const delegate = createMockDelegate(0);
+
+    await expect(safeStatusUpdate(delegate, 'rec-1', 'draft', { status: 'submitted' }, 2)).rejects.toThrow(
+      ConflictError,
+    );
+
+    await expect(safeStatusUpdate(delegate, 'rec-1', 'draft', { status: 'submitted' }, 2)).rejects.toThrow(
+      /Document was modified by another user/,
+    );
+  });
+
+  it('handles expectedVersion of 0 correctly', async () => {
+    const delegate = createMockDelegate(1);
+
+    const result = await safeStatusUpdate(delegate, 'rec-1', 'draft', { status: 'submitted' }, 0);
+
+    expect(result).toEqual({ count: 1, newVersion: 1 });
+    expect(delegate.updateMany).toHaveBeenCalledWith({
+      where: { id: 'rec-1', status: 'draft', version: 0 },
+      data: { status: 'submitted', version: 1 },
+    });
+  });
 });
 
 describe('safeStatusUpdateTx', () => {
@@ -79,7 +125,7 @@ describe('safeStatusUpdateTx', () => {
       status: 'submitted',
     });
 
-    expect(result).toBe(1);
+    expect(result).toEqual({ count: 1, newVersion: undefined });
     expect(txDelegate.updateMany).toHaveBeenCalledWith({
       where: { id: 'rec-1', status: 'draft' },
       data: { status: 'submitted' },
@@ -92,5 +138,17 @@ describe('safeStatusUpdateTx', () => {
     await expect(safeStatusUpdateTx(txDelegate, 'rec-1', 'draft', { status: 'submitted' })).rejects.toThrow(
       ConflictError,
     );
+  });
+
+  it('supports version-based optimistic locking in transactions', async () => {
+    const txDelegate = createMockDelegate(1);
+
+    const result = await safeStatusUpdateTx(txDelegate, 'rec-1', 'draft', { status: 'submitted' }, 5);
+
+    expect(result).toEqual({ count: 1, newVersion: 6 });
+    expect(txDelegate.updateMany).toHaveBeenCalledWith({
+      where: { id: 'rec-1', status: 'draft', version: 5 },
+      data: { status: 'submitted', version: 6 },
+    });
   });
 });

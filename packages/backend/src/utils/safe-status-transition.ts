@@ -6,10 +6,22 @@
  * current status. If another request has already changed the status,
  * `updateMany` returns { count: 0 } and we throw a conflict error.
  *
+ * Supports optional optimistic locking via a `version` column.
+ * When `expectedVersion` is provided, the WHERE clause also checks the
+ * version and the data payload increments it atomically.
+ *
  * Usage in services:
  *   const current = await prisma.mrrv.findUnique({ where: { id } });
  *   assertTransition('grn', current.status, 'pending_qc');
  *   await safeStatusUpdate(prisma.mrrv, id, current.status, { status: 'pending_qc' });
+ *
+ * With optimistic locking:
+ *   const current = await prisma.mrrv.findUnique({ where: { id } });
+ *   assertTransition('grn', current.status, 'pending_qc');
+ *   const { newVersion } = await safeStatusUpdate(
+ *     prisma.mrrv, id, current.status,
+ *     { status: 'pending_qc' }, current.version
+ *   );
  */
 import { ConflictError } from '@nit-scs-v2/shared';
 
@@ -26,27 +38,34 @@ type PrismaDelegate = {
  * @param id        Record ID
  * @param expectedStatus  The status we expect the record to currently have
  * @param data      The data to update (should include the new status)
- * @returns         The count of updated records (should be 1)
+ * @param expectedVersion  Optional version for optimistic locking
+ * @returns         Object with count of updated records and optional newVersion
  */
 export async function safeStatusUpdate(
   delegate: PrismaDelegate,
   id: string,
   expectedStatus: string,
   data: Record<string, unknown>,
-): Promise<number> {
-  const result = await delegate.updateMany({
-    where: { id, status: expectedStatus },
-    data,
-  });
+  expectedVersion?: number,
+): Promise<{ count: number; newVersion?: number }> {
+  const where: Record<string, unknown> = { id, status: expectedStatus };
+  if (expectedVersion !== undefined) {
+    where.version = expectedVersion;
+    data.version = expectedVersion + 1;
+  }
+
+  const result = await delegate.updateMany({ where, data });
 
   if (result.count === 0) {
     throw new ConflictError(
-      `Status transition conflict: the record has been modified by another request. ` +
-        `Expected status '${expectedStatus}' but it has already changed. Please refresh and try again.`,
+      expectedVersion !== undefined
+        ? 'Document was modified by another user. Please refresh and try again.'
+        : `Status transition conflict: the record has been modified by another request. ` +
+          `Expected status '${expectedStatus}' but it has already changed. Please refresh and try again.`,
     );
   }
 
-  return result.count;
+  return { count: result.count, newVersion: expectedVersion !== undefined ? expectedVersion + 1 : undefined };
 }
 
 /**
@@ -58,6 +77,7 @@ export async function safeStatusUpdateTx(
   id: string,
   expectedStatus: string,
   data: Record<string, unknown>,
-): Promise<number> {
-  return safeStatusUpdate(txDelegate, id, expectedStatus, data);
+  expectedVersion?: number,
+): Promise<{ count: number; newVersion?: number }> {
+  return safeStatusUpdate(txDelegate, id, expectedStatus, data, expectedVersion);
 }

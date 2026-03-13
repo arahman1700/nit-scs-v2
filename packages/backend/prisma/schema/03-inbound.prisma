@@ -23,6 +23,7 @@ model Mrrv {
   notes          String?
   binLocation    String?   @map("bin_location") @db.VarChar(30)
   receivingDock  String?   @map("receiving_dock") @db.VarChar(50)
+  version        Int       @default(0)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -109,6 +110,7 @@ model Rfim {
   pmApprovalRequired Boolean   @default(false) @map("pm_approval_required")
   pmApprovalDate     DateTime? @map("pm_approval_date") @db.Timestamptz
   pmApprovalById     String?   @map("pm_approval_by_id") @db.Uuid
+  version            Int       @default(0)
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -148,6 +150,7 @@ model OsdReport {
   resolutionAmount Decimal?  @map("resolution_amount") @db.Decimal(15, 2)
   resolutionDate   DateTime? @map("resolution_date") @db.Date
   resolvedById     String?   @map("resolved_by_id") @db.Uuid
+  version          Int       @default(0)
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
