@@ -6,7 +6,7 @@ const { mockPrisma } = vi.hoisted(() => {
   return { mockPrisma: {} as PrismaMock };
 });
 
-vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
+vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma, prismaRead: mockPrisma }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import {

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PrismaMock } from '../../../test-utils/prisma-mock.js';
 
 const { mockPrisma } = vi.hoisted(() => ({ mockPrisma: {} as PrismaMock }));
-vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
+vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma, prismaRead: mockPrisma }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 

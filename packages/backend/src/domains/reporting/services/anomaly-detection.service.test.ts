@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PrismaMock, PrismaModelMock } from '../../../test-utils/prisma-mock.js';
 
 const { mockPrisma } = vi.hoisted(() => ({ mockPrisma: {} as PrismaMock }));
-vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
+vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma, prismaRead: mockPrisma }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../notifications/services/notification.service.js', () => ({
   createNotification: vi.fn().mockResolvedValue({}),

@@ -26,8 +26,8 @@ vi.mock('../../../utils/routeHelpers.js', () => ({
   emitDocumentEvent: vi.fn(),
   emitEntityEvent: vi.fn(),
 }));
-vi.mock('../../../utils/prisma.js', () => ({
-  prisma: new Proxy(
+vi.mock('../../../utils/prisma.js', () => {
+  const mockDb = new Proxy(
     {},
     {
       get: (_target, prop) => {
@@ -35,8 +35,9 @@ vi.mock('../../../utils/prisma.js', () => ({
         return new Proxy({}, { get: () => vi.fn().mockResolvedValue(null) });
       },
     },
-  ),
-}));
+  );
+  return { prisma: mockDb, prismaRead: mockDb };
+});
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
