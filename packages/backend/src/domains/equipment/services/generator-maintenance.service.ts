@@ -111,16 +111,10 @@ export async function startProgress(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  await safeStatusUpdate(
-    prisma.generatorMaintenance,
-    record.id,
-    record.status,
-    {
-      status: 'in_progress',
-      performedById: userId,
-    },
-    record.version,
-  );
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, {
+    status: 'in_progress',
+    performedById: userId,
+  });
   const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'in_progress' }, userId);
@@ -133,17 +127,11 @@ export async function complete(id: string, userId: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'completed');
 
-  await safeStatusUpdate(
-    prisma.generatorMaintenance,
-    record.id,
-    record.status,
-    {
-      status: 'completed',
-      completedDate: new Date(),
-      performedById: userId,
-    },
-    record.version,
-  );
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, {
+    status: 'completed',
+    completedDate: new Date(),
+    performedById: userId,
+  });
   const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'completed' }, userId);
@@ -156,7 +144,7 @@ export async function markOverdue(id: string) {
   if (!record) throw new NotFoundError('GeneratorMaintenance', id);
   assertTransition(DOC_TYPE, record.status, 'overdue');
 
-  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, { status: 'overdue' }, record.version);
+  await safeStatusUpdate(prisma.generatorMaintenance, record.id, record.status, { status: 'overdue' });
   const updated = await prisma.generatorMaintenance.findUnique({ where: { id: record.id } });
 
   emitEvent('status_change', record.id, { from: record.status, to: 'overdue' });

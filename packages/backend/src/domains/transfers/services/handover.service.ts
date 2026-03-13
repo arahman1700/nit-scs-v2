@@ -86,13 +86,7 @@ export async function startVerification(id: string, _userId: string) {
   if (!record) throw new NotFoundError('StorekeeperHandover', id);
   assertTransition(DOC_TYPE, record.status, 'in_progress');
 
-  await safeStatusUpdate(
-    prisma.storekeeperHandover,
-    record.id,
-    record.status,
-    { status: 'in_progress' },
-    record.version,
-  );
+  await safeStatusUpdate(prisma.storekeeperHandover, record.id, record.status, { status: 'in_progress' });
   const updated = await prisma.storekeeperHandover.findUnique({ where: { id: record.id } });
 
   eventBus.publish({
@@ -116,7 +110,7 @@ export async function complete(id: string, _userId: string) {
     throw new BusinessRuleError('Inventory must be verified before completing the handover');
   }
 
-  await safeStatusUpdate(prisma.storekeeperHandover, record.id, record.status, { status: 'completed' }, record.version);
+  await safeStatusUpdate(prisma.storekeeperHandover, record.id, record.status, { status: 'completed' });
   const updated = await prisma.storekeeperHandover.findUnique({ where: { id: record.id } });
 
   eventBus.publish({
