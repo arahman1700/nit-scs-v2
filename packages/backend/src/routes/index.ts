@@ -39,6 +39,7 @@ import { registerSystemRoutes } from '../domains/system/index.js';
 import { registerNotificationRoutes } from '../domains/notifications/index.js';
 import { registerAuditRoutes } from '../domains/audit/index.js';
 import { registerUploadRoutes } from '../domains/uploads/index.js';
+import { registerSchedulerRoutes } from '../domains/scheduler/index.js';
 
 /**
  * Create a fresh API router with all domain routes registered.
@@ -107,6 +108,7 @@ export function createApiRouter() {
   registry.register('notifications', registerNotificationRoutes);
   registry.register('audit', registerAuditRoutes);
   registry.register('uploads', registerUploadRoutes);
+  registry.register('scheduler', registerSchedulerRoutes);
 
   registry.mount(router);
 

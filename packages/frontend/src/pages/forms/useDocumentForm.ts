@@ -572,7 +572,7 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
         if (joType === 'rental_monthly' && startDate && formData.durationMonths && !endDate) {
           const start = new Date(`${startDate}T00:00:00.000Z`);
           start.setMonth(start.getMonth() + Number(formData.durationMonths));
-          payload.rentalDetails.rentalEndDate = start.toISOString();
+          (payload.rentalDetails as Record<string, unknown>).rentalEndDate = start.toISOString();
         }
         for (const k of [
           'startDate',
