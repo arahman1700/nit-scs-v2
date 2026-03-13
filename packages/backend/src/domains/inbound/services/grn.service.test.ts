@@ -130,9 +130,9 @@ describe('grn.service', () => {
       mockedGenerateDocNumber.mockResolvedValue('GRN-001');
       mockPrisma.mrrv.create.mockResolvedValue({ id: 'grn-1', mrrvNumber: 'GRN-001' });
 
-      const result = await create(headerData, lines, 'user-1');
+      const { grn } = await create(headerData, lines, 'user-1');
 
-      expect(result).toEqual({ id: 'grn-1', mrrvNumber: 'GRN-001' });
+      expect(grn).toEqual({ id: 'grn-1', mrrvNumber: 'GRN-001' });
       expect(mockedGenerateDocNumber).toHaveBeenCalledWith('grn');
     });
 
