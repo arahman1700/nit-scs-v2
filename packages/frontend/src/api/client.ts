@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { toast } from '@/components/Toaster';
+import { queryClient } from '@/api/queryClient';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
@@ -48,6 +50,17 @@ apiClient.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config;
+
+    // 409 Conflict: optimistic locking version mismatch
+    if (error.response?.status === 409) {
+      toast.error(
+        'Version Conflict',
+        'This record was modified by another user. The page will reload with the latest data.',
+      );
+      // Invalidate all cached queries so the user sees fresh state before retrying
+      void queryClient.invalidateQueries();
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;

@@ -87,6 +87,14 @@ export interface DocumentRouteConfig {
   /** Service function for update. Receives (id, body). Should throw if not draft. */
   update?: (id: string, body: Record<string, unknown>) => Promise<{ existing: unknown; updated: unknown }>;
 
+  // ── Optimistic locking ─────────────────────
+  /**
+   * When true, the PUT handler enforces that a version field is present in the
+   * request body (Phase C optimistic locking). Set this for models that have a
+   * version Int column in their Prisma schema.
+   */
+  requiresVersion?: boolean;
+
   // ── Status-transition actions ────────────────
   actions?: ActionConfig[];
 
@@ -401,11 +409,13 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
     const mw = [authenticate, rbac('update', config.updateRoles), validate(config.updateSchema)];
     router.put('/:id', ...mw, async (req: Request, res: Response, next: NextFunction) => {
       try {
-        // Phase C: version field is required for optimistic locking on all document updates
-        const version = (req.body as Record<string, unknown>).version;
-        if (version === undefined || version === null) {
-          sendError(res, 400, 'version field is required for updates');
-          return;
+        // Phase C: version field is required for optimistic locking when model supports versioning
+        if (config.requiresVersion) {
+          const version = (req.body as Record<string, unknown>).version;
+          if (version === undefined || version === null) {
+            sendError(res, 400, 'version field is required for updates');
+            return;
+          }
         }
 
         const { existing, updated } = await config.update!(req.params.id as string, req.body);

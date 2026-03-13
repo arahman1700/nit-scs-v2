@@ -218,9 +218,9 @@ describe('mi.service', () => {
   // ─────────────────────────────────────────────────────────────────────────
   describe('update', () => {
     it('should update a draft MIRV', async () => {
-      const existing = { id: 'mirv-1', status: 'draft' };
-      const updated = { id: 'mirv-1', status: 'draft', notes: 'Updated' };
-      mockPrisma.mirv.findUnique.mockResolvedValue(existing);
+      const existing = { id: 'mirv-1', status: 'draft', version: 0 };
+      const updated = { id: 'mirv-1', status: 'draft', notes: 'Updated', version: 1 };
+      mockPrisma.mirv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.mirv.update.mockResolvedValue(updated);
 
       const result = await update('mirv-1', { notes: 'Updated' });

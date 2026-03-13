@@ -304,9 +304,9 @@ describe('mr.service', () => {
 
   describe('update', () => {
     it('updates a draft MRF successfully', async () => {
-      const existing = makeMrf({ status: 'draft' });
-      mockPrisma.materialRequisition.findUnique.mockResolvedValue(existing);
-      const updated = { ...existing, notes: 'Updated' };
+      const existing = makeMrf({ status: 'draft', version: 0 });
+      const updated = { ...existing, notes: 'Updated', version: 1 };
+      mockPrisma.materialRequisition.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.materialRequisition.update.mockResolvedValue(updated);
 
       const result = await update('mrf-1', { notes: 'Updated' });
