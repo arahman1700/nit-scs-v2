@@ -132,6 +132,9 @@ const SystemSettingsPage = React.lazy(() =>
 const NotificationRulesPage = React.lazy(() =>
   import('@/pages/admin/NotificationRulesPage').then(m => ({ default: m.NotificationRulesPage })),
 );
+const SchedulerManagementPage = React.lazy(() =>
+  import('@/pages/admin/SchedulerManagementPage').then(m => ({ default: m.SchedulerManagementPage })),
+);
 
 // Inspection Tools (AQL Calculator & Checklists)
 const InspectionToolsPage = React.lazy(() =>
@@ -217,6 +220,7 @@ export function adminRoutes(currentRole: UserRole) {
       <Route path="/admin/settings/document-types/:id" element={<DynamicTypeBuilderPage />} />
       <Route path="/admin/settings/workflows" element={<AdminSystemPage />} />
       <Route path="/admin/settings/notifications" element={<NotificationRulesPage />} />
+      <Route path="/admin/settings/scheduler" element={<SchedulerManagementPage />} />
       <Route path="/admin/settings/system" element={<SystemSettingsPage />} />
 
       {/* Section Landing Pages (V3 — Reorganized) */}

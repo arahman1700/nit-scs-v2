@@ -1,6 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Compass, FormInput, FileText, GitBranch, Bell, ChevronRight, type LucideIcon } from 'lucide-react';
+import {
+  Settings,
+  Compass,
+  FormInput,
+  FileText,
+  GitBranch,
+  Bell,
+  Clock,
+  ChevronRight,
+  type LucideIcon,
+} from 'lucide-react';
 
 // ── Settings Categories ────────────────────────────────────────────────
 
@@ -64,6 +74,16 @@ const SETTINGS_CATEGORIES: SettingsCategory[] = [
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/15',
     href: '/admin/settings/notifications',
+    badge: null,
+  },
+  {
+    id: 'scheduler',
+    label: 'Scheduler & Jobs',
+    description: 'Monitor scheduled jobs, view execution history, and manage the dead letter queue',
+    icon: Clock,
+    color: 'text-rose-400',
+    bgColor: 'bg-rose-500/15',
+    href: '/admin/settings/scheduler',
     badge: null,
   },
   {
