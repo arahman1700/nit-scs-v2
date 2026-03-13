@@ -126,6 +126,8 @@ model SavedReport {
   lastRunAt          DateTime? @map("last_run_at") @db.Timestamptz
   /// Email recipients for scheduled reports (JSON array of email addresses)
   scheduleRecipients Json?     @map("schedule_recipients")
+  /// JSON array of role strings this report is shared with (e.g. ["admin","manager"])
+  sharedWithRoles    Json?     @map("shared_with_roles")
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz
 
