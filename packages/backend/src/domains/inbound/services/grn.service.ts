@@ -164,14 +164,23 @@ export async function update(id: string, data: GrnUpdateDto) {
     throw new BusinessRuleError('Only draft GRNs can be updated');
   }
 
-  const updated = await prisma.mrrv.update({
-    where: { id },
-    data: {
-      ...data,
-      ...(data.receiveDate ? { receiveDate: new Date(data.receiveDate) } : {}),
-    },
-  });
+  const { version, ...rest } = data;
+  const updateData = {
+    ...rest,
+    ...(rest.receiveDate ? { receiveDate: new Date(rest.receiveDate) } : {}),
+    version: (existing.version ?? 0) + 1,
+  };
 
+  if (version !== undefined) {
+    const result = await prisma.mrrv.updateMany({ where: { id, version }, data: updateData });
+    if (result.count === 0) {
+      throw new ConflictError('Document was modified by another user. Please refresh and try again.');
+    }
+  } else {
+    await prisma.mrrv.update({ where: { id }, data: updateData });
+  }
+
+  const updated = await prisma.mrrv.findUnique({ where: { id } });
   return { existing, updated };
 }
 
