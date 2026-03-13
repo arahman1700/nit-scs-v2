@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { UserRole } from '@nit-scs-v2/shared/types';
 import type { User } from '@nit-scs-v2/shared/types';
@@ -8,9 +8,11 @@ import { MobileTabBar } from '@/components/MobileTabBar';
 import { PwaInstallPrompt } from '@/components/PwaInstallPrompt';
 import { PwaUpdatePrompt } from '@/components/PwaUpdatePrompt';
 import { OfflineIndicator } from '@/components/OfflineIndicator';
+import { KeyboardShortcutOverlay } from '@/components/KeyboardShortcutOverlay';
 import { useRealtimeSync } from '@/socket/useRealtimeSync';
 import { useCurrentUser } from '@/domains/auth/hooks/useAuth';
 import { useNavigation } from '@/domains/system/hooks/useNavigation';
+import { useKeyboardShortcuts, useGlobalShortcutListener } from '@/hooks/useKeyboardShortcuts';
 import { NAVIGATION_LINKS, SECTION_NAVIGATION } from '@/config/navigation';
 import { Breadcrumbs } from '@/components/Breadcrumbs';
 import { AI_ENABLED } from '@/modules/ai/index';
@@ -29,11 +31,37 @@ export const MainLayout: React.FC<{
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth > 1024);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   // Real-time: invalidate React Query caches on Socket.IO events
   useRealtimeSync();
+
+  // Global keyboard shortcuts listener
+  useGlobalShortcutListener();
+
+  // Default keyboard shortcuts
+  const defaultShortcuts = useMemo(
+    () => [
+      {
+        key: '?',
+        label: 'Show keyboard shortcuts',
+        category: 'General',
+        handler: () => setShowShortcuts(true),
+      },
+      {
+        key: '/',
+        label: 'Focus search',
+        category: 'General',
+        handler: () => {
+          document.querySelector<HTMLInputElement>('[data-search-input]')?.focus();
+        },
+      },
+    ],
+    [],
+  );
+  useKeyboardShortcuts(defaultShortcuts);
 
   // Track window size changes via resize observer
   useEffect(() => {
@@ -190,6 +218,8 @@ export const MainLayout: React.FC<{
           <AiChatWidget />
         </React.Suspense>
       )}
+
+      <KeyboardShortcutOverlay isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
     </div>
   );
 };
