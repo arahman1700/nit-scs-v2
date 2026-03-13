@@ -6,6 +6,7 @@ const VALID_ENTITY_TYPES = new Set([
   'mirv',
   'mrv',
   'shipment',
+  'jo',
   'job-order',
   'rfim',
   'osd',

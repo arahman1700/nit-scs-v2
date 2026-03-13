@@ -37,6 +37,7 @@ import {
 import { useGenerators } from '@/domains/master-data/hooks/useMasterData';
 import { CHART_PALETTE } from '@/config/chartTheme';
 import { extractRows, toRecord } from '@/utils/type-helpers';
+import { displayStr } from '@/utils/displayStr';
 
 const LazyKanban = React.lazy(() =>
   import('@/pages/transport/JobOrdersKanban').then(m => ({ default: m.JobOrdersKanban })),
@@ -120,7 +121,8 @@ export const EquipmentSectionPage: React.FC = () => {
   const joByType = useMemo(() => {
     const counts: Record<string, number> = {};
     joData.forEach(j => {
-      const t = (toRecord(j).type as string) || 'Other';
+      const rec = toRecord(j);
+      const t = (rec.joType as string) || (rec.type as string) || 'Other';
       counts[t] = (counts[t] || 0) + 1;
     });
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -198,10 +200,10 @@ export const EquipmentSectionPage: React.FC = () => {
                     >
                       <div>
                         <p className="text-white text-sm font-medium">
-                          {(rec.documentNumber as string) || (rec.id as string)}
+                          {(rec.joNumber as string) || (rec.id as string)}
                         </p>
                         <p className="text-gray-400 text-xs">
-                          {(rec.type as string) || 'N/A'} - {(rec.projectName as string) || ''}
+                          {(rec.joType as string) || (rec.type as string) || 'N/A'} - {displayStr(rec.project)}
                         </p>
                       </div>
                       <StatusBadge status="Overdue" />
@@ -251,7 +253,7 @@ export const EquipmentSectionPage: React.FC = () => {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/10">
-              <th className="text-left p-4 text-nesma-secondary font-medium">ID</th>
+              <th className="text-left p-4 text-nesma-secondary font-medium">JO #</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Type</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Project</th>
               <th className="text-left p-4 text-nesma-secondary font-medium">Requester</th>
@@ -265,12 +267,24 @@ export const EquipmentSectionPage: React.FC = () => {
               const rec = toRecord(j);
               return (
                 <tr key={rec.id as string} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                  <td className="p-4 text-white font-medium">{(rec.documentNumber as string) || (rec.id as string)}</td>
-                  <td className="p-4 text-gray-300">{(rec.type as string) || '-'}</td>
-                  <td className="p-4 text-gray-300">{(rec.projectName as string) || '-'}</td>
-                  <td className="p-4 text-gray-300">{(rec.requesterName as string) || '-'}</td>
+                  <td className="p-4 text-white font-medium">{(rec.joNumber as string) || (rec.id as string)}</td>
+                  <td className="p-4 text-gray-300">{(rec.joType as string) || (rec.type as string) || '-'}</td>
+                  <td className="p-4 text-gray-300">{displayStr(rec.project) || '-'}</td>
+                  <td className="p-4 text-gray-300">{displayStr(rec.requestedBy) || '-'}</td>
                   <td className="p-4 text-gray-300">
-                    {rec.createdAt ? new Date(rec.createdAt as string).toLocaleDateString() : '-'}
+                    {rec.requestDate
+                      ? new Date(rec.requestDate as string).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : rec.createdAt
+                        ? new Date(rec.createdAt as string).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '-'}
                   </td>
                   <td className="p-4">
                     <StatusBadge status={(rec.status as string) || 'Pending'} />

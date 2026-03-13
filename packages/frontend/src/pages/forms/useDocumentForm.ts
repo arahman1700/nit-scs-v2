@@ -132,7 +132,7 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
   // Check if document is editable based on status
   const docStatus = (existingDoc?.status as string) || '';
   const editableStatuses = EDITABLE_STATUSES[formType || ''] || [];
-  const isEditable = !isEditMode || editableStatuses.includes(docStatus);
+  const isEditable = !isEditMode || editableStatuses.some(s => s.toLowerCase() === docStatus.toLowerCase());
 
   // Pre-populate form data from existing document
   useEffect(() => {
@@ -314,6 +314,31 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
     return formConfig.sections;
   }, [formConfig.sections, joTypeSections, formType]);
 
+  // Dynamic wizard steps for JO forms — wire type-specific sections into Steps 2 & 3
+  const effectiveFormConfig = useMemo(() => {
+    if (formType !== 'jo' || joTypeSections.length === 0 || !formConfig.wizardSteps) return formConfig;
+
+    const baseSectionCount = formConfig.sections.length; // 2 (Request Info + Service Type)
+    const typeSectionCount = joTypeSections.length;
+
+    // Detail sections → Step 2 (Service Type & Details), Budget section (last) → Step 3
+    const detailIndices: number[] = [];
+    for (let i = baseSectionCount; i < baseSectionCount + typeSectionCount - 1; i++) {
+      detailIndices.push(i);
+    }
+    const budgetIndex = baseSectionCount + typeSectionCount - 1;
+
+    return {
+      ...formConfig,
+      wizardSteps: [
+        formConfig.wizardSteps[0], // Step 1: Request Information → [0]
+        { ...formConfig.wizardSteps[1], sectionIndices: [1, ...detailIndices] }, // Step 2 + type details
+        { ...formConfig.wizardSteps[2], sectionIndices: [budgetIndex] }, // Step 3: Budget
+        formConfig.wizardSteps[3], // Step 4: Review → []
+      ],
+    };
+  }, [formConfig, formType, joTypeSections]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -433,6 +458,172 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
       payload.materialType = String(payload.materialType).toLowerCase().replace(/ /g, '_');
     }
 
+    // JO: map flat form fields → backend nested objects + fix field names
+    if (formType === 'jo' && joType) {
+      payload.joType = joType;
+      delete payload.type; // remove incorrect `type` field
+
+      if (joType === 'transport') {
+        payload.transportDetails = {
+          pickupLocation: formData.pickupLocation || '',
+          deliveryLocation: formData.deliveryLocation || '',
+          cargoType: formData.cargoType || '',
+          cargoWeightTons: formData.cargoWeight ? Number(formData.cargoWeight) : undefined,
+          numberOfTrailers: formData.numberOfTrailers ? Number(formData.numberOfTrailers) : undefined,
+          materialPriceSar: formData.materialPrice ? Number(formData.materialPrice) : undefined,
+          insuranceRequired: Boolean(formData.insuranceRequired),
+        };
+        // Convert shiftStartTime to ISO if needed
+        const rawShift = formData.shiftStartTime as string;
+        if (rawShift && !rawShift.includes('Z')) {
+          payload.shiftStartTime = `${rawShift}:00.000Z`;
+        }
+        // Clean up flat transport fields from payload
+        for (const k of [
+          'pickupLocation',
+          'deliveryLocation',
+          'cargoType',
+          'cargoWeight',
+          'numberOfTrailers',
+          'materialPrice',
+          'entryPermit',
+        ]) {
+          delete payload[k];
+        }
+      }
+
+      if (joType === 'equipment') {
+        // Store equipment info in notes/description since equipmentLines needs UUID refs
+        const equipType = formData.equipmentType as string;
+        if (equipType) {
+          payload.notes = [
+            payload.notes || '',
+            `Equipment: ${equipType}`,
+            formData.quantity ? `Qty: ${formData.quantity}` : '',
+            formData.durationDays ? `Duration: ${formData.durationDays} days` : '',
+            formData.projectSite ? `Site: ${formData.projectSite}` : '',
+            formData.withOperator ? 'With operator' : '',
+          ]
+            .filter(Boolean)
+            .join(' | ');
+        }
+        for (const k of ['equipmentType', 'quantity', 'durationDays', 'projectSite', 'withOperator']) {
+          delete payload[k];
+        }
+      }
+
+      if (joType === 'generator_rental') {
+        const startDate = formData.rentalStart || formData.startDate;
+        const endDate = formData.rentalEnd || formData.endDate;
+        payload.generatorDetails = {
+          capacityKva: formData.capacityKva ? Number(formData.capacityKva) : undefined,
+          shiftStartTime: (formData.shiftStartTime as string) || undefined,
+        };
+        payload.rentalDetails = {
+          rentalStartDate: startDate ? `${startDate}T00:00:00.000Z` : undefined,
+          rentalEndDate: endDate ? `${endDate}T00:00:00.000Z` : undefined,
+          withOperator: false,
+        };
+        for (const k of [
+          'capacityKva',
+          'rentalStart',
+          'rentalEnd',
+          'startDate',
+          'endDate',
+          'siteLocation',
+          'fuelIncluded',
+          'shiftStartTime',
+        ]) {
+          delete payload[k];
+        }
+      }
+
+      if (joType === 'generator_maintenance') {
+        // generatorId must be a valid UUID — if it's a text label, store in notes instead
+        const genId = formData.generatorId as string;
+        const isUuid = genId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(genId);
+        payload.generatorDetails = {
+          generatorId: isUuid ? genId : undefined,
+          capacityKva: formData.capacityKva ? Number(formData.capacityKva) : undefined,
+          maintenanceType: formData.maintenanceType
+            ? (String(formData.maintenanceType).toLowerCase() as 'preventive' | 'corrective' | 'emergency')
+            : undefined,
+          issueDescription: (formData.issueDescription as string) || undefined,
+        };
+        if (genId && !isUuid) {
+          payload.notes = `Generator: ${genId}${payload.notes ? ' | ' + payload.notes : ''}`;
+        }
+        for (const k of ['generatorId', 'capacityKva', 'maintenanceType', 'issueDescription', 'fuelIncluded']) {
+          delete payload[k];
+        }
+      }
+
+      if (joType === 'rental_daily' || joType === 'rental_monthly') {
+        const startDate = formData.startDate || formData.rentalStart;
+        const endDate = formData.endDate || formData.rentalEnd;
+        payload.rentalDetails = {
+          rentalStartDate: startDate ? `${startDate}T00:00:00.000Z` : undefined,
+          rentalEndDate: endDate ? `${endDate}T00:00:00.000Z` : undefined,
+          dailyRate: formData.dailyRate ? Number(formData.dailyRate) : undefined,
+          monthlyRate: formData.monthlyRate ? Number(formData.monthlyRate) : undefined,
+          withOperator: Boolean(formData.withOperator),
+        };
+        // For monthly with duration, calculate end date
+        if (joType === 'rental_monthly' && startDate && formData.durationMonths && !endDate) {
+          const start = new Date(`${startDate}T00:00:00.000Z`);
+          start.setMonth(start.getMonth() + Number(formData.durationMonths));
+          payload.rentalDetails.rentalEndDate = start.toISOString();
+        }
+        for (const k of [
+          'startDate',
+          'endDate',
+          'rentalStart',
+          'rentalEnd',
+          'dailyRate',
+          'monthlyRate',
+          'withOperator',
+          'equipmentType',
+          'durationMonths',
+          'coaApprovalRequired',
+        ]) {
+          delete payload[k];
+        }
+        if (formData.coaApprovalRequired) {
+          payload.coaApprovalRequired = Boolean(formData.coaApprovalRequired);
+        }
+      }
+
+      if (joType === 'scrap') {
+        payload.scrapDetails = {
+          scrapType: (formData.scrapType as string) || '',
+          scrapWeightTons: formData.weightTons ? Number(formData.weightTons) : 0,
+          scrapDescription: (formData.issueDescription as string) || (formData.scrapDescription as string) || undefined,
+          scrapDestination: (formData.destination as string) || undefined,
+        };
+        for (const k of ['scrapType', 'weightTons', 'destination', 'photos', 'scrapDescription']) {
+          delete payload[k];
+        }
+      }
+
+      // Convert header-level numeric fields from string → number
+      if (payload.vehicleYear) payload.vehicleYear = Number(payload.vehicleYear);
+      if (payload.insuranceValue) payload.insuranceValue = Number(payload.insuranceValue);
+
+      // Remove fields not in the JO Zod schema
+      for (const k of [
+        'qciRequired',
+        'totalValue',
+        'lines',
+        'lineItems',
+        'requester',
+        'insuranceValueSar',
+        'entryPermit',
+        'type',
+      ]) {
+        delete payload[k];
+      }
+    }
+
     // Surplus: map display condition → lowercase + disposition → lowercase
     if (formType === 'surplus') {
       if (payload.condition) {
@@ -533,7 +724,6 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
       'requestedBy',
       'lineItems', // raw lineItems array — we send `lines` instead
       'date', // raw date field — mapped to receiveDate/requestDate/etc.
-      'joType', // UI-only field for job order type selector
     ];
     for (const key of displayOnlyFields) {
       if (payload[key] !== undefined) {
@@ -619,7 +809,7 @@ export function useDocumentForm(rawFormType: string | undefined, id: string | un
     handleRemoveFile,
     handleInputChange,
     meQuery,
-    formConfig,
+    formConfig: effectiveFormConfig,
     allSections,
     editableStatuses,
     initialized,

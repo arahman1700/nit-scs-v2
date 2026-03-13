@@ -7,6 +7,7 @@ const DOCUMENT_TYPES = [
   'mrv',
   'rfim',
   'osd',
+  'jo',
   'job-order',
   'gate-pass',
   'stock-transfer',

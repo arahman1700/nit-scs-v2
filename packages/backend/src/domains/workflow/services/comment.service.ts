@@ -17,6 +17,7 @@ const DOCUMENT_DELEGATES: Record<
   mrv: prisma.mrv,
   rfim: prisma.rfim,
   osd: prisma.osdReport,
+  jo: prisma.jobOrder,
   'job-order': prisma.jobOrder,
   'gate-pass': prisma.gatePass,
   'stock-transfer': prisma.stockTransfer,

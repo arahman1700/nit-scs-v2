@@ -86,6 +86,9 @@ const MODEL_MAP: Record<string, string> = {
   shipment: 'shipment',
 };
 
+// Models that have slaDueDate directly on the main document table
+const MODELS_WITH_SLA_DUE_DATE = new Set(['mirv']);
+
 type PrismaDelegate = {
   update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<unknown>;
   findUnique: (args: { where: { id: string } }) => Promise<Record<string, unknown> | null>;
@@ -224,13 +227,15 @@ export async function submitForApproval(params: {
   slaDueDate.setHours(slaDueDate.getHours() + firstStep.slaHours);
 
   // Update document status
+  // Only mirv has slaDueDate on the main model; jo uses JoSlaTracking table
   const delegate = getDelegate(documentType);
+  const updateData: Record<string, unknown> = { status: 'pending_approval' };
+  if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
+    updateData.slaDueDate = slaDueDate;
+  }
   await delegate.update({
     where: { id: documentId },
-    data: {
-      status: 'pending_approval',
-      slaDueDate,
-    },
+    data: updateData,
   });
 
   // Create ApprovalStep records — idempotent: skip levels that already exist
@@ -391,10 +396,13 @@ export async function processApproval(params: {
 
       if (nextWorkflow) {
         nextSlaDate.setHours(nextSlaDate.getHours() + nextWorkflow.slaHours);
-        await delegate.update({
-          where: { id: documentId },
-          data: { slaDueDate: nextSlaDate },
-        });
+        // Only set slaDueDate on models that have it on the main table
+        if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
+          await delegate.update({
+            where: { id: documentId },
+            data: { slaDueDate: nextSlaDate },
+          });
+        }
       }
 
       // Notify next level
