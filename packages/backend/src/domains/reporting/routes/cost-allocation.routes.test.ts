@@ -43,6 +43,13 @@ vi.mock('../../../utils/prisma.js', () => ({
 vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
+vi.mock('../../auth/services/permission.service.js', () => ({
+  hasPermissionDB: vi.fn().mockImplementation((role: string, resource: string, action: string) => {
+    // warehouse_staff has no 'reports' permission
+    if (role === 'warehouse_staff' && resource === 'reports') return Promise.resolve(false);
+    return Promise.resolve(true);
+  }),
+}));
 
 vi.mock('../services/cost-allocation.service.js', () => ({
   getCostAllocation: vi.fn(),

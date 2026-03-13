@@ -112,7 +112,10 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
   const rbac = (action: 'read' | 'create' | 'update' | 'delete' | 'approve', fallbackRoles?: string[]) => {
     if (config.resource) return requirePermission(config.resource, action);
     if (fallbackRoles?.length) return requireRole(...fallbackRoles);
-    return (_req: Request, _res: Response, next: NextFunction) => next(); // no restriction
+    // Fail-closed: deny access when no permission resource is configured
+    return (_req: Request, res: Response) => {
+      res.status(403).json({ error: 'No permission resource configured for this route' });
+    };
   };
 
   // ── GET / — List with pagination ─────────────────────────────────

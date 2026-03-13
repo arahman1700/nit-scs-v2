@@ -9,7 +9,7 @@
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { createCrudRouter } from '../../../utils/crud-factory.js';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { prisma } from '../../../utils/prisma.js';
 import { applyScopeFilter } from '../../../utils/scope-filter.js';
 import {
@@ -78,12 +78,10 @@ const router = Router();
  *
  * GET /bin-cards/computed?warehouseId=...&itemId=...&page=1&pageSize=50
  */
-const COMPUTED_ROLES = ['admin', 'warehouse_supervisor', 'warehouse_staff', 'inventory_specialist'];
-
 router.get(
   '/computed',
   authenticate,
-  requireRole(...COMPUTED_ROLES),
+  requirePermission('bin_card', 'read'),
   applyScopeFilter({ warehouseField: 'warehouseId' }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

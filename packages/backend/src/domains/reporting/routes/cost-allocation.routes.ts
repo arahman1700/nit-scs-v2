@@ -8,16 +8,16 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { sendSuccess } from '../../../utils/response.js';
 import { cached, CacheTTL } from '../../../utils/cache.js';
 import { getCostAllocation, getCostAllocationSummary } from '../services/cost-allocation.service.js';
 
 const router = Router();
 
-// All routes require authentication + specific roles
+// All routes require authentication + reports:read permission
 router.use(authenticate);
-router.use(requireRole('admin', 'manager', 'finance_user', 'warehouse_supervisor'));
+router.use(requirePermission('reports', 'read'));
 
 /** Parse optional date query params with validation */
 function parseDateParams(req: Request): { dateFrom?: Date; dateTo?: Date } {

@@ -5,7 +5,7 @@
 import { Router } from 'express';
 import type { Request, Response, NextFunction } from 'express';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole, requirePermission } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { validate } from '../../../middleware/validate.js';
 import { rateLimiter } from '../../../middleware/rate-limiter.js';
 import { sendSuccess } from '../../../utils/response.js';
@@ -110,7 +110,7 @@ router.get(
 router.post(
   '/reorder-predictions/auto-update',
   authenticate,
-  requireRole('admin'),
+  requirePermission('inventory', 'update'),
   rateLimiter(5, 60_000),
   async (_req: Request, res: Response, next: NextFunction) => {
     try {

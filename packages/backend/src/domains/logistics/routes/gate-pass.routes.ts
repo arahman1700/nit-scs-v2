@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { createDocumentRouter } from '../../../utils/document-factory.js';
 import { gatePassCreateSchema, gatePassUpdateSchema } from '../schemas/logistics.schema.js';
 import { authenticate } from '../../../middleware/auth.js';
-import { requireRole } from '../../../middleware/rbac.js';
+import { requirePermission } from '../../../middleware/rbac.js';
 import { prisma } from '../../../utils/prisma.js';
 import { applyScopeFilter } from '../../../utils/scope-filter.js';
 import * as gatePassService from '../services/gate-pass.service.js';
@@ -23,7 +23,7 @@ const router = Router();
 router.get(
   '/expected-deliveries',
   authenticate,
-  requireRole('gate_officer', 'warehouse_supervisor', 'warehouse_staff', 'admin'),
+  requirePermission('gatepass', 'read'),
   applyScopeFilter({ warehouseField: 'warehouseId' }),
   async (req: Request, res: Response, next: NextFunction) => {
     try {

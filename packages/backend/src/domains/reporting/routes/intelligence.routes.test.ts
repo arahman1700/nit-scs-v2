@@ -43,7 +43,11 @@ vi.mock('../../auth/services/auth.service.js', () => ({
   isTokenBlacklisted: vi.fn().mockResolvedValue(false),
 }));
 vi.mock('../../auth/services/permission.service.js', () => ({
-  hasPermissionDB: vi.fn().mockResolvedValue(true),
+  hasPermissionDB: vi.fn().mockImplementation((role: string, resource: string, action: string) => {
+    // viewer role has no inventory:update permission
+    if (role === 'viewer' && resource === 'inventory' && action === 'update') return Promise.resolve(false);
+    return Promise.resolve(true);
+  }),
 }));
 // Mock rate limiter to pass-through (avoids in-memory counter exhaustion in tests)
 vi.mock('../../../middleware/rate-limiter.js', () => ({
