@@ -1,5 +1,16 @@
 import React from 'react';
-import { BarChart3, Hash, Table2, List, Activity, PieChart } from 'lucide-react';
+import {
+  BarChart3,
+  Hash,
+  Table2,
+  List,
+  Activity,
+  PieChart,
+  GanttChart,
+  Calendar,
+  Table,
+  Map as MapIcon,
+} from 'lucide-react';
 
 export interface WidgetTypeDefinition {
   type: string;
@@ -16,6 +27,10 @@ export const WIDGET_TYPES: WidgetTypeDefinition[] = [
   { type: 'list', label: 'List', icon: List, defaultWidth: 1, defaultHeight: 1 },
   { type: 'activity', label: 'Activity Feed', icon: Activity, defaultWidth: 1, defaultHeight: 1 },
   { type: 'status_counts', label: 'Status Counts', icon: PieChart, defaultWidth: 1, defaultHeight: 1 },
+  { type: 'gantt', label: 'Gantt Chart', icon: GanttChart, defaultWidth: 2, defaultHeight: 1 },
+  { type: 'calendar_heatmap', label: 'Calendar Heatmap', icon: Calendar, defaultWidth: 2, defaultHeight: 1 },
+  { type: 'pivot', label: 'Pivot Table', icon: Table, defaultWidth: 2, defaultHeight: 1 },
+  { type: 'map', label: 'Zone Map', icon: MapIcon, defaultWidth: 2, defaultHeight: 1 },
 ];
 
 interface WidgetPaletteProps {

@@ -9,6 +9,10 @@ import { TableWidget } from './TableWidget';
 import { ListWidget } from './ListWidget';
 import { ActivityWidget } from './ActivityWidget';
 import { StatusCountWidget } from './StatusCountWidget';
+import { GanttWidget } from './widgets/GanttWidget';
+import { CalendarHeatmapWidget } from './widgets/CalendarHeatmapWidget';
+import { PivotTableWidget } from './widgets/PivotTableWidget';
+import { MapWidget } from './widgets/MapWidget';
 import { WidgetConfigModal } from './WidgetConfigModal';
 
 interface WidgetWrapperProps {
@@ -25,6 +29,10 @@ const WIDGET_RENDERERS: Record<string, React.FC<{ widget: DashboardWidget }>> = 
   list: ListWidget,
   activity: ActivityWidget,
   status_counts: StatusCountWidget,
+  gantt: GanttWidget,
+  calendar_heatmap: CalendarHeatmapWidget,
+  pivot: PivotTableWidget,
+  map: MapWidget,
 };
 
 export const WidgetWrapper: React.FC<WidgetWrapperProps> = ({ widget, onUpdate, onDelete, editMode }) => {
