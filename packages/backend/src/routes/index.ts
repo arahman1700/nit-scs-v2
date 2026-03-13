@@ -6,6 +6,8 @@
 // ---------------------------------------------------------------------------
 
 import { Router } from 'express';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from '../config/swagger.js';
 import { rateLimiter } from '../middleware/rate-limiter.js';
 import { metricsMiddleware } from '../middleware/metrics.js';
 import { register } from '../infrastructure/metrics/prometheus.js';
@@ -61,6 +63,17 @@ export function createApiRouter() {
   // ── Kubernetes-style probes (public, lightweight) ─────────────────────
   router.get('/live', livenessProbe);
   router.get('/ready', readinessProbe);
+
+  // ── OpenAPI / Swagger Docs ─────────────────────────────────────────
+  router.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec as object, {
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'NIT SCS V2 API Docs',
+    }),
+  );
+  router.get('/api-docs.json', (_req, res) => res.json(swaggerSpec));
 
   // ── Prometheus metrics (public, no auth) ────────────────────────────
   router.get('/metrics', async (_req, res) => {

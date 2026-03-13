@@ -12,7 +12,16 @@ const STORE_NAME = 'pending-transactions';
 
 // ── Types ───────────────────────────────────────────────────────────────
 
-export type TransactionType = 'grn-receive' | 'mi-issue' | 'wt-transfer';
+export type TransactionType =
+  | 'grn-receive'
+  | 'mi-issue'
+  | 'wt-transfer'
+  | 'mrn-request'
+  | 'qci-inspect'
+  | 'dr-report'
+  | 'mr-return'
+  | 'jo-execute'
+  | 'scrap-dispose';
 
 export type TransactionStatus = 'pending' | 'syncing' | 'synced' | 'failed';
 

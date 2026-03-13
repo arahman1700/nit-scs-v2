@@ -15,6 +15,7 @@ import rateCardRoutes from './routes/rate-card.routes.js';
 import customFieldsRoutes from './routes/custom-fields.routes.js';
 import dynamicDocumentRoutes from './routes/dynamic-document.routes.js';
 import dynamicDocumentTypeRoutes from './routes/dynamic-document-type.routes.js';
+import eventbusMonitorRoutes from './routes/eventbus-monitor.routes.js';
 
 export function registerSystemRoutes(router: Router) {
   router.use('/settings', settingsRoutes);
@@ -33,4 +34,5 @@ export function registerSystemRoutes(router: Router) {
   router.use('/custom-fields', customFieldsRoutes);
   router.use('/dynamic', dynamicDocumentRoutes);
   router.use('/dynamic-types', dynamicDocumentTypeRoutes);
+  router.use('/monitor', eventbusMonitorRoutes);
 }

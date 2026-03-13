@@ -143,6 +143,11 @@ const DashboardsHubPage = React.lazy(() =>
   import('@/pages/DashboardsHubPage').then(m => ({ default: m.DashboardsHubPage })),
 );
 
+// EventBus Monitor Dashboard
+const EventBusMonitorDashboard = React.lazy(() =>
+  import('@/pages/dashboards/EventBusMonitorDashboard').then(m => ({ default: m.EventBusMonitorDashboard })),
+);
+
 // Gap Analysis Feature Pages
 const KpiDashboard = React.lazy(() =>
   import('@/pages/dashboards/KpiDashboard').then(m => ({ default: m.KpiDashboard })),
@@ -273,6 +278,9 @@ export function adminRoutes(currentRole: UserRole) {
       {/* V2 Dashboard Routes */}
       <Route path="/admin/dashboards/assets" element={<AssetDashboard />} />
       <Route path="/admin/dashboards/labor" element={<LaborDashboard />} />
+
+      {/* EventBus Monitor Dashboard (admin-only) */}
+      <Route path="/admin/dashboards/eventbus" element={<EventBusMonitorDashboard />} />
 
       {/* Gap Analysis Feature Pages */}
       <Route path="/admin/dashboards/kpis" element={<KpiDashboard />} />

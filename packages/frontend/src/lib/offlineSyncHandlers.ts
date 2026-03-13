@@ -31,6 +31,48 @@ function setupSyncHandlers() {
     if (!wtId) throw new Error('Missing wtId in offline payload');
     await apiClient.post(`/wt/${wtId}/ship`);
   });
+
+  // MRN Request: POST /mrn
+  registerSyncHandler('mrn-request', async (tx: OfflineTransaction) => {
+    const { itemId, quantity, reason } = tx.payload;
+    if (!itemId) throw new Error('Missing itemId in offline payload');
+    await apiClient.post('/mrn', { itemId, quantity, reason });
+  });
+
+  // QCI Inspect: POST /qci
+  registerSyncHandler('qci-inspect', async (tx: OfflineTransaction) => {
+    const { grnId, inspectionResults } = tx.payload;
+    if (!grnId) throw new Error('Missing grnId in offline payload');
+    await apiClient.post('/qci', { grnId, inspectionResults });
+  });
+
+  // DR Report: POST /dr
+  registerSyncHandler('dr-report', async (tx: OfflineTransaction) => {
+    const { grnId, discrepancyType, quantity, notes } = tx.payload;
+    if (!grnId) throw new Error('Missing grnId in offline payload');
+    await apiClient.post('/dr', { grnId, discrepancyType, quantity, notes });
+  });
+
+  // MR Return: POST /mr
+  registerSyncHandler('mr-return', async (tx: OfflineTransaction) => {
+    const { itemId, quantity, reason, condition } = tx.payload;
+    if (!itemId) throw new Error('Missing itemId in offline payload');
+    await apiClient.post('/mr', { itemId, quantity, reason, condition });
+  });
+
+  // JO Execute: POST /jo/:id/execute
+  registerSyncHandler('jo-execute', async (tx: OfflineTransaction) => {
+    const { joId, taskResults, laborHours } = tx.payload;
+    if (!joId) throw new Error('Missing joId in offline payload');
+    await apiClient.post(`/jo/${joId}/execute`, { taskResults, laborHours });
+  });
+
+  // Scrap Dispose: POST /scrap
+  registerSyncHandler('scrap-dispose', async (tx: OfflineTransaction) => {
+    const { itemId, quantity, condition, notes } = tx.payload;
+    if (!itemId) throw new Error('Missing itemId in offline payload');
+    await apiClient.post('/scrap', { itemId, quantity, condition, notes });
+  });
 }
 
 export { setupSyncHandlers };

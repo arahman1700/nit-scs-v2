@@ -13,13 +13,10 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 
-import swaggerUi from 'swagger-ui-express';
-
 import { logger } from './config/logger.js';
 import { getCorsOptions } from './config/cors.js';
 import { getEnv } from './config/env.js';
 import { getRedis, disconnectRedis } from './config/redis.js';
-import { swaggerSpec } from './config/swagger.js';
 import { requestId } from './middleware/request-id.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { errorHandler } from './middleware/error-handler.js';
@@ -98,22 +95,8 @@ if (process.env.NODE_ENV !== 'production') {
 }
 app.use(requestLogger);
 
-// ── Swagger / OpenAPI Docs (disabled in production) ──────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  app.use(
-    '/api/docs',
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, {
-      customCss: '.swagger-ui .topbar { display: none }',
-      customSiteTitle: 'NIT SCS API Docs',
-    }),
-  );
-  app.get('/api/docs.json', (_req, res) => {
-    res.json(swaggerSpec);
-  });
-}
-
 // ── API Routes (versioned) ────────────────────────────────────────────────
+// Swagger UI is mounted inside the API router at /api/v1/api-docs
 // Rate limiter is applied inside apiRoutes (routes/index.ts) — not here,
 // to avoid double-counting each request against the same Redis key.
 app.use('/api/v1', apiRoutes);

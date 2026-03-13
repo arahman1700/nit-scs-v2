@@ -24,6 +24,24 @@ const MobileMiIssue = React.lazy(() =>
 const MobileWtTransfer = React.lazy(() =>
   import('@/pages/warehouse/MobileWtTransfer').then(m => ({ default: m.MobileWtTransfer })),
 );
+const MobileMrnRequest = React.lazy(() =>
+  import('@/pages/warehouse/MobileMrnRequest').then(m => ({ default: m.MobileMrnRequest })),
+);
+const MobileQciInspect = React.lazy(() =>
+  import('@/pages/warehouse/MobileQciInspect').then(m => ({ default: m.MobileQciInspect })),
+);
+const MobileDrReport = React.lazy(() =>
+  import('@/pages/warehouse/MobileDrReport').then(m => ({ default: m.MobileDrReport })),
+);
+const MobileMrReturn = React.lazy(() =>
+  import('@/pages/warehouse/MobileMrReturn').then(m => ({ default: m.MobileMrReturn })),
+);
+const MobileJoExecute = React.lazy(() =>
+  import('@/pages/warehouse/MobileJoExecute').then(m => ({ default: m.MobileJoExecute })),
+);
+const MobileScrapDispose = React.lazy(() =>
+  import('@/pages/warehouse/MobileScrapDispose').then(m => ({ default: m.MobileScrapDispose })),
+);
 
 // ── Warehouse route definitions ──────────────────────────────────────────
 export function warehouseRoutes(currentRole: UserRole) {
@@ -84,6 +102,54 @@ export function warehouseRoutes(currentRole: UserRole) {
         element={
           <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
             <MobileWtTransfer />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/mrn"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileMrnRequest />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/qci"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileQciInspect />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/dr"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileDrReport />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/mr"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileMrReturn />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/jo"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileJoExecute />
+          </RoleGuard>
+        }
+      />
+      <Route
+        path="/warehouse/mobile/scrap"
+        element={
+          <RoleGuard currentRole={currentRole} allowedRoles={WAREHOUSE_ROLES}>
+            <MobileScrapDispose />
           </RoleGuard>
         }
       />
