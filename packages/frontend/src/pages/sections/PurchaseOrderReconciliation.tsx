@@ -64,22 +64,21 @@ function KpiCard({
 // ── Columns ──────────────────────────────────────────────────────────────────
 
 const COLUMNS: ColumnDef[] = [
-  { field: 'poNumber', headerName: 'PO Number', width: 130, pinned: 'left' },
-  { field: 'supplierCode', headerName: 'Supplier Code', width: 130 },
-  { field: 'supplierName', headerName: 'Supplier Name', width: 200 },
-  { field: 'itemCode', headerName: 'Item Code', width: 130 },
-  { field: 'description', headerName: 'Description', width: 220 },
-  { field: 'uom', headerName: 'UOM', width: 80 },
-  { field: 'orderedQty', headerName: 'Ordered Qty', width: 110, type: 'number' },
-  { field: 'receivedQty', headerName: 'Received Qty', width: 120, type: 'number' },
-  { field: 'variance', headerName: 'Variance', width: 100, type: 'number' },
+  { key: 'poNumber', label: 'PO Number' },
+  { key: 'supplierCode', label: 'Supplier Code' },
+  { key: 'supplierName', label: 'Supplier Name' },
+  { key: 'itemCode', label: 'Item Code' },
+  { key: 'description', label: 'Description' },
+  { key: 'uom', label: 'UOM' },
+  { key: 'orderedQty', label: 'Ordered Qty' },
+  { key: 'receivedQty', label: 'Received Qty' },
+  { key: 'variance', label: 'Variance' },
   {
-    field: 'status',
-    headerName: 'Status',
-    width: 140,
-    cellRenderer: (value: unknown) => <ReconStatusBadge status={value as PoReconciliationLine['status']} />,
+    key: 'status',
+    label: 'Status',
+    component: (value: unknown) => <ReconStatusBadge status={value as PoReconciliationLine['status']} />,
   },
-  { field: 'unitPrice', headerName: 'Unit Price', width: 110, type: 'number' },
+  { key: 'unitPrice', label: 'Unit Price' },
 ];
 
 // ── Filter bar ────────────────────────────────────────────────────────────────
