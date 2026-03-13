@@ -10,7 +10,8 @@ import {
   type VisibilityState,
   type RowSelectionState,
 } from '@tanstack/react-table';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmptyState } from '@/components/EmptyState';
 import type { ColumnDef } from '@/config/resourceColumns';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -21,6 +22,21 @@ export interface ColumnState {
   visible?: boolean;
   sort?: 'asc' | 'desc' | null;
   sortIndex?: number;
+}
+
+export interface ServerPaginationProps {
+  /** Total number of records on the server */
+  total: number;
+  /** Current 1-based page number */
+  page: number;
+  /** Number of rows per page */
+  pageSize: number;
+  /** Called when the user changes pages */
+  onPageChange: (page: number) => void;
+  /** Called when the user changes page size */
+  onPageSizeChange: (pageSize: number) => void;
+  /** Called when the user sorts a column (server-side sort) */
+  onSortChange?: (sortBy: string, sortDir: 'asc' | 'desc') => void;
 }
 
 export interface SmartGridProps {
@@ -36,6 +52,8 @@ export interface SmartGridProps {
   suppressPagination?: boolean;
   initialColumnState?: ColumnState[];
   onColumnStateChanged?: (state: ColumnState[]) => void;
+  /** When provided, enables server-side pagination mode */
+  serverPagination?: ServerPaginationProps;
 }
 
 /** Resolve a nested key like 'item.itemCode' from a data row. */
@@ -66,6 +84,13 @@ function isCurrencyColumn(col: ColumnDef): boolean {
   return false;
 }
 
+// Threshold above which virtual scrolling is activated
+const VIRTUAL_SCROLL_THRESHOLD = 500;
+// Estimated row height in pixels (matches py-2.5 + text-[13px])
+const ROW_HEIGHT_ESTIMATE = 42;
+// Fixed height for the virtual scroll container
+const VIRTUAL_CONTAINER_HEIGHT = 600;
+
 export const SmartGrid: React.FC<SmartGridProps> = ({
   columns,
   rowData,
@@ -79,6 +104,7 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
   suppressPagination,
   initialColumnState,
   onColumnStateChanged,
+  serverPagination,
 }) => {
   // ── Sorting ────────────────────────────────────────────────────────────
   const [sorting, setSorting] = useState<SortingState>(() => {
@@ -182,6 +208,8 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
         size: col.key === 'id' ? 150 : isStatus ? 120 : isCurrency ? 130 : undefined,
         minSize: col.key === 'id' ? 130 : 80,
         maxSize: col.key === 'id' ? 180 : undefined,
+        // Disable client-side sorting when server pagination is active
+        enableSorting: !serverPagination,
         cell: info => {
           const value = info.getValue();
           if (isStatus) {
@@ -201,7 +229,7 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     }
 
     return cols;
-  }, [columns, isDocument]);
+  }, [columns, isDocument, serverPagination]);
 
   // ── Table instance ─────────────────────────────────────────────────────
   const table = useReactTable({
@@ -211,7 +239,9 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     onSortingChange: updater => {
       setSorting(prev => {
         const next = typeof updater === 'function' ? updater(prev) : updater;
-        if (onSortChanged && next.length > 0) {
+        if (serverPagination?.onSortChange && next.length > 0) {
+          serverPagination.onSortChange(next[0].id, next[0].desc ? 'desc' : 'asc');
+        } else if (onSortChanged && next.length > 0) {
           onSortChanged(next[0].id, next[0].desc ? 'desc' : 'asc');
         }
         return next;
@@ -221,10 +251,19 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    // Only use client-side sort model when not in server pagination mode
+    getSortedRowModel: serverPagination ? undefined : getSortedRowModel(),
     getRowId: row => row.id as string,
     enableRowSelection: isDocument,
     columnResizeMode: 'onChange',
+    // When server pagination is active, tell TanStack Table the real row count
+    ...(serverPagination
+      ? {
+          manualSorting: true,
+          manualPagination: true,
+          rowCount: serverPagination.total,
+        }
+      : {}),
   });
 
   // ── Column state persistence (debounced) ───────────────────────────────
@@ -256,6 +295,22 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     };
   }, [sorting, columnSizing, columnVisibility, onColumnStateChanged, table]);
 
+  // ── Virtual scrolling setup ────────────────────────────────────────────
+  const tableRows = table.getRowModel().rows;
+  const useVirtual = tableRows.length > VIRTUAL_SCROLL_THRESHOLD;
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const virtualizer = useVirtualizer({
+    count: tableRows.length,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: () => ROW_HEIGHT_ESTIMATE,
+    overscan: 10,
+    enabled: useVirtual,
+  });
+
+  const virtualItems = useVirtual ? virtualizer.getVirtualItems() : null;
+  const totalVirtualSize = useVirtual ? virtualizer.getTotalSize() : 0;
+
   // ── Loading state ──────────────────────────────────────────────────────
   if (loading && rowData.length === 0) {
     return (
@@ -270,69 +325,222 @@ export const SmartGrid: React.FC<SmartGridProps> = ({
     return <EmptyState />;
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────
-  const maxHeight = suppressPagination ? undefined : Math.min(600, 56 + rowData.length * 42);
+  // ── Server pagination controls ─────────────────────────────────────────
+  const renderServerPagination = () => {
+    if (!serverPagination) return null;
+    const { total, page, pageSize, onPageChange, onPageSizeChange } = serverPagination;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
+    const to = Math.min(page * pageSize, total);
 
-  return (
-    <div className="w-full overflow-auto" style={{ maxHeight }}>
-      <table className="w-full border-collapse">
-        <thead className="sticky top-0 z-10">
-          {table.getHeaderGroups().map(headerGroup => (
-            <tr key={headerGroup.id} className="bg-white/[0.03]">
-              {headerGroup.headers.map(header => {
-                const canSort = header.column.getCanSort();
-                const sorted = header.column.getIsSorted();
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-white/10">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <span>
+            {from}–{to} of {total.toLocaleString()} records
+          </span>
+          <span className="text-gray-600">|</span>
+          <label className="flex items-center gap-1.5">
+            <span>Rows:</span>
+            <select
+              value={pageSize}
+              onChange={e => onPageSizeChange(Number(e.target.value))}
+              className="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-nesma-secondary/50"
+            >
+              {[10, 20, 50, 100].map(size => (
+                <option key={size} value={size} className="bg-nesma-dark">
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            disabled={page <= 1}
+            onClick={() => onPageChange(1)}
+            className="px-2 py-1 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="First page"
+          >
+            «
+          </button>
+          <button
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          {/* Page number pills */}
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum: number;
+            if (totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (page <= 3) {
+              pageNum = i + 1;
+            } else if (page >= totalPages - 2) {
+              pageNum = totalPages - 4 + i;
+            } else {
+              pageNum = page - 2 + i;
+            }
+            return (
+              <button
+                key={pageNum}
+                onClick={() => onPageChange(pageNum)}
+                className={`min-w-[32px] h-8 px-2 rounded-lg text-sm transition-colors ${
+                  pageNum === page
+                    ? 'bg-nesma-primary text-white font-medium'
+                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+
+          <button
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(page + 1)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="Next page"
+          >
+            <ChevronRight size={16} />
+          </button>
+          <button
+            disabled={page >= totalPages}
+            onClick={() => onPageChange(totalPages)}
+            className="px-2 py-1 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            aria-label="Last page"
+          >
+            »
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────
+  const maxHeight = useVirtual
+    ? VIRTUAL_CONTAINER_HEIGHT
+    : suppressPagination
+      ? undefined
+      : Math.min(600, 56 + rowData.length * ROW_HEIGHT_ESTIMATE);
+
+  // Header row (shared between both render paths)
+  const headerContent = (
+    <thead className="sticky top-0 z-10">
+      {table.getHeaderGroups().map(headerGroup => (
+        <tr key={headerGroup.id} className="bg-white/[0.03]">
+          {headerGroup.headers.map(header => {
+            const canSort = header.column.getCanSort();
+            const sorted = header.column.getIsSorted();
+            return (
+              <th
+                key={header.id}
+                className={`px-3 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider select-none whitespace-nowrap ${
+                  canSort ? 'cursor-pointer hover:text-gray-300' : ''
+                }`}
+                style={{ width: header.getSize() }}
+                onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+              >
+                <div className="flex items-center gap-1">
+                  {flexRender(header.column.columnDef.header, header.getContext())}
+                  {sorted === 'asc' && <ChevronUp size={12} className="text-nesma-secondary" />}
+                  {sorted === 'desc' && <ChevronDown size={12} className="text-nesma-secondary" />}
+                </div>
+                {/* Resize handle */}
+                {header.column.getCanResize() && (
+                  <div
+                    onMouseDown={header.getResizeHandler()}
+                    onTouchStart={header.getResizeHandler()}
+                    className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 hover:opacity-100 bg-nesma-secondary/40"
+                    style={{ transform: 'translateX(50%)' }}
+                  />
+                )}
+              </th>
+            );
+          })}
+        </tr>
+      ))}
+    </thead>
+  );
+
+  // ── Virtual scrolling render path ──────────────────────────────────────
+  if (useVirtual && virtualItems) {
+    return (
+      <div>
+        <div ref={scrollContainerRef} className="w-full overflow-auto" style={{ height: VIRTUAL_CONTAINER_HEIGHT }}>
+          <table className="w-full border-collapse">
+            {headerContent}
+            <tbody style={{ height: totalVirtualSize, position: 'relative' }}>
+              {virtualItems.map(virtualRow => {
+                const row = tableRows[virtualRow.index];
                 return (
-                  <th
-                    key={header.id}
-                    className={`px-3 py-2.5 text-left text-[11px] font-semibold text-gray-400 uppercase tracking-wider select-none whitespace-nowrap ${
-                      canSort ? 'cursor-pointer hover:text-gray-300' : ''
-                    }`}
-                    style={{ width: header.getSize() }}
-                    onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                  <tr
+                    key={row.id}
+                    data-index={virtualRow.index}
+                    ref={virtualizer.measureElement}
+                    className={`border-b border-white/[0.05] transition-colors duration-150 absolute w-full ${
+                      row.getIsSelected() ? 'bg-[rgba(217,175,123,0.08)]' : 'hover:bg-white/[0.04]'
+                    } ${onRowClicked ? 'cursor-pointer' : ''}`}
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    onClick={() => onRowClicked?.(row.original)}
                   >
-                    <div className="flex items-center gap-1">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {sorted === 'asc' && <ChevronUp size={12} className="text-nesma-secondary" />}
-                      {sorted === 'desc' && <ChevronDown size={12} className="text-nesma-secondary" />}
-                    </div>
-                    {/* Resize handle */}
-                    {header.column.getCanResize() && (
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none opacity-0 hover:opacity-100 bg-nesma-secondary/40"
-                        style={{ transform: 'translateX(50%)' }}
-                      />
-                    )}
-                  </th>
+                    {row.getVisibleCells().map(cell => (
+                      <td
+                        key={cell.id}
+                        className="px-3 py-2.5 text-[13px] text-gray-300 whitespace-nowrap"
+                        style={{ width: cell.column.getSize() }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
                 );
               })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row => (
-            <tr
-              key={row.id}
-              className={`border-b border-white/[0.05] transition-colors duration-150 ${
-                row.getIsSelected() ? 'bg-[rgba(217,175,123,0.08)]' : 'hover:bg-white/[0.04]'
-              } ${onRowClicked ? 'cursor-pointer' : ''}`}
-              onClick={() => onRowClicked?.(row.original)}
-            >
-              {row.getVisibleCells().map(cell => (
-                <td
-                  key={cell.id}
-                  className="px-3 py-2.5 text-[13px] text-gray-300 whitespace-nowrap"
-                  style={{ width: cell.column.getSize() }}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        </div>
+        {renderServerPagination()}
+      </div>
+    );
+  }
+
+  // ── Standard render path ───────────────────────────────────────────────
+  return (
+    <div>
+      <div className="w-full overflow-auto" style={{ maxHeight }}>
+        <table className="w-full border-collapse">
+          {headerContent}
+          <tbody>
+            {tableRows.map(row => (
+              <tr
+                key={row.id}
+                className={`border-b border-white/[0.05] transition-colors duration-150 ${
+                  row.getIsSelected() ? 'bg-[rgba(217,175,123,0.08)]' : 'hover:bg-white/[0.04]'
+                } ${onRowClicked ? 'cursor-pointer' : ''}`}
+                onClick={() => onRowClicked?.(row.original)}
+              >
+                {row.getVisibleCells().map(cell => (
+                  <td
+                    key={cell.id}
+                    className="px-3 py-2.5 text-[13px] text-gray-300 whitespace-nowrap"
+                    style={{ width: cell.column.getSize() }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {renderServerPagination()}
     </div>
   );
 };

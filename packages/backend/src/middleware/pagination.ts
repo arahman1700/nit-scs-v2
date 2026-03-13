@@ -7,6 +7,8 @@ export interface PaginationQuery {
   sortBy: string;
   sortDir: 'asc' | 'desc';
   search?: string;
+  /** Key-value pairs parsed from `filter.<field>=<value>` query params */
+  filters: Record<string, string>;
 }
 
 declare global {
@@ -41,6 +43,17 @@ export function paginate(defaultSort = 'createdAt', allowedSortFields?: string[]
     const sortDir = ((req.query.sortDir as string) || 'desc') === 'asc' ? ('asc' as const) : ('desc' as const);
     const search = req.query.search as string | undefined;
 
+    // Parse filter.<field>=<value> query params into a plain object
+    const filters: Record<string, string> = {};
+    for (const [key, val] of Object.entries(req.query)) {
+      if (key.startsWith('filter.') && typeof val === 'string') {
+        const field = key.slice('filter.'.length);
+        if (field.length > 0) {
+          filters[field] = val;
+        }
+      }
+    }
+
     req.pagination = {
       page,
       pageSize,
@@ -48,6 +61,7 @@ export function paginate(defaultSort = 'createdAt', allowedSortFields?: string[]
       sortBy,
       sortDir,
       search,
+      filters,
     };
 
     next();
