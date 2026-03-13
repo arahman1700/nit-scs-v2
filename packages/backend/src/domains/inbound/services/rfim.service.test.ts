@@ -124,7 +124,7 @@ describe('rfim.service (V1 re-export wrapper)', () => {
     it('update() should delegate to qci.service.update', async () => {
       const existing = { id: 'rfim-1', comments: null };
       const updated = { id: 'rfim-1', comments: 'Updated' };
-      mockPrisma.rfim.findUnique.mockResolvedValue(existing);
+      mockPrisma.rfim.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.rfim.update.mockResolvedValue(updated);
 
       const result = await rfimService.update('rfim-1', { comments: 'Updated' });

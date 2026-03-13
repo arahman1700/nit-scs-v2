@@ -144,7 +144,7 @@ describe('mrf.service (V1 re-export wrapper)', () => {
     it('update() should delegate to mr.service.update', async () => {
       const existing = { id: 'mrf-1', status: 'draft' };
       const updated = { ...existing, notes: 'Updated' };
-      mockPrisma.materialRequisition.findUnique.mockResolvedValue(existing);
+      mockPrisma.materialRequisition.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.materialRequisition.update.mockResolvedValue(updated);
 
       const result = await mrfService.update('mrf-1', { notes: 'Updated' });

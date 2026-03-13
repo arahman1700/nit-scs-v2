@@ -148,7 +148,7 @@ describe('mirv.service (V1 re-export wrapper)', () => {
     it('update() should delegate to mi.service.update', async () => {
       const existing = { id: 'mirv-1', status: 'draft' };
       const updated = { id: 'mirv-1', status: 'draft', notes: 'Updated' };
-      mockPrisma.mirv.findUnique.mockResolvedValue(existing);
+      mockPrisma.mirv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.mirv.update.mockResolvedValue(updated);
 
       const result = await mirvService.update('mirv-1', { notes: 'Updated' });

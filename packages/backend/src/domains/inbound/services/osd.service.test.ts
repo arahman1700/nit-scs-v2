@@ -124,7 +124,7 @@ describe('osd.service (V1 re-export wrapper)', () => {
     it('update() should delegate to dr.service.update', async () => {
       const existing = { id: 'osd-1', status: 'draft' };
       const updated = { id: 'osd-1', status: 'draft', poNumber: 'PO-123' };
-      mockPrisma.osdReport.findUnique.mockResolvedValue(existing);
+      mockPrisma.osdReport.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.osdReport.update.mockResolvedValue(updated);
 
       const result = await osdService.update('osd-1', { poNumber: 'PO-123' });

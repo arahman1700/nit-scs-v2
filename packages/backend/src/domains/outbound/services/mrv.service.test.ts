@@ -132,7 +132,7 @@ describe('mrv.service (V1 re-export wrapper)', () => {
     it('update() should delegate to mrn.service.update', async () => {
       const existing = { id: 'mrv-1', status: 'draft', mrvLines: [] };
       const updated = { ...existing, notes: 'Updated' };
-      mockPrisma.mrv.findUnique.mockResolvedValue(existing);
+      mockPrisma.mrv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.mrv.update.mockResolvedValue(updated);
 
       const result = await mrvService.update('mrv-1', { notes: 'Updated' } as any);

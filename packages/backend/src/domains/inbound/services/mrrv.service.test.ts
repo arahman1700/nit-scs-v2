@@ -110,19 +110,19 @@ describe('mrrv.service (V1 re-export wrapper)', () => {
       (generateDocumentNumber as ReturnType<typeof vi.fn>).mockResolvedValue('GRN-001');
       mockPrisma.mrrv.create.mockResolvedValue({ id: 'grn-1', mrrvNumber: 'GRN-001' });
 
-      const result = await mrrvService.create(
+      const { grn } = await mrrvService.create(
         { supplierId: 'sup-1', warehouseId: 'wh-1', receiveDate: '2026-03-01T00:00:00Z' },
         [{ itemId: 'item-1', qtyReceived: 10, unitCost: 50, uomId: 'uom-1' }],
         'user-1',
       );
 
-      expect(result).toEqual({ id: 'grn-1', mrrvNumber: 'GRN-001' });
+      expect(grn).toEqual({ id: 'grn-1', mrrvNumber: 'GRN-001' });
     });
 
     it('update() should delegate to grn.service.update', async () => {
       const existing = { id: 'grn-1', status: 'draft' };
       const updated = { id: 'grn-1', status: 'draft', notes: 'Updated' };
-      mockPrisma.mrrv.findUnique.mockResolvedValue(existing);
+      mockPrisma.mrrv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.mrrv.update.mockResolvedValue(updated);
 
       const result = await mrrvService.update('grn-1', { notes: 'Updated' });
