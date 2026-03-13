@@ -7,6 +7,8 @@
 
 import { Router } from 'express';
 import { rateLimiter } from '../middleware/rate-limiter.js';
+import { metricsMiddleware } from '../middleware/metrics.js';
+import { register } from '../infrastructure/metrics/prometheus.js';
 import { RouteRegistry } from '../utils/route-registry.js';
 import {
   healthCheck,
@@ -59,6 +61,15 @@ export function createApiRouter() {
   // ── Kubernetes-style probes (public, lightweight) ─────────────────────
   router.get('/live', livenessProbe);
   router.get('/ready', readinessProbe);
+
+  // ── Prometheus metrics (public, no auth) ────────────────────────────
+  router.get('/metrics', async (_req, res) => {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  });
+
+  // ── HTTP metrics collection (before domain routes) ──────────────────
+  router.use(metricsMiddleware);
 
   // ── Register all domains via RouteRegistry ────────────────────────────
   // Order no longer matters — the registry handles safe ordering

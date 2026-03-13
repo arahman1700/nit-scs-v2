@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { log } from '../config/logger.js';
+import { eventBusEventsTotal } from '../infrastructure/metrics/prometheus.js';
 
 /**
  * Typed event payload that flows through the system event bus.
@@ -33,6 +34,46 @@ const systemEventSchema = z.object({
   timestamp: z.string(),
 });
 
+// ── EventBus Instrumentation ──────────────────────────────────────────────────
+
+export interface EventErrorEntry {
+  type: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface EventStats {
+  totalPublished: number;
+  publishedByType: Record<string, number>;
+  errors: EventErrorEntry[];
+  lastPublished: string | null;
+}
+
+const MAX_ERROR_ENTRIES = 100;
+
+const stats: EventStats = {
+  totalPublished: 0,
+  publishedByType: {},
+  errors: [],
+  lastPublished: null,
+};
+
+/** Returns a snapshot of the current EventBus statistics. */
+export function getEventBusStats(): EventStats {
+  return { ...stats, publishedByType: { ...stats.publishedByType }, errors: [...stats.errors] };
+}
+
+/** Record an error that occurred while processing an event. Keeps the last 100 entries. */
+export function recordEventError(type: string, error: unknown): void {
+  const message = error instanceof Error ? error.message : String(error);
+  stats.errors.push({ type, message, timestamp: new Date().toISOString() });
+  if (stats.errors.length > MAX_ERROR_ENTRIES) {
+    stats.errors = stats.errors.slice(-MAX_ERROR_ENTRIES);
+  }
+}
+
+// ── EventBus Class ────────────────────────────────────────────────────────────
+
 class SystemEventBus extends EventEmitter {
   private static instance: SystemEventBus;
 
@@ -62,7 +103,13 @@ class SystemEventBus extends EventEmitter {
         entityType: event.entityType,
       });
     }
+    // Instrumentation: track stats
+    stats.totalPublished++;
+    stats.publishedByType[event.type] = (stats.publishedByType[event.type] ?? 0) + 1;
+    stats.lastPublished = event.timestamp;
+
     log('debug', `[EventBus] ${event.type} — ${event.entityType}:${event.entityId}`);
+    eventBusEventsTotal.inc({ event_type: event.type });
     this.emit(event.type, event);
     this.emit('*', event);
   }
