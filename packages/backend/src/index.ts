@@ -171,8 +171,22 @@ app.use(errorHandler);
 if (process.env.NODE_ENV === 'production') {
   const currentDir = dirname(fileURLToPath(import.meta.url));
   const frontendDist = join(currentDir, '../../frontend/dist');
+
+  // Hashed assets (JS/CSS/fonts/images) — long-lived immutable cache
+  app.use(
+    '/assets',
+    express.static(join(frontendDist, 'assets'), {
+      maxAge: '1y',
+      immutable: true,
+    }),
+  );
+
+  // All other static files (non-hashed) — short cache with revalidation
   app.use(express.static(frontendDist));
+
+  // SPA fallback — HTML must never be cached
   app.get('{*path}', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile('index.html', { root: frontendDist });
   });
 }

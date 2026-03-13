@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const commitSha = process.env.RENDER_GIT_COMMIT || process.env.COMMIT_SHA || 'dev';
 
 export default defineConfig({
+  base: process.env.VITE_CDN_URL || '/',
   server: {
     port: 3000,
     proxy: {

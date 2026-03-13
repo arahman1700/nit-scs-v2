@@ -120,6 +120,7 @@ router.get('/files/:filename', authenticate, (req: Request, res: Response) => {
   // Set security headers for file serving
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Content-Disposition', 'inline');
+  res.setHeader('Cache-Control', 'private, max-age=3600');
   res.sendFile(filePath);
 });
 

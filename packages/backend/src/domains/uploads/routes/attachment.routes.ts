@@ -136,6 +136,7 @@ router.get('/:id/download', authenticate, async (req: Request, res: Response) =>
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
     res.setHeader('Content-Type', attachment.mimeType);
+    res.setHeader('Cache-Control', 'private, max-age=3600');
     res.sendFile(filePath);
   } catch (err) {
     const e = err as Error & { statusCode?: number };
