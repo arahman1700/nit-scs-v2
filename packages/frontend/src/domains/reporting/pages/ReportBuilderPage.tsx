@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { FileBarChart, Save, Play, Plus, Trash2, ChevronDown, LayoutTemplate } from 'lucide-react';
+import { FileBarChart, Save, Play, Plus, Trash2, ChevronDown, LayoutTemplate, Calendar } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -29,6 +29,7 @@ import { ColumnSelector } from '@/components/report-builder/ColumnSelector';
 import { FilterBuilder } from '@/components/report-builder/FilterBuilder';
 import { VisualizationSelector } from '@/components/report-builder/VisualizationSelector';
 import { ReportTemplateGallery } from '@/components/report-builder/ReportTemplateGallery';
+import { ReportScheduleModal } from '@/components/report-builder/ReportScheduleModal';
 
 const CHART_COLORS = ['#80D1E9', '#2E3A8C', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -37,6 +38,7 @@ export const ReportBuilderPage: React.FC = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
   const [newName, setNewName] = useState('');
 
   // Local form state
@@ -307,6 +309,29 @@ export const ReportBuilderPage: React.FC = () => {
             </button>
           )}
 
+          {/* Schedule */}
+          {selectedId && currentReport && (
+            <button
+              onClick={() => setShowSchedule(true)}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm transition-colors ${
+                currentReport.scheduleFrequency
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-400 hover:bg-amber-500/30'
+                  : 'bg-white/5 border-white/10 text-gray-300 hover:text-white hover:border-white/20'
+              }`}
+              title={
+                currentReport.scheduleFrequency ? `Scheduled: ${currentReport.scheduleFrequency}` : 'Schedule report'
+              }
+              aria-label="Schedule report"
+            >
+              <Calendar size={14} />
+              {currentReport.scheduleFrequency ? (
+                <span className="capitalize">{currentReport.scheduleFrequency}</span>
+              ) : (
+                'Schedule'
+              )}
+            </button>
+          )}
+
           {/* Run */}
           {selectedId && (
             <button
@@ -376,6 +401,11 @@ export const ReportBuilderPage: React.FC = () => {
             }}
           />
         </div>
+      )}
+
+      {/* Schedule modal */}
+      {showSchedule && currentReport && (
+        <ReportScheduleModal report={currentReport} onClose={() => setShowSchedule(false)} />
       )}
 
       {/* Main content */}

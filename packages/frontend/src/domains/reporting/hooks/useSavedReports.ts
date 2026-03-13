@@ -15,19 +15,34 @@ export interface ReportFilter {
   value: string;
 }
 
+export type ScheduleFrequency = 'daily' | 'weekly' | 'monthly' | 'quarterly';
+
 export interface SavedReport {
   id: string;
   name: string;
   description?: string;
+  ownerId?: string;
   dataSource: string;
   columns: string[];
   filters: ReportFilter[];
   visualization: 'table' | 'bar' | 'line' | 'pie';
   isTemplate?: boolean;
+  isPublic?: boolean;
+  sharedWithRoles?: string[];
   category?: string;
   owner?: { fullName: string };
+  scheduleFrequency?: ScheduleFrequency | null;
+  scheduleRecipients?: string[];
+  nextRunAt?: string | null;
+  lastRunAt?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ShareReportInput {
+  id: string;
+  roles?: string[];
+  isPublic?: boolean;
 }
 
 export interface CreateReportInput {
@@ -47,6 +62,12 @@ export interface UpdateReportInput {
   columns?: string[];
   filters?: ReportFilter[];
   visualization?: 'table' | 'bar' | 'line' | 'pie';
+}
+
+export interface ScheduleReportInput {
+  id: string;
+  scheduleFrequency?: ScheduleFrequency | null;
+  scheduleRecipients?: string[];
 }
 
 export interface ReportResult {
@@ -143,6 +164,48 @@ export function useTemplateToReport() {
   return useMutation({
     mutationFn: async (templateId: string) => {
       const { data } = await apiClient.post<ApiResponse<SavedReport>>(`/reports/saved/templates/${templateId}/use`);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['saved-reports'] }),
+  });
+}
+
+// ── Share ────────────────────────────────────────────────────────────────────
+
+/** POST /api/reports/saved/:id/share — update sharing settings (roles + isPublic) */
+export function useShareReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: ShareReportInput) => {
+      const { data } = await apiClient.post<ApiResponse<SavedReport>>(`/reports/saved/${id}/share`, body);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-reports'] });
+      qc.invalidateQueries({ queryKey: ['shared-reports'] });
+    },
+  });
+}
+
+/** GET /api/reports/saved/shared — reports shared with the current user's role */
+export function useSharedReports() {
+  return useQuery({
+    queryKey: ['shared-reports'],
+    queryFn: async () => {
+      const { data } = await apiClient.get<ApiResponse<SavedReport[]>>('/reports/saved/shared');
+      return data;
+    },
+  });
+}
+
+// ── Schedule ─────────────────────────────────────────────────────────────────
+
+/** PATCH /api/reports/saved/:id/schedule — set schedule frequency and recipients */
+export function useScheduleReport() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: ScheduleReportInput) => {
+      const { data } = await apiClient.patch<ApiResponse<SavedReport>>(`/reports/saved/${id}/schedule`, body);
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['saved-reports'] }),

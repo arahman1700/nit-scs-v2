@@ -10,6 +10,11 @@ import { getDataSource } from '../services/widget-data.service.js';
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
+const shareReportSchema = z.object({
+  roles: z.array(z.string()).optional(),
+  isPublic: z.boolean().optional(),
+});
+
 const createSavedReportSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
@@ -155,6 +160,38 @@ router.post('/templates/:id/use', async (req: Request, res: Response, next: Next
   }
 });
 
+// ── GET /api/reports/saved/shared — reports shared with my role ─────────
+// NOTE: must be registered BEFORE /:id to prevent shadowing
+
+router.get('/shared', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userRole = req.user!.role;
+    const { page, pageSize, skip } = parsePagination(req.query as Record<string, unknown>);
+
+    // Find reports where sharedWithRoles JSON array contains the user's role
+    const [reports, total] = await Promise.all([
+      prisma.savedReport.findMany({
+        where: {
+          sharedWithRoles: { array_contains: userRole },
+        },
+        include: { owner: { select: { fullName: true } } },
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.savedReport.count({
+        where: {
+          sharedWithRoles: { array_contains: userRole },
+        },
+      }),
+    ]);
+
+    sendSuccess(res, reports, { page, pageSize, total });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ── GET /api/reports/saved/:id — get report config ──────────────────────
 
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
@@ -234,6 +271,39 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
 
     await prisma.savedReport.delete({ where: { id } });
     sendNoContent(res);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── POST /api/reports/saved/:id/share — update sharing settings ─────────
+
+router.post('/:id/share', validate(shareReportSchema), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.userId;
+    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    const existing = await prisma.savedReport.findUnique({ where: { id } });
+    if (!existing) {
+      sendError(res, 404, 'Report not found');
+      return;
+    }
+    if (existing.ownerId !== userId && req.user!.systemRole !== 'admin') {
+      sendError(res, 403, 'Not authorized to share this report');
+      return;
+    }
+
+    const { roles, isPublic } = req.body as { roles?: string[]; isPublic?: boolean };
+
+    const report = await prisma.savedReport.update({
+      where: { id },
+      data: {
+        ...(roles !== undefined && { sharedWithRoles: roles }),
+        ...(isPublic !== undefined && { isPublic }),
+      },
+    });
+
+    sendSuccess(res, report);
   } catch (err) {
     next(err);
   }
