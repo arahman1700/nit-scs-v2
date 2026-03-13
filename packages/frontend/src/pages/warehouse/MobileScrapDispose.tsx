@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Trash2, CheckCircle2, ScanLine, ArrowLeft, AlertCircle } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import type { UploadedFile } from '@/components/FileUploadZone';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { OfflineQueueBanner } from '@/components/OfflineQueueBanner';
 import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
@@ -22,6 +24,7 @@ export function MobileScrapDispose() {
   const [condition, setCondition] = useState<ScrapCondition | null>(null);
   const [quantity, setQuantity] = useState('');
   const [notes, setNotes] = useState('');
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [submitError, setSubmitError] = useState(false);
 
@@ -62,6 +65,7 @@ export function MobileScrapDispose() {
         quantity: Number(quantity),
         condition,
         notes,
+        attachments: attachments.map(f => ({ url: f.url, name: f.originalName })),
       });
       setQueuedOffline(!isOnline);
       setStep('done');
@@ -76,6 +80,7 @@ export function MobileScrapDispose() {
     setCondition(null);
     setQuantity('');
     setNotes('');
+    setAttachments([]);
     setQueuedOffline(false);
     setSubmitError(false);
   };
@@ -238,6 +243,19 @@ export function MobileScrapDispose() {
                   className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-nesma-secondary/50 resize-none"
                 />
               </div>
+            </div>
+
+            {/* Condition Photos */}
+            <div className="glass-card rounded-2xl p-4 border border-white/10">
+              <h3 className="text-sm font-semibold text-white mb-3">Condition Photos</h3>
+              <FileUploadZone
+                entityType="scrap"
+                entityId={scannedItem?.id}
+                maxFiles={10}
+                acceptedTypes=".jpg,.jpeg,.png,.pdf"
+                files={attachments}
+                onFilesChange={setAttachments}
+              />
             </div>
 
             {submitError && (

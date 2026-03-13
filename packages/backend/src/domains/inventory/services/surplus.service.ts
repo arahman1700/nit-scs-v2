@@ -96,7 +96,7 @@ export async function evaluate(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'evaluated');
 
-  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'evaluated' });
+  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'evaluated' }, surplus.version);
   return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }
 
@@ -105,10 +105,16 @@ export async function approve(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'approved');
 
-  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, {
-    status: 'approved',
-    ouHeadApprovalDate: new Date(),
-  });
+  await safeStatusUpdate(
+    prisma.surplusItem,
+    surplus.id,
+    surplus.status,
+    {
+      status: 'approved',
+      ouHeadApprovalDate: new Date(),
+    },
+    surplus.version,
+  );
   return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }
 
@@ -206,7 +212,7 @@ export async function action(id: string, userId: string) {
     }
     // 'sell' disposition: no downstream document — proceeds to SSC workflow
 
-    await safeStatusUpdateTx(tx.surplusItem, surplus.id, surplus.status, { status: 'actioned' });
+    await safeStatusUpdateTx(tx.surplusItem, surplus.id, surplus.status, { status: 'actioned' }, surplus.version);
     const updated = await tx.surplusItem.findUnique({ where: { id: surplus.id } });
 
     return { updated, linkedDocumentId, linkedDocumentType };
@@ -237,6 +243,6 @@ export async function close(id: string) {
   if (!surplus) throw new NotFoundError('Surplus', id);
   assertTransition(DOC_TYPE, surplus.status, 'closed');
 
-  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'closed' });
+  await safeStatusUpdate(prisma.surplusItem, surplus.id, surplus.status, { status: 'closed' }, surplus.version);
   return prisma.surplusItem.findUnique({ where: { id: surplus.id } });
 }

@@ -401,6 +401,13 @@ export function createDocumentRouter(config: DocumentRouteConfig): Router {
     const mw = [authenticate, rbac('update', config.updateRoles), validate(config.updateSchema)];
     router.put('/:id', ...mw, async (req: Request, res: Response, next: NextFunction) => {
       try {
+        // Phase C: version field is required for optimistic locking on all document updates
+        const version = (req.body as Record<string, unknown>).version;
+        if (version === undefined || version === null) {
+          sendError(res, 400, 'version field is required for updates');
+          return;
+        }
+
         const { existing, updated } = await config.update!(req.params.id as string, req.body);
 
         await auditAndEmit(req, {

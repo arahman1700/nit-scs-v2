@@ -85,8 +85,17 @@ export function useFormSubmit({
         setSubmitted(true);
         onSuccess?.(payload);
         return true;
-      } catch {
-        setErrors([{ field: 'form', rule: 'ERROR', message: 'An unexpected error occurred' }]);
+      } catch (err: unknown) {
+        // Handle 409 Conflict — optimistic locking failure
+        const axiosErr = err as { response?: { status?: number; data?: { error?: string } } };
+        if (axiosErr?.response?.status === 409) {
+          const msg =
+            axiosErr.response?.data?.error ||
+            'This document was modified by another user. Please refresh and try again.';
+          setErrors([{ field: 'form', rule: 'CONFLICT', message: msg }]);
+        } else {
+          setErrors([{ field: 'form', rule: 'ERROR', message: 'An unexpected error occurred' }]);
+        }
         return false;
       } finally {
         setSubmitting(false);

@@ -20,6 +20,7 @@ import { processScheduledRules } from '../../../events/scheduled-rule-runner.js'
 import { detectSuspiciousActivity } from '../../auth/services/security.service.js';
 import { checkExpiringContracts as checkAmcExpiry } from '../../equipment/services/amc.service.js';
 import { checkDueMaintenances as checkVehicleMaintenanceDueM8 } from '../../equipment/services/vehicle-maintenance.service.js';
+import { syncPurchaseOrders } from '../../inbound/services/oracle-po-sync.service.js';
 
 // ── Email Retry ──────────────────────────────────────────────────────────
 
@@ -700,5 +701,22 @@ registerJob({
   lockTtlSec: 39600,
   handler: async (_ctx: JobContext) => {
     await checkVehicleMaintenanceDueM8();
+  },
+});
+
+// Oracle PO sync — every 15 minutes (lock: 12 minutes)
+registerJob({
+  name: 'po_sync',
+  intervalMs: 15 * 60 * 1000,
+  lockTtlSec: 720,
+  handler: async (ctx: JobContext) => {
+    try {
+      const result = await syncPurchaseOrders();
+      if (result.skipped === 0) {
+        ctx.log('info', `[Scheduler] Oracle PO sync: ${result.synced} synced, ${result.failed} failed`);
+      }
+    } catch (err) {
+      ctx.log('error', `[Scheduler] Oracle PO sync failed: ${(err as Error).message}`);
+    }
   },
 });

@@ -4,6 +4,7 @@ import qciRoutes from './routes/qci.routes.js';
 import drRoutes from './routes/dr.routes.js';
 import inspectionRoutes from './routes/inspection.routes.js';
 import asnRoutes from './routes/asn.routes.js';
+import purchaseOrderRoutes from './routes/purchase-order.routes.js';
 // V1 backward-compatible aliases
 import mrrvRoutes from './routes/mrrv.routes.js';
 import rfimRoutes from './routes/rfim.routes.js';
@@ -18,6 +19,7 @@ export function registerInboundRoutes(router: Router) {
   router.use('/inspections', inspectionRoutes);
   router.use('/asn', asnRoutes);
   router.use('/receiving-automation', receivingAutomationRoutes);
+  router.use('/purchase-orders', purchaseOrderRoutes);
   // V1 aliases
   router.use('/mrrv', mrrvRoutes);
   router.use('/rfim', rfimRoutes);

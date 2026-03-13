@@ -126,7 +126,7 @@ export async function send(id: string) {
     throw new BusinessRuleError('Cannot send IMSF with no line items');
   }
 
-  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'sent' });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'sent' }, imsf.version);
   return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
@@ -164,7 +164,7 @@ export async function confirm(id: string, userId: string) {
   }
 
   return prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.imsf, imsf.id, imsf.status, { status: 'confirmed' });
+    await safeStatusUpdateTx(tx.imsf, imsf.id, imsf.status, { status: 'confirmed' }, imsf.version);
     const updated = await tx.imsf.findUnique({ where: { id: imsf.id } });
 
     // Auto-create StockTransfer (WT) from confirmed IMSF
@@ -259,7 +259,7 @@ export async function ship(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'in_transit');
 
-  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'in_transit' });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'in_transit' }, imsf.version);
   return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
@@ -268,7 +268,7 @@ export async function deliver(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'delivered');
 
-  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'delivered' });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'delivered' }, imsf.version);
   return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }
 
@@ -277,6 +277,6 @@ export async function complete(id: string) {
   if (!imsf) throw new NotFoundError('IMSF', id);
   assertTransition(DOC_TYPE, imsf.status, 'completed');
 
-  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'completed' });
+  await safeStatusUpdate(prisma.imsf, imsf.id, imsf.status, { status: 'completed' }, imsf.version);
   return prisma.imsf.findUnique({ where: { id: imsf.id } });
 }

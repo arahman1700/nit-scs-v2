@@ -23,9 +23,10 @@ export default createDocumentRouter({
 
   createSchema: mrrvCreateSchema,
   createRoles: WRITE_ROLES,
-  create: (body, userId) => {
+  create: async (body, userId) => {
     const { lines, ...headerData } = body as MrrvCreateDto;
-    return mrrvService.create(headerData, lines, userId);
+    const { grn, poWarnings } = await mrrvService.create(headerData, lines, userId);
+    return { ...grn, poWarnings };
   },
 
   updateSchema: mrrvUpdateSchema,
