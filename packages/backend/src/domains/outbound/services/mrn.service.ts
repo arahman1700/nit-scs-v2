@@ -6,7 +6,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
@@ -178,7 +178,7 @@ export async function complete(id: string, userId: string) {
   }));
 
   await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.mrv, mrn.id, mrn.status, { status: 'completed' });
+    await safeStatusUpdateTx(tx.mrv, mrn.id, mrn.status, { status: 'completed' }, mrn.version);
     await addStockBatch([...goodStockItems, ...blockedStockItems], tx);
   });
 

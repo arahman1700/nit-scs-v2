@@ -79,6 +79,7 @@ export const mrfUpdateSchema = z.object({
   drawingReference: z.string().optional(),
   priority: z.enum(['urgent', 'high', 'medium', 'low']).optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // ── Stock Transfer ────────────────────────────────────────────────────
@@ -116,6 +117,7 @@ export const stockTransferUpdateSchema = z.object({
   toProjectId: uuid.optional(),
   transferDate: z.string().datetime().optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // ── Shipment ──────────────────────────────────────────────────────────

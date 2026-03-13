@@ -46,6 +46,7 @@ export const grnUpdateSchema = z.object({
   binLocation: z.string().optional(),
   receivingDock: z.string().optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // V1 compatibility aliases
@@ -79,6 +80,7 @@ export const miUpdateSchema = z.object({
   requiredDate: z.string().datetime().optional(),
   priority: z.enum(['normal', 'urgent', 'emergency']).optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // V1 compatibility aliases
@@ -118,6 +120,7 @@ export const mrnUpdateSchema = z.object({
   reason: z.string().optional(),
   originalMiId: uuid.optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // V1 compatibility aliases
@@ -131,6 +134,7 @@ export const qciUpdateSchema = z.object({
   result: z.enum(['pass', 'fail', 'conditional']).optional(),
   comments: z.string().optional(),
   status: z.enum(['pending', 'in_progress', 'completed']).optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // V1 compatibility alias
@@ -168,6 +172,7 @@ export const drUpdateSchema = z.object({
   reportDate: z.string().datetime().optional(),
   reportTypes: z.array(z.string()).optional(),
   notes: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // V1 compatibility aliases

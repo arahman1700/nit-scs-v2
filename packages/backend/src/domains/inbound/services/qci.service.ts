@@ -5,7 +5,7 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition, canTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';

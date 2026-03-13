@@ -150,6 +150,7 @@ export const joUpdateSchema = z.object({
   coaApprovalRequired: z.boolean().optional(),
   shiftStartTime: z.string().datetime().optional(),
   cnNumber: z.string().optional(),
+  version: z.number().int().min(0).optional(),
 });
 
 // ── Approval Schema ───────────────────────────────────────────────────

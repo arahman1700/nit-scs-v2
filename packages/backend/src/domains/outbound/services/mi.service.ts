@@ -8,7 +8,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { submitForApproval, processApproval } from '../../workflow/services/approval.service.js';
 import { reserveStockBatch } from '../../inventory/services/inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { log } from '../../../config/logger.js';
 import { eventBus } from '../../../events/event-bus.js';

@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
@@ -136,7 +136,7 @@ export async function submit(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'pending');
-  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'pending' });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'pending' }, st.version);
   const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({
@@ -155,7 +155,7 @@ export async function approve(id: string) {
   const st = await prisma.stockTransfer.findUnique({ where: { id } });
   if (!st) throw new NotFoundError('Stock Transfer', id);
   assertTransition(DOC_TYPE, st.status, 'approved');
-  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'approved' });
+  await safeStatusUpdate(prisma.stockTransfer, st.id, st.status, { status: 'approved' }, st.version);
   const updated = await prisma.stockTransfer.findUnique({ where: { id: st.id } });
 
   eventBus.publish({

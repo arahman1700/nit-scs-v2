@@ -2,7 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { submitForApproval } from '../../workflow/services/approval.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
@@ -525,10 +525,16 @@ export async function assign(id: string, supplierId?: string) {
   if (!jo) throw new NotFoundError('Job Order', id);
   assertTransition(DOC_TYPE, jo.status, 'assigned');
 
-  await safeStatusUpdate(prisma.jobOrder, jo.id, jo.status, {
-    status: 'assigned',
-    supplierId: supplierId ?? jo.supplierId,
-  });
+  await safeStatusUpdate(
+    prisma.jobOrder,
+    jo.id,
+    jo.status,
+    {
+      status: 'assigned',
+      supplierId: supplierId ?? jo.supplierId,
+    },
+    jo.version,
+  );
   const updated = await prisma.jobOrder.findUnique({ where: { id: jo.id } });
 
   eventBus.publish({
@@ -548,7 +554,13 @@ export async function start(id: string) {
   if (!jo) throw new NotFoundError('Job Order', id);
   assertTransition(DOC_TYPE, jo.status, 'in_progress');
 
-  await safeStatusUpdate(prisma.jobOrder, jo.id, jo.status, { status: 'in_progress', startDate: new Date() });
+  await safeStatusUpdate(
+    prisma.jobOrder,
+    jo.id,
+    jo.status,
+    { status: 'in_progress', startDate: new Date() },
+    jo.version,
+  );
   const updated = await prisma.jobOrder.findUnique({ where: { id: jo.id } });
 
   eventBus.publish({
@@ -569,7 +581,7 @@ export async function hold(id: string, reason?: string) {
   assertTransition(DOC_TYPE, jo.status, 'on_hold');
 
   await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'on_hold' });
+    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'on_hold' }, jo.version);
     await tx.joSlaTracking.update({
       where: { jobOrderId: jo.id },
       data: { stopClockStart: new Date(), stopClockReason: reason ?? null },
@@ -584,7 +596,7 @@ export async function resume(id: string) {
   assertTransition(DOC_TYPE, jo.status, 'in_progress');
 
   await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'in_progress' });
+    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'in_progress' }, jo.version);
     const sla = await tx.joSlaTracking.findUnique({ where: { jobOrderId: jo.id } });
     if (sla?.stopClockStart && sla.slaDueDate) {
       const pausedMs = Date.now() - sla.stopClockStart.getTime();
@@ -612,11 +624,17 @@ export async function complete(id: string, userId: string) {
   if (jo.slaTracking?.slaDueDate) slaMet = now <= jo.slaTracking.slaDueDate;
 
   await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, {
-      status: 'completed',
-      completionDate: now,
-      completedById: userId,
-    });
+    await safeStatusUpdateTx(
+      tx.jobOrder,
+      jo.id,
+      jo.status,
+      {
+        status: 'completed',
+        completionDate: now,
+        completedById: userId,
+      },
+      jo.version,
+    );
     if (slaMet !== null) {
       await tx.joSlaTracking.update({ where: { jobOrderId: jo.id }, data: { slaMet } });
     }
@@ -641,7 +659,7 @@ export async function invoice(id: string, paymentData: Record<string, unknown>) 
   assertTransition(DOC_TYPE, jo.status, 'invoiced');
 
   const result = await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'invoiced' });
+    await safeStatusUpdateTx(tx.jobOrder, jo.id, jo.status, { status: 'invoiced' }, jo.version);
     const updated = await tx.jobOrder.findUnique({ where: { id: jo.id } });
     const payment = await tx.joPayment.create({
       data: {

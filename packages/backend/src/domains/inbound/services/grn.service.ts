@@ -6,11 +6,13 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
-import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { GrnCreateDto, GrnUpdateDto, GrnLineDto, ListParams } from '../../../types/dto.js';
+import { validateGrnAgainstPO } from './oracle-po-sync.service.js';
+import type { PoValidationWarning } from './oracle-po-sync.service.js';
 
 const DOC_TYPE = 'grn';
 
@@ -74,8 +76,32 @@ export async function getById(id: string) {
   return grn;
 }
 
-export async function create(headerData: Omit<GrnCreateDto, 'lines'>, lines: GrnLineDto[], userId: string) {
-  const grn = await prisma.$transaction(async tx => {
+export async function create(
+  headerData: Omit<GrnCreateDto, 'lines'>,
+  lines: GrnLineDto[],
+  userId: string,
+): Promise<{ grn: Awaited<ReturnType<typeof createGrnRecord>>; poWarnings: PoValidationWarning[] }> {
+  // Soft PO validation — non-blocking, performed before transaction
+  let poWarnings: PoValidationWarning[] = [];
+  if (headerData.poNumber) {
+    try {
+      const validationItems = lines.map(line => ({
+        itemCode: (line as GrnLineDto & { itemCode?: string }).itemCode ?? line.itemId,
+        qtyReceived: line.qtyReceived,
+      }));
+      const validation = await validateGrnAgainstPO(headerData.poNumber, validationItems);
+      poWarnings = validation.warnings;
+    } catch {
+      // Non-blocking — ignore errors from Oracle integration
+    }
+  }
+
+  const grn = await createGrnRecord(headerData, lines, userId);
+  return { grn, poWarnings };
+}
+
+async function createGrnRecord(headerData: Omit<GrnCreateDto, 'lines'>, lines: GrnLineDto[], userId: string) {
+  return prisma.$transaction(async tx => {
     const grnNumber = await generateDocumentNumber('grn');
 
     let totalValue = 0;
@@ -129,8 +155,6 @@ export async function create(headerData: Omit<GrnCreateDto, 'lines'>, lines: Grn
 
     return created;
   });
-
-  return grn;
 }
 
 export async function update(id: string, data: GrnUpdateDto) {
@@ -160,7 +184,7 @@ export async function submit(id: string) {
   assertTransition(DOC_TYPE, grn.status, 'pending_qc');
 
   await prisma.$transaction(async tx => {
-    await safeStatusUpdateTx(tx.mrrv, grn.id, grn.status, { status: 'pending_qc' });
+    await safeStatusUpdateTx(tx.mrrv, grn.id, grn.status, { status: 'pending_qc' }, grn.version);
 
     // Auto-create QCI if required
     if (grn.rfimRequired) {
