@@ -175,7 +175,7 @@ export async function schedule(id: string) {
   const to = await prisma.transportOrder.findUnique({ where: { id } });
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'scheduled');
-  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, { status: 'scheduled' });
+  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, { status: 'scheduled' }, to.version);
   const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({
@@ -195,10 +195,16 @@ export async function dispatch(id: string) {
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'in_transit');
 
-  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, {
-    status: 'in_transit',
-    actualPickupDate: new Date(),
-  });
+  await safeStatusUpdate(
+    prisma.transportOrder,
+    to.id,
+    to.status,
+    {
+      status: 'in_transit',
+      actualPickupDate: new Date(),
+    },
+    to.version,
+  );
   const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({
@@ -218,10 +224,16 @@ export async function deliver(id: string) {
   if (!to) throw new NotFoundError('Transport Order', id);
   assertTransition(DOC_TYPE, to.status, 'delivered');
 
-  await safeStatusUpdate(prisma.transportOrder, to.id, to.status, {
-    status: 'delivered',
-    actualDeliveryDate: new Date(),
-  });
+  await safeStatusUpdate(
+    prisma.transportOrder,
+    to.id,
+    to.status,
+    {
+      status: 'delivered',
+      actualDeliveryDate: new Date(),
+    },
+    to.version,
+  );
   const updated = await prisma.transportOrder.findUnique({ where: { id: to.id } });
 
   eventBus.publish({

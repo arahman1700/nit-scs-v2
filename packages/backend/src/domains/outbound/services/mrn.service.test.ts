@@ -173,9 +173,9 @@ describe('create', () => {
 // ── update ───────────────────────────────────────────────────────────
 describe('update', () => {
   it('updates a draft MRN and returns existing + updated', async () => {
-    const existing = makeMrn({ status: 'draft' });
-    const updated = { ...existing, notes: 'updated' };
-    mockPrisma.mrv.findUnique.mockResolvedValue(existing);
+    const existing = makeMrn({ status: 'draft', version: 0 });
+    const updated = { ...existing, notes: 'updated', version: 1 };
+    mockPrisma.mrv.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
     mockPrisma.mrv.update.mockResolvedValue(updated);
 
     const result = await update(MRN_ID, { notes: 'updated' } as any);

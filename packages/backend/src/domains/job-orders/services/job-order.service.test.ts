@@ -401,9 +401,9 @@ describe('job-order.service', () => {
 
   describe('update', () => {
     it('updates a draft job order successfully', async () => {
-      const existing = makeJo({ status: 'draft' });
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(existing);
-      const updated = { ...existing, description: 'Updated description' };
+      const existing = makeJo({ status: 'draft', version: 0 });
+      const updated = { ...existing, description: 'Updated description', version: 1 };
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updated);
       mockPrisma.jobOrder.update.mockResolvedValue(updated);
 
       const result = await update('jo-1', { description: 'Updated description' });
@@ -425,8 +425,10 @@ describe('job-order.service', () => {
     });
 
     it('transforms date fields to Date objects', async () => {
-      mockPrisma.jobOrder.findUnique.mockResolvedValue(makeJo({ status: 'draft' }));
-      mockPrisma.jobOrder.update.mockResolvedValue(makeJo());
+      const existing = makeJo({ status: 'draft', version: 0 });
+      const updatedJo = makeJo({ version: 1 });
+      mockPrisma.jobOrder.findUnique.mockResolvedValueOnce(existing).mockResolvedValueOnce(updatedJo);
+      mockPrisma.jobOrder.update.mockResolvedValue(updatedJo);
 
       await update('jo-1', { requestDate: '2025-07-01', requiredDate: '2025-08-01' });
 
