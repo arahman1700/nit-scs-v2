@@ -127,7 +127,7 @@ export async function submit(id: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'pending');
 
-  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, { status: 'pending' });
+  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, { status: 'pending' }, mrn.version);
   return prisma.mrv.findUnique({ where: { id: mrn.id } });
 }
 
@@ -136,11 +136,17 @@ export async function receive(id: string, userId: string) {
   if (!mrn) throw new NotFoundError('MRN', id);
   assertTransition(DOC_TYPE, mrn.status, 'received');
 
-  await safeStatusUpdate(prisma.mrv, mrn.id, mrn.status, {
-    status: 'received',
-    receivedById: userId,
-    receivedDate: new Date(),
-  });
+  await safeStatusUpdate(
+    prisma.mrv,
+    mrn.id,
+    mrn.status,
+    {
+      status: 'received',
+      receivedById: userId,
+      receivedDate: new Date(),
+    },
+    mrn.version,
+  );
   return prisma.mrv.findUnique({ where: { id: mrn.id } });
 }
 

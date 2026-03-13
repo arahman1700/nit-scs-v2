@@ -154,7 +154,7 @@ export async function submit(id: string) {
   const mr = await prisma.materialRequisition.findUnique({ where: { id } });
   if (!mr) throw new NotFoundError('MR', id);
   assertTransition(DOC_TYPE, mr.status, 'submitted');
-  await safeStatusUpdate(prisma.materialRequisition, mr.id, mr.status, { status: 'submitted' });
+  await safeStatusUpdate(prisma.materialRequisition, mr.id, mr.status, { status: 'submitted' }, mr.version);
   return prisma.materialRequisition.findUnique({ where: { id: mr.id } });
 }
 
@@ -163,11 +163,17 @@ export async function review(id: string, userId: string) {
   if (!mr) throw new NotFoundError('MR', id);
   assertTransition(DOC_TYPE, mr.status, 'under_review');
 
-  await safeStatusUpdate(prisma.materialRequisition, mr.id, mr.status, {
-    status: 'under_review',
-    reviewedById: userId,
-    reviewDate: new Date(),
-  });
+  await safeStatusUpdate(
+    prisma.materialRequisition,
+    mr.id,
+    mr.status,
+    {
+      status: 'under_review',
+      reviewedById: userId,
+      reviewDate: new Date(),
+    },
+    mr.version,
+  );
   return prisma.materialRequisition.findUnique({ where: { id: mr.id } });
 }
 
@@ -176,12 +182,18 @@ export async function approve(id: string, userId: string) {
   if (!mr) throw new NotFoundError('MR', id);
   assertTransition(DOC_TYPE, mr.status, 'approved');
 
-  await safeStatusUpdate(prisma.materialRequisition, mr.id, mr.status, {
-    status: 'approved',
-    approvedById: userId,
-    approvalDate: new Date(),
-    stockVerificationSla: new Date(Date.now() + 4 * 60 * 60 * 1000),
-  });
+  await safeStatusUpdate(
+    prisma.materialRequisition,
+    mr.id,
+    mr.status,
+    {
+      status: 'approved',
+      approvedById: userId,
+      approvalDate: new Date(),
+      stockVerificationSla: new Date(Date.now() + 4 * 60 * 60 * 1000),
+    },
+    mr.version,
+  );
   return prisma.materialRequisition.findUnique({ where: { id: mr.id } });
 }
 
