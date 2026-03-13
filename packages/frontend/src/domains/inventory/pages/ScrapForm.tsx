@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, Recycle, CheckCircle, Camera, X, Loader2, Upload, DollarSign, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Save, Recycle, CheckCircle, Camera, Loader2, DollarSign, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { SCRAP_MATERIAL_TYPES } from '@nit-scs-v2/shared/constants';
 import type { Project, Warehouse } from '@nit-scs-v2/shared/types';
 import {
@@ -13,8 +13,9 @@ import {
   useSscList,
   useAcceptBid,
   useRejectBid,
-  useUpload,
 } from '@/api/hooks';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import type { UploadedFile } from '@/components/FileUploadZone';
 import { useProjects, useWarehouses } from '@/domains/master-data/hooks/useMasterData';
 import { previewNextNumber } from '@/utils/autoNumber';
 import { toRecord } from '@/utils/type-helpers';
@@ -46,11 +47,10 @@ export const ScrapForm: React.FC = () => {
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>({});
   const [submitted, setSubmitted] = useState(false);
   const [documentNumber, setDocumentNumber] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<{ url: string; name: string }[]>([]);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
 
   const createMutation = useCreateScrap();
   const updateMutation = useUpdateScrap();
-  const uploadMutation = useUpload();
   const siteManagerApproval = useApproveBySiteManager();
   const qcApproval = useApproveByQc();
   const storekeeperApproval = useApproveByStorekeeper();
@@ -87,27 +87,21 @@ export const ScrapForm: React.FC = () => {
       }
       setFormData(data);
       if (existingDoc.photos && Array.isArray(existingDoc.photos)) {
-        setPhotos(existingDoc.photos.map((url: string, i: number) => ({ url, name: `Photo ${i + 1}` })));
+        setAttachments(
+          existingDoc.photos.map((url: string, i: number) => ({
+            url,
+            originalName: `Photo ${i + 1}`,
+            size: 0,
+            mimeType: 'image/jpeg',
+          })),
+        );
       }
     }
   }, [existingDoc, isEditMode]);
 
-  const handlePhotoUpload = async (file: File) => {
-    try {
-      const result = await uploadMutation.mutateAsync(file);
-      setPhotos(prev => [...prev, { url: result.url, name: result.originalName }]);
-    } catch {
-      // Error handled by mutation state
-    }
-  };
-
-  const handleRemovePhoto = (index: number) => {
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...formData, photos: photos.map(p => p.url) } as Record<string, unknown>;
+    const payload = { ...formData, photos: attachments.map(f => f.url) } as Record<string, unknown>;
 
     if (isEditMode && id) {
       updateMutation.mutate({ ...payload, id } as Record<string, unknown> & { id: string }, {
@@ -141,7 +135,7 @@ export const ScrapForm: React.FC = () => {
             onClick={() => {
               setSubmitted(false);
               setFormData({});
-              setPhotos([]);
+              setAttachments([]);
             }}
             className="btn-secondary px-4 py-2 rounded-lg"
           >
@@ -404,68 +398,25 @@ export const ScrapForm: React.FC = () => {
         </div>
       </div>
 
-      {/* Photo Upload Section */}
+      {/* Condition Photos — FileUploadZone */}
       <div className="glass-card rounded-2xl p-6">
         <h2 className="text-white font-semibold mb-4 flex items-center gap-2">
           <Camera className="w-5 h-5 text-nesma-secondary" />
-          Photos
+          Condition Photos
+          <span className="text-xs font-normal text-gray-400 ml-1">(minimum 3 recommended)</span>
         </h2>
-        <p className="text-gray-400 text-xs mb-4">Upload photos of scrap materials (minimum 3 recommended)</p>
-
-        {/* Photo Grid */}
-        {photos.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-4">
-            {photos.map((photo, index) => (
-              <div key={index} className="relative group border border-white/10 rounded-xl overflow-hidden bg-white/5">
-                <img src={photo.url} alt={photo.name} className="w-full h-28 object-cover" />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    type="button"
-                    onClick={() => handleRemovePhoto(index)}
-                    className="p-1.5 rounded-lg bg-red-500/80 text-white hover:bg-red-500 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-400 p-2 truncate">{photo.name}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Upload Button */}
-        <label
-          className={`border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:bg-white/5 hover:border-nesma-secondary/50 transition-all cursor-pointer group ${
-            uploadMutation.isPending ? 'pointer-events-none opacity-60' : ''
-          }`}
-        >
-          <input
-            type="file"
-            className="hidden"
-            accept="image/*"
-            disabled={uploadMutation.isPending}
-            onChange={e => {
-              const file = e.target.files?.[0];
-              if (file) handlePhotoUpload(file);
-              e.target.value = '';
-            }}
-          />
-          <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
-            {uploadMutation.isPending ? (
-              <Loader2 className="text-nesma-secondary animate-spin w-5 h-5" />
-            ) : (
-              <Upload className="text-gray-400 group-hover:text-nesma-secondary transition-colors w-5 h-5" />
-            )}
-          </div>
-          <span className="block text-sm text-gray-300 group-hover:text-white transition-colors">
-            {uploadMutation.isPending ? 'Uploading...' : 'Click to add photo'}
-          </span>
-          <span className="text-xs text-gray-400 mt-1 block">JPG, PNG -- Max 10MB</span>
-        </label>
-
-        {photos.length > 0 && photos.length < 3 && (
+        <p className="text-gray-400 text-xs mb-4">Upload photos documenting the scrap material condition</p>
+        <FileUploadZone
+          entityType="scrap"
+          entityId={isEditMode ? id : undefined}
+          maxFiles={10}
+          acceptedTypes=".jpg,.jpeg,.png,.pdf"
+          files={attachments}
+          onFilesChange={setAttachments}
+        />
+        {attachments.length > 0 && attachments.length < 3 && (
           <p className="text-amber-400 text-xs mt-2">
-            {3 - photos.length} more photo(s) recommended for complete documentation
+            {3 - attachments.length} more photo(s) recommended for complete documentation
           </p>
         )}
       </div>

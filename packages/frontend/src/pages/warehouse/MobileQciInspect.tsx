@@ -1,6 +1,8 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ClipboardCheck, CheckCircle2, ScanLine, ArrowLeft, AlertCircle, XCircle } from 'lucide-react';
 import BarcodeScanner from '@/components/BarcodeScanner';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import type { UploadedFile } from '@/components/FileUploadZone';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { OfflineQueueBanner } from '@/components/OfflineQueueBanner';
 import { SyncStatusIndicator } from '@/components/SyncStatusIndicator';
@@ -27,6 +29,7 @@ export function MobileQciInspect() {
     { id: '4', description: 'Documentation complete', passed: null, notes: '' },
     { id: '5', description: 'Specification compliance', passed: null, notes: '' },
   ]);
+  const [attachments, setAttachments] = useState<UploadedFile[]>([]);
   const [queuedOffline, setQueuedOffline] = useState(false);
   const [submitError, setSubmitError] = useState(false);
 
@@ -76,6 +79,7 @@ export function MobileQciInspect() {
           passed: line.passed,
           notes: line.notes,
         })),
+        attachments: attachments.map(f => ({ url: f.url, name: f.originalName })),
       });
       setQueuedOffline(!isOnline);
       setStep('done');
@@ -89,6 +93,7 @@ export function MobileQciInspect() {
     setScannedGrnId('');
     setScannedGrnNumber('');
     setInspectionLines(prev => prev.map(l => ({ ...l, passed: null, notes: '' })));
+    setAttachments([]);
     setQueuedOffline(false);
     setSubmitError(false);
   };
@@ -199,6 +204,19 @@ export function MobileQciInspect() {
                   )}
                 </div>
               ))}
+            </div>
+
+            {/* Inspection Photos */}
+            <div className="glass-card rounded-2xl p-4 border border-white/10">
+              <h3 className="text-sm font-semibold text-white mb-3">Inspection Photos</h3>
+              <FileUploadZone
+                entityType="rfim"
+                entityId={scannedGrnId || undefined}
+                maxFiles={10}
+                acceptedTypes=".jpg,.jpeg,.png,.pdf"
+                files={attachments}
+                onFilesChange={setAttachments}
+              />
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-nesma-dark/95 backdrop-blur-xl border-t border-white/10">
