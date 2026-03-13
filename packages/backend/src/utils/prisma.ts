@@ -8,7 +8,10 @@ import { Prisma, PrismaClient } from '@prisma/client';
 // ---------------------------------------------------------------------------
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- standard global singleton pattern
-const globalForPrisma = globalThis as any as { prisma: PrismaClient | undefined };
+const globalForPrisma = globalThis as any as {
+  prisma: PrismaClient | undefined;
+  prismaReadBase: PrismaClient | undefined;
+};
 
 // ---------------------------------------------------------------------------
 // Soft-Delete Middleware (via $extends)
@@ -36,32 +39,65 @@ function applySoftDeleteFilter(model: string | undefined, args: Record<string, u
   args.where = where;
 }
 
+function buildExtendedClient(base: PrismaClient): PrismaClient {
+  return base.$extends({
+    query: {
+      $allModels: {
+        async findMany({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
+        async findFirst({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
+        async count({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
+      },
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type
+  }) as any as PrismaClient;
+}
+
 const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
   });
 
-export const prisma = basePrisma.$extends({
-  query: {
-    $allModels: {
-      async findMany({ model, args, query }) {
-        applySoftDeleteFilter(model, args);
-        return query(args);
-      },
-      async findFirst({ model, args, query }) {
-        applySoftDeleteFilter(model, args);
-        return query(args);
-      },
-      async count({ model, args, query }) {
-        applySoftDeleteFilter(model, args);
-        return query(args);
-      },
-    },
-  },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type
-}) as any as PrismaClient;
+export const prisma = buildExtendedClient(basePrisma);
+
+// ---------------------------------------------------------------------------
+// Read Replica Client
+// ---------------------------------------------------------------------------
+// When DATABASE_READ_URL is set, a second PrismaClient instance is created
+// pointing to the read replica. All read-heavy reporting queries should use
+// `prismaRead` to offload traffic from the primary.
+// Falls back to the primary `prisma` instance when no replica URL is configured.
+// ---------------------------------------------------------------------------
+
+const baseReadPrisma: PrismaClient = (() => {
+  const readUrl = process.env.DATABASE_READ_URL;
+  if (!readUrl) {
+    // No replica configured — fall back to primary base client
+    return basePrisma;
+  }
+  return (
+    globalForPrisma.prismaReadBase ??
+    new PrismaClient({
+      datasources: { db: { url: readUrl } },
+      log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    })
+  );
+})();
+
+export const prismaRead = buildExtendedClient(baseReadPrisma);
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = basePrisma;
+  if (process.env.DATABASE_READ_URL) {
+    globalForPrisma.prismaReadBase = baseReadPrisma;
+  }
 }

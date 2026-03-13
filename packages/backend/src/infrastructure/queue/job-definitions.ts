@@ -53,6 +53,10 @@ export const JOB_NAMES = {
   /** Check visitor overstays */
   HR_VISITOR_OVERSTAY: 'HR_VISITOR_OVERSTAY',
 
+  // ── SCM: Customs & Logistics ───────────────────────────────────────────
+  /** Customs document expiry warnings (7/3/1 day) */
+  SCM_CUSTOMS_EXPIRY: 'SCM_CUSTOMS_EXPIRY',
+
   // ── EAM: Enterprise Asset Management ──────────────────────────────────
   /** Calculate asset depreciation */
   EAM_ASSET_DEPRECIATION: 'EAM_ASSET_DEPRECIATION',
@@ -107,6 +111,7 @@ export const JOB_LEGACY_MAP: Record<JobName, string> = {
   EAM_ASSET_DEPRECIATION: 'asset_depreciation',
   EAM_AMC_EXPIRY: 'amc_expiry',
   EAM_VEHICLE_MAINTENANCE: 'vehicle_maintenance',
+  SCM_CUSTOMS_EXPIRY: 'customs_expiry',
   ONT_EMAIL_RETRY: 'email_retry',
   ONT_EQUIPMENT_RETURN: 'sow_equipment_return',
   ONT_SHIPMENT_DELAYS: 'sow_shipment_delays',
@@ -322,6 +327,17 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
     legacyName: 'vehicle_maintenance',
     queue: QUEUE_NAMES.WMS_QUEUE,
     repeat: { every: 12 * HOUR },
+    priority: 4,
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 30_000 },
+  },
+
+  // ── SCM Customs Jobs → WMS_QUEUE ──────────────────────────────────────
+  {
+    name: JOB_NAMES.SCM_CUSTOMS_EXPIRY,
+    legacyName: 'customs_expiry',
+    queue: QUEUE_NAMES.WMS_QUEUE,
+    repeat: { every: 1 * DAY },
     priority: 4,
     attempts: 3,
     backoff: { type: 'exponential', delay: 30_000 },

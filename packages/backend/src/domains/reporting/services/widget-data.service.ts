@@ -1,4 +1,4 @@
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 
 // ── Types ──────────────────────────────────────────────────────────────
 

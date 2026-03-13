@@ -9,6 +9,7 @@ const VALID_ENTITY_TYPES = new Set([
   'job-order',
   'rfim',
   'osd',
+  'scrap',
   'gate-pass',
   'stock-transfer',
   'mrf',

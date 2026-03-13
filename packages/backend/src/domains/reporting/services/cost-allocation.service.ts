@@ -6,7 +6,7 @@
 // No new Prisma models — pure reporting/aggregation over existing tables.
 // ---------------------------------------------------------------------------
 
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { Prisma } from '@prisma/client';
 import { NotFoundError } from '@nit-scs-v2/shared';
 

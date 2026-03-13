@@ -36,6 +36,7 @@ import { startWorkers } from '../../../infrastructure/queue/queue-worker.js';
 // ── Import domain job modules for side-effect registration ───────────────
 import '../jobs/sla-jobs.js';
 import '../jobs/maintenance-jobs.js';
+import '../jobs/customs-jobs.js';
 import '../../notifications/jobs/notification-jobs.js';
 import '../../inventory/jobs/expiry-jobs.js';
 

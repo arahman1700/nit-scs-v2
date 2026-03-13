@@ -196,6 +196,19 @@ export async function verify(id: string, userId: string) {
     timestamp: new Date().toISOString(),
   });
 
+  eventBus.publish({
+    type: 'customs:clearance_received',
+    entityType: 'customs_document',
+    entityId: id,
+    action: 'verify',
+    payload: {
+      shipmentId: record.shipmentId,
+      documentType: record.documentType,
+    },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
   return updated;
 }
 
@@ -232,6 +245,20 @@ export async function reject(id: string, userId: string, reason?: string) {
       to: 'rejected',
       documentType: record.documentType,
       shipmentId: record.shipmentId,
+      reason,
+    },
+    performedById: userId,
+    timestamp: new Date().toISOString(),
+  });
+
+  eventBus.publish({
+    type: 'customs:hold_placed',
+    entityType: 'customs_document',
+    entityId: id,
+    action: 'reject',
+    payload: {
+      shipmentId: record.shipmentId,
+      documentType: record.documentType,
       reason,
     },
     performedById: userId,

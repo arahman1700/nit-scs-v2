@@ -5,7 +5,7 @@
  * Users pick measures (what to calculate) and dimensions (how to slice),
  * and the service translates that into Prisma queries.
  */
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 
 // ── Entity → Prisma Model Map (shared with custom-data-source.service) ──

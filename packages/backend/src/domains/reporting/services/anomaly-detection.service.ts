@@ -10,7 +10,7 @@
  * 4. Negative inventory — stock levels below zero after transactions
  * 5. Unusual patterns — large price variance, dormant item sudden activity
  */
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { log } from '../../../config/logger.js';
 import { createNotification } from '../../notifications/services/notification.service.js';
 

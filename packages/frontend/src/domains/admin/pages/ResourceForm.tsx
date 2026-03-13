@@ -1,9 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Save, AlertCircle, AlertTriangle, Info, Loader2, Eye } from 'lucide-react';
+import { Save, AlertCircle, AlertTriangle, Info, Loader2, Eye, Paperclip } from 'lucide-react';
 import { LineItemsTable } from '@/components/LineItemsTable';
 import { DocumentComments } from '@/components/DocumentComments';
 import { DocumentAttachments } from '@/components/DocumentAttachments';
+import { FileUploadZone } from '@/components/FileUploadZone';
+import type { UploadedFile } from '@/components/FileUploadZone';
 import { useDocumentForm } from '@/pages/forms/useDocumentForm';
 import { FormFieldRenderer } from '@/components/forms/FormFieldRenderer';
 import { FormSuccessView } from '@/components/forms/FormSuccessView';
@@ -41,6 +43,9 @@ interface SharedFormProps {
   handleFileUpload: (fieldKey: string, file: File) => Promise<void>;
   handleRemoveFile: (fieldKey: string) => void;
   handleSubmit: (e: React.FormEvent) => void;
+  /** Multi-file upload zone state for QCI / DR / Scrap new-document mode */
+  uploadZoneFiles: UploadedFile[];
+  setUploadZoneFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
 }
 
 // ── Flat form content (original rendering) ──────────────────────────────
@@ -73,6 +78,8 @@ const FlatFormContent: React.FC<SharedFormProps & { formCode: string; navigate: 
   handleFileUpload,
   handleRemoveFile,
   handleSubmit,
+  uploadZoneFiles,
+  setUploadZoneFiles,
 }) => (
   <form onSubmit={handleSubmit} className="p-8 space-y-10">
     {allSections.map((section, idx) => (
@@ -117,6 +124,26 @@ const FlatFormContent: React.FC<SharedFormProps & { formCode: string; navigate: 
 
     {isEditMode && id && formType && <DocumentComments documentType={formType} documentId={id} />}
     {isEditMode && id && formType && <DocumentAttachments entityType={formType} recordId={id} />}
+
+    {/* Multi-file upload zone for QCI inspection photos, DR evidence, and Scrap condition photos */}
+    {(formType === 'rfim' || formType === 'osd' || formType === 'scrap') && (!isEditMode || isEditable) && (
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-white flex items-center gap-3">
+          <span className="w-1 h-6 bg-nesma-secondary rounded-full shadow-[0_0_8px_rgba(128,209,233,0.6)]" />
+          <Paperclip size={18} className="text-nesma-secondary" />
+          {formType === 'rfim' ? 'Inspection Photos' : formType === 'osd' ? 'Evidence Photos' : 'Condition Photos'}
+          {formType === 'scrap' && <span className="text-xs font-normal text-gray-400 ml-1">(minimum 3 required)</span>}
+        </h3>
+        <FileUploadZone
+          entityType={formType === 'rfim' ? 'rfim' : formType === 'osd' ? 'osd' : 'scrap'}
+          entityId={isEditMode ? id : undefined}
+          maxFiles={10}
+          acceptedTypes=".jpg,.jpeg,.png,.pdf"
+          files={uploadZoneFiles}
+          onFilesChange={setUploadZoneFiles}
+        />
+      </div>
+    )}
 
     {formType === 'mrrv' && (
       <div className="flex gap-3 flex-wrap">
@@ -345,6 +372,10 @@ const WizardFormContent: React.FC<SharedFormProps & { formConfig: FormConfig }> 
   handleFileUpload,
   handleRemoveFile,
   handleSubmit,
+   
+  uploadZoneFiles: _uploadZoneFiles,
+   
+  setUploadZoneFiles: _setUploadZoneFiles,
 }) => {
   const wizardStepDefs = formConfig.wizardSteps!;
 
@@ -502,6 +533,7 @@ const WizardFormContent: React.FC<SharedFormProps & { formConfig: FormConfig }> 
 export const ResourceForm: React.FC = () => {
   const { formType, id } = useParams<{ formType: string; id: string }>();
   const navigate = useNavigate();
+  const [uploadZoneFiles, setUploadZoneFiles] = useState<UploadedFile[]>([]);
 
   const {
     formData,
@@ -588,6 +620,7 @@ export const ResourceForm: React.FC = () => {
           reset();
           setFormData({});
           setLineItems([]);
+          setUploadZoneFiles([]);
         }}
         onNavigateBack={() => navigate(-1)}
       />
@@ -693,6 +726,8 @@ export const ResourceForm: React.FC = () => {
             handleFileUpload={handleFileUpload}
             handleRemoveFile={handleRemoveFile}
             handleSubmit={handleSubmit}
+            uploadZoneFiles={uploadZoneFiles}
+            setUploadZoneFiles={setUploadZoneFiles}
           />
         ) : (
           <FlatFormContent
@@ -723,6 +758,8 @@ export const ResourceForm: React.FC = () => {
             handleFileUpload={handleFileUpload}
             handleRemoveFile={handleRemoveFile}
             handleSubmit={handleSubmit}
+            uploadZoneFiles={uploadZoneFiles}
+            setUploadZoneFiles={setUploadZoneFiles}
           />
         )}
       </div>

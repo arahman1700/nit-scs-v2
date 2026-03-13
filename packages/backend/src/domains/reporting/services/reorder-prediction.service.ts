@@ -10,7 +10,7 @@
  * 4. Predicted Stockout = Current Stock / ADC (days from now)
  * 5. Economic Order Quantity (EOQ) = sqrt(2 * Annual Demand * Order Cost / Holding Cost)
  */
-import { prisma } from '../../../utils/prisma.js';
+import { prisma, prismaRead } from '../../../utils/prisma.js';
 import { log } from '../../../config/logger.js';
 
 // ── Types ───────────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ async function getConsumptionStats(): Promise<
   }>
 > {
   try {
-    const results = await prisma.$queryRaw<
+    const results = await prismaRead.$queryRaw<
       Array<{
         itemId: string;
         itemCode: string;
@@ -159,7 +159,7 @@ async function getConsumptionStats(): Promise<
  */
 async function getLeadTimeEstimate(itemId: string): Promise<number> {
   try {
-    const result = await prisma.$queryRaw<[{ avg_lead_days: number | null }]>`
+    const result = await prismaRead.$queryRaw<[{ avg_lead_days: number | null }]>`
       SELECT AVG(
         EXTRACT(EPOCH FROM (m."receivedDate" - m."createdAt")) / 86400
       )::float AS avg_lead_days

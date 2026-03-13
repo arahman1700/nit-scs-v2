@@ -5,7 +5,7 @@
  * Each source defines an entity type + aggregation + filters
  * and gets registered in the widget-data registry at startup.
  */
-import { prisma } from '../../../utils/prisma.js';
+import { prisma, prismaRead } from '../../../utils/prisma.js';
 import { getPrismaDelegate } from '../../../utils/prisma-helpers.js';
 import { Prisma } from '@prisma/client';
 import { log } from '../../../config/logger.js';
@@ -55,14 +55,14 @@ const ENTITY_MODEL_MAP: Record<string, string> = {
 // ── CRUD ──────────────────────────────────────────────────────────────
 
 export async function listCustomDataSources(userId?: string) {
-  return prisma.customDataSource.findMany({
+  return prismaRead.customDataSource.findMany({
     where: userId ? { OR: [{ isPublic: true }, { createdById: userId }] } : undefined,
     orderBy: { name: 'asc' },
   });
 }
 
 export async function getCustomDataSource(id: string) {
-  return prisma.customDataSource.findUniqueOrThrow({ where: { id } });
+  return prismaRead.customDataSource.findUniqueOrThrow({ where: { id } });
 }
 
 export async function createCustomDataSource(data: {
@@ -218,7 +218,7 @@ export async function executeCustomDataSource(source: {
     groupBy: (args: unknown) => Promise<unknown[]>;
     findMany: (args: unknown) => Promise<unknown[]>;
     aggregate: (args: unknown) => Promise<unknown>;
-  }>(prisma, modelName);
+  }>(prismaRead, modelName);
 
   const where = buildWhereClause(template);
 
@@ -300,7 +300,7 @@ export async function executeCustomDataSource(source: {
 export async function loadCustomDataSources(
   registerFn: (key: string, fn: (config: unknown) => Promise<unknown>) => void,
 ): Promise<void> {
-  const sources = await prisma.customDataSource.findMany();
+  const sources = await prismaRead.customDataSource.findMany();
 
   for (const source of sources) {
     registerFn(`custom/${source.sourceKey}`, async () => {

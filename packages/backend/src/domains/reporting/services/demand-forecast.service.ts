@@ -6,7 +6,7 @@
  * and seasonal indices to project future demand for inventory items.
  */
 
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { log } from '../../../config/logger.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────

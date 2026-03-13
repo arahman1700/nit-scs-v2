@@ -165,6 +165,40 @@ const CHAIN_RULES: ChainNotificationRule[] = [
   },
 ];
 
+// ── Customs Notification Rules ──────────────────────────────────────────
+
+interface CustomsNotificationRule {
+  eventType: string;
+  recipientRoles: string[];
+  titleTemplate: string;
+  bodyTemplate: string;
+  notificationType: string;
+}
+
+const CUSTOMS_RULES: CustomsNotificationRule[] = [
+  {
+    eventType: 'customs:clearance_received',
+    recipientRoles: ['logistics_coordinator', 'manager'],
+    titleTemplate: 'Customs Document Verified: {{documentType}}',
+    bodyTemplate: 'A customs document has been verified and clearance received for the associated shipment.',
+    notificationType: 'customs_clearance',
+  },
+  {
+    eventType: 'customs:hold_placed',
+    recipientRoles: ['logistics_coordinator', 'manager'],
+    titleTemplate: 'Customs Document Held: {{documentType}}',
+    bodyTemplate: 'A customs document has been rejected and a hold has been placed on the associated shipment.',
+    notificationType: 'customs_hold',
+  },
+  {
+    eventType: 'customs:document_expiring',
+    recipientRoles: ['logistics_coordinator', 'manager'],
+    titleTemplate: 'Customs Document Expiring: {{documentType}}',
+    bodyTemplate: 'A customs document is expiring soon. Please review and renew if required.',
+    notificationType: 'customs_expiry_warning',
+  },
+];
+
 // ── Event Handler ──────────────────────────────────────────────────────
 
 async function handleDocumentStatusChange(event: SystemEvent): Promise<void> {
@@ -353,6 +387,46 @@ async function handleLowStockAlert(event: SystemEvent): Promise<void> {
   }
 }
 
+// ── Customs Event Handler ───────────────────────────────────────────────
+
+async function handleCustomsEvent(event: SystemEvent): Promise<void> {
+  const rule = CUSTOMS_RULES.find(r => r.eventType === event.type);
+  if (!rule) return;
+
+  const documentType = (event.payload.documentType as string) ?? 'Unknown';
+  const title = rule.titleTemplate.replace('{{documentType}}', documentType);
+
+  try {
+    const recipients = await prisma.employee.findMany({
+      where: {
+        systemRole: { in: rule.recipientRoles },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+
+    if (recipients.length === 0) {
+      log('debug', `[ChainNotification] No active recipients for customs event: ${event.type}`);
+      return;
+    }
+
+    await prisma.notification.createMany({
+      data: recipients.map(r => ({
+        recipientId: r.id,
+        title: title.slice(0, 200),
+        body: rule.bodyTemplate,
+        notificationType: rule.notificationType,
+        referenceTable: 'customs_document',
+        referenceId: event.entityId,
+      })),
+    });
+
+    log('info', `[ChainNotification] Created ${recipients.length} notification(s) for ${event.type}: ${documentType}`);
+  } catch (err) {
+    log('error', `[ChainNotification] Failed to create customs notifications for ${event.type}: ${err}`);
+  }
+}
+
 // ── Start / Stop ───────────────────────────────────────────────────────
 
 let started = false;
@@ -363,6 +437,9 @@ export function startChainNotifications(): void {
   eventBus.on('document:status_changed', handleDocumentStatusChange);
   eventBus.on('inventory:low_stock', handleLowStockAlert);
   eventBus.on('inventory:blocked_lots_created', handleBlockedLotsCreated);
+  eventBus.on('customs:clearance_received', handleCustomsEvent);
+  eventBus.on('customs:hold_placed', handleCustomsEvent);
+  eventBus.on('customs:document_expiring', handleCustomsEvent);
   // Also listen on wildcard for events that use action: 'status_change' pattern
   eventBus.on('*', (event: SystemEvent) => {
     if (event.type !== 'document:status_changed' && event.action === 'status_change') {

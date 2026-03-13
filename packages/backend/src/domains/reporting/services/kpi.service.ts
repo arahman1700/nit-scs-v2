@@ -5,7 +5,7 @@
 // grouped into 5 categories: Inventory, Procurement, Logistics, Quality, Financial.
 // ---------------------------------------------------------------------------
 
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { logger } from '../../../config/logger.js';
 
 // ── Types ──────────────────────────────────────────────────────────────────

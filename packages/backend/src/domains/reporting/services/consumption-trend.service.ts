@@ -6,7 +6,7 @@
  * - Top-N most consumed items by volume over a configurable period
  */
 
-import { prisma } from '../../../utils/prisma.js';
+import { prismaRead as prisma } from '../../../utils/prisma.js';
 import { log } from '../../../config/logger.js';
 
 // ── Types ───────────────────────────────────────────────────────────────────
