@@ -7,6 +7,27 @@ import { eventBus, type SystemEvent } from './event-bus.js';
 import { prisma } from '../utils/prisma.js';
 import { log } from '../config/logger.js';
 import { sendTemplatedEmail } from '../domains/system/services/email.service.js';
+import { renderEmailTemplate } from '../domains/notifications/services/email-renderer.service.js';
+
+// ── V1 → V2 Display Name Map ─────────────────────────────────────────
+
+const ENTITY_DISPLAY_NAMES: Record<string, string> = {
+  mrrv: 'GRN',
+  mirv: 'MI',
+  mrv: 'MRN',
+  rfim: 'QCI',
+  osd: 'DR',
+  mrf: 'MR',
+  stock_transfer: 'WT',
+  shipment: 'Shipment',
+  scrap_item: 'Scrap Item',
+  jo: 'Job Order',
+  imsf: 'IMSF',
+};
+
+function getDisplayName(entityType: string): string {
+  return ENTITY_DISPLAY_NAMES[entityType] ?? entityType.toUpperCase();
+}
 
 // ── Notification Rule Definitions ──────────────────────────────────────
 
@@ -195,18 +216,47 @@ async function handleDocumentStatusChange(event: SystemEvent): Promise<void> {
       // Fire-and-forget email for rules with templates
       if (rule.emailTemplateCode) {
         const roleRecipients = rule.recipientRoles.map(r => `role:${r}`);
-        sendTemplatedEmail({
-          templateCode: rule.emailTemplateCode,
-          to: roleRecipients,
-          variables: {
-            documentType: event.entityType,
-            documentId: event.entityId,
-            status: toStatus,
-            documentNumber: (event.payload.documentNumber as string) ?? event.entityId,
-          },
-          referenceTable: event.entityType,
-          referenceId: event.entityId,
-        }).catch(err => log('error', `[ChainNotification] Email failed: ${err}`));
+        const documentNumber = (event.payload.documentNumber as string) ?? event.entityId;
+        const templateVars: Record<string, string> = {
+          documentType: getDisplayName(event.entityType),
+          documentNumber,
+          date: new Date().toLocaleDateString(),
+          status: toStatus,
+          orgName: process.env.ORG_NAME ?? 'NIT Supply Chain',
+          ...(event.payload.approverName ? { approverName: event.payload.approverName as string } : {}),
+          ...(event.payload.rejectorName ? { rejectorName: event.payload.rejectorName as string } : {}),
+          ...(event.payload.reason ? { reason: event.payload.reason as string } : {}),
+          ...(event.payload.escalatedFrom ? { escalatedFrom: event.payload.escalatedFrom as string } : {}),
+          ...(event.payload.slaDeadline ? { slaDeadline: event.payload.slaDeadline as string } : {}),
+        };
+
+        // Attempt to render with the new email renderer first
+        const rendered = await renderEmailTemplate(rule.emailTemplateCode, templateVars).catch(() => null);
+
+        if (rendered) {
+          // Use pre-rendered subject/html via sendTemplatedEmail (template still needed for logging)
+          sendTemplatedEmail({
+            templateCode: rule.emailTemplateCode,
+            to: roleRecipients,
+            variables: templateVars,
+            referenceTable: event.entityType,
+            referenceId: event.entityId,
+          }).catch(err => log('error', `[ChainNotification] Email failed: ${err}`));
+        } else {
+          // Fallback: send with raw variables (template may not exist in new format)
+          sendTemplatedEmail({
+            templateCode: rule.emailTemplateCode,
+            to: roleRecipients,
+            variables: {
+              documentType: event.entityType,
+              documentId: event.entityId,
+              status: toStatus,
+              documentNumber,
+            },
+            referenceTable: event.entityType,
+            referenceId: event.entityId,
+          }).catch(err => log('error', `[ChainNotification] Email failed: ${err}`));
+        }
       }
 
       log(
