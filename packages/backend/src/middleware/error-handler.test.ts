@@ -172,6 +172,21 @@ describe('errorHandler middleware', () => {
       });
     });
 
+    it('returns 409 with TRANSACTION_CONFLICT for P2034', () => {
+      const err = new (Prisma.PrismaClientKnownRequestError as unknown as new (code: string) => Error)('P2034');
+      const req = mockReq();
+      const res = mockRes();
+
+      errorHandler(err, req, res, mockNext);
+
+      expect(res.status).toHaveBeenCalledWith(409);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        message: 'Transaction conflict — please retry the operation',
+        code: 'TRANSACTION_CONFLICT',
+      });
+    });
+
     it('returns 400 for PrismaClientValidationError', () => {
       const err = new (Prisma.PrismaClientValidationError as unknown as new () => Error)();
       const req = mockReq();

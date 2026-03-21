@@ -631,16 +631,39 @@ describe('asn.service', () => {
       await expect(receiveAsn('asn-1', 'user-1')).rejects.toThrow('Only arrived ASNs can be received');
     });
 
-    it('falls back to itemId when item UOM is not found', async () => {
+    it('falls back to line.uomId when item UOM is not found in map', async () => {
+      // ASN lines from DB don't have uomId, so fallback is undefined (not itemId)
       mockPrisma.item.findMany.mockResolvedValue([]);
 
       await receiveAsn('asn-1', 'user-1');
 
       const call = mockPrisma.mrrv.create.mock.calls[0][0];
       const grnLines = call.data.mrrvLines.create;
-      // When item not found in map, uomId falls back to line.itemId
-      expect(grnLines[0].uomId).toBe('item-1');
-      expect(grnLines[1].uomId).toBe('item-2');
+      // When item not found in map, uomId falls back to line.uomId (NOT line.itemId)
+      // AsnLine model has no uomId so this is undefined, but it's correct behavior
+      // because assigning an itemId as a uomId is a data corruption bug
+      expect(grnLines[0].uomId).not.toBe('item-1');
+      expect(grnLines[1].uomId).not.toBe('item-2');
+    });
+
+    it('uses line.uomId as fallback when itemUomMap has no entry and line has uomId', async () => {
+      // Simulate ASN lines that have a uomId property
+      const linesWithUom = [
+        makeAsnLine({ id: 'line-1', itemId: 'item-1', qtyExpected: 100, uomId: 'uom-abc' }),
+        makeAsnLine({ id: 'line-2', itemId: 'item-2', qtyExpected: 50, lotNumber: null, uomId: 'uom-def' }),
+      ];
+      (mockPrisma as Record<string, PrismaModelMock>).advanceShippingNotice.findUnique.mockResolvedValue(
+        makeAsn({ status: 'arrived', asnNumber: 'ASN-2026-001', lines: linesWithUom }),
+      );
+      // Item UOM map returns empty -- no items found
+      mockPrisma.item.findMany.mockResolvedValue([]);
+
+      await receiveAsn('asn-1', 'user-1');
+
+      const call = mockPrisma.mrrv.create.mock.calls[0][0];
+      const grnLines = call.data.mrrvLines.create;
+      expect(grnLines[0].uomId).toBe('uom-abc');
+      expect(grnLines[1].uomId).toBe('uom-def');
     });
 
     it('sets poNumber to null when purchaseOrderRef is not set', async () => {

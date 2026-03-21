@@ -73,6 +73,13 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
           code: 'FK_VIOLATION',
         });
         return;
+      case 'P2034':
+        res.status(409).json({
+          success: false,
+          message: 'Transaction conflict — please retry the operation',
+          code: 'TRANSACTION_CONFLICT',
+        });
+        return;
     }
   }
 

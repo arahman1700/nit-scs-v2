@@ -259,7 +259,7 @@ export async function receiveAsn(id: string, userId: string) {
             itemId: line.itemId,
             qtyOrdered: Number(line.qtyExpected),
             qtyReceived: Number(line.qtyExpected),
-            uomId: itemUomMap.get(line.itemId) ?? line.itemId, // use item's default UOM
+            uomId: itemUomMap.get(line.itemId) ?? (line as Record<string, unknown>).uomId as string, // use item's default UOM, fallback to line's own UOM (not line.itemId)
             condition: 'good',
             // lotNumber lives on AsnLine, not MrrvLine — stored via notes for traceability
             notes: line.lotNumber ? `Lot: ${line.lotNumber}` : null,

@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../../utils/prisma.js';
+import type { TxClient } from '../../inventory/services/inventory.service.js';
 
 export interface AuditEntry {
   tableName: string;
@@ -37,8 +38,9 @@ export interface AuditEntry {
   ipAddress?: string;
 }
 
-export async function createAuditLog(entry: AuditEntry) {
-  return prisma.auditLog.create({
+export async function createAuditLog(entry: AuditEntry, tx?: TxClient) {
+  const client = tx ?? prisma;
+  return client.auditLog.create({
     data: {
       tableName: entry.tableName,
       recordId: entry.recordId,

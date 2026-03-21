@@ -177,6 +177,29 @@ describe('audit.service', () => {
 
       await expect(createAuditLog(baseEntry)).rejects.toThrow('DB error');
     });
+
+    it('should use global prisma when tx is not provided', async () => {
+      const created = { id: 'audit-tx-1', ...baseEntry };
+      mockPrisma.auditLog.create.mockResolvedValue(created);
+
+      await createAuditLog(baseEntry);
+
+      expect(mockPrisma.auditLog.create).toHaveBeenCalledOnce();
+    });
+
+    it('should use tx.auditLog.create when tx is provided', async () => {
+      const mockTx = {
+        auditLog: {
+          create: vi.fn().mockResolvedValue({ id: 'audit-tx-2', ...baseEntry }),
+        },
+      };
+
+      const result = await createAuditLog(baseEntry, mockTx as never);
+
+      expect(mockTx.auditLog.create).toHaveBeenCalledOnce();
+      expect(mockPrisma.auditLog.create).not.toHaveBeenCalled();
+      expect(result).toEqual({ id: 'audit-tx-2', ...baseEntry });
+    });
   });
 
   // ---------------------------------------------------------------------------
