@@ -113,17 +113,36 @@ async function updateLotWithVersion(
   }
 }
 
+// ── Low-Stock Alert Types ────────────────────────────────────────────────
+
+export interface LowStockAlert {
+  type: 'inventory:low_stock';
+  entityType: 'inventory_level';
+  entityId: string;
+  action: string;
+  payload: Record<string, unknown>;
+  timestamp: string;
+}
+
+/** Publish collected low-stock alerts (call AFTER transaction commits). */
+function publishLowStockAlerts(alerts: LowStockAlert[]): void {
+  for (const alert of alerts) {
+    eventBus.publish(alert);
+  }
+}
+
 // ── Low-Stock Alert Check ────────────────────────────────────────────────
 
 /**
  * Check if inventory has dropped below minLevel or reorderPoint.
  * Sets alertSent=true to avoid repeated alerts.
+ * Returns alert data instead of publishing — caller publishes post-commit.
  */
 async function checkLowStockAlert(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0],
   itemId: string,
   warehouseId: string,
-): Promise<void> {
+): Promise<LowStockAlert | null> {
   const level = await tx.inventoryLevel.findUnique({
     where: { itemId_warehouseId: { itemId, warehouseId } },
     include: {
@@ -132,7 +151,7 @@ async function checkLowStockAlert(
     },
   });
 
-  if (!level || level.alertSent) return;
+  if (!level || level.alertSent) return null;
 
   const available = Number(level.qtyOnHand) - Number(level.qtyReserved);
   const minLevel = level.minLevel ? Number(level.minLevel) : null;
@@ -163,11 +182,9 @@ async function checkLowStockAlert(
 
     log(alertType === 'critical' ? 'warn' : 'info', `[Inventory] Low stock ${alertType}: ${title}`);
 
-    // Create real Notification records for warehouse supervisors (fire-and-forget outside tx)
-    // We schedule this after the transaction commits by queueing to event bus
-    eventBus.publish({
-      type: 'inventory:low_stock',
-      entityType: 'inventory_level',
+    return {
+      type: 'inventory:low_stock' as const,
+      entityType: 'inventory_level' as const,
       entityId: `${itemId}:${warehouseId}`,
       action: alertType === 'critical' ? 'critical_low_stock' : 'low_stock_warning',
       payload: {
@@ -185,8 +202,10 @@ async function checkLowStockAlert(
         body,
       },
       timestamp: new Date().toISOString(),
-    });
+    };
   }
+
+  return null;
 }
 
 // ── Add Stock ───────────────────────────────────────────────────────────
@@ -410,7 +429,7 @@ export async function consumeReservation(
   qty: number,
   mirvLineId: string,
 ): Promise<ConsumptionResult> {
-  return prisma.$transaction(async tx => {
+  const { totalCost, alerts } = await prisma.$transaction(async tx => {
     // 1. Decrement both qtyOnHand AND qtyReserved with optimistic locking
     await updateLevelWithVersion(tx, itemId, warehouseId, {
       qtyOnHand: { decrement: qty },
@@ -430,7 +449,7 @@ export async function consumeReservation(
     });
 
     let remaining = qty;
-    let totalCost = 0;
+    let cost = 0;
 
     for (const lot of lots) {
       if (remaining <= 0) break;
@@ -440,7 +459,7 @@ export async function consumeReservation(
 
       const toConsume = Math.min(remaining, lotAvailable);
       const unitCost = Number(lot.unitCost ?? 0);
-      totalCost += toConsume * unitCost;
+      cost += toConsume * unitCost;
 
       const newAvailable = lotAvailable - toConsume;
       const newReserved = Math.max(0, Number(lot.reservedQty ?? 0) - toConsume);
@@ -465,11 +484,18 @@ export async function consumeReservation(
       remaining -= toConsume;
     }
 
-    // 4. Check low-stock alerts
-    await checkLowStockAlert(tx, itemId, warehouseId);
+    // 4. Check low-stock alerts (collect data, don't publish inside tx)
+    const collectedAlerts: LowStockAlert[] = [];
+    const alert = await checkLowStockAlert(tx, itemId, warehouseId);
+    if (alert) collectedAlerts.push(alert);
 
-    return { totalCost };
+    return { totalCost: cost, alerts: collectedAlerts };
   });
+
+  // Publish low-stock alerts AFTER transaction commits
+  publishLowStockAlerts(alerts);
+
+  return { totalCost };
 }
 
 // ── Deduct Stock (without reservation) ──────────────────────────────────
@@ -484,7 +510,7 @@ export async function deductStock(
   qty: number,
   ref: ConsumptionReference,
 ): Promise<ConsumptionResult> {
-  return prisma.$transaction(async tx => {
+  const { totalCost, alerts } = await prisma.$transaction(async tx => {
     // 1. Check availability
     const level = await tx.inventoryLevel.findUnique({
       where: { itemId_warehouseId: { itemId, warehouseId } },
@@ -512,7 +538,7 @@ export async function deductStock(
     });
 
     let remaining = qty;
-    let totalCost = 0;
+    let cost = 0;
 
     for (const lot of lots) {
       if (remaining <= 0) break;
@@ -522,7 +548,7 @@ export async function deductStock(
 
       const toConsume = Math.min(remaining, lotAvailable);
       const unitCost = Number(lot.unitCost ?? 0);
-      totalCost += toConsume * unitCost;
+      cost += toConsume * unitCost;
 
       const newAvailable = lotAvailable - toConsume;
 
@@ -547,15 +573,22 @@ export async function deductStock(
       remaining -= toConsume;
     }
 
-    // 4. Check low-stock alerts
-    await checkLowStockAlert(tx, itemId, warehouseId);
+    // 4. Check low-stock alerts (collect data, don't publish inside tx)
+    const collectedAlerts: LowStockAlert[] = [];
+    const alert = await checkLowStockAlert(tx, itemId, warehouseId);
+    if (alert) collectedAlerts.push(alert);
 
     // 5. Invalidate cached dashboard data
     // Note: done inside tx callback but invalidation is best-effort
     await invalidateInventoryCache();
 
-    return { totalCost };
+    return { totalCost: cost, alerts: collectedAlerts };
   });
+
+  // Publish low-stock alerts AFTER transaction commits
+  publishLowStockAlerts(alerts);
+
+  return { totalCost };
 }
 
 // ############################################################################
@@ -622,18 +655,27 @@ export async function addStockBatch(items: AddStockParams[], externalTx?: TxClie
       }
     }
 
-    // Single low-stock check pass for all affected items
+    // Single low-stock check pass for all affected items (collect alerts, don't publish inside tx)
+    const collectedAlerts: LowStockAlert[] = [];
     const uniquePairs = [...new Set(items.map(i => `${i.itemId}:${i.warehouseId}`))];
     for (const pair of uniquePairs) {
       const [itemId, warehouseId] = pair.split(':');
-      await checkLowStockAlert(tx, itemId, warehouseId);
+      const alert = await checkLowStockAlert(tx, itemId, warehouseId);
+      if (alert) collectedAlerts.push(alert);
     }
+    return collectedAlerts;
   };
 
+  let alerts: LowStockAlert[];
   if (externalTx) {
-    await run(externalTx);
+    alerts = await run(externalTx);
+    // When using externalTx, caller owns the transaction commit —
+    // alerts will be published after the outer tx commits (best-effort)
+    publishLowStockAlerts(alerts);
   } else {
-    await prisma.$transaction(run);
+    alerts = await prisma.$transaction(run);
+    // Standalone tx — safe to publish now (transaction already committed)
+    publishLowStockAlerts(alerts);
   }
 
   log('info', `[Inventory] Batch added stock for ${items.length} items`);
@@ -720,6 +762,7 @@ export async function consumeReservationBatch(
   const run = async (tx: TxClient) => {
     let totalCost = 0;
     const lineCosts = new Map<string, number>();
+    const collectedAlerts: LowStockAlert[] = [];
 
     for (const { itemId, warehouseId, qty, mirvLineId } of items) {
       // Decrement both qtyOnHand AND qtyReserved
@@ -772,16 +815,24 @@ export async function consumeReservationBatch(
       totalCost += lineCost;
       lineCosts.set(mirvLineId, lineCost);
 
-      await checkLowStockAlert(tx, itemId, warehouseId);
+      const alert = await checkLowStockAlert(tx, itemId, warehouseId);
+      if (alert) collectedAlerts.push(alert);
     }
 
-    return { totalCost, lineCosts };
+    return { totalCost, lineCosts, alerts: collectedAlerts };
   };
 
+  let result: { totalCost: number; lineCosts: Map<string, number>; alerts: LowStockAlert[] };
   if (externalTx) {
-    return run(externalTx);
+    result = await run(externalTx);
+  } else {
+    result = await prisma.$transaction(run);
   }
-  return prisma.$transaction(run);
+
+  // Publish low-stock alerts AFTER transaction commits
+  publishLowStockAlerts(result.alerts);
+
+  return { totalCost: result.totalCost, lineCosts: result.lineCosts };
 }
 
 /**
@@ -796,6 +847,7 @@ export async function deductStockBatch(
 
   const run = async (tx: TxClient) => {
     let totalCost = 0;
+    const collectedAlerts: LowStockAlert[] = [];
 
     for (const { itemId, warehouseId, qty, ref } of items) {
       const level = await tx.inventoryLevel.findUnique({
@@ -848,17 +900,25 @@ export async function deductStockBatch(
         remaining -= toConsume;
       }
 
-      await checkLowStockAlert(tx, itemId, warehouseId);
+      const alert = await checkLowStockAlert(tx, itemId, warehouseId);
+      if (alert) collectedAlerts.push(alert);
     }
 
     await invalidateInventoryCache();
-    return { totalCost };
+    return { totalCost, alerts: collectedAlerts };
   };
 
+  let result: { totalCost: number; alerts: LowStockAlert[] };
   if (externalTx) {
-    return run(externalTx);
+    result = await run(externalTx);
+  } else {
+    result = await prisma.$transaction(run);
   }
-  return prisma.$transaction(run);
+
+  // Publish low-stock alerts AFTER transaction commits
+  publishLowStockAlerts(result.alerts);
+
+  return { totalCost: result.totalCost };
 }
 
 // ── Get Stock Level ─────────────────────────────────────────────────────

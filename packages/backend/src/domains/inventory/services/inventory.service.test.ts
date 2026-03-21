@@ -6,17 +6,23 @@ const { mockPrisma } = vi.hoisted(() => {
   return { mockPrisma: {} as PrismaMock };
 });
 
+const { mockEventBus } = vi.hoisted(() => {
+  return { mockEventBus: { publish: vi.fn() } };
+});
+
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../audit/services/audit.service.js', () => ({ createAuditLog: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
 vi.mock('../../../utils/cache.js', () => ({ invalidateCachePattern: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: mockEventBus }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { createAuditLog } from '../../audit/services/audit.service.js';
 import {
   addStock,
+  addStockBatch,
   reserveStock,
   releaseReservation,
   releaseReservationBatch,
@@ -736,6 +742,90 @@ describe('inventory.service', () => {
           OR: [{ itemId: 'item-1', warehouseId: 'wh-1' }],
         },
       });
+    });
+  });
+
+  // ─── Post-commit low-stock alerts ─────────────────────────────────────
+
+  describe('post-commit low-stock alerts', () => {
+    const lowStockLevel = makeLevelRow({
+      qtyOnHand: 5,
+      qtyReserved: 0,
+      minLevel: 10,
+      reorderPoint: 20,
+      alertSent: false,
+      item: { itemCode: 'ITM-001', itemDescription: 'Steel Pipe' },
+      warehouse: { warehouseCode: 'WH-001', warehouseName: 'Main Warehouse' },
+    });
+
+    it('publishes low-stock alert AFTER addStockBatch transaction commits (not inside)', async () => {
+      let publishCalledInsideTx = false;
+
+      // Override $transaction to track if publish is called inside
+      mockPrisma.$transaction.mockImplementation(async (fn: (tx: PrismaMock) => Promise<unknown>) => {
+        const result = await fn(mockPrisma);
+        // At this point we're still "inside" the mock tx callback
+        // If eventBus.publish was called, it means it happened inside the tx
+        if (mockEventBus.publish.mock.calls.length > 0) {
+          publishCalledInsideTx = true;
+        }
+        return result;
+      });
+
+      // Setup: findUnique returns low stock level (triggers alert)
+      mockPrisma.inventoryLevel.findUnique.mockResolvedValue(lowStockLevel);
+      mockPrisma.inventoryLevel.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.inventoryLevel.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.create.mockResolvedValue({});
+      mockedGenDoc.mockResolvedValue('LOT-001');
+
+      await addStockBatch([{ itemId: 'item-1', warehouseId: 'wh-1', qty: 1 }]);
+
+      // eventBus.publish should NOT have been called inside the $transaction callback
+      expect(publishCalledInsideTx).toBe(false);
+      // But it SHOULD have been called after
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'inventory:low_stock',
+          entityType: 'inventory_level',
+        }),
+      );
+    });
+
+    it('does NOT publish low-stock alert when transaction throws', async () => {
+      mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      await expect(
+        addStockBatch([{ itemId: 'item-1', warehouseId: 'wh-1', qty: 1 }]),
+      ).rejects.toThrow('Transaction failed');
+
+      expect(mockEventBus.publish).not.toHaveBeenCalled();
+    });
+
+    it('checkLowStockAlert returns alert data (not void) for collection post-commit', async () => {
+      // Setup: findUnique returns low stock level that triggers a critical alert
+      mockPrisma.inventoryLevel.findUnique.mockResolvedValue(lowStockLevel);
+      mockPrisma.inventoryLevel.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.inventoryLevel.update.mockResolvedValue({});
+      mockPrisma.inventoryLot.create.mockResolvedValue({});
+      mockedGenDoc.mockResolvedValue('LOT-001');
+
+      await addStockBatch([{ itemId: 'item-1', warehouseId: 'wh-1', qty: 1 }]);
+
+      // Verify the published alert has the expected structure
+      expect(mockEventBus.publish).toHaveBeenCalledTimes(1);
+      const publishedAlert = mockEventBus.publish.mock.calls[0][0];
+      expect(publishedAlert.type).toBe('inventory:low_stock');
+      expect(publishedAlert.entityType).toBe('inventory_level');
+      expect(publishedAlert.entityId).toBe('item-1:wh-1');
+      expect(publishedAlert.action).toBe('critical_low_stock');
+      expect(publishedAlert.payload).toEqual(
+        expect.objectContaining({
+          itemId: 'item-1',
+          warehouseId: 'wh-1',
+          alertType: 'critical',
+        }),
+      );
     });
   });
 });
