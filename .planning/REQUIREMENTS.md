@@ -11,11 +11,11 @@ Requirements for production launch. Each maps to roadmap phases.
 
 - [ ] **DINT-01**: All stock-modifying operations (GRN, MI, MRN, MR, WT) wrap stock mutations + document updates in a single Prisma $transaction
 - [ ] **DINT-02**: Approval state machine (processApproval) wraps all DB calls in a single $transaction with notifications moved post-commit
-- [ ] **DINT-03**: ASN UOM assignment bug fixed -- line.uomId used instead of line.itemId
-- [ ] **DINT-04**: GRN totalValue calculated from line items during create transaction, returned in initial response
+- [x] **DINT-03**: ASN UOM assignment bug fixed -- line.uomId used instead of line.itemId
+- [x] **DINT-04**: GRN totalValue calculated from line items during create transaction, returned in initial response
 - [ ] **DINT-05**: Soft-delete Prisma extension covers findUnique, aggregate, and groupBy in addition to findMany/findFirst/count
 - [ ] **DINT-06**: Float-to-Decimal migration for CycleCountLine, StagingAssignment, PackingLine quantity fields
-- [ ] **DINT-07**: Domain events published AFTER transaction commits, never inside transaction boundaries
+- [x] **DINT-07**: Domain events published AFTER transaction commits, never inside transaction boundaries
 - [ ] **DINT-08**: WT/stock-transfer service duplication eliminated -- V1 wt.service.ts wraps V2 stock-transfer.service.ts
 - [ ] **DINT-09**: totalValue calculation extracted to shared utility, used by all document services
 
@@ -115,11 +115,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | DINT-01 | Phase 1 | Pending |
 | DINT-02 | Phase 1 | Pending |
-| DINT-03 | Phase 1 | Pending |
-| DINT-04 | Phase 1 | Pending |
+| DINT-03 | Phase 1 | Complete |
+| DINT-04 | Phase 1 | Complete |
 | DINT-05 | Phase 2 | Pending |
 | DINT-06 | Phase 2 | Pending |
-| DINT-07 | Phase 1 | Pending |
+| DINT-07 | Phase 1 | Complete |
 | DINT-08 | Phase 2 | Pending |
 | DINT-09 | Phase 2 | Pending |
 | SECR-01 | Phase 3 | Pending |

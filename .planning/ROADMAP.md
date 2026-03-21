@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Transaction foundation: P2034 error handling, tx-aware audit, ASN UOM fix, GRN totalValue verification, post-commit low-stock alerts
+- [x] 01-01-PLAN.md -- Transaction foundation: P2034 error handling, tx-aware audit, ASN UOM fix, GRN totalValue verification, post-commit low-stock alerts
 - [ ] 01-02-PLAN.md -- Approval state machine: wrap processApproval/submitForApproval in $transaction, fix MI approve split-transaction
 
 ### Phase 2: Data Layer Cleanup
