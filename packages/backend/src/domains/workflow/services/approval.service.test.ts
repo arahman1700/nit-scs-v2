@@ -13,9 +13,12 @@ vi.mock('../../../socket/setup.js', () => ({
   emitToUser: vi.fn(),
   emitToDocument: vi.fn(),
 }));
-vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../config/logger.js', () => ({ log: vi.fn(), logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn() } }));
 vi.mock('../../../events/event-bus.js', () => ({
   eventBus: { publish: vi.fn() },
+}));
+vi.mock('../../notifications/services/notification.service.js', () => ({
+  createNotification: vi.fn().mockResolvedValue({}),
 }));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
@@ -182,7 +185,7 @@ describe('approval.service', () => {
         ],
       });
 
-      // Should create audit log
+      // Should create audit log (with tx parameter)
       expect(createAuditLog).toHaveBeenCalledWith(
         expect.objectContaining({
           tableName: 'mirv',
@@ -190,6 +193,7 @@ describe('approval.service', () => {
           action: 'update',
           performedById: 'user-1',
         }),
+        expect.anything(), // tx client
       );
 
       // Should return top-level approval info
@@ -277,10 +281,11 @@ describe('approval.service', () => {
     it('approves current step and fully approves document when single level', async () => {
       const step = makeApprovalStep();
       mockPrisma.approvalStep.findFirst
-        .mockResolvedValueOnce(step) // current pending step
-        .mockResolvedValueOnce(null); // no next step
+        .mockResolvedValueOnce(step) // current pending step (READ PHASE)
+        .mockResolvedValueOnce(null); // no next step (inside tx)
       mockPrisma.approvalStep.update.mockResolvedValue({});
       mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
       mockPrisma.auditLog.create.mockResolvedValue({});
 
       // Authorize: admin role
@@ -312,7 +317,7 @@ describe('approval.service', () => {
         }),
       });
 
-      // Audit log should be created
+      // Audit log should be created (with tx parameter)
       expect(createAuditLog).toHaveBeenCalledWith(
         expect.objectContaining({
           tableName: 'mirv',
@@ -321,6 +326,7 @@ describe('approval.service', () => {
           newValues: expect.objectContaining({ status: 'approved' }),
           performedById: 'approver-1',
         }),
+        expect.anything(), // tx client
       );
     });
 
@@ -376,6 +382,7 @@ describe('approval.service', () => {
       mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step).mockResolvedValueOnce(null); // no next step
       mockPrisma.approvalStep.update.mockResolvedValue({});
       mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
       mockPrisma.auditLog.create.mockResolvedValue({});
 
       // Admin user
@@ -406,6 +413,7 @@ describe('approval.service', () => {
       mockPrisma.approvalStep.update.mockResolvedValue({});
       mockPrisma.approvalStep.updateMany.mockResolvedValue({ count: 0 });
       mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
       mockPrisma.auditLog.create.mockResolvedValue({});
 
       // Authorize
@@ -447,7 +455,7 @@ describe('approval.service', () => {
         },
       });
 
-      // Audit log
+      // Audit log (with tx parameter)
       expect(createAuditLog).toHaveBeenCalledWith(
         expect.objectContaining({
           tableName: 'mirv',
@@ -459,6 +467,7 @@ describe('approval.service', () => {
           }),
           performedById: 'approver-1',
         }),
+        expect.anything(), // tx client
       );
     });
 
@@ -468,6 +477,7 @@ describe('approval.service', () => {
       mockPrisma.approvalStep.update.mockResolvedValue({});
       mockPrisma.approvalStep.updateMany.mockResolvedValue({ count: 0 });
       mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
       mockPrisma.auditLog.create.mockResolvedValue({});
 
       mockPrisma.employee.findUnique.mockResolvedValue({

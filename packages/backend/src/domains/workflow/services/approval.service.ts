@@ -6,6 +6,7 @@ import { createNotification } from '../../notifications/services/notification.se
 import { emitToRole, emitToDocument } from '../../../socket/setup.js';
 import { log } from '../../../config/logger.js';
 import { eventBus } from '../../../events/event-bus.js';
+import { type TxClient } from '../../inventory/services/inventory.service.js';
 
 // ── Document Display Names (V1 internal → V2 label) ────────────────────
 
@@ -97,6 +98,19 @@ type PrismaDelegate = {
 function getDelegate(documentType: string): PrismaDelegate {
   const modelName = MODEL_MAP[documentType] || documentType;
   return getPrismaDelegate<PrismaDelegate>(prisma, modelName);
+}
+
+/**
+ * Get a delegate from the transaction client (NOT the global prisma client).
+ * Inside $transaction, using the global delegate would bypass the transaction boundary.
+ */
+function getDelegateTx(tx: TxClient, documentType: string): PrismaDelegate {
+  const modelName = MODEL_MAP[documentType] || documentType;
+  const delegate = (tx as Record<string, unknown>)[modelName];
+  if (!delegate || typeof (delegate as Record<string, unknown>).update !== 'function') {
+    throw new Error(`No Prisma delegate found for model "${modelName}" on transaction client`);
+  }
+  return delegate as PrismaDelegate;
 }
 
 // ── Delegation Resolution ───────────────────────────────────────────────
@@ -226,52 +240,49 @@ export async function submitForApproval(params: {
   const slaDueDate = new Date();
   slaDueDate.setHours(slaDueDate.getHours() + firstStep.slaHours);
 
-  // Update document status
-  // Only mirv has slaDueDate on the main model; jo uses JoSlaTracking table
-  const delegate = getDelegate(documentType);
-  const updateData: Record<string, unknown> = { status: 'pending_approval' };
-  if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
-    updateData.slaDueDate = slaDueDate;
-  }
-  await delegate.update({
-    where: { id: documentId },
-    data: updateData,
-  });
-
-  // Create ApprovalStep records — idempotent: skip levels that already exist
+  // Check for existing steps (idempotency) — read outside tx is fine
   const existingSteps = await prisma.approvalStep.findMany({
     where: { documentType, documentId },
     select: { level: true },
   });
   const existingLevels = new Set(existingSteps.map(s => s.level));
-
   const newSteps = chain.steps.filter(step => !existingLevels.has(step.level));
-  if (newSteps.length > 0) {
-    await prisma.approvalStep.createMany({
-      data: newSteps.map(step => ({
-        documentType,
-        documentId,
-        level: step.level,
-        approverRole: step.approverRole,
-        status: 'pending' as const,
-      })),
-    });
-  }
 
-  // Audit log
-  await createAuditLog({
-    tableName: documentType,
-    recordId: documentId,
-    action: 'update',
-    newValues: {
-      status: 'pending_approval',
-      slaDueDate: slaDueDate.toISOString(),
-      approvalChain: chain.steps,
-    },
-    performedById: submittedById,
-  });
+  // ── MUTATE PHASE (all DB writes in one transaction) ──
+  await prisma.$transaction(async (tx: TxClient) => {
+    const delegateTx = getDelegateTx(tx, documentType);
+    const updateData: Record<string, unknown> = { status: 'pending_approval' };
+    if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
+      updateData.slaDueDate = slaDueDate;
+    }
+    await delegateTx.update({ where: { id: documentId }, data: updateData });
 
-  // Socket events — notify first level approver role
+    if (newSteps.length > 0) {
+      await tx.approvalStep.createMany({
+        data: newSteps.map(step => ({
+          documentType,
+          documentId,
+          level: step.level,
+          approverRole: step.approverRole,
+          status: 'pending' as const,
+        })),
+      });
+    }
+
+    await createAuditLog({
+      tableName: documentType,
+      recordId: documentId,
+      action: 'update',
+      newValues: {
+        status: 'pending_approval',
+        slaDueDate: slaDueDate.toISOString(),
+        approvalChain: chain.steps,
+      },
+      performedById: submittedById,
+    }, tx);
+  }, { timeout: 10000, maxWait: 5000 });
+
+  // ── NOTIFY PHASE (post-commit — safe to emit) ──
   if (io) {
     emitToRole(io, firstStep.approverRole, 'approval:requested', {
       documentType,
@@ -291,7 +302,6 @@ export async function submitForApproval(params: {
     });
   }
 
-  // Push + persistent notification to first-level approvers
   notifyRoleUsers(
     firstStep.approverRole,
     {
@@ -337,7 +347,7 @@ export async function processApproval(params: {
 }): Promise<void> {
   const { documentType, documentId, action, processedById, comments, io } = params;
 
-  // Find the current pending step (lowest level that is still pending)
+  // ── 1. READ PHASE (outside transaction) ──
   const currentStep = await prisma.approvalStep.findFirst({
     where: {
       documentType,
@@ -351,85 +361,173 @@ export async function processApproval(params: {
     throw new Error(`No pending approval step for ${documentType} ${documentId}`);
   }
 
-  // Verify the user is authorized for this step
   const isAuthorized = await isAuthorizedApprover(processedById, currentStep.approverRole, documentType);
   if (!isAuthorized) {
     throw new Error(`User is not authorized to ${action} this document. Required role: ${currentStep.approverRole}`);
   }
 
-  const delegate = getDelegate(documentType);
+  // ── 2. MUTATE PHASE (all DB writes in one transaction) ──
+  type ApprovalOutcome =
+    | { outcome: 'advanced'; nextStep: { level: number; approverRole: string }; nextSlaDate: Date | null }
+    | { outcome: 'fully_approved'; submitterId: string | undefined }
+    | { outcome: 'rejected'; submitterId: string | undefined };
 
-  if (action === 'approve') {
-    // Mark current step as approved
-    await prisma.approvalStep.update({
-      where: { id: currentStep.id },
-      data: {
-        status: 'approved',
-        approverId: processedById,
-        notes: comments ?? null,
-        decidedAt: new Date(),
-      },
-    });
+  const result: ApprovalOutcome = await prisma.$transaction(async (tx: TxClient) => {
+    const delegateTx = getDelegateTx(tx, documentType);
 
-    // Check if there are more steps
-    const nextStep = await prisma.approvalStep.findFirst({
-      where: {
-        documentType,
-        documentId,
-        status: 'pending',
-        level: { gt: currentStep.level },
-      },
-      orderBy: { level: 'asc' },
-    });
-
-    if (nextStep) {
-      // More levels to go — update SLA for next level
-      const nextSlaDate = new Date();
-      // Look up SLA hours for next step's role
-      const nextWorkflow = await prisma.approvalWorkflow.findFirst({
-        where: {
-          documentType,
-          approverRole: nextStep.approverRole,
+    if (action === 'approve') {
+      // Mark current step approved
+      await tx.approvalStep.update({
+        where: { id: currentStep.id },
+        data: {
+          status: 'approved',
+          approverId: processedById,
+          notes: comments ?? null,
+          decidedAt: new Date(),
         },
-        orderBy: { minAmount: 'desc' },
       });
 
-      if (nextWorkflow) {
-        nextSlaDate.setHours(nextSlaDate.getHours() + nextWorkflow.slaHours);
-        // Only set slaDueDate on models that have it on the main table
-        if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
-          await delegate.update({
-            where: { id: documentId },
-            data: { slaDueDate: nextSlaDate },
-          });
-        }
-      }
-
-      // Notify next level
-      if (io) {
-        emitToRole(io, nextStep.approverRole, 'approval:requested', {
+      // Check for next pending step
+      const nextStep = await tx.approvalStep.findFirst({
+        where: {
           documentType,
           documentId,
-          level: nextStep.level,
-          approverRole: nextStep.approverRole,
+          status: 'pending',
+          level: { gt: currentStep.level },
+        },
+        orderBy: { level: 'asc' },
+      });
+
+      if (nextStep) {
+        // More levels -- update SLA
+        let nextSlaDate: Date | null = null;
+        const nextWorkflow = await tx.approvalWorkflow.findFirst({
+          where: {
+            documentType,
+            approverRole: nextStep.approverRole,
+          },
+          orderBy: { minAmount: 'desc' },
+        });
+
+        if (nextWorkflow) {
+          nextSlaDate = new Date();
+          nextSlaDate.setHours(nextSlaDate.getHours() + nextWorkflow.slaHours);
+          if (MODELS_WITH_SLA_DUE_DATE.has(documentType)) {
+            await delegateTx.update({
+              where: { id: documentId },
+              data: { slaDueDate: nextSlaDate },
+            });
+          }
+        }
+
+        return {
+          outcome: 'advanced' as const,
+          nextStep: { level: nextStep.level, approverRole: nextStep.approverRole },
+          nextSlaDate,
+        };
+      } else {
+        // Fully approved
+        await delegateTx.update({
+          where: { id: documentId },
+          data: {
+            status: 'approved',
+            approvedById: processedById,
+            approvedDate: new Date(),
+          },
+        });
+
+        await createAuditLog({
+          tableName: documentType,
+          recordId: documentId,
+          action: 'update',
+          newValues: {
+            status: 'approved',
+            approvedById: processedById,
+            comments,
+            finalLevel: currentStep.level,
+          },
+          performedById: processedById,
+        }, tx);
+
+        // Fetch submitter for notification
+        const doc = await delegateTx.findUnique({ where: { id: documentId } });
+        const submitterId = (doc as Record<string, unknown> | null)?.createdById as string | undefined;
+        return { outcome: 'fully_approved' as const, submitterId };
+      }
+    } else {
+      // Reject
+      await tx.approvalStep.update({
+        where: { id: currentStep.id },
+        data: {
+          status: 'rejected',
+          approverId: processedById,
+          notes: comments ?? 'Rejected',
+          decidedAt: new Date(),
+        },
+      });
+
+      await tx.approvalStep.updateMany({
+        where: {
+          documentType,
+          documentId,
+          status: 'pending',
+          level: { gt: currentStep.level },
+        },
+        data: { status: 'skipped' },
+      });
+
+      await delegateTx.update({
+        where: { id: documentId },
+        data: {
+          status: 'rejected',
+          rejectionReason: comments || 'Rejected',
+        },
+      });
+
+      await createAuditLog({
+        tableName: documentType,
+        recordId: documentId,
+        action: 'update',
+        newValues: {
+          status: 'rejected',
+          rejectedAtLevel: currentStep.level,
+          rejectionReason: comments || 'Rejected',
+        },
+        performedById: processedById,
+      }, tx);
+
+      const doc = await delegateTx.findUnique({ where: { id: documentId } });
+      const submitterId = (doc as Record<string, unknown> | null)?.createdById as string | undefined;
+      return { outcome: 'rejected' as const, submitterId };
+    }
+  }, { timeout: 10000, maxWait: 5000 });
+
+  // ── 3. NOTIFY PHASE (post-commit — safe to emit) ──
+  switch (result.outcome) {
+    case 'advanced': {
+      if (io) {
+        emitToRole(io, result.nextStep.approverRole, 'approval:requested', {
+          documentType,
+          documentId,
+          level: result.nextStep.level,
+          approverRole: result.nextStep.approverRole,
           previouslyApprovedBy: processedById,
         });
         emitToDocument(io, documentId, 'approval:level_approved', {
           documentType,
           documentId,
           approvedLevel: currentStep.level,
-          nextLevel: nextStep.level,
-          nextApproverRole: nextStep.approverRole,
+          nextLevel: result.nextStep.level,
+          nextApproverRole: result.nextStep.approverRole,
           approvedById: processedById,
         });
       }
 
-      // Push + persistent notification to next-level approvers
       notifyRoleUsers(
-        nextStep.approverRole,
+        result.nextStep.approverRole,
         {
-          title: `${docLabel(documentType)} Awaiting L${nextStep.level} Approval`,
-          body: `Level ${currentStep.level} approved. Your Level ${nextStep.level} approval is required.`,
+          title: `${docLabel(documentType)} Awaiting L${result.nextStep.level} Approval`,
+          body: `Level ${currentStep.level} approved. Your Level ${result.nextStep.level} approval is required.`,
           referenceTable: documentType,
           referenceId: documentId,
         },
@@ -438,7 +536,7 @@ export async function processApproval(params: {
 
       log(
         'info',
-        `[Approval] ${documentType} ${documentId} level ${currentStep.level} approved by ${processedById}, advancing to level ${nextStep.level}`,
+        `[Approval] ${documentType} ${documentId} level ${currentStep.level} approved, advancing to level ${result.nextStep.level}`,
       );
 
       eventBus.publish({
@@ -448,37 +546,16 @@ export async function processApproval(params: {
         action: 'approve_level',
         payload: {
           approvedLevel: currentStep.level,
-          nextLevel: nextStep.level,
+          nextLevel: result.nextStep.level,
           approvedById: processedById,
           comments,
         },
         performedById: processedById,
         timestamp: new Date().toISOString(),
       });
-    } else {
-      // All levels approved — mark document as approved
-      await delegate.update({
-        where: { id: documentId },
-        data: {
-          status: 'approved',
-          approvedById: processedById,
-          approvedDate: new Date(),
-        },
-      });
-
-      await createAuditLog({
-        tableName: documentType,
-        recordId: documentId,
-        action: 'update',
-        newValues: {
-          status: 'approved',
-          approvedById: processedById,
-          comments,
-          finalLevel: currentStep.level,
-        },
-        performedById: processedById,
-      });
-
+      break;
+    }
+    case 'fully_approved': {
       if (io) {
         emitToDocument(io, documentId, 'approval:approved', {
           documentType,
@@ -489,13 +566,10 @@ export async function processApproval(params: {
         });
       }
 
-      // Notify the document submitter that it's fully approved
-      const approvedDoc = await delegate.findUnique({ where: { id: documentId } });
-      const submitter = (approvedDoc as Record<string, unknown> | null)?.createdById as string | undefined;
-      if (submitter) {
+      if (result.submitterId) {
         createNotification(
           {
-            recipientId: submitter,
+            recipientId: result.submitterId,
             title: `${docLabel(documentType)} Approved`,
             body: `Your ${docLabel(documentType)} has been fully approved.`,
             notificationType: 'approval',
@@ -508,7 +582,7 @@ export async function processApproval(params: {
 
       log(
         'info',
-        `[Approval] ${documentType} ${documentId} fully approved (${currentStep.level} levels) by ${processedById}`,
+        `[Approval] ${documentType} ${documentId} fully approved (${currentStep.level} levels)`,
       );
 
       eventBus.publish({
@@ -520,93 +594,50 @@ export async function processApproval(params: {
         performedById: processedById,
         timestamp: new Date().toISOString(),
       });
+      break;
     }
-  } else {
-    // Reject — mark current step and all subsequent steps
-    await prisma.approvalStep.update({
-      where: { id: currentStep.id },
-      data: {
-        status: 'rejected',
-        approverId: processedById,
-        notes: comments ?? 'Rejected',
-        decidedAt: new Date(),
-      },
-    });
+    case 'rejected': {
+      if (io) {
+        emitToDocument(io, documentId, 'approval:rejected', {
+          documentType,
+          documentId,
+          rejectedById: processedById,
+          rejectedAtLevel: currentStep.level,
+          reason: comments,
+        });
+      }
 
-    // Skip all remaining steps
-    await prisma.approvalStep.updateMany({
-      where: {
-        documentType,
-        documentId,
-        status: 'pending',
-        level: { gt: currentStep.level },
-      },
-      data: { status: 'skipped' },
-    });
+      if (result.submitterId) {
+        createNotification(
+          {
+            recipientId: result.submitterId,
+            title: `${docLabel(documentType)} Rejected`,
+            body: `Your ${docLabel(documentType)} was rejected at Level ${currentStep.level}.${comments ? ` Reason: ${comments}` : ''}`,
+            notificationType: 'approval',
+            referenceTable: documentType,
+            referenceId: documentId,
+          },
+          io,
+        ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
+      }
 
-    // Update document
-    await delegate.update({
-      where: { id: documentId },
-      data: {
-        status: 'rejected',
-        rejectionReason: comments || 'Rejected',
-      },
-    });
+      log('info', `[Approval] ${documentType} ${documentId} rejected at level ${currentStep.level}`);
 
-    await createAuditLog({
-      tableName: documentType,
-      recordId: documentId,
-      action: 'update',
-      newValues: {
-        status: 'rejected',
-        rejectedAtLevel: currentStep.level,
-        rejectionReason: comments || 'Rejected',
-      },
-      performedById: processedById,
-    });
-
-    if (io) {
-      emitToDocument(io, documentId, 'approval:rejected', {
-        documentType,
-        documentId,
-        rejectedById: processedById,
-        rejectedAtLevel: currentStep.level,
-        reason: comments,
-      });
-    }
-
-    // Notify the document submitter that it's been rejected
-    const rejectedDoc = await delegate.findUnique({ where: { id: documentId } });
-    const rejSubmitter = (rejectedDoc as Record<string, unknown> | null)?.createdById as string | undefined;
-    if (rejSubmitter) {
-      createNotification(
-        {
-          recipientId: rejSubmitter,
-          title: `${docLabel(documentType)} Rejected`,
-          body: `Your ${docLabel(documentType)} was rejected at Level ${currentStep.level}.${comments ? ` Reason: ${comments}` : ''}`,
-          notificationType: 'approval',
-          referenceTable: documentType,
-          referenceId: documentId,
+      eventBus.publish({
+        type: 'approval:rejected',
+        entityType: documentType,
+        entityId: documentId,
+        action: 'reject',
+        payload: {
+          rejectedById: processedById,
+          rejectedAtLevel: currentStep.level,
+          reason: comments,
         },
-        io,
-      ).catch(err => log('warn', `[Approval] Push notify failed: ${err}`));
+        performedById: processedById,
+        timestamp: new Date().toISOString(),
+      });
+      break;
     }
-
-    log('info', `[Approval] ${documentType} ${documentId} rejected at level ${currentStep.level} by ${processedById}`);
-
-    eventBus.publish({
-      type: 'approval:rejected',
-      entityType: documentType,
-      entityId: documentId,
-      action: 'reject',
-      payload: {
-        rejectedById: processedById,
-        rejectedAtLevel: currentStep.level,
-        reason: comments,
-      },
-      performedById: processedById,
-      timestamp: new Date().toISOString(),
-    });
   }
 }
 
