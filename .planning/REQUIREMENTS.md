@@ -1,7 +1,7 @@
-# Requirements: NIT Supply Chain V2 — Production Readiness
+# Requirements: NIT Supply Chain V2 -- Production Readiness
 
 **Defined:** 2026-03-22
-**Core Value:** Reliable inventory tracking — every material movement must be atomic, accurate, and audited
+**Core Value:** Reliable inventory tracking -- every material movement must be atomic, accurate, and audited
 
 ## v1 Requirements
 
@@ -11,21 +11,21 @@ Requirements for production launch. Each maps to roadmap phases.
 
 - [ ] **DINT-01**: All stock-modifying operations (GRN, MI, MRN, MR, WT) wrap stock mutations + document updates in a single Prisma $transaction
 - [ ] **DINT-02**: Approval state machine (processApproval) wraps all DB calls in a single $transaction with notifications moved post-commit
-- [ ] **DINT-03**: ASN UOM assignment bug fixed — line.uomId used instead of line.itemId
+- [ ] **DINT-03**: ASN UOM assignment bug fixed -- line.uomId used instead of line.itemId
 - [ ] **DINT-04**: GRN totalValue calculated from line items during create transaction, returned in initial response
 - [ ] **DINT-05**: Soft-delete Prisma extension covers findUnique, aggregate, and groupBy in addition to findMany/findFirst/count
 - [ ] **DINT-06**: Float-to-Decimal migration for CycleCountLine, StagingAssignment, PackingLine quantity fields
 - [ ] **DINT-07**: Domain events published AFTER transaction commits, never inside transaction boundaries
-- [ ] **DINT-08**: WT/stock-transfer service duplication eliminated — V1 wt.service.ts wraps V2 stock-transfer.service.ts
+- [ ] **DINT-08**: WT/stock-transfer service duplication eliminated -- V1 wt.service.ts wraps V2 stock-transfer.service.ts
 - [ ] **DINT-09**: totalValue calculation extracted to shared utility, used by all document services
 
 ### Security
 
 - [ ] **SECR-01**: Rate limiter exempts /auth/me endpoint OR switches to per-user rate limiting for authenticated routes
 - [ ] **SECR-02**: Zod schema string length limits added to all text input fields (max 255 for names, max 500 for descriptions/notes)
-- [ ] **SECR-03**: AI module SQL injection hardening — audit logging, read-only DB user, SQL AST validation
+- [ ] **SECR-03**: AI module SQL injection hardening -- audit logging, read-only DB user, SQL AST validation
 - [ ] **SECR-04**: CORS configured per-environment with explicit origin allowlist for production
-- [ ] **SECR-05**: Auth middleware race condition fixed — explicit return after sendError
+- [ ] **SECR-05**: Auth middleware race condition fixed -- explicit return after sendError
 - [ ] **SECR-06**: Error handler production mode hides stack traces and internal details
 - [ ] **SECR-07**: Pino PII redaction configured for passwords, tokens, emails in log output
 
@@ -34,34 +34,34 @@ Requirements for production launch. Each maps to roadmap phases.
 - [ ] **INFR-01**: Redis maxmemory-policy changed from allkeys-lru to noeviction
 - [ ] **INFR-02**: BullMQ shutdownQueues() wired into graceful shutdown handler with 15s drain timeout
 - [ ] **INFR-03**: Prisma migration format re-baselined to consistent timestamp naming for CI/CD compatibility
-- [ ] **INFR-04**: Production environment validation — REDIS_URL required, connection_limit in DATABASE_URL enforced
+- [ ] **INFR-04**: Production environment validation -- REDIS_URL required, connection_limit in DATABASE_URL enforced
 - [ ] **INFR-05**: Vite source maps set to 'hidden' for production builds
-- [ ] **INFR-06**: Dockerfile hardened — dumb-init installed, Node.js version pinned
+- [ ] **INFR-06**: Dockerfile hardened -- dumb-init installed, Node.js version pinned
 - [ ] **INFR-07**: Express body parser limit tightened (256KB default instead of unlimited)
 - [ ] **INFR-08**: Request timeouts added to all Express routes (30s default)
 - [ ] **INFR-09**: Explicit Prisma $connect() at startup with connection pool configured
 
 ### Performance
 
-- [ ] **PERF-01**: Bin cards computed endpoint fixed — pagination added, query timeout enforced
+- [ ] **PERF-01**: Bin cards computed endpoint fixed -- pagination added, query timeout enforced
 - [ ] **PERF-02**: Missing database indexes added: ApprovalStep(documentType, documentId, status), AuditLog(tableName, recordId, createdAt), Notification(recipientId, read, createdAt), JobOrder(entityId), InventoryLevel(itemId, lastMovementDate), InventoryLot(supplierId, expiryDate)
 - [ ] **PERF-03**: N+1 queries fixed in mr.service.ts and approval.service.ts using batch lookups
 - [ ] **PERF-04**: Vite vendor chunk splitting configured for optimal browser caching
-- [ ] **PERF-05**: Route shadowing warnings resolved — static routes mounted before dynamic ones
+- [ ] **PERF-05**: Route shadowing warnings resolved -- static routes mounted before dynamic ones
 - [ ] **PERF-06**: Prisma relationJoins preview feature enabled and tested
 - [ ] **PERF-07**: Caching layer added for master data, approval chains, and permission matrix with TTL and invalidation
 
 ### Code Quality
 
-- [ ] **QUAL-01**: Large frontend components (800+ LOC) refactored — sub-components extracted for YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage
-- [ ] **QUAL-02**: Test reliability fixed — socket hang failures in cycle-count and dashboard-builder tests resolved
+- [ ] **QUAL-01**: Large frontend components (800+ LOC) refactored -- sub-components extracted for YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage
+- [ ] **QUAL-02**: Test reliability fixed -- socket hang failures in cycle-count and dashboard-builder tests resolved
 - [ ] **QUAL-03**: Workflow rule engine cache invalidation added on rule CRUD operations
 - [ ] **QUAL-04**: Dynamic document type status flow validated with Zod schema before saving
 
 ### Verification
 
 - [ ] **VERF-01**: All 7 core document types (GRN, MI, MRN, MR, WT, QCI, DR) verified end-to-end with stock effects
-- [ ] **VERF-02**: Approval workflow verified — sequential and parallel paths with concurrent scenario testing
+- [ ] **VERF-02**: Approval workflow verified -- sequential and parallel paths with concurrent scenario testing
 - [ ] **VERF-03**: All 13 role-based navigation paths resolve to working pages
 - [ ] **VERF-04**: RTL Arabic rendering verified across all pages
 - [ ] **VERF-05**: PDF export verified for all document types
@@ -105,7 +105,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | ML-based demand forecasting improvements | Basic version exists, defer validation |
 | Automated replenishment rules | Manual WT creation sufficient |
 | Real-time chat/messaging | Not core to supply chain operations |
-| New feature development | Fix-first approach — stabilize existing code |
+| New feature development | Fix-first approach -- stabilize existing code |
 
 ## Traceability
 
@@ -113,60 +113,60 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DINT-01 | Pending | Pending |
-| DINT-02 | Pending | Pending |
-| DINT-03 | Pending | Pending |
-| DINT-04 | Pending | Pending |
-| DINT-05 | Pending | Pending |
-| DINT-06 | Pending | Pending |
-| DINT-07 | Pending | Pending |
-| DINT-08 | Pending | Pending |
-| DINT-09 | Pending | Pending |
-| SECR-01 | Pending | Pending |
-| SECR-02 | Pending | Pending |
-| SECR-03 | Pending | Pending |
-| SECR-04 | Pending | Pending |
-| SECR-05 | Pending | Pending |
-| SECR-06 | Pending | Pending |
-| SECR-07 | Pending | Pending |
-| INFR-01 | Pending | Pending |
-| INFR-02 | Pending | Pending |
-| INFR-03 | Pending | Pending |
-| INFR-04 | Pending | Pending |
-| INFR-05 | Pending | Pending |
-| INFR-06 | Pending | Pending |
-| INFR-07 | Pending | Pending |
-| INFR-08 | Pending | Pending |
-| INFR-09 | Pending | Pending |
-| PERF-01 | Pending | Pending |
-| PERF-02 | Pending | Pending |
-| PERF-03 | Pending | Pending |
-| PERF-04 | Pending | Pending |
-| PERF-05 | Pending | Pending |
-| PERF-06 | Pending | Pending |
-| PERF-07 | Pending | Pending |
-| QUAL-01 | Pending | Pending |
-| QUAL-02 | Pending | Pending |
-| QUAL-03 | Pending | Pending |
-| QUAL-04 | Pending | Pending |
-| VERF-01 | Pending | Pending |
-| VERF-02 | Pending | Pending |
-| VERF-03 | Pending | Pending |
-| VERF-04 | Pending | Pending |
-| VERF-05 | Pending | Pending |
-| VERF-06 | Pending | Pending |
-| VERF-07 | Pending | Pending |
-| PROD-01 | Pending | Pending |
-| PROD-02 | Pending | Pending |
-| PROD-03 | Pending | Pending |
-| PROD-04 | Pending | Pending |
-| PROD-05 | Pending | Pending |
+| DINT-01 | Phase 1 | Pending |
+| DINT-02 | Phase 1 | Pending |
+| DINT-03 | Phase 1 | Pending |
+| DINT-04 | Phase 1 | Pending |
+| DINT-05 | Phase 2 | Pending |
+| DINT-06 | Phase 2 | Pending |
+| DINT-07 | Phase 1 | Pending |
+| DINT-08 | Phase 2 | Pending |
+| DINT-09 | Phase 2 | Pending |
+| SECR-01 | Phase 3 | Pending |
+| SECR-02 | Phase 3 | Pending |
+| SECR-03 | Phase 3 | Pending |
+| SECR-04 | Phase 3 | Pending |
+| SECR-05 | Phase 3 | Pending |
+| SECR-06 | Phase 3 | Pending |
+| SECR-07 | Phase 3 | Pending |
+| INFR-01 | Phase 4 | Pending |
+| INFR-02 | Phase 4 | Pending |
+| INFR-03 | Phase 4 | Pending |
+| INFR-04 | Phase 4 | Pending |
+| INFR-05 | Phase 4 | Pending |
+| INFR-06 | Phase 4 | Pending |
+| INFR-07 | Phase 4 | Pending |
+| INFR-08 | Phase 4 | Pending |
+| INFR-09 | Phase 4 | Pending |
+| PERF-01 | Phase 5 | Pending |
+| PERF-02 | Phase 5 | Pending |
+| PERF-03 | Phase 5 | Pending |
+| PERF-04 | Phase 5 | Pending |
+| PERF-05 | Phase 5 | Pending |
+| PERF-06 | Phase 5 | Pending |
+| PERF-07 | Phase 5 | Pending |
+| QUAL-01 | Phase 6 | Pending |
+| QUAL-02 | Phase 6 | Pending |
+| QUAL-03 | Phase 6 | Pending |
+| QUAL-04 | Phase 6 | Pending |
+| VERF-01 | Phase 7 | Pending |
+| VERF-02 | Phase 7 | Pending |
+| VERF-03 | Phase 7 | Pending |
+| VERF-04 | Phase 7 | Pending |
+| VERF-05 | Phase 7 | Pending |
+| VERF-06 | Phase 7 | Pending |
+| VERF-07 | Phase 7 | Pending |
+| PROD-01 | Phase 8 | Pending |
+| PROD-02 | Phase 8 | Pending |
+| PROD-03 | Phase 8 | Pending |
+| PROD-04 | Phase 8 | Pending |
+| PROD-05 | Phase 8 | Pending |
 
 **Coverage:**
 - v1 requirements: 48 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 48 ⚠️
+- Mapped to phases: 48
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-22*
-*Last updated: 2026-03-22 after initial definition*
+*Last updated: 2026-03-22 after roadmap creation*
