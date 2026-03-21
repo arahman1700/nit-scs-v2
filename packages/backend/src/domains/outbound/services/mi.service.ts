@@ -213,6 +213,7 @@ export async function approve(
     }));
 
     // Atomic: reservation + line updates + MI status in one transaction
+    // Separate from processApproval tx -- approval is idempotent, stock reservation is recoverable
     await prisma.$transaction(async tx => {
       const { success: allReserved } = await reserveStockBatch(reserveItems, tx);
 
@@ -230,7 +231,7 @@ export async function approve(
         where: { id: mi.id },
         data: { reservationStatus: allReserved ? 'reserved' : 'none' },
       });
-    });
+    }, { timeout: 15000, maxWait: 10000 });
 
     // SOW M1-F02 AC-04: Auto-generate pick list (wave) on approval
     // Stays outside the transaction — non-blocking convenience
