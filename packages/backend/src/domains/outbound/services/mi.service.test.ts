@@ -42,6 +42,7 @@ import {
   releaseReservationBatch,
 } from '../../inventory/services/inventory.service.js';
 import { assertTransition } from '@nit-scs-v2/shared';
+import { eventBus } from '../../../events/event-bus.js';
 
 const mockedGenerateDocNumber = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const mockedSubmitForApproval = submitForApproval as ReturnType<typeof vi.fn>;
@@ -359,6 +360,104 @@ describe('mi.service', () => {
       });
 
       await expect(approve('mirv-1', 'approve', 'user-1')).rejects.toThrow('MI must be pending approval');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // approve - transaction sequencing
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('approve - transaction sequencing', () => {
+    const pendingMirv = {
+      id: 'mirv-1',
+      status: 'pending_approval',
+      warehouseId: 'wh-1',
+      mirvLines: [
+        { id: 'line-1', itemId: 'item-1', qtyRequested: 10 },
+      ],
+    };
+
+    it('calls processApproval before stock reservation $transaction', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMirv);
+      mockedReserveStockBatch.mockResolvedValue({ success: true, failedItems: [] });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      const callOrder: string[] = [];
+      mockedProcessApproval.mockImplementation(async () => {
+        callOrder.push('processApproval');
+      });
+      mockPrisma.$transaction.mockImplementation(async (fn: unknown) => {
+        callOrder.push('stock_$transaction_start');
+        const result = await (fn as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+        callOrder.push('stock_$transaction_end');
+        return result;
+      });
+
+      await approve('mirv-1', 'approve', 'user-1');
+
+      expect(callOrder.indexOf('processApproval')).toBeLessThan(
+        callOrder.indexOf('stock_$transaction_start'),
+      );
+    });
+
+    it('does NOT execute stock reservation when processApproval throws', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMirv);
+      mockedProcessApproval.mockRejectedValue(new Error('Approval failed'));
+
+      await expect(approve('mirv-1', 'approve', 'user-1')).rejects.toThrow('Approval failed');
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(mockedReserveStockBatch).not.toHaveBeenCalled();
+    });
+
+    it('fires eventBus.publish for document:status_changed AFTER both operations complete', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMirv);
+      mockedProcessApproval.mockResolvedValue(undefined);
+      mockedReserveStockBatch.mockResolvedValue({ success: true, failedItems: [] });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      const callOrder: string[] = [];
+      mockPrisma.$transaction.mockImplementation(async (fn: unknown) => {
+        const result = await (fn as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+        callOrder.push('stock_tx_done');
+        return result;
+      });
+      (eventBus.publish as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        callOrder.push('eventBus.publish');
+      });
+
+      await approve('mirv-1', 'approve', 'user-1');
+
+      const txIdx = callOrder.indexOf('stock_tx_done');
+      const eventIdx = callOrder.indexOf('eventBus.publish');
+      expect(txIdx).toBeGreaterThanOrEqual(0);
+      expect(eventIdx).toBeGreaterThan(txIdx);
+    });
+
+    it('reject action skips stock reservation entirely', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMirv);
+      mockedProcessApproval.mockResolvedValue(undefined);
+
+      await approve('mirv-1', 'reject', 'user-1', 'Not needed');
+
+      expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(mockedReserveStockBatch).not.toHaveBeenCalled();
+    });
+
+    it('stock reservation transaction uses timeout: 15000', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMirv);
+      mockedProcessApproval.mockResolvedValue(undefined);
+      mockedReserveStockBatch.mockResolvedValue({ success: true, failedItems: [] });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      await approve('mirv-1', 'approve', 'user-1');
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 15000, maxWait: 10000 }),
+      );
     });
   });
 
