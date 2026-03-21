@@ -32,11 +32,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Approving a document updates the approval step, advances the document status, and triggers stock effects in a single atomic operation -- a crash mid-approval leaves no orphaned state
   3. ASN line items correctly reference their UOM (not itemId) and GRN totalValue reflects actual line item calculations in the initial response
   4. Domain events (Socket.IO notifications, email triggers) fire only after the database transaction commits -- never for rolled-back operations
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Transaction foundation: P2034 error handling, tx-aware audit, ASN UOM fix, GRN totalValue verification, post-commit low-stock alerts
+- [ ] 01-02-PLAN.md -- Approval state machine: wrap processApproval/submitForApproval in $transaction, fix MI approve split-transaction
 
 ### Phase 2: Data Layer Cleanup
 **Goal**: Data layer is precise, consistent, and free of duplication -- soft deletes are reliable, quantities are exact, and redundant services are unified
@@ -154,7 +154,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Transaction Safety | 0/2 | Not started | - |
+| 1. Transaction Safety | 0/2 | Planning complete | - |
 | 2. Data Layer Cleanup | 0/2 | Not started | - |
 | 3. Security Hardening | 0/2 | Not started | - |
 | 4. Infrastructure and Deployment | 0/2 | Not started | - |
