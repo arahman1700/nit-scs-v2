@@ -20,6 +20,8 @@ vi.mock('../../../events/event-bus.js', () => ({
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { createAuditLog } from '../../audit/services/audit.service.js';
+import { emitToRole, emitToDocument } from '../../../socket/setup.js';
+import { eventBus } from '../../../events/event-bus.js';
 import {
   getApprovalChain,
   getRequiredApproval,
@@ -495,6 +497,263 @@ describe('approval.service', () => {
       mockPrisma.delegationRule.findFirst.mockResolvedValue(null);
 
       await expect(processApproval(defaultParams)).rejects.toThrow('User is not authorized to reject this document');
+    });
+  });
+
+  // ─── processApproval - transaction wrapping ────────────────────────────
+
+  describe('processApproval - transaction wrapping', () => {
+    function setupApproveFullyMocks() {
+      const step = makeApprovalStep();
+      // READ PHASE: findFirst for current step (outside tx)
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step);
+      // Authorization
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'admin',
+        isActive: true,
+      });
+      // Inside $transaction: approvalStep.update, approvalStep.findFirst(null = fully approved),
+      // mirv.update, createAuditLog, mirv.findUnique (for submitter)
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(null); // no next step (inside tx)
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+      return step;
+    }
+
+    it('calls prisma.$transaction for approve action (fully approved)', async () => {
+      setupApproveFullyMocks();
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'approve',
+        processedById: 'approver-1',
+        comments: 'Looks good',
+      });
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 10000, maxWait: 5000 }),
+      );
+    });
+
+    it('calls prisma.$transaction for reject action', async () => {
+      const step = makeApprovalStep();
+      mockPrisma.approvalStep.findFirst.mockResolvedValue(step);
+      mockPrisma.employee.findUnique.mockResolvedValue({ systemRole: 'admin', isActive: true });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalStep.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'reject',
+        processedById: 'approver-1',
+        comments: 'Bad',
+      });
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 10000, maxWait: 5000 }),
+      );
+    });
+
+    it('calls eventBus.publish AFTER $transaction resolves (not inside)', async () => {
+      setupApproveFullyMocks();
+
+      const callOrder: string[] = [];
+      mockPrisma.$transaction.mockImplementation(async (fn: unknown, _opts?: unknown) => {
+        const result = await (fn as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+        callOrder.push('$transaction_resolved');
+        return result;
+      });
+      (eventBus.publish as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        callOrder.push('eventBus.publish');
+      });
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'approve',
+        processedById: 'approver-1',
+      });
+
+      const txIdx = callOrder.indexOf('$transaction_resolved');
+      const eventIdx = callOrder.indexOf('eventBus.publish');
+      expect(txIdx).toBeGreaterThanOrEqual(0);
+      expect(eventIdx).toBeGreaterThan(txIdx);
+    });
+
+    it('calls emitToDocument AFTER $transaction resolves', async () => {
+      setupApproveFullyMocks();
+
+      const callOrder: string[] = [];
+      mockPrisma.$transaction.mockImplementation(async (fn: unknown, _opts?: unknown) => {
+        const result = await (fn as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+        callOrder.push('$transaction_resolved');
+        return result;
+      });
+      (emitToDocument as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        callOrder.push('emitToDocument');
+      });
+
+      const mockIo = {} as import('socket.io').Server;
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'approve',
+        processedById: 'approver-1',
+        io: mockIo,
+      });
+
+      const txIdx = callOrder.indexOf('$transaction_resolved');
+      const emitIdx = callOrder.indexOf('emitToDocument');
+      expect(txIdx).toBeGreaterThanOrEqual(0);
+      expect(emitIdx).toBeGreaterThan(txIdx);
+    });
+
+    it('does NOT call eventBus/socket/notification when $transaction throws', async () => {
+      const step = makeApprovalStep();
+      mockPrisma.approvalStep.findFirst.mockResolvedValue(step);
+      mockPrisma.employee.findUnique.mockResolvedValue({ systemRole: 'admin', isActive: true });
+
+      mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      const mockIo = {} as import('socket.io').Server;
+      await expect(
+        processApproval({
+          documentType: 'mirv',
+          documentId: 'doc-1',
+          action: 'approve',
+          processedById: 'approver-1',
+          io: mockIo,
+        }),
+      ).rejects.toThrow('Transaction failed');
+
+      expect(eventBus.publish).not.toHaveBeenCalled();
+      expect(emitToRole).not.toHaveBeenCalled();
+      expect(emitToDocument).not.toHaveBeenCalled();
+    });
+
+    it('passes tx to createAuditLog inside $transaction (fully approved)', async () => {
+      setupApproveFullyMocks();
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'approve',
+        processedById: 'approver-1',
+      });
+
+      // createAuditLog should be called with 2 args: entry + tx
+      expect(createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({ tableName: 'mirv', recordId: 'doc-1' }),
+        expect.anything(), // tx client
+      );
+    });
+
+    it('passes tx to createAuditLog inside $transaction (reject)', async () => {
+      const step = makeApprovalStep();
+      mockPrisma.approvalStep.findFirst.mockResolvedValue(step);
+      mockPrisma.employee.findUnique.mockResolvedValue({ systemRole: 'admin', isActive: true });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalStep.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-1',
+        action: 'reject',
+        processedById: 'approver-1',
+        comments: 'No',
+      });
+
+      expect(createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({ tableName: 'mirv', recordId: 'doc-1' }),
+        expect.anything(), // tx client
+      );
+    });
+  });
+
+  // ─── submitForApproval - transaction wrapping ────────────────────────
+
+  describe('submitForApproval - transaction wrapping', () => {
+    const defaultParams = {
+      documentType: 'mirv',
+      documentId: 'doc-1',
+      amount: 10000,
+      submittedById: 'user-1',
+    };
+
+    function setupSubmitMocks() {
+      mockPrisma.approvalWorkflow.findMany.mockResolvedValue([makeWorkflow()]);
+      mockPrisma.approvalStep.findMany.mockResolvedValue([]);
+      mockPrisma.approvalStep.createMany.mockResolvedValue({ count: 1 });
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.auditLog.create.mockResolvedValue({});
+    }
+
+    it('calls prisma.$transaction wrapping delegate.update + approvalStep.createMany + createAuditLog', async () => {
+      setupSubmitMocks();
+
+      await submitForApproval(defaultParams);
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({ timeout: 10000, maxWait: 5000 }),
+      );
+    });
+
+    it('calls eventBus.publish AFTER $transaction resolves', async () => {
+      setupSubmitMocks();
+
+      const callOrder: string[] = [];
+      mockPrisma.$transaction.mockImplementation(async (fn: unknown, _opts?: unknown) => {
+        const result = await (fn as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+        callOrder.push('$transaction_resolved');
+        return result;
+      });
+      (eventBus.publish as ReturnType<typeof vi.fn>).mockImplementation(() => {
+        callOrder.push('eventBus.publish');
+      });
+
+      await submitForApproval(defaultParams);
+
+      const txIdx = callOrder.indexOf('$transaction_resolved');
+      const eventIdx = callOrder.indexOf('eventBus.publish');
+      expect(txIdx).toBeGreaterThanOrEqual(0);
+      expect(eventIdx).toBeGreaterThan(txIdx);
+    });
+
+    it('does NOT call eventBus/socket/notification when $transaction throws', async () => {
+      mockPrisma.approvalWorkflow.findMany.mockResolvedValue([makeWorkflow()]);
+      mockPrisma.approvalStep.findMany.mockResolvedValue([]);
+      mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
+
+      const mockIo = {} as import('socket.io').Server;
+      await expect(submitForApproval({ ...defaultParams, io: mockIo })).rejects.toThrow('Transaction failed');
+
+      expect(eventBus.publish).not.toHaveBeenCalled();
+      expect(emitToRole).not.toHaveBeenCalled();
+      expect(emitToDocument).not.toHaveBeenCalled();
+    });
+
+    it('passes tx to createAuditLog inside $transaction', async () => {
+      setupSubmitMocks();
+
+      await submitForApproval(defaultParams);
+
+      expect(createAuditLog).toHaveBeenCalledWith(
+        expect.objectContaining({ tableName: 'mirv', recordId: 'doc-1' }),
+        expect.anything(), // tx client
+      );
     });
   });
 
