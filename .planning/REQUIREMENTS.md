@@ -71,10 +71,10 @@ Requirements for production launch. Each maps to roadmap phases.
 ### Production Hardening
 
 - [x] **PROD-01**: Sentry trace sampling reduced to 0.1, Prisma integration added
-- [ ] **PROD-02**: Prometheus metrics added: connection pool, Socket.IO clients, business document counters
+- [x] **PROD-02**: Prometheus metrics added: connection pool, Socket.IO clients, business document counters
 - [x] **PROD-03**: AsyncLocalStorage configured for request-scoped correlation IDs
 - [x] **PROD-04**: Transaction duration and optimistic lock retry metrics added
-- [ ] **PROD-05**: Nightly inventory reconciliation job implemented
+- [x] **PROD-05**: Nightly inventory reconciliation job implemented
 
 ## v2 Requirements
 
@@ -157,10 +157,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | VERF-06 | Phase 7 | Complete |
 | VERF-07 | Phase 7 | Complete |
 | PROD-01 | Phase 8 | Complete |
-| PROD-02 | Phase 8 | Pending |
+| PROD-02 | Phase 8 | Complete |
 | PROD-03 | Phase 8 | Complete |
 | PROD-04 | Phase 8 | Complete |
-| PROD-05 | Phase 8 | Pending |
+| PROD-05 | Phase 8 | Complete |
 
 **Coverage:**
 - v1 requirements: 48 total

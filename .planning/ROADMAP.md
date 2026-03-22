@@ -145,7 +145,7 @@ Plans:
 
 Plans:
 - [x] 08-01-PLAN.md -- Request tracing infrastructure: AsyncLocalStorage correlation IDs, Sentry Prisma integration at 10% sampling, transaction/lock Prometheus metrics
-- [ ] 08-02-PLAN.md -- Business metrics and reconciliation: Socket.IO client gauge, document operation counters, connection pool gauge, nightly reconciliation with configurable threshold
+- [x] 08-02-PLAN.md -- Business metrics and reconciliation: Socket.IO client gauge, document operation counters, connection pool gauge, nightly reconciliation with configurable threshold
 
 ## Progress
 
