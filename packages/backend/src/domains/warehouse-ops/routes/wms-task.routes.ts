@@ -46,7 +46,7 @@ const createTaskSchema = z.object({
   lpnId: z.string().uuid().optional(),
   quantity: z.number().positive().optional(),
   estimatedMins: z.number().positive().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const assignSchema = z.object({

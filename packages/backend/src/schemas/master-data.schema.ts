@@ -28,7 +28,7 @@ export const uomSchema = z.object({
 
 export const warehouseTypeSchema = z.object({
   typeName: z.string().min(1).max(50),
-  description: z.string().optional(),
+  description: z.string().max(500).optional(),
 });
 
 export const equipmentCategorySchema = z.object({
@@ -55,7 +55,7 @@ export const projectCreateSchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   budget: z.number().positive().optional(),
-  description: z.string().optional(),
+  description: z.string().max(2000).optional(),
 });
 
 export const projectUpdateSchema = projectCreateSchema.partial();
@@ -90,11 +90,11 @@ export const supplierCreateSchema = z.object({
   supplierCode: z.string().min(1).max(50),
   supplierName: z.string().min(1).max(300),
 
-  types: z.array(z.string()),
+  types: z.array(z.string().max(100)),
   contactPerson: z.string().max(200).optional(),
   phone: z.string().max(20).optional(),
   email: z.string().email().optional(),
-  address: z.string().optional(),
+  address: z.string().max(500).optional(),
   cityId: z.string().uuid().optional(),
   crNumber: z.string().max(50).optional(),
   vatNumber: z.string().max(50).optional(),
@@ -113,7 +113,7 @@ export const warehouseCreateSchema = z.object({
   projectId: z.string().uuid().optional(),
   regionId: z.string().uuid(),
   cityId: z.string().uuid().optional(),
-  address: z.string().optional(),
+  address: z.string().max(500).optional(),
   managerId: z.string().uuid().optional(),
   contactPhone: z.string().max(20).optional(),
   status: z.enum(['active', 'inactive', 'closed']).default('active'),
@@ -181,7 +181,7 @@ export const supplierRateCreateSchema = z.object({
   withOperatorSurcharge: z.number().min(0).default(0),
   validFrom: z.string().datetime(),
   validUntil: z.string().datetime().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 export const supplierRateUpdateSchema = supplierRateCreateSchema.partial();
@@ -210,8 +210,8 @@ export const customsTrackingCreateSchema = z.object({
   vatAmount: z.number().min(0).optional(),
   otherFees: z.number().min(0).optional(),
   paymentStatus: z.string().max(20).optional(),
-  issues: z.string().optional(),
-  resolution: z.string().optional(),
+  issues: z.string().max(2000).optional(),
+  resolution: z.string().max(1000).optional(),
 });
 
 export const customsTrackingUpdateSchema = customsTrackingCreateSchema.partial();

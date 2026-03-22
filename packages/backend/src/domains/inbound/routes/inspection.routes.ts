@@ -16,32 +16,32 @@ import type { InspectionLevel } from '../services/aql.service.js';
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const checklistItemSchema = z.object({
-  description: z.string().min(1),
+  description: z.string().min(1).max(500),
   itemOrder: z.number().int().nonnegative(),
   isMandatory: z.boolean().optional(),
-  inspectionType: z.string().optional(),
+  inspectionType: z.string().max(100).optional(),
 });
 
 const createChecklistSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  category: z.string().optional(),
+  name: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
   isActive: z.boolean().optional(),
   items: z.array(checklistItemSchema).optional(),
 });
 
 const updateChecklistSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  category: z.string().max(100).optional(),
   isActive: z.boolean().optional(),
 });
 
 const updateChecklistItemSchema = z.object({
-  description: z.string().min(1).optional(),
+  description: z.string().min(1).max(500).optional(),
   itemOrder: z.number().int().nonnegative().optional(),
   isMandatory: z.boolean().optional(),
-  inspectionType: z.string().optional(),
+  inspectionType: z.string().max(100).optional(),
 });
 
 const reorderItemsSchema = z.object({

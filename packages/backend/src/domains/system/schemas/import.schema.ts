@@ -18,7 +18,7 @@ export const importPreviewSchema = z.object({
 export const importExecuteSchema = z.object({
   entity: z.enum(IMPORTABLE_ENTITIES),
   /** Column mapping: excel header -> database field */
-  mapping: z.record(z.string()),
+  mapping: z.record(z.string().max(255)),
   /** Parsed rows from the preview step */
   rows: z.array(z.record(z.unknown())).min(1).max(5000),
 });

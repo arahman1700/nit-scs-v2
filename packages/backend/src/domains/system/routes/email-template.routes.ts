@@ -10,19 +10,19 @@ import { previewTemplate } from '../services/email.service.js';
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const createEmailTemplateSchema = z.object({
-  code: z.string().min(1),
-  name: z.string().min(1),
-  subject: z.string().min(1),
-  bodyHtml: z.string().min(1),
-  variables: z.array(z.string()).optional(),
+  code: z.string().min(1).max(50),
+  name: z.string().min(1).max(255),
+  subject: z.string().min(1).max(500),
+  bodyHtml: z.string().min(1).max(10000),
+  variables: z.array(z.string().max(100)).optional(),
   isActive: z.boolean().optional(),
 });
 
 const updateEmailTemplateSchema = z.object({
-  name: z.string().min(1).optional(),
-  subject: z.string().min(1).optional(),
-  bodyHtml: z.string().min(1).optional(),
-  variables: z.array(z.string()).optional(),
+  name: z.string().min(1).max(255).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  bodyHtml: z.string().min(1).max(10000).optional(),
+  variables: z.array(z.string().max(100)).optional(),
   isActive: z.boolean().optional(),
 });
 

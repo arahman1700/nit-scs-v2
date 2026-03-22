@@ -30,14 +30,14 @@ import {
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const createContractSchema = z.object({
-  contractCode: z.string().min(1),
+  contractCode: z.string().min(1).max(50),
   supplierId: z.string().uuid(),
   serviceType: z.enum(['warehousing', 'transportation', 'customs_brokerage', 'freight_forwarding', 'full_3pl']),
-  startDate: z.string(),
-  endDate: z.string().optional(),
+  startDate: z.string().max(50),
+  endDate: z.string().max(50).optional(),
   rateSchedule: z.record(z.unknown()),
   slaTerms: z.record(z.unknown()).optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const createChargeSchema = z.object({
@@ -53,15 +53,15 @@ const createChargeSchema = z.object({
     'penalty',
     'other',
   ]),
-  description: z.string().optional(),
+  description: z.string().max(2000).optional(),
   quantity: z.number().positive(),
   unitRate: z.number().positive(),
   totalAmount: z.number().positive(),
   currency: z.string().length(3).optional(),
-  refDocType: z.string().optional(),
+  refDocType: z.string().max(50).optional(),
   refDocId: z.string().uuid().optional(),
-  periodFrom: z.string().optional(),
-  periodTo: z.string().optional(),
+  periodFrom: z.string().max(50).optional(),
+  periodTo: z.string().max(50).optional(),
 });
 
 const router = Router();

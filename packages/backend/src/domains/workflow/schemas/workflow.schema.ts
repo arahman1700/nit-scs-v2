@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 export const createWorkflowSchema = z.object({
   name: z.string().min(1).max(200),
-  description: z.string().optional(),
+  description: z.string().max(2000).optional(),
   entityType: z.string().min(1).max(50),
   isActive: z.boolean().optional().default(true),
   priority: z.number().int().optional().default(0),
@@ -15,7 +15,7 @@ export const updateWorkflowSchema = createWorkflowSchema.partial();
 // ── Condition Schemas ───────────────────────────────────────────────────
 
 const leafConditionSchema = z.object({
-  field: z.string().min(1),
+  field: z.string().min(1).max(255),
   op: z.enum(['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'contains']),
   value: z.unknown(),
 });
@@ -90,12 +90,12 @@ export const updateRuleSchema = createRuleSchema
 
 export const testRuleSchema = z.object({
   event: z.object({
-    type: z.string(),
-    entityType: z.string(),
-    entityId: z.string(),
-    action: z.string(),
+    type: z.string().max(100),
+    entityType: z.string().max(100),
+    entityId: z.string().max(100),
+    action: z.string().max(100),
     payload: z.record(z.unknown()),
-    performedById: z.string().optional(),
-    timestamp: z.string().optional(),
+    performedById: z.string().max(100).optional(),
+    timestamp: z.string().max(50).optional(),
   }),
 });

@@ -60,7 +60,7 @@ router.put('/:role', authenticate, requireRole('admin'), async (req, res, next) 
   try {
     const role = req.params.role as string;
     const bulkSchema = z.record(
-      z.string().min(1),
+      z.string().min(1).max(100),
       z.array(z.enum(['read', 'create', 'update', 'delete', 'approve', 'export', 'import'])),
     );
     const parsed = bulkSchema.safeParse(req.body);

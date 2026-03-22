@@ -10,23 +10,23 @@ import { sendSuccess, sendCreated, sendError, sendNoContent } from '../../../uti
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const createDashboardSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
+  name: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
   isPublic: z.boolean().optional(),
-  defaultForRole: z.string().optional(),
+  defaultForRole: z.string().max(100).optional(),
 });
 
 const updateDashboardSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().nullable().optional(),
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).nullable().optional(),
   isPublic: z.boolean().optional(),
-  defaultForRole: z.string().nullable().optional(),
+  defaultForRole: z.string().max(100).nullable().optional(),
 });
 
 const createWidgetSchema = z.object({
-  widgetType: z.string().min(1),
-  title: z.string().min(1),
-  dataSource: z.string().min(1),
+  widgetType: z.string().min(1).max(100),
+  title: z.string().min(1).max(255),
+  dataSource: z.string().min(1).max(255),
   queryConfig: z.record(z.unknown()).optional(),
   displayConfig: z.record(z.unknown()).optional(),
   gridPosition: z.record(z.unknown()).optional(),
@@ -34,9 +34,9 @@ const createWidgetSchema = z.object({
 });
 
 const updateWidgetSchema = z.object({
-  widgetType: z.string().min(1).optional(),
-  title: z.string().min(1).optional(),
-  dataSource: z.string().min(1).optional(),
+  widgetType: z.string().min(1).max(100).optional(),
+  title: z.string().min(1).max(255).optional(),
+  dataSource: z.string().min(1).max(255).optional(),
   queryConfig: z.record(z.unknown()).optional(),
   displayConfig: z.record(z.unknown()).optional(),
   gridPosition: z.record(z.unknown()).optional(),
@@ -45,7 +45,7 @@ const updateWidgetSchema = z.object({
 
 const layoutUpdateSchema = z.array(
   z.object({
-    widgetId: z.string().min(1),
+    widgetId: z.string().min(1).max(100),
     gridPosition: z.record(z.unknown()).optional(),
     sortOrder: z.number().int().optional(),
   }),

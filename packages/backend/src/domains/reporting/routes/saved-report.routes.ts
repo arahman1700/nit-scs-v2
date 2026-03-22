@@ -11,27 +11,27 @@ import { getDataSource } from '../services/widget-data.service.js';
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const shareReportSchema = z.object({
-  roles: z.array(z.string()).optional(),
+  roles: z.array(z.string().max(100)).optional(),
   isPublic: z.boolean().optional(),
 });
 
 const createSavedReportSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  dataSource: z.string().min(1),
+  name: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  dataSource: z.string().min(1).max(255),
   columns: z.array(z.unknown()).optional(),
   filters: z.record(z.unknown()).optional(),
-  visualization: z.string().optional(),
+  visualization: z.string().max(100).optional(),
   isPublic: z.boolean().optional(),
 });
 
 const updateSavedReportSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().nullable().optional(),
-  dataSource: z.string().min(1).optional(),
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).nullable().optional(),
+  dataSource: z.string().min(1).max(255).optional(),
   columns: z.array(z.unknown()).optional(),
   filters: z.record(z.unknown()).optional(),
-  visualization: z.string().optional(),
+  visualization: z.string().max(100).optional(),
   isPublic: z.boolean().optional(),
 });
 

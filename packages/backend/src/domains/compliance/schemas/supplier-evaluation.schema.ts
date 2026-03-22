@@ -8,7 +8,7 @@ const metricSchema = z.object({
   metricName: z.string().min(1).max(50),
   weight: z.number().min(0).max(100),
   rawScore: z.number().min(0).max(100),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 // ── Create ──────────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ export const supplierEvaluationCreateSchema = z.object({
   supplierId: uuid,
   periodStart: z.string().datetime(),
   periodEnd: z.string().datetime(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
   metrics: z.array(metricSchema).optional(),
 });
 
@@ -26,6 +26,6 @@ export const supplierEvaluationCreateSchema = z.object({
 export const supplierEvaluationUpdateSchema = z.object({
   periodStart: z.string().datetime().optional(),
   periodEnd: z.string().datetime().optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
   metrics: z.array(metricSchema).optional(),
 });

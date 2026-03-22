@@ -14,15 +14,15 @@ const strongPassword = z
 
 export const loginSchema = z.object({
   email: z.string().email('Valid email is required'),
-  password: z.string().min(1, 'Password is required'),
+  password: z.string().min(1, 'Password is required').max(128),
 });
 
 export const refreshSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required').optional(),
+  refreshToken: z.string().min(1, 'Refresh token is required').max(2000).optional(),
 });
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
+  currentPassword: z.string().min(1, 'Current password is required').max(128),
   newPassword: strongPassword,
 });
 

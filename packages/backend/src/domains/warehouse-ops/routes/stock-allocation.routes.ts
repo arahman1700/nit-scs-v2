@@ -34,13 +34,13 @@ const allocateSchema = z.object({
   lpnId: z.string().uuid().optional(),
   qtyAllocated: z.number().positive(),
   allocType: z.enum(['soft', 'hard', 'pick_confirmed']),
-  demandDocType: z.string().min(1),
+  demandDocType: z.string().min(1).max(50),
   demandDocId: z.string().uuid(),
   allocatedById: z.string().uuid().optional(),
 });
 
 const bulkAllocateSchema = z.object({
-  demandDocType: z.string().min(1),
+  demandDocType: z.string().min(1).max(50),
   demandDocId: z.string().uuid(),
   warehouseId: z.string().uuid().optional(),
   lines: z

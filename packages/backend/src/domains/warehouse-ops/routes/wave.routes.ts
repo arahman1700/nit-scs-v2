@@ -28,7 +28,7 @@ import {
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const createWaveSchema = z.object({
-  waveNumber: z.string().min(1),
+  waveNumber: z.string().min(1).max(50),
   warehouseId: z.string().uuid(),
   waveType: z.enum(['manual', 'auto', 'priority']).optional(),
   createdById: z.string().uuid().optional(),

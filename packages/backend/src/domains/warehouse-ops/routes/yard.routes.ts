@@ -37,38 +37,38 @@ import * as yardService from '../services/yard.service.js';
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const createDockDoorSchema = z.object({
-  warehouseId: z.string().min(1),
-  doorNumber: z.string().min(1),
+  warehouseId: z.string().min(1).max(100),
+  doorNumber: z.string().min(1).max(50),
   doorType: z.enum(['inbound', 'outbound', 'both']),
-  status: z.string().optional(),
+  status: z.string().max(50).optional(),
 });
 
 const updateDockDoorSchema = z.object({
   doorType: z.enum(['inbound', 'outbound', 'both']).optional(),
-  status: z.string().optional(),
+  status: z.string().max(50).optional(),
 });
 
 const createAppointmentSchema = z.object({
-  warehouseId: z.string().min(1),
-  dockDoorId: z.string().optional(),
+  warehouseId: z.string().min(1).max(100),
+  dockDoorId: z.string().max(100).optional(),
   appointmentType: z.enum(['delivery', 'pickup', 'transfer']),
-  scheduledStart: z.string().min(1),
-  scheduledEnd: z.string().min(1),
-  carrierName: z.string().optional(),
-  driverName: z.string().optional(),
-  vehiclePlate: z.string().optional(),
-  referenceType: z.string().optional(),
-  referenceId: z.string().optional(),
-  notes: z.string().optional(),
+  scheduledStart: z.string().min(1).max(50),
+  scheduledEnd: z.string().min(1).max(50),
+  carrierName: z.string().max(255).optional(),
+  driverName: z.string().max(255).optional(),
+  vehiclePlate: z.string().max(30).optional(),
+  referenceType: z.string().max(50).optional(),
+  referenceId: z.string().max(100).optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const truckCheckInSchema = z.object({
-  warehouseId: z.string().min(1),
-  vehiclePlate: z.string().min(1),
-  driverName: z.string().optional(),
-  carrierName: z.string().optional(),
+  warehouseId: z.string().min(1).max(100),
+  vehiclePlate: z.string().min(1).max(30),
+  driverName: z.string().max(255).optional(),
+  carrierName: z.string().max(255).optional(),
   purpose: z.enum(['delivery', 'pickup', 'transfer']),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 const router = Router();

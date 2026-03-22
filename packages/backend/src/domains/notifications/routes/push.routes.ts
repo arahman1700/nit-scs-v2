@@ -18,8 +18,8 @@ import { logger } from '../../../config/logger.js';
 const pushSubscribeSchema = z.object({
   endpoint: z.string().url(),
   keys: z.object({
-    p256dh: z.string().min(1),
-    auth: z.string().min(1),
+    p256dh: z.string().min(1).max(500),
+    auth: z.string().min(1).max(500),
   }),
 });
 

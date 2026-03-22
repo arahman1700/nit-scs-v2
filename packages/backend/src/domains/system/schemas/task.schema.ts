@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 export const createTaskSchema = z.object({
   title: z.string().min(1).max(300),
-  description: z.string().optional(),
+  description: z.string().max(2000).optional(),
   status: z.enum(['open', 'in_progress', 'completed', 'cancelled']).default('open'),
   priority: z.enum(['high', 'medium', 'low']).default('medium'),
-  dueDate: z.string().optional(),
+  dueDate: z.string().max(50).optional(),
   assigneeId: z.string().uuid().optional(),
   projectId: z.string().uuid().optional(),
   tags: z.array(z.string().max(50)).default([]),
@@ -13,9 +13,9 @@ export const createTaskSchema = z.object({
 
 export const updateTaskSchema = z.object({
   title: z.string().min(1).max(300).optional(),
-  description: z.string().optional(),
+  description: z.string().max(2000).optional(),
   priority: z.enum(['high', 'medium', 'low']).optional(),
-  dueDate: z.string().nullable().optional(),
+  dueDate: z.string().max(50).nullable().optional(),
   projectId: z.string().uuid().nullable().optional(),
   tags: z.array(z.string().max(50)).optional(),
 });

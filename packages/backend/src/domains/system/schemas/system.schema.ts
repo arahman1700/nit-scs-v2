@@ -16,7 +16,7 @@ export const notificationListSchema = z.object({
 export const notificationCreateSchema = z.object({
   recipientId: uuid,
   title: z.string().min(1, 'Title is required').max(200),
-  body: z.string().optional(),
+  body: z.string().max(2000).optional(),
   notificationType: z.string().min(1, 'Notification type is required').max(30),
   referenceTable: z.string().max(50).optional(),
   referenceId: uuid.optional(),
@@ -25,9 +25,9 @@ export const notificationCreateSchema = z.object({
 // ── Audit Log Schemas ─────────────────────────────────────────────────
 
 export const auditLogQuerySchema = z.object({
-  tableName: z.string().optional(),
+  tableName: z.string().max(100).optional(),
   recordId: uuid.optional(),
-  action: z.string().optional(),
+  action: z.string().max(50).optional(),
   performedById: uuid.optional(),
   page: z.coerce.number().int().positive().optional().default(1),
   pageSize: z.coerce.number().int().positive().max(100).optional().default(20),
