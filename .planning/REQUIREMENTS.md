@@ -62,9 +62,9 @@ Requirements for production launch. Each maps to roadmap phases.
 
 - [ ] **VERF-01**: All 7 core document types (GRN, MI, MRN, MR, WT, QCI, DR) verified end-to-end with stock effects
 - [x] **VERF-02**: Approval workflow verified -- sequential and parallel paths with concurrent scenario testing
-- [ ] **VERF-03**: All 13 role-based navigation paths resolve to working pages
-- [ ] **VERF-04**: RTL Arabic rendering verified across all pages
-- [ ] **VERF-05**: PDF export verified for all document types
+- [x] **VERF-03**: All 13 role-based navigation paths resolve to working pages
+- [x] **VERF-04**: RTL Arabic rendering verified across all pages
+- [x] **VERF-05**: PDF export verified for all document types
 - [x] **VERF-06**: Notification delivery verified for all workflow triggers
 - [x] **VERF-07**: Socket.IO real-time updates verified for all document transitions
 
@@ -151,9 +151,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-04 | Phase 6 | Complete |
 | VERF-01 | Phase 7 | Pending |
 | VERF-02 | Phase 7 | Complete |
-| VERF-03 | Phase 7 | Pending |
-| VERF-04 | Phase 7 | Pending |
-| VERF-05 | Phase 7 | Pending |
+| VERF-03 | Phase 7 | Complete |
+| VERF-04 | Phase 7 | Complete |
+| VERF-05 | Phase 7 | Complete |
 | VERF-06 | Phase 7 | Complete |
 | VERF-07 | Phase 7 | Complete |
 | PROD-01 | Phase 8 | Pending |
