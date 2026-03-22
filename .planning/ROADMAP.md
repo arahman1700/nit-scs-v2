@@ -125,12 +125,12 @@ Plans:
   3. Logging in as each of the 13 roles navigates to a working dashboard with appropriate menu items -- no broken pages or 404s
   4. Switching to Arabic (RTL) renders all pages correctly -- no overlapping text, reversed layouts function properly, and switching back to English restores LTR
   5. Exporting any document type to PDF produces a correctly formatted file with all line items and header data
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-- [ ] 07-03: TBD
+- [ ] 07-01-PLAN.md -- Document lifecycle verification: end-to-end tests for all 7 core document types (GRN, MI, MRN, MR, WT, QCI, DR) with stock effect assertions
+- [ ] 07-02-PLAN.md -- Approval workflow, notification, and Socket.IO verification: sequential/parallel approval tests, N-01/N-06 notification triggers, socket auth and event emission
+- [ ] 07-03-PLAN.md -- Frontend verification: role navigation coverage for all roles, RTL direction toggle, PDF export for all document types
 
 ### Phase 8: Production Observability
 **Goal**: The production system has monitoring, alerting, request tracing, and automated reconciliation to detect and diagnose issues before users report them
@@ -160,5 +160,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 4. Infrastructure and Deployment | 2/2 | Complete   | 2026-03-22 |
 | 5. Performance and Stability | 2/2 | Complete   | 2026-03-22 |
 | 6. Code Quality | 0/2 | Planning complete | - |
-| 7. End-to-End Verification | 0/3 | Not started | - |
+| 7. End-to-End Verification | 0/3 | Planning complete | - |
 | 8. Production Observability | 0/2 | Not started | - |
