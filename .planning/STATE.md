@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-03-22T03:47:22.621Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-22T03:50:48.412Z"
 progress:
   total_phases: 8
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -59,6 +59,7 @@ Plan: 3 of 3
 | Phase 06 P01 | 15min | 2 tasks | 5 files |
 | Phase 07 P02 | 10min | 2 tasks | 4 files |
 | Phase 07 P03 | 10min | 2 tasks | 6 files |
+| Phase 07 P01 | 13min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Recent decisions affecting current work:
 - [Phase 07]: flushPromises (50ms setTimeout) needed for fire-and-forget eventBus handlers in notification dispatcher tests
 - [Phase 07]: Stable function constructor for jsPDF mock -- vi.fn().mockImplementation fails when core.ts caches the loaded module and vi.clearAllMocks resets the implementation
 - [Phase 07]: vi.stubGlobal localStorage mock for DirectionContext tests -- jsdom in Vitest 4 lacks functional Storage API methods
+- [Phase 07]: WT stock effects verified across ship() and receive() instead of complete() -- actual implementation splits deduct/add across ship and receive
+- [Phase 07]: Added eventBus and safeStatusUpdate mocks to GRN and WT test files for proper assertion and isolation
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T03:47:22.618Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-03-22T03:50:48.409Z
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None

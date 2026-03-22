@@ -128,7 +128,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 07-01-PLAN.md -- Document lifecycle verification: end-to-end tests for all 7 core document types (GRN, MI, MRN, MR, WT, QCI, DR) with stock effect assertions
+- [x] 07-01-PLAN.md -- Document lifecycle verification: end-to-end tests for all 7 core document types (GRN, MI, MRN, MR, WT, QCI, DR) with stock effect assertions
 - [x] 07-02-PLAN.md -- Approval workflow, notification, and Socket.IO verification: sequential/parallel approval tests, N-01/N-06 notification triggers, socket auth and event emission
 - [x] 07-03-PLAN.md -- Frontend verification: role navigation coverage for all roles, RTL direction toggle, PDF export for all document types
 
