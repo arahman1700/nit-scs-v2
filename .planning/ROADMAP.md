@@ -94,11 +94,11 @@ Plans:
   3. Master data lists (items, suppliers, warehouses) are served from cache on repeated requests within the TTL window, with cache invalidated on mutations
   4. The frontend production bundle uses vendor chunk splitting -- React, Prisma client, and other large libraries load from separate cached chunks
   5. No route shadowing warnings appear on server startup -- all static routes are mounted before dynamic parameter routes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- Database indexes, Prisma relationJoins, verify vendor chunks and route shadowing
+- [ ] 05-02-PLAN.md -- Bin cards N+1 fix with batch queries and timeout, Redis caching for master data and approval chains
 
 ### Phase 6: Code Quality
 **Goal**: Large components are maintainable, tests are reliable, and dynamic configuration is validated before saving
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 2. Data Layer Cleanup | 0/1 | Planning complete | - |
 | 3. Security Hardening | 0/2 | Planning complete | - |
 | 4. Infrastructure and Deployment | 2/2 | Complete   | 2026-03-22 |
-| 5. Performance and Stability | 0/2 | Not started | - |
+| 5. Performance and Stability | 0/2 | Planning complete | - |
 | 6. Code Quality | 0/1 | Not started | - |
 | 7. End-to-End Verification | 0/3 | Not started | - |
 | 8. Production Observability | 0/2 | Not started | - |
