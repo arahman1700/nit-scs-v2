@@ -74,6 +74,7 @@ model InventoryLot {
   @@index([expiryDate, status], map: "idx_mtl_lots_expiry_check")
   @@index([warehouseId, status, availableQty], map: "idx_mtl_lots_wh_avail")
   @@index([supplierId, receiptDate], map: "idx_mtl_lots_supplier_receipt")
+  @@index([supplierId, expiryDate(sort: Asc)], map: "idx_mtl_lots_supplier_expiry")
   @@map("MTL_LOT_NUMBERS")
 }
 
