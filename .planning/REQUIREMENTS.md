@@ -44,11 +44,11 @@ Requirements for production launch. Each maps to roadmap phases.
 ### Performance
 
 - [x] **PERF-01**: Bin cards computed endpoint fixed -- pagination added, query timeout enforced
-- [ ] **PERF-02**: Missing database indexes added: ApprovalStep(documentType, documentId, status), AuditLog(tableName, recordId, createdAt), Notification(recipientId, read, createdAt), JobOrder(entityId), InventoryLevel(itemId, lastMovementDate), InventoryLot(supplierId, expiryDate)
+- [x] **PERF-02**: Missing database indexes added: ApprovalStep(documentType, documentId, status), AuditLog(tableName, recordId, createdAt), Notification(recipientId, read, createdAt), JobOrder(entityId), InventoryLevel(itemId, lastMovementDate), InventoryLot(supplierId, expiryDate)
 - [x] **PERF-03**: N+1 queries fixed in mr.service.ts and approval.service.ts using batch lookups
-- [ ] **PERF-04**: Vite vendor chunk splitting configured for optimal browser caching
-- [ ] **PERF-05**: Route shadowing warnings resolved -- static routes mounted before dynamic ones
-- [ ] **PERF-06**: Prisma relationJoins preview feature enabled and tested
+- [x] **PERF-04**: Vite vendor chunk splitting configured for optimal browser caching
+- [x] **PERF-05**: Route shadowing warnings resolved -- static routes mounted before dynamic ones
+- [x] **PERF-06**: Prisma relationJoins preview feature enabled and tested
 - [x] **PERF-07**: Caching layer added for master data, approval chains, and permission matrix with TTL and invalidation
 
 ### Code Quality
@@ -139,11 +139,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFR-08 | Phase 4 | Complete |
 | INFR-09 | Phase 4 | Complete |
 | PERF-01 | Phase 5 | Complete |
-| PERF-02 | Phase 5 | Pending |
+| PERF-02 | Phase 5 | Complete |
 | PERF-03 | Phase 5 | Complete |
-| PERF-04 | Phase 5 | Pending |
-| PERF-05 | Phase 5 | Pending |
-| PERF-06 | Phase 5 | Pending |
+| PERF-04 | Phase 5 | Complete |
+| PERF-05 | Phase 5 | Complete |
+| PERF-06 | Phase 5 | Complete |
 | PERF-07 | Phase 5 | Complete |
 | QUAL-01 | Phase 6 | Pending |
 | QUAL-02 | Phase 6 | Pending |

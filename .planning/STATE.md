@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-03-22T01:31:41.634Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-22T01:37:45.560Z"
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Plan: 2 of 2
 | Phase 04 P02 | 2min | 2 tasks | 5 files |
 | Phase 04 P01 | 3min | 2 tasks | 4 files |
 | Phase 05 P02 | 3min | 2 tasks | 4 files |
+| Phase 05 P01 | 9min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Batch queries via Prisma OR + groupBy instead of raw SQL -- keeps type safety and Prisma middleware compatibility
 - [Phase 05]: Promise.race timeout (15s) over Prisma $transaction timeout -- works with multiple independent queries, not just transactions
 - [Phase 05]: Permission matrix left with existing in-memory cache -- adding Redis would add latency for no benefit on small per-process data
+- [Phase 05]: Function-based manualChunks over object syntax -- pnpm monorepos cannot resolve transitive deps as Rollup entry modules
+- [Phase 05]: AuditLog composite index uses performedAt (not createdAt) -- matches actual model timestamp field
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T01:31:41.631Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-03-22T01:37:45.557Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None
