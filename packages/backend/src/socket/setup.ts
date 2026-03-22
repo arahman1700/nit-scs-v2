@@ -4,6 +4,7 @@ import { log } from '../config/logger.js';
 import { prisma } from '../utils/prisma.js';
 import { getPrismaDelegate } from '../utils/prisma-helpers.js';
 import { hasPermission, type Permission } from '@nit-scs-v2/shared';
+import { updateSocketClients } from '../infrastructure/metrics/business-metrics.js';
 
 // ---------------------------------------------------------------------------
 // Document type → resource mapping for permission checks
@@ -96,6 +97,9 @@ export function setupSocketIO(io: SocketIOServer) {
     // Join user-specific room for notifications
     socket.join(`user:${userId}`);
 
+    // Track connected client count for Prometheus metrics
+    updateSocketClients(io.engine.clientsCount);
+
     // Periodic token re-validation for long-lived connections
     const recheckTimer = setInterval(() => {
       try {
@@ -175,6 +179,7 @@ export function setupSocketIO(io: SocketIOServer) {
 
     socket.on('disconnect', () => {
       clearInterval(recheckTimer);
+      updateSocketClients(io.engine.clientsCount);
       log('debug', `[Socket.IO] Disconnected: ${userId}`);
     });
   });

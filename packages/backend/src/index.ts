@@ -38,6 +38,7 @@ import {
 } from './domains/reporting/services/widget-data.service.js';
 import { loadCustomDataSources } from './domains/reporting/services/custom-data-source.service.js';
 import { healthCheck } from './domains/system/routes/health.routes.js';
+import { collectPoolMetrics } from './infrastructure/metrics/business-metrics.js';
 import apiRoutes from './routes/index.js';
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
@@ -192,7 +193,11 @@ httpServer.listen(PORT, () => {
   // Eagerly connect Prisma at startup — fail fast if DB is unreachable
   prisma
     .$connect()
-    .then(() => logger.info('Prisma connected to database'))
+    .then(() => {
+      logger.info('Prisma connected to database');
+      // Collect Prisma connection pool metrics every 15 seconds (reads in-memory counters, no DB query)
+      setInterval(() => collectPoolMetrics(prisma), 15_000);
+    })
     .catch((err: unknown) => {
       logger.error({ err }, 'Failed to connect to database -- exiting');
       process.exit(1);

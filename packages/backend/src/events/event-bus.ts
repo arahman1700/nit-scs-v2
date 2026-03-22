@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { z } from 'zod';
 import { log } from '../config/logger.js';
 import { eventBusEventsTotal } from '../infrastructure/metrics/prometheus.js';
+import { trackDocumentOperation } from '../infrastructure/metrics/business-metrics.js';
 
 /**
  * Typed event payload that flows through the system event bus.
@@ -110,6 +111,12 @@ class SystemEventBus extends EventEmitter {
 
     log('debug', `[EventBus] ${event.type} — ${event.entityType}:${event.entityId}`);
     eventBusEventsTotal.inc({ event_type: event.type });
+
+    // Track document-level business metrics
+    if (event.action === 'create' || event.action === 'approve' || event.action === 'status_change') {
+      trackDocumentOperation(event.entityType, event.action);
+    }
+
     this.emit(event.type, event);
     this.emit('*', event);
   }
