@@ -141,11 +141,11 @@ Plans:
   2. Prometheus /metrics endpoint exposes connection pool utilization, active Socket.IO client count, and document creation/approval counters per type
   3. Every log line and Sentry event within a single HTTP request shares the same correlation ID, set via AsyncLocalStorage
   4. A nightly reconciliation job compares computed inventory levels against the stock ledger and flags discrepancies above a configurable threshold
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+- [ ] 08-01-PLAN.md -- Request tracing infrastructure: AsyncLocalStorage correlation IDs, Sentry Prisma integration at 10% sampling, transaction/lock Prometheus metrics
+- [ ] 08-02-PLAN.md -- Business metrics and reconciliation: Socket.IO client gauge, document operation counters, connection pool gauge, nightly reconciliation with configurable threshold
 
 ## Progress
 
@@ -161,4 +161,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 5. Performance and Stability | 2/2 | Complete   | 2026-03-22 |
 | 6. Code Quality | 0/2 | Planning complete | - |
 | 7. End-to-End Verification | 0/3 | Planning complete | - |
-| 8. Production Observability | 0/2 | Not started | - |
+| 8. Production Observability | 0/2 | Planning complete | - |
