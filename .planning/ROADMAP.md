@@ -113,7 +113,7 @@ Plans:
 
 Plans:
 - [ ] 06-01-PLAN.md -- Backend quality: test reliability fix, rule cache invalidation verification, statusFlow Zod validation with circular transition detection
-- [ ] 06-02-PLAN.md -- Frontend refactoring: extract sub-components from YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage to under 400 LOC each
+- [x] 06-02-PLAN.md -- Frontend refactoring: extract sub-components from YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage to under 400 LOC each
 
 ### Phase 7: End-to-End Verification
 **Goal**: Every core user workflow is verified to function correctly -- documents flow from creation through approval to stock effects, across all roles and in both languages

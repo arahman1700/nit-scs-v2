@@ -53,7 +53,7 @@ Requirements for production launch. Each maps to roadmap phases.
 
 ### Code Quality
 
-- [ ] **QUAL-01**: Large frontend components (800+ LOC) refactored -- sub-components extracted for YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage
+- [x] **QUAL-01**: Large frontend components (800+ LOC) refactored -- sub-components extracted for YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage
 - [ ] **QUAL-02**: Test reliability fixed -- socket hang failures in cycle-count and dashboard-builder tests resolved
 - [ ] **QUAL-03**: Workflow rule engine cache invalidation added on rule CRUD operations
 - [ ] **QUAL-04**: Dynamic document type status flow validated with Zod schema before saving
@@ -145,7 +145,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERF-05 | Phase 5 | Complete |
 | PERF-06 | Phase 5 | Complete |
 | PERF-07 | Phase 5 | Complete |
-| QUAL-01 | Phase 6 | Pending |
+| QUAL-01 | Phase 6 | Complete |
 | QUAL-02 | Phase 6 | Pending |
 | QUAL-03 | Phase 6 | Pending |
 | QUAL-04 | Phase 6 | Pending |
