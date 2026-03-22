@@ -11,6 +11,25 @@ const { mockPrisma } = vi.hoisted(() => {
 vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../inventory/services/inventory.service.js', () => ({ addStockBatch: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
+vi.mock('../../../utils/safe-status-transition.js', () => ({
+  safeStatusUpdate: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any) => {
+    const result = await delegate.updateMany({ where: { id, status: expectedStatus }, data });
+    return { count: result.count };
+  }),
+  safeStatusUpdateTx: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any) => {
+    const result = await delegate.updateMany({ where: { id, status: expectedStatus }, data });
+    return { count: result.count };
+  }),
+}));
+vi.mock('../../../utils/document-value.js', () => ({
+  calculateDocumentTotalValue: vi.fn((items: any[]) =>
+    items.reduce((sum: number, i: any) => sum + (i.cost ?? 0) * (i.qty ?? 0), 0),
+  ),
+}));
+vi.mock('./oracle-po-sync.service.js', () => ({
+  validateGrnAgainstPO: vi.fn().mockResolvedValue({ warnings: [] }),
+}));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -20,11 +39,13 @@ import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, create, update, submit, approveQc, receive, store } from './grn.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch } from '../../inventory/services/inventory.service.js';
+import { eventBus } from '../../../events/event-bus.js';
 import { assertTransition } from '@nit-scs-v2/shared';
 
 const mockedGenerateDocNumber = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const mockedAddStockBatch = addStockBatch as ReturnType<typeof vi.fn>;
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
+const mockedEventBusPublish = eventBus.publish as ReturnType<typeof vi.fn>;
 
 describe('grn.service', () => {
   beforeEach(() => {
@@ -347,6 +368,176 @@ describe('grn.service', () => {
       mockPrisma.mrrv.findUnique.mockResolvedValue(null);
 
       await expect(store('nonexistent', 'user-1')).rejects.toThrow(NotFoundError);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // end-to-end lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('end-to-end lifecycle', () => {
+    it('create() returns a GRN with status draft and correct totalValue', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('GRN-E2E-001');
+      mockPrisma.mrrv.create.mockResolvedValue({
+        id: 'grn-e2e',
+        mrrvNumber: 'GRN-E2E-001',
+        status: 'draft',
+        totalValue: 1500,
+      });
+
+      const headerData = {
+        supplierId: 'sup-1',
+        warehouseId: 'wh-1',
+        receiveDate: '2026-03-01T00:00:00Z',
+      };
+      const lines = [
+        { itemId: 'item-1', qtyReceived: 10, unitCost: 50, uomId: 'uom-1' },
+        { itemId: 'item-2', qtyReceived: 5, unitCost: 200, uomId: 'uom-2' },
+      ];
+
+      const { grn } = await create(headerData, lines, 'user-1');
+
+      expect(grn.status).toBe('draft');
+      expect(grn.totalValue).toBe(1500);
+    });
+
+    it('submit() transitions draft -> pending_qc and auto-creates QCI when rfimRequired=true', async () => {
+      const grn = {
+        id: 'grn-e2e',
+        status: 'draft',
+        rfimRequired: true,
+        version: 0,
+        poNumber: 'PO-001',
+        supplierId: 'sup-1',
+        warehouseId: 'wh-1',
+        mrrvLines: [],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockedGenerateDocNumber.mockResolvedValue('QCI-E2E-001');
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.rfim.create.mockResolvedValue({ id: 'qci-e2e', rfimNumber: 'QCI-E2E-001' });
+
+      const result = await submit('grn-e2e');
+
+      expect(result.qciRequired).toBe(true);
+      expect(mockPrisma.rfim.create).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.rfim.create.mock.calls[0][0].data.mrrvId).toBe('grn-e2e');
+    });
+
+    it('submit() auto-creates DR when lines have qtyDamaged > 0', async () => {
+      const grn = {
+        id: 'grn-e2e-2',
+        status: 'draft',
+        rfimRequired: false,
+        version: 0,
+        poNumber: 'PO-002',
+        supplierId: 'sup-1',
+        warehouseId: 'wh-1',
+        mrrvLines: [
+          { id: 'line-1', itemId: 'item-1', uomId: 'uom-1', qtyOrdered: 10, qtyReceived: 10, qtyDamaged: 3, unitCost: 50 },
+        ],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockedGenerateDocNumber.mockResolvedValue('DR-E2E-001');
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.osdReport.create.mockResolvedValue({ id: 'dr-e2e' });
+      mockPrisma.mrrv.update.mockResolvedValue({});
+
+      await submit('grn-e2e-2');
+
+      expect(mockPrisma.osdReport.create).toHaveBeenCalledTimes(1);
+      const drData = mockPrisma.osdReport.create.mock.calls[0][0].data;
+      expect(drData.mrrvId).toBe('grn-e2e-2');
+      expect(drData.osdLines.create).toHaveLength(1);
+      expect(drData.osdLines.create[0].qtyDamaged).toBe(3);
+    });
+
+    it('approveQc() transitions pending_qc -> qc_approved and sets qcInspectorId', async () => {
+      const grn = { id: 'grn-e2e', status: 'pending_qc', version: 1 };
+      mockPrisma.mrrv.findUnique
+        .mockResolvedValueOnce(grn)
+        .mockResolvedValueOnce({ ...grn, status: 'qc_approved', qcInspectorId: 'inspector-1' });
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await approveQc('grn-e2e', 'inspector-1');
+
+      expect(result.status).toBe('qc_approved');
+      expect(result.qcInspectorId).toBe('inspector-1');
+    });
+
+    it('receive() transitions qc_approved -> received', async () => {
+      const grn = { id: 'grn-e2e', status: 'qc_approved', version: 2 };
+      mockPrisma.mrrv.findUnique
+        .mockResolvedValueOnce(grn)
+        .mockResolvedValueOnce({ ...grn, status: 'received' });
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await receive('grn-e2e');
+
+      expect(result.status).toBe('received');
+    });
+
+    it('store() transitions received -> stored AND calls addStockBatch with (qtyReceived - qtyDamaged) per line', async () => {
+      const grn = {
+        id: 'grn-e2e',
+        status: 'received',
+        warehouseId: 'wh-1',
+        supplierId: 'sup-1',
+        version: 3,
+        mrrvLines: [
+          { id: 'line-1', itemId: 'item-1', qtyReceived: 20, qtyDamaged: 5, unitCost: 100, expiryDate: null },
+          { id: 'line-2', itemId: 'item-2', qtyReceived: 10, qtyDamaged: 0, unitCost: 50, expiryDate: null },
+        ],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+      mockedAddStockBatch.mockResolvedValue(undefined);
+
+      const result = await store('grn-e2e', 'user-1');
+
+      expect(result).toEqual({ id: 'grn-e2e', warehouseId: 'wh-1', linesStored: 2 });
+      expect(mockedAddStockBatch).toHaveBeenCalledTimes(1);
+
+      const stockItems = mockedAddStockBatch.mock.calls[0][0];
+      expect(stockItems).toHaveLength(2);
+      expect(stockItems[0]).toEqual(
+        expect.objectContaining({ itemId: 'item-1', warehouseId: 'wh-1', qty: 15 }),
+      );
+      expect(stockItems[1]).toEqual(
+        expect.objectContaining({ itemId: 'item-2', warehouseId: 'wh-1', qty: 10 }),
+      );
+    });
+
+    it('store() publishes eventBus document:status_changed with entityType mrrv and payload.to = stored', async () => {
+      const grn = {
+        id: 'grn-e2e-ev',
+        status: 'received',
+        warehouseId: 'wh-1',
+        supplierId: 'sup-1',
+        version: 3,
+        mrrvLines: [
+          { id: 'line-1', itemId: 'item-1', qtyReceived: 5, qtyDamaged: 0, unitCost: 10, expiryDate: null },
+        ],
+      };
+      mockPrisma.mrrv.findUnique.mockResolvedValue(grn);
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.mrrv.updateMany.mockResolvedValue({ count: 1 });
+      mockedAddStockBatch.mockResolvedValue(undefined);
+
+      await store('grn-e2e-ev', 'user-1');
+
+      expect(mockedEventBusPublish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'document:status_changed',
+          entityType: 'mrrv',
+          entityId: 'grn-e2e-ev',
+          payload: expect.objectContaining({ to: 'stored' }),
+        }),
+      );
     });
   });
 });

@@ -328,4 +328,82 @@ describe('dr.service', () => {
       expect(updateArgs.data.responseDate).toBeNull();
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // end-to-end lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('end-to-end lifecycle', () => {
+    it('create() creates DR linked to GRN via mrrvId with damaged line items', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('OSD-E2E-001');
+      mockPrisma.osdReport.create.mockResolvedValue({
+        id: 'dr-e2e',
+        osdNumber: 'OSD-E2E-001',
+        mrrvId: 'mrrv-e2e',
+        status: 'draft',
+        osdLines: [
+          { itemId: 'item-1', qtyDamaged: 3 },
+        ],
+      });
+
+      const headerData = {
+        grnId: 'mrrv-e2e',
+        supplierId: 'sup-1',
+        warehouseId: 'wh-1',
+        reportDate: '2026-03-01T00:00:00Z',
+        reportTypes: ['damage'],
+      };
+      const lines = [
+        {
+          itemId: 'item-1',
+          uomId: 'uom-1',
+          grnLineId: 'line-1',
+          qtyInvoice: 10,
+          qtyReceived: 10,
+          qtyDamaged: 3,
+          damageType: 'physical',
+          unitCost: 50,
+        },
+      ];
+
+      const result = await create(headerData, lines);
+
+      expect(result.status).toBe('draft');
+      expect(result.mrrvId).toBe('mrrv-e2e');
+      // Verify damage value calculation: 3 * 50 = 150
+      const createArgs = mockPrisma.osdReport.create.mock.calls[0][0];
+      expect(createArgs.data.totalDamageValue).toBe(150);
+      expect(createArgs.data.mrrvId).toBe('mrrv-e2e');
+    });
+
+    it('resolve() transitions claim_sent -> resolved with resolution data', async () => {
+      const dr = { id: 'dr-e2e', status: 'claim_sent' };
+      const resolved = {
+        ...dr,
+        status: 'resolved',
+        resolutionType: 'credit_note',
+        resolutionAmount: 150,
+        resolvedById: 'user-1',
+      };
+      mockPrisma.osdReport.findUnique.mockResolvedValue(dr);
+      mockPrisma.osdReport.update.mockResolvedValue(resolved);
+
+      const result = await resolve('dr-e2e', 'user-1', {
+        resolutionType: 'credit_note',
+        resolutionAmount: 150,
+        supplierResponse: 'Agreed to credit',
+      });
+
+      expect(result.status).toBe('resolved');
+      expect(mockPrisma.osdReport.update).toHaveBeenCalledWith({
+        where: { id: 'dr-e2e' },
+        data: expect.objectContaining({
+          status: 'resolved',
+          resolvedById: 'user-1',
+          resolutionType: 'credit_note',
+          resolutionAmount: 150,
+          supplierResponse: 'Agreed to credit',
+        }),
+      });
+    });
+  });
 });

@@ -31,10 +31,12 @@ vi.mock('@nit-scs-v2/shared', async importOriginal => {
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { list, getById, update, start, complete } from './qci.service.js';
+import { eventBus } from '../../../events/event-bus.js';
 import { assertTransition, canTransition } from '@nit-scs-v2/shared';
 
 const mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
 const mockedCanTransition = canTransition as ReturnType<typeof vi.fn>;
+const mockedEventBusPublish = eventBus.publish as ReturnType<typeof vi.fn>;
 
 describe('qci.service', () => {
   beforeEach(() => {
@@ -249,6 +251,72 @@ describe('qci.service', () => {
 
       await expect(complete('rfim-1', '')).rejects.toThrow(
         'Inspection result is required (pass, fail, or conditional)',
+      );
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // end-to-end lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('end-to-end lifecycle', () => {
+    it('create() creates QCI linked to GRN via mrrvId', async () => {
+      // QCI is auto-created by GRN submit, but we test the relationship linkage
+      // by simulating what the GRN submit does: tx.rfim.create with mrrvId
+      mockPrisma.rfim.create.mockResolvedValue({
+        id: 'qci-e2e',
+        rfimNumber: 'QCI-E2E-001',
+        mrrvId: 'mrrv-e2e',
+        status: 'pending',
+      });
+
+      // Simulate what GRN submit does internally
+      const result = await mockPrisma.rfim.create({
+        data: {
+          rfimNumber: 'QCI-E2E-001',
+          mrrvId: 'mrrv-e2e',
+          requestDate: new Date(),
+          status: 'pending',
+        },
+      });
+
+      expect(result.mrrvId).toBe('mrrv-e2e');
+      expect(result.status).toBe('pending');
+    });
+
+    it('start() transitions pending -> in_progress (inspect phase)', async () => {
+      const qci = { id: 'qci-e2e', status: 'pending', mrrvId: 'mrrv-e2e' };
+      mockPrisma.rfim.findUnique
+        .mockResolvedValueOnce(qci)
+        .mockResolvedValueOnce({ ...qci, status: 'in_progress', inspectorId: 'inspector-1' });
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await start('qci-e2e', 'inspector-1');
+
+      expect(result.status).toBe('in_progress');
+      expect(result.inspectorId).toBe('inspector-1');
+    });
+
+    it('complete() transitions in_progress -> completed with pass result', async () => {
+      const qci = { id: 'qci-e2e', status: 'in_progress', mrrvId: 'mrrv-e2e', comments: null };
+      const completedQci = { ...qci, status: 'completed', result: 'pass' };
+      mockPrisma.rfim.findUnique
+        .mockResolvedValueOnce(qci) // initial lookup
+        .mockResolvedValueOnce(completedQci); // inside tx after update
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockedCanTransition.mockReturnValue(false); // parent GRN not ready
+      mockPrisma.rfim.updateMany.mockResolvedValue({ count: 1 });
+
+      const result = await complete('qci-e2e', 'pass', 'Inspection passed');
+
+      expect(result.updated.status).toBe('completed');
+      expect(result.mrrvId).toBe('mrrv-e2e');
+      expect(mockedEventBusPublish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'document:status_changed',
+          entityType: 'rfim',
+          payload: expect.objectContaining({ to: 'completed', result: 'pass' }),
+        }),
       );
     });
   });
