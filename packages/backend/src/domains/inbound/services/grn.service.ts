@@ -11,6 +11,7 @@ import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate, safeStatusUpdateTx } from '../../../utils/safe-status-transition.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type { GrnCreateDto, GrnUpdateDto, GrnLineDto, ListParams } from '../../../types/dto.js';
+import { calculateDocumentTotalValue } from '../../../utils/document-value.js';
 import { validateGrnAgainstPO } from './oracle-po-sync.service.js';
 import type { PoValidationWarning } from './oracle-po-sync.service.js';
 
@@ -104,12 +105,9 @@ async function createGrnRecord(headerData: Omit<GrnCreateDto, 'lines'>, lines: G
   return prisma.$transaction(async tx => {
     const grnNumber = await generateDocumentNumber('grn');
 
-    let totalValue = 0;
-    for (const line of lines) {
-      if (line.unitCost && line.qtyReceived) {
-        totalValue += line.unitCost * line.qtyReceived;
-      }
-    }
+    const totalValue = calculateDocumentTotalValue(
+      lines.map(line => ({ cost: line.unitCost, qty: line.qtyReceived })),
+    );
 
     const hasDr = lines.some(l => l.qtyDamaged && l.qtyDamaged > 0);
 

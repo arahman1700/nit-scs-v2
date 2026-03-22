@@ -8,6 +8,7 @@ import { generateDocumentNumber } from '../../system/services/document-number.se
 import { submitForApproval, processApproval } from '../../workflow/services/approval.service.js';
 import { reserveStockBatch } from '../../inventory/services/inventory.service.js';
 import { signQcForMirv, issueMirv, cancelMirv } from './mirv-operations.js';
+import { calculateDocumentTotalValue } from '../../../utils/document-value.js';
 import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { log } from '../../../config/logger.js';
@@ -89,13 +90,9 @@ export async function create(headerData: Omit<MiCreateDto, 'lines'>, lines: MiLi
     });
     const costMap = new Map(items.map(i => [i.id, Number(i.standardCost ?? 0)]));
 
-    let estimatedValue = 0;
-    for (const line of lines) {
-      const cost = costMap.get(line.itemId) ?? 0;
-      if (cost > 0) {
-        estimatedValue += cost * line.qtyRequested;
-      }
-    }
+    const estimatedValue = calculateDocumentTotalValue(
+      lines.map(line => ({ cost: costMap.get(line.itemId) ?? 0, qty: line.qtyRequested })),
+    );
 
     return tx.mirv.create({
       data: {

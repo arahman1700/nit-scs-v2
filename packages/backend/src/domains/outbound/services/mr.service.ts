@@ -9,6 +9,7 @@ import { getStockLevelsBatch } from '../../inventory/services/inventory.service.
 import { NotFoundError, BusinessRuleError, ConflictError } from '@nit-scs-v2/shared';
 import { assertTransition } from '@nit-scs-v2/shared';
 import { safeStatusUpdate } from '../../../utils/safe-status-transition.js';
+import { calculateDocumentTotalValue } from '../../../utils/document-value.js';
 import { eventBus } from '../../../events/event-bus.js';
 import type {
   MrfCreateDto as MrCreateDto,
@@ -89,15 +90,12 @@ export async function create(headerData: Omit<MrCreateDto, 'lines'>, lines: MrLi
         : [];
     const costMap = new Map(items.map(i => [i.id, Number(i.standardCost ?? 0)]));
 
-    let totalEstimatedValue = 0;
-    for (const line of lines) {
-      if (line.itemId) {
-        const cost = costMap.get(line.itemId) ?? 0;
-        if (cost > 0) {
-          totalEstimatedValue += cost * line.qtyRequested;
-        }
-      }
-    }
+    const totalEstimatedValue = calculateDocumentTotalValue(
+      lines.filter(line => line.itemId).map(line => ({
+        cost: costMap.get(line.itemId as string) ?? 0,
+        qty: line.qtyRequested,
+      })),
+    );
 
     return tx.materialRequisition.create({
       data: {
