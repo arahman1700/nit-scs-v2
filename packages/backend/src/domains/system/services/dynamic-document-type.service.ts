@@ -1,7 +1,9 @@
 import { prisma } from '../../../utils/prisma.js';
 import { Prisma } from '@prisma/client';
-import { NotFoundError } from '@nit-scs-v2/shared';
+import { NotFoundError, BusinessRuleError } from '@nit-scs-v2/shared';
 import { log } from '../../../config/logger.js';
+import { statusFlowSchema } from '../schemas/dynamic-document-type.schema.js';
+import { ZodError } from 'zod';
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -109,6 +111,19 @@ export async function getDocumentTypeByCode(code: string) {
 }
 
 export async function createDocumentType(input: CreateDocumentTypeInput, userId: string) {
+  // Validate statusFlow if provided
+  if (input.statusFlow) {
+    try {
+      statusFlowSchema.parse(input.statusFlow);
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const messages = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+        throw new BusinessRuleError(`Invalid status flow configuration: ${messages}`);
+      }
+      throw err;
+    }
+  }
+
   const docType = await prisma.dynamicDocumentType.create({
     data: {
       code: input.code,
@@ -136,6 +151,19 @@ export async function createDocumentType(input: CreateDocumentTypeInput, userId:
 export async function updateDocumentType(id: string, input: UpdateDocumentTypeInput) {
   const existing = await prisma.dynamicDocumentType.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError('Document type not found');
+
+  // Validate statusFlow if provided
+  if (input.statusFlow) {
+    try {
+      statusFlowSchema.parse(input.statusFlow);
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const messages = err.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+        throw new BusinessRuleError(`Invalid status flow configuration: ${messages}`);
+      }
+      throw err;
+    }
+  }
 
   const data: Prisma.DynamicDocumentTypeUpdateInput = {
     version: { increment: 1 },

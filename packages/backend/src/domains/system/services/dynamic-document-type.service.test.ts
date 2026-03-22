@@ -266,7 +266,15 @@ describe('dynamic-document-type.service', () => {
         description: 'A custom request form',
         icon: 'FileText',
         category: 'operations',
-        statusFlow: { initialStatus: 'draft', statuses: [], transitions: {} },
+        statusFlow: {
+          initialStatus: 'draft',
+          statuses: [
+            { key: 'draft', label: 'Draft', color: 'gray' },
+            { key: 'submitted', label: 'Submitted', color: 'blue' },
+            { key: 'approved', label: 'Approved', color: 'green' },
+          ],
+          transitions: { draft: ['submitted'], submitted: ['approved'] },
+        },
         approvalConfig: { levels: [] },
         permissionConfig: { canEdit: ['admin'] },
         settings: { autoNumber: true },
@@ -284,7 +292,7 @@ describe('dynamic-document-type.service', () => {
           description: 'A custom request form',
           icon: 'FileText',
           category: 'operations',
-          statusFlow: { initialStatus: 'draft', statuses: [], transitions: {} },
+          statusFlow: input.statusFlow,
           approvalConfig: { levels: [] },
           permissionConfig: { canEdit: ['admin'] },
           settings: { autoNumber: true },
@@ -353,6 +361,81 @@ describe('dynamic-document-type.service', () => {
         }),
       });
     });
+
+    it('should create with valid statusFlow (draft->submitted->approved->completed)', async () => {
+      const validFlow = {
+        initialStatus: 'draft',
+        statuses: [
+          { key: 'draft', label: 'Draft', color: 'gray' },
+          { key: 'submitted', label: 'Submitted', color: 'blue' },
+          { key: 'approved', label: 'Approved', color: 'green' },
+          { key: 'completed', label: 'Completed', color: 'emerald' },
+        ],
+        transitions: {
+          draft: ['submitted'],
+          submitted: ['approved'],
+          approved: ['completed'],
+        },
+      };
+      const input = { code: 'VALID', name: 'Valid Flow', statusFlow: validFlow };
+      mockPrisma.dynamicDocumentType.create.mockResolvedValue({ id: 'type-valid', ...input });
+
+      const result = await createDocumentType(input, 'user-1');
+      expect(result.id).toBe('type-valid');
+      expect(mockPrisma.dynamicDocumentType.create).toHaveBeenCalled();
+    });
+
+    it('should throw when statusFlow has circular transitions with no terminal status', async () => {
+      const circularFlow = {
+        initialStatus: 'a',
+        statuses: [
+          { key: 'a', label: 'A', color: 'red' },
+          { key: 'b', label: 'B', color: 'blue' },
+          { key: 'c', label: 'C', color: 'green' },
+        ],
+        transitions: { a: ['b'], b: ['c'], c: ['a'] },
+      };
+
+      await expect(
+        createDocumentType({ code: 'CIRC', name: 'Circular', statusFlow: circularFlow }, 'user-1'),
+      ).rejects.toThrow('Invalid status flow configuration');
+      expect(mockPrisma.dynamicDocumentType.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw when statusFlow initialStatus is not in statuses array', async () => {
+      const badInitial = {
+        initialStatus: 'missing',
+        statuses: [{ key: 'draft', label: 'Draft', color: 'gray' }],
+        transitions: {},
+      };
+
+      await expect(
+        createDocumentType({ code: 'BAD_INIT', name: 'Bad Initial', statusFlow: badInitial }, 'user-1'),
+      ).rejects.toThrow('Invalid status flow configuration');
+      expect(mockPrisma.dynamicDocumentType.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw when statusFlow transition references undefined status', async () => {
+      const badTransition = {
+        initialStatus: 'draft',
+        statuses: [{ key: 'draft', label: 'Draft', color: 'gray' }],
+        transitions: { draft: ['nonexistent'] },
+      };
+
+      await expect(
+        createDocumentType({ code: 'BAD_TRANS', name: 'Bad Transition', statusFlow: badTransition }, 'user-1'),
+      ).rejects.toThrow('Invalid status flow configuration');
+      expect(mockPrisma.dynamicDocumentType.create).not.toHaveBeenCalled();
+    });
+
+    it('should succeed when statusFlow is omitted (undefined)', async () => {
+      const input = { code: 'NO_FLOW', name: 'No Flow' };
+      mockPrisma.dynamicDocumentType.create.mockResolvedValue({ id: 'type-no-flow', ...input });
+
+      const result = await createDocumentType(input, 'user-1');
+      expect(result.id).toBe('type-no-flow');
+      expect(mockPrisma.dynamicDocumentType.create).toHaveBeenCalled();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -412,7 +495,11 @@ describe('dynamic-document-type.service', () => {
       mockPrisma.dynamicDocumentType.findUnique.mockResolvedValue({ id: 'type-1', version: 0 });
       mockPrisma.dynamicDocumentType.update.mockResolvedValue({ id: 'type-1', version: 1 });
 
-      const statusFlow = { initialStatus: 'pending', statuses: [], transitions: {} };
+      const statusFlow = {
+        initialStatus: 'pending',
+        statuses: [{ key: 'pending', label: 'Pending', color: 'yellow' }],
+        transitions: {},
+      };
       const approvalConfig = { levels: [{ role: 'manager' }] };
       const permissionConfig = { canEdit: ['admin', 'manager'] };
       const settings = { enableComments: true };
@@ -451,6 +538,56 @@ describe('dynamic-document-type.service', () => {
           version: { increment: 1 },
         },
       });
+    });
+
+    it('should throw when updating with statusFlow where initialStatus not in statuses', async () => {
+      mockPrisma.dynamicDocumentType.findUnique.mockResolvedValue({ id: 'type-1', version: 1 });
+
+      const badFlow = {
+        initialStatus: 'nonexistent',
+        statuses: [{ key: 'draft', label: 'Draft', color: 'gray' }],
+        transitions: {},
+      };
+
+      await expect(updateDocumentType('type-1', { statusFlow: badFlow })).rejects.toThrow(
+        'Invalid status flow configuration',
+      );
+      expect(mockPrisma.dynamicDocumentType.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw when updating with circular statusFlow', async () => {
+      mockPrisma.dynamicDocumentType.findUnique.mockResolvedValue({ id: 'type-1', version: 1 });
+
+      const circularFlow = {
+        initialStatus: 'x',
+        statuses: [
+          { key: 'x', label: 'X', color: 'red' },
+          { key: 'y', label: 'Y', color: 'blue' },
+        ],
+        transitions: { x: ['y'], y: ['x'] },
+      };
+
+      await expect(updateDocumentType('type-1', { statusFlow: circularFlow })).rejects.toThrow(
+        'Invalid status flow configuration',
+      );
+      expect(mockPrisma.dynamicDocumentType.update).not.toHaveBeenCalled();
+    });
+
+    it('should update with valid statusFlow', async () => {
+      mockPrisma.dynamicDocumentType.findUnique.mockResolvedValue({ id: 'type-1', version: 1 });
+      mockPrisma.dynamicDocumentType.update.mockResolvedValue({ id: 'type-1', version: 2 });
+
+      const validFlow = {
+        initialStatus: 'open',
+        statuses: [
+          { key: 'open', label: 'Open', color: 'blue' },
+          { key: 'closed', label: 'Closed', color: 'gray' },
+        ],
+        transitions: { open: ['closed'] },
+      };
+
+      await updateDocumentType('type-1', { statusFlow: validFlow });
+      expect(mockPrisma.dynamicDocumentType.update).toHaveBeenCalled();
     });
   });
 
