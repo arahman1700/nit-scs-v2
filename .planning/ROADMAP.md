@@ -109,10 +109,11 @@ Plans:
   2. Running the full test suite 5 times in a row produces zero socket hang failures in cycle-count or dashboard-builder tests
   3. Modifying a workflow rule immediately reflects in the next rule evaluation -- no stale cache serving outdated rules
   4. Saving a dynamic document type with an invalid status flow (e.g., circular transitions) is rejected with a validation error
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
+- [ ] 06-01-PLAN.md -- Backend quality: test reliability fix, rule cache invalidation verification, statusFlow Zod validation with circular transition detection
+- [ ] 06-02-PLAN.md -- Frontend refactoring: extract sub-components from YardDashboard, NotificationRulesPage, DynamicTypeBuilderPage to under 400 LOC each
 
 ### Phase 7: End-to-End Verification
 **Goal**: Every core user workflow is verified to function correctly -- documents flow from creation through approval to stock effects, across all roles and in both languages
@@ -158,6 +159,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Security Hardening | 0/2 | Planning complete | - |
 | 4. Infrastructure and Deployment | 2/2 | Complete   | 2026-03-22 |
 | 5. Performance and Stability | 2/2 | Complete   | 2026-03-22 |
-| 6. Code Quality | 0/1 | Not started | - |
+| 6. Code Quality | 0/2 | Planning complete | - |
 | 7. End-to-End Verification | 0/3 | Not started | - |
 | 8. Production Observability | 0/2 | Not started | - |
