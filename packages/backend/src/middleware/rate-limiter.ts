@@ -74,11 +74,20 @@ async function redisLimiter(
 /**
  * General rate limiter middleware.
  * Uses Redis when available, falls back to in-memory.
+ *
+ * @param exemptPaths - paths to skip rate limiting for (e.g. session-maintenance endpoints)
  */
-export function rateLimiter(maxRequests = 100, windowMs = 60_000) {
+export function rateLimiter(maxRequests = 100, windowMs = 60_000, exemptPaths: string[] = []) {
   const windowSec = Math.ceil(windowMs / 1000);
+  const exemptSet = new Set(exemptPaths.map(p => p.toLowerCase()));
 
   return (req: Request, res: Response, next: NextFunction) => {
+    // Skip rate limiting for exempt paths (e.g. /auth/me, /auth/refresh)
+    if (exemptSet.has(req.path.toLowerCase())) {
+      next();
+      return;
+    }
+
     const ip = req.ip || 'unknown';
     const key = `rl:global:${ip}`;
 
@@ -96,6 +105,42 @@ export function rateLimiter(maxRequests = 100, windowMs = 60_000) {
       })
       .catch(err => {
         logger.error({ err, key }, 'Rate limiter unexpected error');
+        next();
+      });
+  };
+}
+
+/**
+ * Per-user rate limiter for authenticated routes.
+ * Keys on userId from JWT payload (requires authenticate middleware first).
+ * Default: 1000 requests per 60s per user (generous for SPA navigation).
+ */
+export function authenticatedRateLimiter(maxRequests = 1000, windowMs = 60_000) {
+  const windowSec = Math.ceil(windowMs / 1000);
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.userId;
+    if (!userId) {
+      // No user context — fall through (public route, shouldn't be here)
+      next();
+      return;
+    }
+    const key = `rl:user:${userId}`;
+
+    redisLimiter(key, maxRequests, windowSec)
+      .then(({ allowed, remaining, retryAfterSec }) => {
+        res.setHeader('X-RateLimit-Limit', maxRequests);
+        res.setHeader('X-RateLimit-Remaining', Math.max(0, remaining));
+
+        if (!allowed) {
+          res.setHeader('Retry-After', retryAfterSec);
+          sendError(res, 429, 'Too many requests. Please try again later.');
+          return;
+        }
+        next();
+      })
+      .catch(err => {
+        logger.error({ err, key }, 'User rate limiter unexpected error');
         next();
       });
   };

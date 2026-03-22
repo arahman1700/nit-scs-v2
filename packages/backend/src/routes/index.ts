@@ -53,7 +53,10 @@ export function createApiRouter() {
   const router = Router();
 
   // ── Rate limiter (applied to all /api/v1 routes) ───────────────────────
-  router.use(rateLimiter(500, 60_000));
+  // Exempt session-maintenance endpoints (/auth/me, /auth/refresh) so rapid
+  // SPA navigation does not trigger 429 on session-check calls (SECR-01).
+  // These endpoints still go through authenticate middleware for actual auth.
+  router.use(rateLimiter(500, 60_000, ['/auth/me', '/auth/refresh']));
 
   // ── Health Check (public: minimal status only) ───────────────────────
   router.get('/health', healthCheck);
