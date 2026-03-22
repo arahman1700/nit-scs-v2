@@ -97,14 +97,17 @@ export default defineConfig({
     }),
   ],
   build: {
-    sourcemap: true,
+    sourcemap: 'hidden',
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks: {
-          charts: ['recharts'],
-          dnd: ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          socketio: ['socket.io-client'],
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-data': ['@tanstack/react-query', 'axios', 'zustand'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'vendor-charts': ['recharts'],
+          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'vendor-socket': ['socket.io-client'],
         },
       },
     },

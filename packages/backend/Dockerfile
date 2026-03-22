@@ -1,5 +1,5 @@
 # ── Stage 1: Install dependencies ──
-FROM node:20-alpine AS deps
+FROM node:20.18-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -24,8 +24,11 @@ RUN pnpm --filter @nit-scs-v2/backend build
 RUN cd packages/backend && npx tsc --esModuleInterop --module nodenext --moduleResolution nodenext --outDir dist/seed --rootDir prisma prisma/seed.ts prisma/seed-templates.ts prisma/seed-data.ts prisma/seed-semantic-layer.ts --skipLibCheck || echo "Seed compilation warning (non-fatal)"
 
 # ── Stage 3: Production runtime ──
-FROM node:20-alpine AS runtime
+FROM node:20.18-alpine AS runtime
 WORKDIR /app
+
+# Proper signal handling in containers (PID 1 issue)
+RUN apk add --no-cache dumb-init
 
 # Copy everything needed from the build stage
 COPY --from=build /app/node_modules node_modules
@@ -53,10 +56,11 @@ USER nodejs
 
 WORKDIR /app/packages/backend
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=512"
 EXPOSE 4000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -qO- http://localhost:4000/api/health || exit 1
 
-CMD ["sh", "start.sh"]
+CMD ["dumb-init", "sh", "start.sh"]

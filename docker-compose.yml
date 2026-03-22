@@ -30,7 +30,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction
 
 volumes:
   pgdata:
