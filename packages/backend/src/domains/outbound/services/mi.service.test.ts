@@ -643,4 +643,128 @@ describe('mi.service', () => {
       expect(updateArgs.data.reservationStatus).toBe('released');
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // end-to-end lifecycle
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('end-to-end lifecycle', () => {
+    const mockedEventBusPublish = eventBus.publish as ReturnType<typeof vi.fn>;
+
+    it('create() returns MI with status draft', async () => {
+      mockedGenerateDocNumber.mockResolvedValue('MIRV-E2E-001');
+      mockPrisma.item.findMany.mockResolvedValue([
+        { id: 'item-1', standardCost: 100 },
+        { id: 'item-2', standardCost: 50 },
+      ]);
+      mockPrisma.mirv.create.mockResolvedValue({
+        id: 'mirv-e2e',
+        mirvNumber: 'MIRV-E2E-001',
+        status: 'draft',
+      });
+
+      const result = await create(
+        { projectId: 'proj-1', warehouseId: 'wh-1', requestDate: '2026-03-01T00:00:00Z' },
+        [{ itemId: 'item-1', qtyRequested: 10 }, { itemId: 'item-2', qtyRequested: 5 }],
+        'user-1',
+      );
+
+      expect(result.status).toBe('draft');
+    });
+
+    it('submit() transitions draft -> pending_approval', async () => {
+      mockPrisma.mirv.findUnique.mockResolvedValue({
+        id: 'mirv-e2e',
+        status: 'draft',
+        estimatedValue: 1250,
+      });
+      mockedAssertTransition.mockReturnValue(undefined);
+      mockedSubmitForApproval.mockResolvedValue({ approverRole: 'warehouse_manager', slaHours: 24 });
+
+      const result = await submit('mirv-e2e', 'user-1');
+
+      expect(result.approverRole).toBe('warehouse_manager');
+      expect(mockedAssertTransition).toHaveBeenCalledWith('mi', 'draft', 'pending_approval');
+    });
+
+    it('approve() with action=approve calls reserveStockBatch with correct items from mirvLines', async () => {
+      const pendingMi = {
+        id: 'mirv-e2e',
+        status: 'pending_approval',
+        warehouseId: 'wh-1',
+        mirvLines: [
+          { id: 'line-1', itemId: 'item-1', qtyRequested: 10 },
+          { id: 'line-2', itemId: 'item-2', qtyRequested: 5 },
+        ],
+      };
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMi);
+      mockedProcessApproval.mockResolvedValue(undefined);
+      mockedReserveStockBatch.mockResolvedValue({ success: true, failedItems: [] });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      const result = await approve('mirv-e2e', 'approve', 'approver-1');
+
+      expect(result.status).toBe('approved');
+      expect(mockedReserveStockBatch).toHaveBeenCalledWith(
+        [
+          { itemId: 'item-1', warehouseId: 'wh-1', qty: 10 },
+          { itemId: 'item-2', warehouseId: 'wh-1', qty: 5 },
+        ],
+        expect.anything(),
+      );
+    });
+
+    it('approve() publishes eventBus document:status_changed with entityType mirv and payload.to = approved', async () => {
+      const pendingMi = {
+        id: 'mirv-e2e-ev',
+        status: 'pending_approval',
+        warehouseId: 'wh-1',
+        mirvLines: [{ id: 'line-1', itemId: 'item-1', qtyRequested: 3 }],
+      };
+      mockPrisma.mirv.findUnique.mockResolvedValue(pendingMi);
+      mockedProcessApproval.mockResolvedValue(undefined);
+      mockedReserveStockBatch.mockResolvedValue({ success: true, failedItems: [] });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      await approve('mirv-e2e-ev', 'approve', 'approver-1');
+
+      expect(mockedEventBusPublish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'document:status_changed',
+          entityType: 'mirv',
+          entityId: 'mirv-e2e-ev',
+          payload: expect.objectContaining({ to: 'approved' }),
+        }),
+      );
+    });
+
+    it('issue() transitions approved -> issued within a $transaction', async () => {
+      const approvedMi = {
+        id: 'mirv-e2e',
+        status: 'approved',
+        warehouseId: 'wh-1',
+        projectId: 'proj-1',
+        locationOfWork: 'Site A',
+        qcSignatureId: 'qc-user-1',
+        mirvLines: [
+          { id: 'line-1', itemId: 'item-1', qtyRequested: 10, qtyApproved: 10 },
+        ],
+      };
+      mockPrisma.mirv.findUnique.mockResolvedValue(approvedMi);
+      mockedConsumeReservationBatch.mockResolvedValue({
+        totalCost: 500,
+        lineCosts: new Map([['line-1', 500]]),
+      });
+      mockPrisma.mirvLine.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockedGenerateDocNumber.mockResolvedValue('GP-E2E');
+      mockPrisma.gatePass.create.mockResolvedValue({});
+
+      const result = await issue('mirv-e2e', 'user-1');
+
+      expect(result.id).toBe('mirv-e2e');
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+    });
+  });
 });

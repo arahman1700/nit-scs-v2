@@ -11,6 +11,27 @@ vi.mock('../../../utils/prisma.js', () => ({ prisma: mockPrisma }));
 vi.mock('../../system/services/document-number.service.js', () => ({ generateDocumentNumber: vi.fn() }));
 vi.mock('../../inventory/services/inventory.service.js', () => ({ addStockBatch: vi.fn(), deductStockBatch: vi.fn() }));
 vi.mock('../../../config/logger.js', () => ({ log: vi.fn() }));
+vi.mock('../../../events/event-bus.js', () => ({ eventBus: { publish: vi.fn() } }));
+vi.mock('../../../utils/safe-status-transition.js', () => ({
+  safeStatusUpdate: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any, expectedVersion?: number) => {
+    const where: Record<string, unknown> = { id, status: expectedStatus };
+    if (expectedVersion !== undefined) {
+      where.version = expectedVersion;
+      data.version = expectedVersion + 1;
+    }
+    const result = await delegate.updateMany({ where, data });
+    return { count: result.count };
+  }),
+  safeStatusUpdateTx: vi.fn(async (delegate: any, id: string, expectedStatus: string, data: any, expectedVersion?: number) => {
+    const where: Record<string, unknown> = { id, status: expectedStatus };
+    if (expectedVersion !== undefined) {
+      where.version = expectedVersion;
+      data.version = expectedVersion + 1;
+    }
+    const result = await delegate.updateMany({ where, data });
+    return { count: result.count };
+  }),
+}));
 vi.mock('@nit-scs-v2/shared', async importOriginal => {
   const actual = await importOriginal<typeof import('@nit-scs-v2/shared')>();
   return { ...actual, assertTransition: vi.fn() };
@@ -31,12 +52,14 @@ import {
 } from './stock-transfer.service.js';
 import { generateDocumentNumber } from '../../system/services/document-number.service.js';
 import { addStockBatch, deductStockBatch } from '../../inventory/services/inventory.service.js';
+import { eventBus } from '../../../events/event-bus.js';
 import { NotFoundError, BusinessRuleError, assertTransition } from '@nit-scs-v2/shared';
 
 const _mockedGenDoc = generateDocumentNumber as ReturnType<typeof vi.fn>;
 const _mockedAddStockBatch = addStockBatch as ReturnType<typeof vi.fn>;
 const _mockedDeductStockBatch = deductStockBatch as ReturnType<typeof vi.fn>;
 const _mockedAssertTransition = assertTransition as ReturnType<typeof vi.fn>;
+const mockedEventBusPublish = eventBus.publish as ReturnType<typeof vi.fn>;
 
 // ── helpers ──────────────────────────────────────────────────────────
 const USER_ID = 'user-1';
@@ -456,4 +479,102 @@ describe('cancel', () => {
       await expect(cancel(ST_ID)).rejects.toThrow(`Stock Transfer cannot be cancelled from status: ${status}`);
     },
   );
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// end-to-end lifecycle
+// ─────────────────────────────────────────────────────────────────────────
+describe('end-to-end lifecycle', () => {
+  it('create() returns WT with status draft', async () => {
+    vi.mocked(generateDocumentNumber).mockResolvedValue('ST-E2E-001');
+    const created = makeStockTransfer({ transferNumber: 'ST-E2E-001', stockTransferLines: makeLines() });
+    mockPrisma.stockTransfer.create.mockResolvedValue(created);
+
+    const result = await create(
+      {
+        transferType: 'inter_warehouse',
+        fromWarehouseId: 'wh-from',
+        toWarehouseId: 'wh-to',
+        transferDate: '2026-03-01',
+      } as any,
+      [{ itemId: 'item-1', quantity: 10, uomId: 'uom-1' }] as any,
+      USER_ID,
+    );
+
+    expect(result.status).toBe('draft');
+  });
+
+  it('submit() transitions draft -> pending', async () => {
+    const st = makeStockTransfer({ status: 'draft' });
+    mockPrisma.stockTransfer.findUnique
+      .mockResolvedValueOnce(st)
+      .mockResolvedValueOnce({ ...st, status: 'pending' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
+
+    const result = await submit(ST_ID);
+
+    expect(result.status).toBe('pending');
+  });
+
+  it('ship() deducts from source warehouse and receive() adds to destination warehouse', async () => {
+    const lines = makeLines();
+
+    // Ship: deduct from source warehouse
+    const stShip = makeStockTransfer({ status: 'approved', stockTransferLines: lines });
+    mockPrisma.stockTransfer.findUnique
+      .mockResolvedValueOnce(stShip)
+      .mockResolvedValueOnce({ ...stShip, status: 'shipped' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
+
+    await ship(ST_ID);
+
+    expect(deductStockBatch).toHaveBeenCalledTimes(1);
+    const deductItems = _mockedDeductStockBatch.mock.calls[0][0];
+    expect(deductItems[0]).toEqual(
+      expect.objectContaining({ itemId: 'item-1', warehouseId: 'wh-from', qty: 10 }),
+    );
+    expect(deductItems[1]).toEqual(
+      expect.objectContaining({ itemId: 'item-2', warehouseId: 'wh-from', qty: 5 }),
+    );
+
+    vi.clearAllMocks();
+    Object.assign(mockPrisma, createPrismaMock());
+
+    // Receive: add to destination warehouse
+    const stRecv = makeStockTransfer({ status: 'shipped', stockTransferLines: lines });
+    mockPrisma.stockTransfer.findUnique
+      .mockResolvedValueOnce(stRecv)
+      .mockResolvedValueOnce({ ...stRecv, status: 'received' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
+
+    await receive(ST_ID, USER_ID);
+
+    expect(addStockBatch).toHaveBeenCalledTimes(1);
+    const addItems = _mockedAddStockBatch.mock.calls[0][0];
+    expect(addItems[0]).toEqual(
+      expect.objectContaining({ itemId: 'item-1', warehouseId: 'wh-to', qty: 10 }),
+    );
+    expect(addItems[1]).toEqual(
+      expect.objectContaining({ itemId: 'item-2', warehouseId: 'wh-to', qty: 5 }),
+    );
+  });
+
+  it('complete() publishes eventBus document:status_changed for stock_transfer', async () => {
+    const st = makeStockTransfer({ status: 'received' });
+    mockPrisma.stockTransfer.findUnique
+      .mockResolvedValueOnce(st)
+      .mockResolvedValueOnce({ ...st, status: 'completed' });
+    mockPrisma.stockTransfer.updateMany.mockResolvedValue({ count: 1 });
+
+    await complete(ST_ID);
+
+    expect(mockedEventBusPublish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'document:status_changed',
+        entityType: 'stock_transfer',
+        entityId: ST_ID,
+        payload: expect.objectContaining({ to: 'completed' }),
+      }),
+    );
+  });
 });

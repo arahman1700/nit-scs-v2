@@ -383,3 +383,60 @@ describe('complete', () => {
     expect(addStockBatch).not.toHaveBeenCalled();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// end-to-end lifecycle
+// ─────────────────────────────────────────────────────────────────────────
+describe('end-to-end lifecycle', () => {
+  it('create() returns MRN with status draft', async () => {
+    vi.mocked(generateDocumentNumber).mockResolvedValue('MRV-E2E-001');
+    const created = makeMrn({
+      mrvNumber: 'MRV-E2E-001',
+      mrvLines: [{ id: 'line-1', itemId: 'item-1', qtyReturned: 5, condition: 'good' }],
+    });
+    mockPrisma.mrv.create.mockResolvedValue(created);
+
+    const result = await create(
+      { returnType: 'site_return', projectId: 'proj-1', toWarehouseId: 'wh-1', returnDate: '2026-03-01' } as any,
+      [{ itemId: 'item-1', qtyReturned: 5, uomId: 'uom-1', condition: 'good' }] as any,
+      USER_ID,
+    );
+
+    expect(result.status).toBe('draft');
+  });
+
+  it('complete() with action=approve adds stock back to inventory via addStockBatch', async () => {
+    const lines = [
+      { id: 'l1', itemId: 'item-1', qtyReturned: 8, condition: 'good' },
+      { id: 'l2', itemId: 'item-2', qtyReturned: 3, condition: 'damaged' },
+    ];
+    const mrn = makeMrn({ status: 'received', mrvLines: lines });
+    mockPrisma.mrv.findUnique.mockResolvedValue(mrn);
+
+    const result = await complete(MRN_ID, USER_ID);
+
+    // addStockBatch should have been called with both good and damaged items
+    expect(addStockBatch).toHaveBeenCalledTimes(1);
+    const batchArg = mockedAddStockBatch.mock.calls[0][0];
+    // 1 good (active) + 1 damaged (blocked)
+    expect(batchArg).toHaveLength(2);
+    expect(batchArg[0]).toEqual(
+      expect.objectContaining({ itemId: 'item-1', warehouseId: 'wh-1', qty: 8 }),
+    );
+    expect(batchArg[1]).toEqual(
+      expect.objectContaining({ itemId: 'item-2', warehouseId: 'wh-1', qty: 3, lotStatus: 'blocked' }),
+    );
+
+    // Status changed event
+    expect(mockedEventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'document:status_changed',
+        entityType: 'mrv',
+        payload: expect.objectContaining({ to: 'completed' }),
+      }),
+    );
+
+    expect(result.goodLinesRestocked).toBe(1);
+    expect(result.blockedLinesRestocked).toBe(1);
+  });
+});
