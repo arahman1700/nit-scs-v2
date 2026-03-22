@@ -47,11 +47,10 @@ Plans:
   2. Cycle count quantities, staging assignments, and packing line amounts use Decimal types -- no floating-point rounding errors on financial/quantity calculations
   3. The WT (stock transfer) endpoint uses a single service implementation -- no duplicated logic between wt.service.ts and stock-transfer.service.ts
   4. totalValue calculation is consistent across all document types, computed by a single shared utility function
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Extend soft-delete to findUnique/aggregate/groupBy, extract shared totalValue utility, verify DINT-06 and DINT-08 pre-resolved
 
 ### Phase 3: Security Hardening
 **Goal**: Authentication is stable, all user input is bounded, and known attack vectors (SQL injection, XSS, info leakage) are closed
@@ -155,7 +154,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Transaction Safety | 0/2 | Planning complete | - |
-| 2. Data Layer Cleanup | 0/2 | Not started | - |
+| 2. Data Layer Cleanup | 0/1 | Planning complete | - |
 | 3. Security Hardening | 0/2 | Not started | - |
 | 4. Infrastructure and Deployment | 0/2 | Not started | - |
 | 5. Performance and Stability | 0/2 | Not started | - |
