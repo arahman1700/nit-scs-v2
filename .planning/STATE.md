@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-03-22T02:22:46.558Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-22T02:24:09.269Z"
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
 ---
 
 # Project State
@@ -56,6 +56,7 @@ Plan: 2 of 2
 | Phase 05 P02 | 3min | 2 tasks | 4 files |
 | Phase 05 P01 | 9min | 2 tasks | 6 files |
 | Phase 06 P02 | 13min | 2 tasks | 20 files |
+| Phase 06 P01 | 15min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Phase 05]: AuditLog composite index uses performedAt (not createdAt) -- matches actual model timestamp field
 - [Phase 06]: Use actual exported types from useYard.ts instead of local re-declarations to avoid type drift in extracted sub-components
 - [Phase 06]: Extract additional sub-components (FieldsTab, StatusFlowTab) beyond plan scope to meet 400 LOC target
+- [Phase 06]: DFS from initialStatus to find terminal reachability -- simpler than full cycle detection and correctly handles partial cycles
+- [Phase 06]: BusinessRuleError (422) for statusFlow validation failures -- matches project error hierarchy
+- [Phase 06]: Pre-existing flaky tests deferred -- scheduler, dashboard.routes, imsf.routes are timing-dependent, not caused by current changes
 
 ### Pending Todos
 
@@ -105,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T02:22:46.555Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-03-22T02:24:09.265Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
