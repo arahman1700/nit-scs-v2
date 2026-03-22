@@ -20,6 +20,11 @@ vi.mock('../../../events/event-bus.js', () => ({
 vi.mock('../../notifications/services/notification.service.js', () => ({
   createNotification: vi.fn().mockResolvedValue({}),
 }));
+vi.mock('../../../utils/cache.js', () => ({
+  cached: vi.fn((_key: string, _ttl: number, fetcher: () => Promise<unknown>) => fetcher()),
+  invalidateCachePattern: vi.fn(),
+  CacheTTL: { APPROVAL_CHAIN: 600 },
+}));
 
 import { createPrismaMock } from '../../../test-utils/prisma-mock.js';
 import { createAuditLog } from '../../audit/services/audit.service.js';
@@ -795,6 +800,292 @@ describe('approval.service', () => {
       const result = await getApprovalSteps('mirv', 'nonexistent');
 
       expect(result).toEqual([]);
+    });
+  });
+
+  // ─── sequential multi-level approval ────────────────────────────────
+
+  describe('sequential multi-level approval', () => {
+    // 3-level chain: warehouse_supervisor (L1) → manager (L2) → admin (L3)
+    const threeWorkflows = [
+      makeWorkflow({ id: 'wf-1', approverRole: 'warehouse_supervisor', minAmount: 0, slaHours: 24 }),
+      makeWorkflow({ id: 'wf-2', approverRole: 'manager', minAmount: 0, slaHours: 48 }),
+      makeWorkflow({ id: 'wf-3', approverRole: 'admin', minAmount: 0, slaHours: 72 }),
+    ];
+
+    function makeStepForLevel(level: number, role: string, status = 'pending') {
+      return makeApprovalStep({
+        id: `step-${level}`,
+        level,
+        approverRole: role,
+        status,
+      });
+    }
+
+    it('submitForApproval creates 3 approval steps when chain has 3 levels', async () => {
+      mockPrisma.approvalWorkflow.findMany.mockResolvedValue(threeWorkflows);
+      mockPrisma.approvalStep.findMany.mockResolvedValue([]); // no existing steps
+      mockPrisma.approvalStep.createMany.mockResolvedValue({ count: 3 });
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      const result = await submitForApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        amount: 50000,
+        submittedById: 'user-1',
+      });
+
+      expect(mockPrisma.approvalStep.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({ level: 1, approverRole: 'warehouse_supervisor', status: 'pending' }),
+          expect.objectContaining({ level: 2, approverRole: 'manager', status: 'pending' }),
+          expect.objectContaining({ level: 3, approverRole: 'admin', status: 'pending' }),
+        ]),
+      });
+
+      // Return value should be the highest-level approval (admin)
+      expect(result).toEqual({ approverRole: 'admin', slaHours: 72 });
+    });
+
+    it('processApproval at level 1 advances to level 2', async () => {
+      const step1 = makeStepForLevel(1, 'warehouse_supervisor', 'pending');
+      const step2 = makeStepForLevel(2, 'manager', 'pending');
+
+      // READ: current pending step
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step1);
+      // Auth: matching role
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'warehouse_supervisor',
+        isActive: true,
+      });
+      // Inside tx: update step 1
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      // Inside tx: find next pending step
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step2);
+      // Inside tx: find workflow for next step SLA
+      mockPrisma.approvalWorkflow.findFirst.mockResolvedValue(
+        makeWorkflow({ approverRole: 'manager', slaHours: 48 }),
+      );
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        action: 'approve',
+        processedById: 'approver-L1',
+      });
+
+      // Step 1 should be marked approved
+      expect(mockPrisma.approvalStep.update).toHaveBeenCalledWith({
+        where: { id: 'step-1' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+
+      // Document should NOT be fully approved (still pending steps)
+      const mirvUpdates = mockPrisma.mirv.update.mock.calls;
+      const fullyApprovedCall = mirvUpdates.find(
+        (c: unknown[]) =>
+          ((c[0] as Record<string, unknown>).data as Record<string, unknown>).status === 'approved',
+      );
+      expect(fullyApprovedCall).toBeUndefined();
+
+      // EventBus should publish advancement event
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'approval:level_approved',
+          payload: expect.objectContaining({
+            approvedLevel: 1,
+            nextLevel: 2,
+          }),
+        }),
+      );
+    });
+
+    it('processApproval at level 2 advances to level 3', async () => {
+      const step2 = makeStepForLevel(2, 'manager', 'pending');
+      const step3 = makeStepForLevel(3, 'admin', 'pending');
+
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step2);
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'manager',
+        isActive: true,
+      });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalStep.findFirst.mockResolvedValueOnce(step3);
+      mockPrisma.approvalWorkflow.findFirst.mockResolvedValue(
+        makeWorkflow({ approverRole: 'admin', slaHours: 72 }),
+      );
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        action: 'approve',
+        processedById: 'approver-L2',
+      });
+
+      expect(mockPrisma.approvalStep.update).toHaveBeenCalledWith({
+        where: { id: 'step-2' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'approval:level_approved',
+          payload: expect.objectContaining({
+            approvedLevel: 2,
+            nextLevel: 3,
+          }),
+        }),
+      );
+    });
+
+    it('processApproval at level 3 marks document as fully approved', async () => {
+      const step3 = makeStepForLevel(3, 'admin', 'pending');
+
+      mockPrisma.approvalStep.findFirst
+        .mockResolvedValueOnce(step3)  // READ: current pending
+        .mockResolvedValueOnce(null);  // Inside tx: no next step
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'admin',
+        isActive: true,
+      });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        action: 'approve',
+        processedById: 'approver-L3',
+      });
+
+      // Step 3 approved
+      expect(mockPrisma.approvalStep.update).toHaveBeenCalledWith({
+        where: { id: 'step-3' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+
+      // Document fully approved
+      expect(mockPrisma.mirv.update).toHaveBeenCalledWith({
+        where: { id: 'doc-3level' },
+        data: expect.objectContaining({
+          status: 'approved',
+          approvedById: 'approver-L3',
+          approvedDate: expect.any(Date),
+        }),
+      });
+
+      // EventBus publishes fully-approved event
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'approval:approved',
+          entityId: 'doc-3level',
+        }),
+      );
+    });
+
+    it('processApproval with reject at level 2 rejects without advancing to level 3', async () => {
+      const step2 = makeStepForLevel(2, 'manager', 'pending');
+
+      mockPrisma.approvalStep.findFirst.mockResolvedValue(step2);
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'manager',
+        isActive: true,
+      });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalStep.updateMany.mockResolvedValue({ count: 1 });
+      mockPrisma.mirv.update.mockResolvedValue({});
+      mockPrisma.mirv.findUnique.mockResolvedValue({ createdById: 'submitter-1' });
+      mockPrisma.auditLog.create.mockResolvedValue({});
+
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        action: 'reject',
+        processedById: 'approver-L2',
+        comments: 'Budget exceeded',
+      });
+
+      // Step 2 rejected
+      expect(mockPrisma.approvalStep.update).toHaveBeenCalledWith({
+        where: { id: 'step-2' },
+        data: expect.objectContaining({ status: 'rejected' }),
+      });
+
+      // Remaining steps (level 3) should be skipped
+      expect(mockPrisma.approvalStep.updateMany).toHaveBeenCalledWith({
+        where: {
+          documentType: 'mirv',
+          documentId: 'doc-3level',
+          status: 'pending',
+          level: { gt: 2 },
+        },
+        data: { status: 'skipped' },
+      });
+
+      // Document rejected
+      expect(mockPrisma.mirv.update).toHaveBeenCalledWith({
+        where: { id: 'doc-3level' },
+        data: {
+          status: 'rejected',
+          rejectionReason: 'Budget exceeded',
+        },
+      });
+
+      // EventBus publishes rejection
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'approval:rejected',
+          payload: expect.objectContaining({
+            rejectedAtLevel: 2,
+          }),
+        }),
+      );
+    });
+
+    it('processApproval at level 1 triggers notification for level 2 approverRole', async () => {
+      const step1 = makeStepForLevel(1, 'warehouse_supervisor', 'pending');
+      const step2 = makeStepForLevel(2, 'manager', 'pending');
+
+      mockPrisma.approvalStep.findFirst
+        .mockResolvedValueOnce(step1)
+        .mockResolvedValueOnce(step2);
+      mockPrisma.employee.findUnique.mockResolvedValue({
+        systemRole: 'warehouse_supervisor',
+        isActive: true,
+      });
+      mockPrisma.approvalStep.update.mockResolvedValue({});
+      mockPrisma.approvalWorkflow.findFirst.mockResolvedValue(
+        makeWorkflow({ approverRole: 'manager', slaHours: 48 }),
+      );
+      mockPrisma.mirv.update.mockResolvedValue({});
+
+      // Provide an io mock to test notification emission
+      const mockIo = {} as import('socket.io').Server;
+      await processApproval({
+        documentType: 'mirv',
+        documentId: 'doc-3level',
+        action: 'approve',
+        processedById: 'approver-L1',
+        io: mockIo,
+      });
+
+      // emitToRole should be called to notify the manager role
+      expect(emitToRole).toHaveBeenCalledWith(
+        mockIo,
+        'manager',
+        'approval:requested',
+        expect.objectContaining({
+          documentType: 'mirv',
+          documentId: 'doc-3level',
+          level: 2,
+          approverRole: 'manager',
+        }),
+      );
     });
   });
 });

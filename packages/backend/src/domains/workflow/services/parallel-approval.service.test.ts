@@ -748,4 +748,182 @@ describe('parallel-approval.service', () => {
       );
     });
   });
+
+  // ─── parallel approval lifecycle ────────────────────────────────────
+
+  describe('parallel approval lifecycle', () => {
+    it('createParallelApproval with mode=all and 2 approverIds creates a pending group', async () => {
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'a1' }, { id: 'a2' }]);
+      const createdGroup = makeGroup({ mode: 'all', status: 'pending' });
+      groupModel().create.mockResolvedValue(createdGroup);
+
+      const result = await createParallelApproval({
+        documentType: 'mirv',
+        documentId: 'doc-parallel',
+        level: 1,
+        mode: 'all',
+        approverIds: ['a1', 'a2'],
+      });
+
+      expect(result.mode).toBe('all');
+      expect(result.status).toBe('pending');
+      expect(groupModel().create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          mode: 'all',
+          status: 'pending',
+        }),
+        include: expect.any(Object),
+      });
+    });
+
+    it('mode=all: first approver approve -> group stays pending', async () => {
+      groupModel()
+        .findUnique.mockResolvedValueOnce(makeGroup({ mode: 'all', responses: [] }))
+        .mockResolvedValueOnce(makeGroup({ mode: 'all', status: 'pending' }));
+
+      responseModel().create.mockResolvedValue({});
+      // 1 approved out of 2 expected
+      responseModel().findMany.mockResolvedValue([{ decision: 'approved', groupId: 'group-1' }]);
+
+      const result = await respondToApproval({
+        groupId: 'group-1',
+        approverId: 'a1',
+        decision: 'approved',
+      });
+
+      // Group should NOT be updated to approved (still waiting for second)
+      expect(groupModel().update).not.toHaveBeenCalled();
+      expect(result.status).toBe('pending');
+    });
+
+    it('mode=all: second approver approve -> group resolves to approved (via evaluateGroupCompletion)', async () => {
+      // Use evaluateGroupCompletion to finalize the group after all responses
+      groupModel()
+        .findUnique.mockResolvedValueOnce(
+          makeGroup({
+            mode: 'all',
+            responses: [
+              makeResponse({ approverId: 'a1', decision: 'approved' }),
+              makeResponse({ approverId: 'a2', decision: 'approved' }),
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(makeGroup({ mode: 'all', status: 'approved' }));
+
+      groupModel().update.mockResolvedValue({});
+
+      const result = await evaluateGroupCompletion('group-1', 2);
+
+      expect(groupModel().update).toHaveBeenCalledWith({
+        where: { id: 'group-1' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+      expect(result.status).toBe('approved');
+    });
+
+    it('mode=all: one approve + one reject -> group resolves to rejected', async () => {
+      groupModel()
+        .findUnique.mockResolvedValueOnce(
+          makeGroup({
+            mode: 'all',
+            responses: [makeResponse({ approverId: 'a1', decision: 'approved' })],
+          }),
+        )
+        .mockResolvedValueOnce(makeGroup({ mode: 'all', status: 'rejected' }));
+
+      responseModel().create.mockResolvedValue({});
+      responseModel().findMany.mockResolvedValue([
+        { decision: 'approved', groupId: 'group-1' },
+        { decision: 'rejected', groupId: 'group-1' },
+      ]);
+      groupModel().update.mockResolvedValue({});
+
+      await respondToApproval({
+        groupId: 'group-1',
+        approverId: 'a2',
+        decision: 'rejected',
+      });
+
+      expect(groupModel().update).toHaveBeenCalledWith({
+        where: { id: 'group-1' },
+        data: expect.objectContaining({ status: 'rejected' }),
+      });
+    });
+
+    it('mode=any: first approver approve -> group resolves to approved immediately', async () => {
+      groupModel()
+        .findUnique.mockResolvedValueOnce(makeGroup({ mode: 'any', responses: [] }))
+        .mockResolvedValueOnce(makeGroup({ mode: 'any', status: 'approved' }));
+
+      responseModel().create.mockResolvedValue({});
+      responseModel().findMany.mockResolvedValue([{ decision: 'approved', groupId: 'group-1' }]);
+      groupModel().update.mockResolvedValue({});
+
+      const result = await respondToApproval({
+        groupId: 'group-1',
+        approverId: 'a1',
+        decision: 'approved',
+      });
+
+      expect(groupModel().update).toHaveBeenCalledWith({
+        where: { id: 'group-1' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+      expect(result.status).toBe('approved');
+    });
+
+    it('mode=any: first reject, second approve -> group resolves to approved', async () => {
+      // After first rejection, group stays pending (mode=any needs all to reject)
+      groupModel()
+        .findUnique.mockResolvedValueOnce(
+          makeGroup({
+            mode: 'any',
+            responses: [makeResponse({ approverId: 'a1', decision: 'rejected' })],
+          }),
+        )
+        .mockResolvedValueOnce(makeGroup({ mode: 'any', status: 'approved' }));
+
+      responseModel().create.mockResolvedValue({});
+      responseModel().findMany.mockResolvedValue([
+        { decision: 'rejected', groupId: 'group-1' },
+        { decision: 'approved', groupId: 'group-1' },
+      ]);
+      groupModel().update.mockResolvedValue({});
+
+      const result = await respondToApproval({
+        groupId: 'group-1',
+        approverId: 'a2',
+        decision: 'approved',
+      });
+
+      expect(groupModel().update).toHaveBeenCalledWith({
+        where: { id: 'group-1' },
+        data: expect.objectContaining({ status: 'approved' }),
+      });
+      expect(result.status).toBe('approved');
+    });
+
+    it('slow approver: mode=all with 3 approvers, 2 approve, 1 has not responded -> stays pending', async () => {
+      // Only 2 out of 3 have approved; third approver is slow (no response yet)
+      groupModel()
+        .findUnique.mockResolvedValueOnce(
+          makeGroup({
+            mode: 'all',
+            responses: [
+              makeResponse({ approverId: 'a1', decision: 'approved' }),
+              makeResponse({ approverId: 'a2', decision: 'approved' }),
+              // a3 has NOT responded
+            ],
+          }),
+        )
+        .mockResolvedValueOnce(makeGroup({ mode: 'all', status: 'pending' }));
+
+      // evaluateGroupCompletion with expectedCount=3, but only 2 approved
+      const result = await evaluateGroupCompletion('group-1', 3);
+
+      // Group should NOT be resolved (still waiting for a3)
+      expect(groupModel().update).not.toHaveBeenCalled();
+      expect(result.status).toBe('pending');
+    });
+  });
 });
