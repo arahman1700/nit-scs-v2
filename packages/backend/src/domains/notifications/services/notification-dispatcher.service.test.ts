@@ -465,4 +465,207 @@ describe('notification-dispatcher.service', () => {
       await expect(checkOverdueToolReturns()).resolves.toBeUndefined();
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // workflow notification triggers (N-01, N-06, N-02, duplicate suppression)
+  // ---------------------------------------------------------------------------
+  describe('workflow notification triggers', () => {
+    /**
+     * Start the dispatcher, capture the registered event handlers,
+     * then call them directly with mock events to test notification creation.
+     *
+     * The handlers registered on eventBus.on are fire-and-forget wrappers:
+     *   (event) => { handleXxx(event).catch(...) }
+     * So we need to flush microtasks after calling them.
+     */
+    function getRegisteredHandler(eventType: string): ((event: unknown) => void) | undefined {
+      const calls = mockEventBus.on.mock.calls;
+      for (const call of calls) {
+        if (call[0] === eventType) {
+          return call[1] as (event: unknown) => void;
+        }
+      }
+      return undefined;
+    }
+
+    /** Flush pending microtasks so fire-and-forget async handlers complete */
+    async function flushPromises(): Promise<void> {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    beforeEach(() => {
+      stopNotificationDispatcher();
+      mockEventBus.on.mockClear();
+      startNotificationDispatcher();
+    });
+
+    it('N-01: MI submitted (mirv pending_approval) creates notifications for approver roles', async () => {
+      const handler = getRegisteredHandler('document:status_changed');
+      expect(handler).toBeDefined();
+
+      // Mock employees with approver roles
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'mgr-1' }, { id: 'sup-1' }]);
+      mockPrisma.notification.createMany.mockResolvedValue({ count: 2 });
+
+      const event = {
+        type: 'document:status_changed',
+        entityType: 'mirv',
+        entityId: 'mi-001',
+        action: 'status_change',
+        payload: { to: 'pending_approval', documentNumber: 'MI-2026-001' },
+        performedById: 'user-1',
+        timestamp: new Date().toISOString(),
+      };
+
+      handler!(event);
+      await flushPromises();
+
+      // Should create notifications for approver role users
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            systemRole: { in: ['warehouse_supervisor', 'manager'] },
+            isActive: true,
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            recipientId: 'mgr-1',
+            title: 'MI Requires Approval',
+            notificationType: 'mirv_approval',
+            referenceTable: 'mirv',
+            referenceId: 'mi-001',
+          }),
+        ]),
+      });
+    });
+
+    it('N-06: GRN (mrrv) pending_qc creates QC inspection notifications for qc_officer', async () => {
+      const handler = getRegisteredHandler('document:status_changed');
+      expect(handler).toBeDefined();
+
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'qc-1' }]);
+      mockPrisma.notification.createMany.mockResolvedValue({ count: 1 });
+
+      const event = {
+        type: 'document:status_changed',
+        entityType: 'mrrv',
+        entityId: 'grn-001',
+        action: 'status_change',
+        payload: { to: 'pending_qc', documentNumber: 'GRN-2026-001' },
+        performedById: 'user-1',
+        timestamp: new Date().toISOString(),
+      };
+
+      handler!(event);
+      await flushPromises();
+
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            systemRole: { in: ['qc_officer'] },
+            isActive: true,
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            recipientId: 'qc-1',
+            title: 'QC Inspection Required',
+            notificationType: 'qc_inspection',
+            referenceTable: 'mrrv',
+            referenceId: 'grn-001',
+          }),
+        ]),
+      });
+    });
+
+    it('N-02: inventory:low_stock creates notifications for warehouse_supervisor', async () => {
+      const handler = getRegisteredHandler('inventory:low_stock');
+      expect(handler).toBeDefined();
+
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'ws-1' }]);
+      mockPrisma.notification.createMany.mockResolvedValue({ count: 1 });
+
+      const event = {
+        type: 'inventory:low_stock',
+        entityType: 'item',
+        entityId: 'item-001',
+        action: 'low_stock',
+        payload: { title: 'Low Stock: Cement', body: 'Cement bags below minimum level' },
+        performedById: 'system',
+        timestamp: new Date().toISOString(),
+      };
+
+      handler!(event);
+      await flushPromises();
+
+      expect(mockPrisma.employee.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            systemRole: { in: ['warehouse_supervisor'] },
+            isActive: true,
+          }),
+        }),
+      );
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            recipientId: 'ws-1',
+            notificationType: 'low_stock_sow',
+          }),
+        ]),
+      });
+    });
+
+    it('duplicate suppression: hasRecentNotification prevents duplicate notification', async () => {
+      // This tests the scheduler-based checkEquipmentReturnDue
+      // which has explicit duplicate suppression via hasRecentNotification
+      const futureDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+      mockPrisma.rentalContract.findMany.mockResolvedValue([
+        { id: 'rc-1', contractNumber: 'RC-001', endDate: futureDate },
+      ]);
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'emp-1' }]);
+
+      // Return an existing recent notification (duplicate suppression)
+      mockPrisma.notification.findFirst.mockResolvedValue({ id: 'existing-notif' });
+
+      await checkEquipmentReturnDue();
+
+      // createMany should NOT be called because recent notification exists
+      expect(mockPrisma.notification.createMany).not.toHaveBeenCalled();
+    });
+
+    it('notifyRecipients creates batch notifications for all recipient IDs', async () => {
+      // Test via N-02 handler which calls notifyRecipients internally
+      const handler = getRegisteredHandler('inventory:low_stock');
+
+      mockPrisma.employee.findMany.mockResolvedValue([{ id: 'r1' }, { id: 'r2' }, { id: 'r3' }]);
+      mockPrisma.notification.createMany.mockResolvedValue({ count: 3 });
+
+      handler!({
+        type: 'inventory:low_stock',
+        entityType: 'item',
+        entityId: 'item-002',
+        action: 'low_stock',
+        payload: { title: 'Low Stock Alert', body: 'Stock below minimum' },
+        timestamp: new Date().toISOString(),
+      });
+      await flushPromises();
+
+      expect(mockPrisma.notification.createMany).toHaveBeenCalledWith({
+        data: expect.arrayContaining([
+          expect.objectContaining({ recipientId: 'r1' }),
+          expect.objectContaining({ recipientId: 'r2' }),
+          expect.objectContaining({ recipientId: 'r3' }),
+        ]),
+      });
+      // Should have exactly 3 items in the data array
+      const createManyCall = mockPrisma.notification.createMany.mock.calls[0][0];
+      expect(createManyCall.data).toHaveLength(3);
+    });
+  });
 });
