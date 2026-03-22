@@ -19,9 +19,12 @@ import { getEnv } from './config/env.js';
 import { getRedis, disconnectRedis } from './config/redis.js';
 import { requestId } from './middleware/request-id.js';
 import { requestLogger } from './middleware/request-logger.js';
+import { requestTimeout } from './middleware/request-timeout.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { sanitizeInput } from './middleware/sanitize.js';
 import { setupSocketIO } from './socket/setup.js';
+import { shutdownQueues } from './infrastructure/queue/bullmq.config.js';
+import { prisma } from './utils/prisma.js';
 // rateLimiter is applied inside routes/index.ts (not here) to avoid double-counting
 import { startRuleEngine } from './events/rule-engine.js';
 import { startChainNotifications } from './events/chain-notification-handler.js';
@@ -38,7 +41,7 @@ import apiRoutes from './routes/index.js';
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 dotenv.config({ path: '../../.env' });
-getEnv(); // Validate environment on startup (throws in production if vars missing)
+const env = getEnv(); // Validate environment on startup (throws in production if vars missing)
 
 const app = express();
 const httpServer = createServer(app);
@@ -74,7 +77,7 @@ app.use(
   }),
 );
 app.use(cors(corsOptions));
-const jsonParser = express.json({ limit: '2mb' });
+const jsonParser = express.json({ limit: env.BODY_SIZE_LIMIT });
 app.use((req, res, next) => {
   // Keep raw body intact for signed webhooks (Svix/Resend).
   const isResendWebhook =
@@ -94,6 +97,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 app.use(requestLogger);
+app.use(requestTimeout);
 
 // ── API Routes (versioned) ────────────────────────────────────────────────
 // Swagger UI is mounted inside the API router at /api/v1/api-docs
@@ -182,6 +186,15 @@ const PORT = parseInt(process.env.PORT || '4000', 10);
 
 httpServer.listen(PORT, () => {
   logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'NIT-SCS Backend started');
+
+  // Eagerly connect Prisma at startup — fail fast if DB is unreachable
+  prisma.$connect()
+    .then(() => logger.info('Prisma connected to database'))
+    .catch((err: unknown) => {
+      logger.error({ err }, 'Failed to connect to database -- exiting');
+      process.exit(1);
+    });
+
   startRuleEngine();
   startChainNotifications();
   startNotificationDispatcher();
@@ -208,9 +221,12 @@ async function shutdown(signal: string) {
   stopScheduler();
   io.close();
 
-  // Wait for in-flight requests to finish (up to 5s)
+  // Drain BullMQ workers before draining HTTP (finish current jobs)
+  await shutdownQueues();
+
+  // Wait for in-flight requests to finish (configurable, default 15s)
   const drainStart = Date.now();
-  while (inFlightRequests > 0 && Date.now() - drainStart < 5000) {
+  while (inFlightRequests > 0 && Date.now() - drainStart < env.SHUTDOWN_TIMEOUT_MS) {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   if (inFlightRequests > 0) {
@@ -221,7 +237,6 @@ async function shutdown(signal: string) {
     logger.info('HTTP server closed');
     try {
       await disconnectRedis();
-      const { prisma } = await import('./utils/prisma.js');
       await prisma.$disconnect();
       logger.info('All connections closed');
     } catch (err) {
@@ -230,8 +245,8 @@ async function shutdown(signal: string) {
     process.exit(0);
   });
 
-  // Force exit after 10 s if graceful shutdown hangs
-  setTimeout(() => process.exit(1), 10_000);
+  // Force exit if graceful shutdown hangs (SHUTDOWN_TIMEOUT_MS + 5s buffer)
+  setTimeout(() => process.exit(1), env.SHUTDOWN_TIMEOUT_MS + 5000);
 }
 
 // ── Unhandled errors — log + report to Sentry, then exit ─────────────────

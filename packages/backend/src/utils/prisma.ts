@@ -76,7 +76,11 @@ function buildExtendedClient(base: PrismaClient): PrismaClient {
 const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['warn', 'error'] : ['error'],
+    log: process.env.NODE_ENV === 'development'
+      ? ['warn', 'error']
+      : process.env.PRISMA_DEBUG === 'true'
+        ? [{ emit: 'event', level: 'query' }, 'warn', 'error']
+        : ['error'],
   });
 
 export const prisma = buildExtendedClient(basePrisma);
