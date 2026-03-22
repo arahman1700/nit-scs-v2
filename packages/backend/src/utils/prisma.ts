@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { prismaTransactionDuration } from '../infrastructure/metrics/prometheus.js';
 
 // ---------------------------------------------------------------------------
 // Prisma Client Singleton
@@ -40,7 +41,7 @@ function applySoftDeleteFilter(model: string | undefined, args: Record<string, u
 }
 
 function buildExtendedClient(base: PrismaClient): PrismaClient {
-  return base.$extends({
+  const withSoftDelete = base.$extends({
     query: {
       $allModels: {
         async findMany({ model, args, query }) {
@@ -69,18 +70,41 @@ function buildExtendedClient(base: PrismaClient): PrismaClient {
         },
       },
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type
-  }) as any as PrismaClient;
+  });
+
+  // Chain a second extension for query timing — only observe slow queries (>100ms)
+  // to avoid flooding the histogram with trivial operations
+  const withMetrics = withSoftDelete.$extends({
+    query: {
+      $allOperations({ operation, model, args, query }) {
+        const start = performance.now();
+        const result = query(args);
+        if (result instanceof Promise) {
+          return result.finally(() => {
+            const durationSec = (performance.now() - start) / 1000;
+            if (durationSec > 0.1) {
+              prismaTransactionDuration.observe({ operation: `${model}.${operation}` }, durationSec);
+            }
+          });
+        }
+        return result;
+      },
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type
+  return withMetrics as any as PrismaClient;
 }
 
 const basePrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === 'development'
-      ? ['warn', 'error']
-      : process.env.PRISMA_DEBUG === 'true'
-        ? [{ emit: 'event', level: 'query' }, 'warn', 'error']
-        : ['error'],
+    log:
+      process.env.NODE_ENV === 'development'
+        ? ['warn', 'error']
+        : process.env.PRISMA_DEBUG === 'true'
+          ? [{ emit: 'event', level: 'query' }, 'warn', 'error']
+          : ['error'],
   });
 
 export const prisma = buildExtendedClient(basePrisma);

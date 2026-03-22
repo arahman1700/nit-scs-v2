@@ -4,6 +4,7 @@ import { createAuditLog } from '../../audit/services/audit.service.js';
 import { log } from '../../../config/logger.js';
 import { invalidateCachePattern } from '../../../utils/cache.js';
 import { eventBus } from '../../../events/event-bus.js';
+import { optimisticLockRetries } from '../../../infrastructure/metrics/prometheus.js';
 
 /** Invalidate dashboard caches that depend on inventory data */
 async function invalidateInventoryCache(): Promise<void> {
@@ -60,6 +61,10 @@ export async function updateLevelWithVersion(
   updateData: Record<string, unknown>,
 ): Promise<void> {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    if (attempt > 0) {
+      optimisticLockRetries.inc({ model: 'InventoryLevel' });
+    }
+
     const level = await tx.inventoryLevel.findUnique({
       where: { itemId_warehouseId: { itemId, warehouseId } },
     });

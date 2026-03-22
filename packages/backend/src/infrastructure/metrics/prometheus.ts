@@ -63,3 +63,22 @@ export const cacheOpsTotal = new Counter({
   labelNames: ['operation'],
   registers: [register],
 });
+
+// ── Transaction / Prisma Metrics ────────────────────────────────────────────
+
+export const prismaTransactionDuration = new Histogram({
+  name: 'prisma_transaction_duration_seconds',
+  help: 'Duration of Prisma $transaction calls in seconds',
+  labelNames: ['operation'],
+  buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10],
+  registers: [register],
+});
+
+// ── Optimistic Lock Metrics ─────────────────────────────────────────────────
+
+export const optimisticLockRetries = new Counter({
+  name: 'optimistic_lock_retries_total',
+  help: 'Total optimistic lock retry attempts',
+  labelNames: ['model'],
+  registers: [register],
+});
