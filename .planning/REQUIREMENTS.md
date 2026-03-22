@@ -22,12 +22,12 @@ Requirements for production launch. Each maps to roadmap phases.
 ### Security
 
 - [x] **SECR-01**: Rate limiter exempts /auth/me endpoint OR switches to per-user rate limiting for authenticated routes
-- [ ] **SECR-02**: Zod schema string length limits added to all text input fields (max 255 for names, max 500 for descriptions/notes)
+- [x] **SECR-02**: Zod schema string length limits added to all text input fields (max 255 for names, max 500 for descriptions/notes)
 - [x] **SECR-03**: AI module SQL injection hardening -- audit logging, read-only DB user, SQL AST validation
 - [x] **SECR-04**: CORS configured per-environment with explicit origin allowlist for production
-- [ ] **SECR-05**: Auth middleware race condition fixed -- explicit return after sendError
-- [ ] **SECR-06**: Error handler production mode hides stack traces and internal details
-- [ ] **SECR-07**: Pino PII redaction configured for passwords, tokens, emails in log output
+- [x] **SECR-05**: Auth middleware race condition fixed -- explicit return after sendError
+- [x] **SECR-06**: Error handler production mode hides stack traces and internal details
+- [x] **SECR-07**: Pino PII redaction configured for passwords, tokens, emails in log output
 
 ### Infrastructure
 
@@ -123,12 +123,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DINT-08 | Phase 2 | Complete |
 | DINT-09 | Phase 2 | Complete |
 | SECR-01 | Phase 3 | Complete |
-| SECR-02 | Phase 3 | Pending |
+| SECR-02 | Phase 3 | Complete |
 | SECR-03 | Phase 3 | Complete |
 | SECR-04 | Phase 3 | Complete |
-| SECR-05 | Phase 3 | Pending |
-| SECR-06 | Phase 3 | Pending |
-| SECR-07 | Phase 3 | Pending |
+| SECR-05 | Phase 3 | Complete |
+| SECR-06 | Phase 3 | Complete |
+| SECR-07 | Phase 3 | Complete |
 | INFR-01 | Phase 4 | Pending |
 | INFR-02 | Phase 4 | Pending |
 | INFR-03 | Phase 4 | Pending |

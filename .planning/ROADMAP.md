@@ -65,7 +65,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- Input validation and defensive infrastructure: Zod string limits on all schemas, production error handler, PII log redaction, auth middleware hardening
+- [x] 03-01-PLAN.md -- Input validation and defensive infrastructure: Zod string limits on all schemas, production error handler, PII log redaction, auth middleware hardening
 - [x] 03-02-PLAN.md -- Rate limiter fix, CORS production config, AI SQL audit logging and enhanced validation
 
 ### Phase 4: Infrastructure and Deployment
