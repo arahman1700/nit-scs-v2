@@ -62,11 +62,11 @@ Plans:
   3. The AI chat module cannot execute arbitrary SQL -- all generated queries are validated, logged, and run against a read-only database connection
   4. Production error responses contain no stack traces, internal paths, or implementation details
   5. Log output contains no passwords, tokens, or email addresses in any log level
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Input validation and defensive infrastructure: Zod string limits on all schemas, production error handler, PII log redaction, auth middleware hardening
+- [ ] 03-02-PLAN.md -- Rate limiter fix, CORS production config, AI SQL audit logging and enhanced validation
 
 ### Phase 4: Infrastructure and Deployment
 **Goal**: The system can be deployed to production via CI/CD with proper configuration, graceful shutdown, and environment validation
@@ -155,7 +155,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 |-------|----------------|--------|-----------|
 | 1. Transaction Safety | 0/2 | Planning complete | - |
 | 2. Data Layer Cleanup | 0/1 | Planning complete | - |
-| 3. Security Hardening | 0/2 | Not started | - |
+| 3. Security Hardening | 0/2 | Planning complete | - |
 | 4. Infrastructure and Deployment | 0/2 | Not started | - |
 | 5. Performance and Stability | 0/2 | Not started | - |
 | 6. Code Quality | 0/1 | Not started | - |
