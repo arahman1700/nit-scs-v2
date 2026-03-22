@@ -101,13 +101,15 @@ export default defineConfig({
     chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-data': ['@tanstack/react-query', 'axios', 'zustand'],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'vendor-charts': ['recharts'],
-          'vendor-dnd': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          'vendor-socket': ['socket.io-client'],
+        manualChunks(id: string) {
+          if (id.includes('node_modules')) {
+            if (/[\\/](react-dom|react[\\/]|react-router-dom)[\\/]/.test(id)) return 'vendor-react';
+            if (/[\\/](@tanstack[\\/]react-query|axios|zustand)[\\/]/.test(id)) return 'vendor-data';
+            if (/[\\/](react-hook-form|@hookform[\\/]resolvers|zod)[\\/]/.test(id)) return 'vendor-forms';
+            if (/[\\/]recharts[\\/]/.test(id)) return 'vendor-charts';
+            if (/[\\/]@dnd-kit[\\/]/.test(id)) return 'vendor-dnd';
+            if (/[\\/]socket\.io-client[\\/]/.test(id)) return 'vendor-socket';
+          }
         },
       },
     },
