@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-22T01:15:02.937Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-22T01:15:30.171Z"
 progress:
   total_phases: 8
   completed_phases: 4
@@ -52,6 +52,7 @@ Plan: 2 of 2
 | Phase 03 P02 | 5min | 2 tasks | 7 files |
 | Phase 03 P01 | 24min | 2 tasks | 27 files |
 | Phase 04 P02 | 2min | 2 tasks | 5 files |
+| Phase 04 P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Redis noeviction over allkeys-lru -- BullMQ requires keys persist; returning errors on full is safer than silent eviction
 - [Phase 04]: dumb-init for PID 1 signal forwarding -- Node.js misses SIGTERM without it in Docker
 - [Phase 04]: Migration re-baseline to 20260101* timestamps -- consistent with Prisma expected format, start.sh handles existing databases
+- [Phase 04]: Production-conditional env validation via Zod .refine() -- dev/test unaffected
+- [Phase 04]: BullMQ shutdown before HTTP drain -- workers finish current jobs before connections close
+- [Phase 04]: 256kb body limit default (down from 2mb) -- configurable via BODY_SIZE_LIMIT env var
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T01:14:51.779Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-22T01:15:30.168Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None

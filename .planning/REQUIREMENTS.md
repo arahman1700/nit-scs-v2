@@ -32,14 +32,14 @@ Requirements for production launch. Each maps to roadmap phases.
 ### Infrastructure
 
 - [x] **INFR-01**: Redis maxmemory-policy changed from allkeys-lru to noeviction
-- [ ] **INFR-02**: BullMQ shutdownQueues() wired into graceful shutdown handler with 15s drain timeout
+- [x] **INFR-02**: BullMQ shutdownQueues() wired into graceful shutdown handler with 15s drain timeout
 - [x] **INFR-03**: Prisma migration format re-baselined to consistent timestamp naming for CI/CD compatibility
-- [ ] **INFR-04**: Production environment validation -- REDIS_URL required, connection_limit in DATABASE_URL enforced
+- [x] **INFR-04**: Production environment validation -- REDIS_URL required, connection_limit in DATABASE_URL enforced
 - [x] **INFR-05**: Vite source maps set to 'hidden' for production builds
 - [x] **INFR-06**: Dockerfile hardened -- dumb-init installed, Node.js version pinned
-- [ ] **INFR-07**: Express body parser limit tightened (256KB default instead of unlimited)
-- [ ] **INFR-08**: Request timeouts added to all Express routes (30s default)
-- [ ] **INFR-09**: Explicit Prisma $connect() at startup with connection pool configured
+- [x] **INFR-07**: Express body parser limit tightened (256KB default instead of unlimited)
+- [x] **INFR-08**: Request timeouts added to all Express routes (30s default)
+- [x] **INFR-09**: Explicit Prisma $connect() at startup with connection pool configured
 
 ### Performance
 
@@ -130,14 +130,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SECR-06 | Phase 3 | Complete |
 | SECR-07 | Phase 3 | Complete |
 | INFR-01 | Phase 4 | Complete |
-| INFR-02 | Phase 4 | Pending |
+| INFR-02 | Phase 4 | Complete |
 | INFR-03 | Phase 4 | Complete |
-| INFR-04 | Phase 4 | Pending |
+| INFR-04 | Phase 4 | Complete |
 | INFR-05 | Phase 4 | Complete |
 | INFR-06 | Phase 4 | Complete |
-| INFR-07 | Phase 4 | Pending |
-| INFR-08 | Phase 4 | Pending |
-| INFR-09 | Phase 4 | Pending |
+| INFR-07 | Phase 4 | Complete |
+| INFR-08 | Phase 4 | Complete |
+| INFR-09 | Phase 4 | Complete |
 | PERF-01 | Phase 5 | Pending |
 | PERF-02 | Phase 5 | Pending |
 | PERF-03 | Phase 5 | Pending |
