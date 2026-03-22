@@ -2,24 +2,30 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().url().refine(
-    (val) => {
-      if (process.env.NODE_ENV === 'production') {
-        return val.includes('connection_limit');
-      }
-      return true;
-    },
-    { message: 'Production DATABASE_URL must include connection_limit parameter (e.g. ?connection_limit=20)' },
-  ),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine(
+      val => {
+        if (process.env.NODE_ENV === 'production') {
+          return val.includes('connection_limit');
+        }
+        return true;
+      },
+      { message: 'Production DATABASE_URL must include connection_limit parameter (e.g. ?connection_limit=20)' },
+    ),
 
   // Redis — optional in development, required in production
-  REDIS_URL: z.string().optional().refine(
-    (val) => {
-      if (process.env.NODE_ENV === 'production') return !!val;
-      return true;
-    },
-    { message: 'REDIS_URL is required in production' },
-  ),
+  REDIS_URL: z
+    .string()
+    .optional()
+    .refine(
+      val => {
+        if (process.env.NODE_ENV === 'production') return !!val;
+        return true;
+      },
+      { message: 'REDIS_URL is required in production' },
+    ),
 
   // JWT — minimum 32 chars for security
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -34,7 +40,7 @@ const envSchema = z.object({
     .string()
     .default('http://localhost:3000')
     .refine(
-      (val) => {
+      val => {
         // In production, reject wildcard and localhost origins
         if (process.env.NODE_ENV === 'production') {
           if (val === '*') return false;
@@ -58,6 +64,9 @@ const envSchema = z.object({
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().default(15000),
   BODY_SIZE_LIMIT: z.string().default('256kb'),
   REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
+
+  // Reconciliation — configurable threshold for discrepancy detection
+  RECONCILIATION_THRESHOLD: z.coerce.number().min(0).default(0.001),
 
   // Email (Resend) — optional in development
   RESEND_API_KEY: z.string().optional(),

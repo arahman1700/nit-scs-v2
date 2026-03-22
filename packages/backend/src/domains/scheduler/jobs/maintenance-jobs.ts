@@ -9,6 +9,7 @@
 
 import { registerJob } from '../../../utils/job-registry.js';
 import type { JobContext } from '../../../utils/job-registry.js';
+import { getEnv } from '../../../config/env.js';
 import { processQueuedEmails } from '../../system/services/email.service.js';
 import { cleanupExpiredTokens } from '../../auth/services/auth.service.js';
 import { calculateABCClassification, applyABCClassification } from '../../inventory/services/abc-analysis.service.js';
@@ -275,6 +276,8 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
       lotMap.set(`${row.item_id}:${row.warehouse_id}`, Number(row.lot_total));
     }
 
+    const threshold = getEnv().RECONCILIATION_THRESHOLD;
+
     const discrepancies: Array<{
       itemId: string;
       warehouseId: string;
@@ -289,7 +292,7 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
       const onHand = Number(level.qtyOnHand);
       const diff = Math.abs(onHand - lotTotal);
 
-      if (diff > 0.001) {
+      if (diff > 0) {
         discrepancies.push({
           itemId: level.itemId,
           warehouseId: level.warehouseId,
@@ -300,25 +303,53 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
       }
     }
 
-    if (discrepancies.length === 0) {
-      ctx.log('info', '[Scheduler] Reconciliation complete — no lot discrepancies found');
-    } else {
-      ctx.log('warn', `[Scheduler] Reconciliation found ${discrepancies.length} discrepancies`);
+    // Filter to only significant discrepancies above threshold
+    const significantDiscrepancies = discrepancies.filter(d => Math.abs(d.diff) > threshold);
 
+    if (significantDiscrepancies.length > 0) {
+      ctx.log(
+        'warn',
+        `[Reconciliation] ${significantDiscrepancies.length} discrepancies above threshold ${threshold}`,
+        { discrepancies: significantDiscrepancies.slice(0, 10) },
+      );
+
+      // Create audit log entries for each discrepancy
+      for (const d of significantDiscrepancies) {
+        await ctx.prisma.auditLog.create({
+          data: {
+            tableName: 'InventoryLevel',
+            recordId: d.itemId,
+            action: 'reconciliation_discrepancy',
+            performedAt: new Date(),
+            changedFields: ['qtyOnHand'],
+            oldValues: {
+              qtyOnHand: d.qtyOnHand,
+              warehouseId: d.warehouseId,
+            },
+            newValues: {
+              lotTotal: d.lotTotal,
+              diff: d.diff,
+              threshold,
+            },
+          },
+        });
+      }
+
+      // Notify relevant staff about discrepancies
       const supervisorIds = await ctx.getEmployeeIdsByRole('warehouse_supervisor');
       const inventorySpecialistIds = await ctx.getEmployeeIdsByRole('inventory_specialist');
       const adminIds = await ctx.getAdminIds();
       const allRecipients = [...new Set([...supervisorIds, ...inventorySpecialistIds, ...adminIds])];
 
       if (allRecipients.length > 0) {
-        const top5 = discrepancies
+        const top5 = significantDiscrepancies
           .slice(0, 5)
-          .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (Δ${d.diff.toFixed(3)})`);
+          .map(d => `Item ${d.itemId}: expected ${d.lotTotal}, actual ${d.qtyOnHand} (delta ${d.diff.toFixed(3)})`);
 
         await ctx.notifySla({
           recipientIds: allRecipients,
-          title: `Reconciliation Alert: ${discrepancies.length} discrepancies`,
-          body: `Daily reconciliation found ${discrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
+          title: `Reconciliation Alert: ${significantDiscrepancies.length} discrepancies`,
+          body: `Daily reconciliation found ${significantDiscrepancies.length} inventory level mismatches.\n${top5.join('\n')}`,
           notificationType: 'reconciliation_alert',
           referenceTable: 'inventory_levels',
           referenceId: 'daily-reconciliation',
@@ -326,16 +357,13 @@ async function runDailyReconciliation(ctx: JobContext): Promise<void> {
           socketRoles: ['admin', 'warehouse_supervisor', 'inventory_specialist'],
         });
       }
-
-      for (const d of discrepancies) {
-        await ctx.prisma.inventoryLevel.updateMany({
-          where: { itemId: d.itemId, warehouseId: d.warehouseId },
-          data: { qtyOnHand: d.lotTotal },
-        });
-      }
-
-      ctx.log('info', `[Scheduler] Reconciliation: auto-corrected ${discrepancies.length} inventory levels`);
     }
+
+    // Always log summary
+    ctx.log(
+      'info',
+      `[Reconciliation] Completed: ${significantDiscrepancies.length} discrepancies above threshold ${threshold} (${discrepancies.length} total, ${discrepancies.length - significantDiscrepancies.length} below threshold)`,
+    );
 
     // ── SOW Gap 5: Gate movement vs inventory transaction reconciliation ──
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);

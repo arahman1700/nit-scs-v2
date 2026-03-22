@@ -185,7 +185,7 @@ export const JOB_DEFINITIONS: JobDefinition[] = [
     name: JOB_NAMES.SCM_DAILY_RECONCILIATION,
     legacyName: 'daily_reconciliation',
     queue: QUEUE_NAMES.WMS_QUEUE,
-    repeat: { every: 1 * DAY },
+    repeat: { pattern: '0 2 * * *' },
     priority: 3,
     attempts: 5,
     backoff: { type: 'exponential', delay: 60_000 },
