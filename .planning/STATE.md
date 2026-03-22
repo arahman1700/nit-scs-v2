@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-03-22T03:58:07.158Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-22T17:44:15.613Z"
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 14
-  completed_plans: 14
+  total_plans: 16
+  completed_plans: 15
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Reliable inventory tracking -- every material movement must be atomic, accurate, and audited
-**Current focus:** Phase 07 — end-to-end-verification
+**Current focus:** Phase 08 — production-observability
 
 ## Current Position
 
-Phase: 8
-Plan: Not started
+Phase: 08 (production-observability) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Plan: Not started
 | Phase 07 P02 | 10min | 2 tasks | 4 files |
 | Phase 07 P03 | 10min | 2 tasks | 6 files |
 | Phase 07 P01 | 13min | 2 tasks | 7 files |
+| Phase 08 P01 | 7min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,9 @@ Recent decisions affecting current work:
 - [Phase 07]: vi.stubGlobal localStorage mock for DirectionContext tests -- jsdom in Vitest 4 lacks functional Storage API methods
 - [Phase 07]: WT stock effects verified across ship() and receive() instead of complete() -- actual implementation splits deduct/add across ship and receive
 - [Phase 07]: Added eventBus and safeStatusUpdate mocks to GRN and WT test files for proper assertion and isolation
+- [Phase 08]: AsyncLocalStorage for request context -- zero-arg correlationId propagation across entire async call chain
+- [Phase 08]: Pino mixin over child logger -- auto-injects correlationId globally without per-callsite child loggers
+- [Phase 08]: Only observe Prisma queries >100ms -- avoids flooding histogram with trivial operations
 
 ### Pending Todos
 
@@ -118,6 +122,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T03:50:48.409Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-03-22T17:44:15.609Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None
