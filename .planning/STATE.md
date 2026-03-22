@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-22T00:05:04.879Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-22T00:21:49.622Z"
 progress:
   total_phases: 8
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 3
+  completed_plans: 3
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Reliable inventory tracking -- every material movement must be atomic, accurate, and audited
-**Current focus:** Phase 01 — transaction-safety
+**Current focus:** Phase 02 — data-layer-cleanup
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (data-layer-cleanup) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Plan: Not started
 *Updated after each plan completion*
 | Phase 01 P01 | 9min | 2 tasks | 8 files |
 | Phase 01 P02 | 7min | 2 tasks | 4 files |
+| Phase 02 P01 | 6min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Phase 01]: getDelegateTx uses tx[modelName] for transaction-bound Prisma model access (not global prisma)
 - [Phase 01]: MI approve keeps two separate transactions (processApproval + stock reservation) per research -- approval is idempotent, stock is recoverable
 - [Phase 01]: Three-phase approval pattern established: READ outside tx, MUTATE in $transaction, NOTIFY post-commit
+- [Phase 02]: findUnique gets soft-delete filter via Prisma $extends query middleware (Prisma 5+ supports extra where fields)
+- [Phase 02]: Shared calculateDocumentTotalValue utility pattern: extract common calculations to utils/ with dedicated test file
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T00:01:04.294Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-22T00:21:49.619Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None

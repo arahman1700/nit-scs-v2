@@ -50,7 +50,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 02-01-PLAN.md -- Extend soft-delete to findUnique/aggregate/groupBy, extract shared totalValue utility, verify DINT-06 and DINT-08 pre-resolved
+- [x] 02-01-PLAN.md -- Extend soft-delete to findUnique/aggregate/groupBy, extract shared totalValue utility, verify DINT-06 and DINT-08 pre-resolved
 
 ### Phase 3: Security Hardening
 **Goal**: Authentication is stable, all user input is bounded, and known attack vectors (SQL injection, XSS, info leakage) are closed
