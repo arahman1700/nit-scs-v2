@@ -25,6 +25,10 @@ export const CacheTTL = {
   RECENT_ACTIVITY: 15,
   /** Labor productivity — refresh every 5 minutes */
   LABOR_PRODUCTIVITY: 300,
+  /** Master data (items, suppliers, warehouses, UOMs) — refresh every 5 minutes */
+  MASTER_DATA: 300,
+  /** Approval chain lookups — refresh every 10 minutes */
+  APPROVAL_CHAIN: 600,
 } as const;
 
 /** Cache key prefix to namespace all keys */

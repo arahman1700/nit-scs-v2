@@ -7,6 +7,7 @@ import { emitToRole, emitToDocument } from '../../../socket/setup.js';
 import { log } from '../../../config/logger.js';
 import { eventBus } from '../../../events/event-bus.js';
 import { type TxClient } from '../../inventory/services/inventory.service.js';
+import { cached, invalidateCachePattern, CacheTTL } from '../../../utils/cache.js';
 
 // ── Document Display Names (V1 internal → V2 label) ────────────────────
 
@@ -179,29 +180,33 @@ export async function isAuthorizedApprover(
 /**
  * Build the full multi-level approval chain for a document type and amount.
  * Returns all matching workflow rules ordered by minAmount ascending (lower amounts = earlier levels).
+ * Results are cached in Redis with a 10-minute TTL to reduce DB load on repeated lookups.
  */
 export async function getApprovalChain(documentType: string, amount: number): Promise<ApprovalChain> {
-  const workflows = await prisma.approvalWorkflow.findMany({
-    where: {
-      documentType,
-      minAmount: { lte: amount },
-      OR: [{ maxAmount: null }, { maxAmount: { gte: amount } }],
-    },
-    orderBy: { minAmount: 'asc' },
+  const cacheKey = `approval-chain:${documentType}:${amount}`;
+  return cached(cacheKey, CacheTTL.APPROVAL_CHAIN, async () => {
+    const workflows = await prisma.approvalWorkflow.findMany({
+      where: {
+        documentType,
+        minAmount: { lte: amount },
+        OR: [{ maxAmount: null }, { maxAmount: { gte: amount } }],
+      },
+      orderBy: { minAmount: 'asc' },
+    });
+
+    if (workflows.length === 0) {
+      return { steps: [] };
+    }
+
+    // Build multi-level chain: each matching workflow rule = one approval level
+    const steps = workflows.map((wf, index) => ({
+      level: index + 1,
+      approverRole: wf.approverRole,
+      slaHours: wf.slaHours,
+    }));
+
+    return { steps };
   });
-
-  if (workflows.length === 0) {
-    return { steps: [] };
-  }
-
-  // Build multi-level chain: each matching workflow rule = one approval level
-  const steps = workflows.map((wf, index) => ({
-    level: index + 1,
-    approverRole: wf.approverRole,
-    slaHours: wf.slaHours,
-  }));
-
-  return { steps };
 }
 
 /**
@@ -720,4 +725,11 @@ export async function getPendingApprovalsForUser(userId: string) {
   }
 
   return Array.from(actionableSteps.values());
+}
+
+// ── Cache Invalidation ───────────────────────────────────────────────
+
+/** Invalidate all cached approval chains (call on workflow CRUD mutations). */
+export async function invalidateApprovalChainCache(): Promise<void> {
+  await invalidateCachePattern('approval-chain:*');
 }

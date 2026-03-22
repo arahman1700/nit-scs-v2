@@ -1,14 +1,80 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { createCrudRouter } from '../../../utils/crud-factory.js';
 import { conditionalCache } from '../../../middleware/cache-headers.js';
 import { prisma } from '../../../utils/prisma.js';
 import { BusinessRuleError } from '@nit-scs-v2/shared';
 import * as s from '../../../schemas/master-data.schema.js';
+import { invalidateCachePattern, CacheTTL } from '../../../utils/cache.js';
+import { getRedis, isRedisAvailable } from '../../../config/redis.js';
 
 const router = Router();
 
 // ETag / conditional caching for master data GET requests (5 min max-age)
 router.use(conditionalCache(300));
+
+// ── Redis Cache Layer ─────────────────────────────────────────────────
+
+const CACHE_PREFIX = 'nit-scs:cache:';
+
+/**
+ * Express middleware that caches GET list responses in Redis.
+ * On cache HIT, returns the cached JSON immediately with X-Cache: HIT header.
+ * On cache MISS, intercepts res.json to capture and cache the response.
+ * Only applies to GET requests without an :id param (list endpoints).
+ */
+function masterDataCacheMiddleware(resourceName: string) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    // Only cache list GETs (not detail GETs with /:id)
+    if (req.method !== 'GET' || req.params.id) {
+      return next();
+    }
+
+    if (!isRedisAvailable()) return next();
+    const redis = getRedis();
+    if (!redis) return next();
+
+    const cacheKey = `${CACHE_PREFIX}master-data:${resourceName}:${req.url}`;
+
+    try {
+      const hit = await redis.get(cacheKey);
+      if (hit) {
+        res.setHeader('X-Cache', 'HIT');
+        res.json(JSON.parse(hit));
+        return;
+      }
+    } catch { /* fall through to DB on Redis read error */ }
+
+    // Cache MISS — intercept res.json to capture and cache the response
+    const originalJson = res.json.bind(res);
+    res.json = function (body: unknown) {
+      // Cache the response asynchronously (fire-and-forget)
+      if (redis && res.statusCode >= 200 && res.statusCode < 300) {
+        redis.setex(cacheKey, CacheTTL.MASTER_DATA, JSON.stringify(body)).catch(() => {});
+      }
+      res.setHeader('X-Cache', 'MISS');
+      return originalJson(body);
+    } as typeof res.json;
+
+    next();
+  };
+}
+
+/** Invalidate all master data caches — call on any master data mutation. */
+export async function invalidateMasterDataCache(): Promise<void> {
+  await invalidateCachePattern('master-data:*');
+}
+
+// Invalidate master-data Redis cache on any successful mutation (POST/PUT/PATCH/DELETE)
+router.use((req: Request, res: Response, next: NextFunction) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    res.on('finish', () => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        invalidateCachePattern('master-data:*').catch(() => {});
+      }
+    });
+  }
+  next();
+});
 
 // Master data write ops restricted to admin + manager
 const MASTER_DATA_ROLES = ['admin', 'manager'];
@@ -56,6 +122,8 @@ router.use(
   }),
 );
 
+// Redis cache layer for UOMs (high-traffic reference data)
+router.use('/uoms', masterDataCacheMiddleware('uoms'));
 router.use(
   '/uoms',
   createCrudRouter({
@@ -141,6 +209,8 @@ router.use(
   }),
 );
 
+// Redis cache layer for suppliers (high-traffic reference data)
+router.use('/suppliers', masterDataCacheMiddleware('suppliers'));
 router.use(
   '/suppliers',
   createCrudRouter({
@@ -155,6 +225,8 @@ router.use(
   }),
 );
 
+// Redis cache layer for warehouses (high-traffic reference data)
+router.use('/warehouses', masterDataCacheMiddleware('warehouses'));
 router.use(
   '/warehouses',
   createCrudRouter({
@@ -187,6 +259,8 @@ router.use(
   }),
 );
 
+// Redis cache layer for items (most frequently queried master data)
+router.use('/items', masterDataCacheMiddleware('items'));
 router.use(
   '/items',
   createCrudRouter({
