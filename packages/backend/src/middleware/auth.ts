@@ -59,6 +59,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   req.rawAccessToken = token;
   Sentry.setUser({ id: payload.userId, email: payload.email });
   next();
+  return; // explicit return — defense-in-depth to prevent any code after next()
 }
 
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
@@ -72,7 +73,7 @@ export async function optionalAuth(req: Request, _res: Response, next: NextFunct
         const blacklisted = await isTokenBlacklisted(payload.jti);
         if (blacklisted) {
           next();
-          return;
+          return; // explicit return — defense-in-depth
         }
       }
       req.user = payload;
@@ -82,4 +83,5 @@ export async function optionalAuth(req: Request, _res: Response, next: NextFunct
   }
 
   next();
+  return; // explicit return — defense-in-depth to prevent any code after next()
 }

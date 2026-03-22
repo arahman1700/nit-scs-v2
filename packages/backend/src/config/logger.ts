@@ -34,6 +34,29 @@ export const logger = pino({
     }),
   },
 
+  // PII and secret redaction — prevents sensitive data from appearing in any log level
+  redact: {
+    paths: [
+      'req.headers.authorization',
+      'req.headers.cookie',
+      '*.password',
+      '*.passwordHash',
+      '*.password_hash',
+      '*.token',
+      '*.accessToken',
+      '*.refreshToken',
+      '*.access_token',
+      '*.refresh_token',
+      '*.secret',
+      '*.apiKey',
+      '*.api_key',
+      '*.email',
+      '*.jwt',
+      '*.jti',
+    ],
+    censor: '[REDACTED]',
+  },
+
   // Pretty-print only in development
   transport: isDev ? { target: 'pino-pretty', options: { colorize: true, translateTime: 'SYS:standard' } } : undefined,
 });
