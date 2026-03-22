@@ -2,10 +2,24 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   // Database
-  DATABASE_URL: z.string().url(),
+  DATABASE_URL: z.string().url().refine(
+    (val) => {
+      if (process.env.NODE_ENV === 'production') {
+        return val.includes('connection_limit');
+      }
+      return true;
+    },
+    { message: 'Production DATABASE_URL must include connection_limit parameter (e.g. ?connection_limit=20)' },
+  ),
 
-  // Redis — optional in development, recommended in production
-  REDIS_URL: z.string().optional(),
+  // Redis — optional in development, required in production
+  REDIS_URL: z.string().optional().refine(
+    (val) => {
+      if (process.env.NODE_ENV === 'production') return !!val;
+      return true;
+    },
+    { message: 'REDIS_URL is required in production' },
+  ),
 
   // JWT — minimum 32 chars for security
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
@@ -39,6 +53,11 @@ const envSchema = z.object({
 
   // Error Monitoring (Sentry) — optional, recommended for production
   SENTRY_DSN: z.string().url().optional(),
+
+  // Infrastructure — configurable limits and timeouts
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().default(15000),
+  BODY_SIZE_LIMIT: z.string().default('256kb'),
+  REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
 
   // Email (Resend) — optional in development
   RESEND_API_KEY: z.string().optional(),
