@@ -98,7 +98,7 @@ Plans:
 
 Plans:
 - [ ] 05-01-PLAN.md -- Database indexes, Prisma relationJoins, verify vendor chunks and route shadowing
-- [ ] 05-02-PLAN.md -- Bin cards N+1 fix with batch queries and timeout, Redis caching for master data and approval chains
+- [x] 05-02-PLAN.md -- Bin cards N+1 fix with batch queries and timeout, Redis caching for master data and approval chains
 
 ### Phase 6: Code Quality
 **Goal**: Large components are maintainable, tests are reliable, and dynamic configuration is validated before saving

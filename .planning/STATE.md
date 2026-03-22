@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-03-22T01:18:12.751Z"
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-22T01:31:41.634Z"
 progress:
   total_phases: 8
   completed_phases: 4
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 9
+  completed_plans: 8
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Reliable inventory tracking -- every material movement must be atomic, accurate, and audited
-**Current focus:** Phase 04 — infrastructure-and-deployment
+**Current focus:** Phase 05 — performance-and-stability
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (performance-and-stability) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Plan: Not started
 | Phase 03 P01 | 24min | 2 tasks | 27 files |
 | Phase 04 P02 | 2min | 2 tasks | 5 files |
 | Phase 04 P01 | 3min | 2 tasks | 4 files |
+| Phase 05 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -82,6 +83,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Production-conditional env validation via Zod .refine() -- dev/test unaffected
 - [Phase 04]: BullMQ shutdown before HTTP drain -- workers finish current jobs before connections close
 - [Phase 04]: 256kb body limit default (down from 2mb) -- configurable via BODY_SIZE_LIMIT env var
+- [Phase 05]: Batch queries via Prisma OR + groupBy instead of raw SQL -- keeps type safety and Prisma middleware compatibility
+- [Phase 05]: Promise.race timeout (15s) over Prisma $transaction timeout -- works with multiple independent queries, not just transactions
+- [Phase 05]: Permission matrix left with existing in-memory cache -- adding Redis would add latency for no benefit on small per-process data
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T01:15:30.168Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-03-22T01:31:41.631Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
