@@ -78,11 +78,11 @@ Plans:
   3. Starting the application without REDIS_URL or without connection_limit in DATABASE_URL fails immediately with a clear error message
   4. The Docker container runs with dumb-init, a pinned Node.js version, 256KB body parser limit, and 30-second request timeouts
   5. Production source maps are hidden (not served to browsers) and Prisma connects with explicit pool configuration at startup
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- Backend runtime hardening: env validation (REDIS_URL, connection_limit), BullMQ graceful shutdown, body parser 256KB, request timeouts, Prisma eager connect
+- [ ] 04-02-PLAN.md -- Build and container hardening: Redis noeviction, Dockerfile dumb-init + pinned Node, Vite hidden source maps + vendor chunks, Prisma migration re-baseline
 
 ### Phase 5: Performance and Stability
 **Goal**: The system handles realistic data volumes without hanging, excessive query counts, or missing index scans
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Transaction Safety | 0/2 | Planning complete | - |
 | 2. Data Layer Cleanup | 0/1 | Planning complete | - |
 | 3. Security Hardening | 0/2 | Planning complete | - |
-| 4. Infrastructure and Deployment | 0/2 | Not started | - |
+| 4. Infrastructure and Deployment | 0/2 | Planning complete | - |
 | 5. Performance and Stability | 0/2 | Not started | - |
 | 6. Code Quality | 0/1 | Not started | - |
 | 7. End-to-End Verification | 0/3 | Not started | - |
