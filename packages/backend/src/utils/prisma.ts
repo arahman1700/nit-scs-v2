@@ -55,6 +55,18 @@ function buildExtendedClient(base: PrismaClient): PrismaClient {
           applySoftDeleteFilter(model, args);
           return query(args);
         },
+        async findUnique({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
+        async aggregate({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
+        async groupBy({ model, args, query }) {
+          applySoftDeleteFilter(model, args);
+          return query(args);
+        },
       },
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma $extends returns incompatible branded type

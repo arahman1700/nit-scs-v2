@@ -12,7 +12,7 @@
 import { describe, it, expect } from 'vitest';
 describe('prisma soft-delete filter logic', () => {
   // Replicate the applySoftDeleteFilter function from prisma.ts
-  const SOFT_DELETE_MODELS = new Set(['Employee', 'Item', 'Warehouse']);
+  const SOFT_DELETE_MODELS = new Set(['Employee', 'Item', 'Warehouse', 'DocumentComment', 'Attachment']);
 
   function applySoftDeleteFilter(model: string | undefined, args: Record<string, unknown>) {
     if (!model || !SOFT_DELETE_MODELS.has(model)) return;
@@ -95,6 +95,34 @@ describe('prisma soft-delete filter logic', () => {
 
     // deletedAt is explicitly set (to { not: null }), should not be overridden
     expect((args.where as any).deletedAt).toEqual({ not: null });
+  });
+
+  // --- New tests for findUnique, aggregate, groupBy coverage (DINT-05) ---
+
+  it('should add deletedAt: null for findUnique on soft-delete model', () => {
+    const args: Record<string, unknown> = { where: { id: 'some-id' } };
+    applySoftDeleteFilter('DocumentComment', args);
+    expect((args.where as any).deletedAt).toBeNull();
+    expect((args.where as any).id).toBe('some-id');
+  });
+
+  it('should add deletedAt: null for aggregate on soft-delete model', () => {
+    const args: Record<string, unknown> = { where: {} };
+    applySoftDeleteFilter('Attachment', args);
+    expect((args.where as any).deletedAt).toBeNull();
+  });
+
+  it('should create where with deletedAt: null for groupBy on soft-delete model (no initial where)', () => {
+    const args: Record<string, unknown> = {};
+    applySoftDeleteFilter('DocumentComment', args);
+    expect(args.where).toBeDefined();
+    expect((args.where as any).deletedAt).toBeNull();
+  });
+
+  it('should not modify findUnique where for non-soft-delete model', () => {
+    const args: Record<string, unknown> = { where: { id: 'x' } };
+    applySoftDeleteFilter('LoginAttempt', args);
+    expect((args.where as any).deletedAt).toBeUndefined();
   });
 });
 
