@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 1: Transaction Safety** - All stock-modifying operations and approval workflows wrapped in atomic transactions
 - [ ] **Phase 2: Data Layer Cleanup** - Soft-delete, precision, and code duplication issues resolved at the data layer
 - [ ] **Phase 3: Security Hardening** - Authentication, input validation, and attack surface reduced to production-safe levels
-- [ ] **Phase 4: Infrastructure and Deployment** - System can be reliably deployed to production with CI/CD, graceful shutdown, and correct configuration
+- [x] **Phase 4: Infrastructure and Deployment** - System can be reliably deployed to production with CI/CD, graceful shutdown, and correct configuration (completed 2026-03-22)
 - [ ] **Phase 5: Performance and Stability** - System performs well under realistic data volumes with proper indexing, caching, and query optimization
 - [ ] **Phase 6: Code Quality** - Large components refactored, tests reliable, workflow engine stable, schema validation enforced
 - [ ] **Phase 7: End-to-End Verification** - Every core workflow verified to function correctly across all document types, roles, and languages
@@ -81,8 +81,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md -- Backend runtime hardening: env validation (REDIS_URL, connection_limit), BullMQ graceful shutdown, body parser 256KB, request timeouts, Prisma eager connect
-- [ ] 04-02-PLAN.md -- Build and container hardening: Redis noeviction, Dockerfile dumb-init + pinned Node, Vite hidden source maps + vendor chunks, Prisma migration re-baseline
+- [x] 04-01-PLAN.md -- Backend runtime hardening: env validation (REDIS_URL, connection_limit), BullMQ graceful shutdown, body parser 256KB, request timeouts, Prisma eager connect
+- [x] 04-02-PLAN.md -- Build and container hardening: Redis noeviction, Dockerfile dumb-init + pinned Node, Vite hidden source maps + vendor chunks, Prisma migration re-baseline
 
 ### Phase 5: Performance and Stability
 **Goal**: The system handles realistic data volumes without hanging, excessive query counts, or missing index scans
@@ -156,7 +156,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 1. Transaction Safety | 0/2 | Planning complete | - |
 | 2. Data Layer Cleanup | 0/1 | Planning complete | - |
 | 3. Security Hardening | 0/2 | Planning complete | - |
-| 4. Infrastructure and Deployment | 0/2 | Planning complete | - |
+| 4. Infrastructure and Deployment | 2/2 | Complete   | 2026-03-22 |
 | 5. Performance and Stability | 0/2 | Not started | - |
 | 6. Code Quality | 0/1 | Not started | - |
 | 7. End-to-End Verification | 0/3 | Not started | - |

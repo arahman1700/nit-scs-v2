@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-22T01:04:27.355Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-22T01:15:02.937Z"
 progress:
   total_phases: 8
-  completed_phases: 3
-  total_plans: 5
-  completed_plans: 5
+  completed_phases: 4
+  total_plans: 7
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-22)
 
 **Core value:** Reliable inventory tracking -- every material movement must be atomic, accurate, and audited
-**Current focus:** Phase 03 — security-hardening
+**Current focus:** Phase 04 — infrastructure-and-deployment
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (infrastructure-and-deployment) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Plan: Not started
 | Phase 02 P01 | 6min | 3 tasks | 7 files |
 | Phase 03 P02 | 5min | 2 tasks | 7 files |
 | Phase 03 P01 | 24min | 2 tasks | 27 files |
+| Phase 04 P02 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,9 @@ Recent decisions affecting current work:
 - [Phase 03]: String length conventions: codes=50, names=255, short text=100, descriptions/notes=2000, addresses=500, URLs=2000, reasons=1000, email bodies=10000
 - [Phase 03]: isProduction() as function not const -- error handler tests toggle NODE_ENV dynamically
 - [Phase 03]: sanitizeResponseBody strips stack/meta/query from all error responses as defense-in-depth safety net
+- [Phase 04]: Redis noeviction over allkeys-lru -- BullMQ requires keys persist; returning errors on full is safer than silent eviction
+- [Phase 04]: dumb-init for PID 1 signal forwarding -- Node.js misses SIGTERM without it in Docker
+- [Phase 04]: Migration re-baseline to 20260101* timestamps -- consistent with Prisma expected format, start.sh handles existing databases
 
 ### Pending Todos
 
@@ -87,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T01:00:53.633Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-22T01:14:51.779Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
