@@ -254,6 +254,26 @@ export function validateQuery(sql: string): { valid: boolean; reason?: string } 
     }
   }
 
+  // Block dangerous PostgreSQL function calls that could be used for
+  // data exfiltration, DoS, or server-side operations (SECR-03)
+  const dangerousFunctions = [
+    'pg_read_file', 'pg_read_binary_file', 'pg_stat_file',
+    'pg_ls_dir', 'pg_sleep', 'pg_terminate_backend',
+    'pg_cancel_backend', 'pg_reload_conf',
+    'lo_import', 'lo_export', 'lo_get',
+    'current_setting', 'set_config',
+    'dblink', 'dblink_exec', 'dblink_connect',
+    'query_to_xml', 'query_to_json',
+    'txid_current', 'inet_server_addr', 'inet_server_port',
+    'version',
+  ];
+  for (const fn of dangerousFunctions) {
+    const fnRegex = new RegExp(`\\b${fn}\\s*\\(`, 'i');
+    if (fnRegex.test(cleaned)) {
+      return { valid: false, reason: `Dangerous function not allowed: ${fn}` };
+    }
+  }
+
   // Block subqueries in FROM clause — pattern: FROM (SELECT or FROM\s*\(SELECT
   if (/\bfrom\s*\(\s*select\b/i.test(cleaned)) {
     return { valid: false, reason: 'Subqueries in FROM clause are not allowed.' };

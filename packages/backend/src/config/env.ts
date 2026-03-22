@@ -16,7 +16,21 @@ const envSchema = z.object({
   // Server
   PORT: z.coerce.number().default(4000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  CORS_ORIGIN: z.string().default('http://localhost:3000'),
+  CORS_ORIGIN: z
+    .string()
+    .default('http://localhost:3000')
+    .refine(
+      (val) => {
+        // In production, reject wildcard and localhost origins
+        if (process.env.NODE_ENV === 'production') {
+          if (val === '*') return false;
+          const origins = val.split(',').map(o => o.trim());
+          return origins.every(o => !o.includes('localhost') && !o.includes('127.0.0.1'));
+        }
+        return true;
+      },
+      { message: 'Production CORS_ORIGIN must not be "*" or contain localhost' },
+    ),
 
   // Web Push (VAPID) — optional, auto-generated in development
   VAPID_PUBLIC_KEY: z.string().optional(),

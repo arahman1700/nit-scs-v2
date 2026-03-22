@@ -30,7 +30,9 @@ export interface AuditEntry {
     | 'start_picking'
     | 'confirm_pick'
     | 'bulk_allocate'
-    | 'bulk_assign';
+    | 'bulk_assign'
+    | 'ai_query'
+    | 'ai_block';
   changedFields?: Record<string, unknown>;
   oldValues?: Record<string, unknown>;
   newValues?: Record<string, unknown>;

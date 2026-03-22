@@ -10,6 +10,7 @@ import { logger } from '../../../config/logger.js';
 import { prisma } from '../../../utils/prisma.js';
 import { buildSchemaPrompt, validateQuery, stripCommentsAndQuotes } from './ai-schema-context.js';
 import { buildScopeFilter as _buildScopeFilter } from '../../../utils/scope-filter.js';
+import { createAuditLog } from '../../audit/services/audit.service.js';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -144,6 +145,24 @@ export async function chat(
 
       // Validate the query
       const validation = validateQuery(query);
+
+      // Audit log every AI query attempt (SECR-03)
+      try {
+        await createAuditLog({
+          tableName: 'ai_query',
+          recordId: convId,
+          action: validation.valid ? 'ai_query' : 'ai_block',
+          performedById: userId,
+          changedFields: {
+            query,
+            validationResult: validation.valid ? 'passed' : validation.reason,
+            userRole,
+          },
+        });
+      } catch (auditErr) {
+        logger.warn({ err: auditErr }, 'Failed to write AI query audit log');
+      }
+
       if (!validation.valid) {
         finalContent = `I generated a query but it was blocked for safety: ${validation.reason}\n\n${explanation || ''}`;
         generatedQuery = undefined;
@@ -167,6 +186,12 @@ export async function chat(
               },
               { timeout: 5000 },
             );
+            logger.info({
+              userId,
+              conversationId: convId,
+              query: generatedQuery,
+              rowCount: Array.isArray(resultData) ? resultData.length : 0,
+            }, 'AI query executed');
             finalContent = explanation || 'Here are the results.';
           } catch (queryErr) {
             logger.warn({ err: queryErr, query }, 'AI query execution failed');
