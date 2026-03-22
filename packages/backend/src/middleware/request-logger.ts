@@ -8,16 +8,13 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import { logger, createChildLogger } from '../config/logger.js';
+import { getCorrelationId } from './request-context.js';
 
 const log = createChildLogger({ module: 'http' });
 
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
-  const correlationId = crypto.randomUUID();
+  const correlationId = getCorrelationId() ?? 'no-ctx';
   const start = Date.now();
-
-  // Attach correlation ID to request for downstream use
-  (req as Request & { correlationId: string }).correlationId = correlationId;
-  res.setHeader('X-Correlation-ID', correlationId);
 
   // Log when response finishes
   res.on('finish', () => {

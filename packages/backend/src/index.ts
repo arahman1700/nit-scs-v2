@@ -18,6 +18,7 @@ import { getCorsOptions } from './config/cors.js';
 import { getEnv } from './config/env.js';
 import { getRedis, disconnectRedis } from './config/redis.js';
 import { requestId } from './middleware/request-id.js';
+import { requestContext } from './middleware/request-context.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { requestTimeout } from './middleware/request-timeout.js';
 import { errorHandler } from './middleware/error-handler.js';
@@ -92,6 +93,7 @@ app.use(compression());
 app.use(cookieParser());
 app.use(sanitizeInput());
 app.use(requestId);
+app.use(requestContext);
 // Structured request logging (replaces morgan in production, used alongside in dev)
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
@@ -188,7 +190,8 @@ httpServer.listen(PORT, () => {
   logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'NIT-SCS Backend started');
 
   // Eagerly connect Prisma at startup — fail fast if DB is unreachable
-  prisma.$connect()
+  prisma
+    .$connect()
     .then(() => logger.info('Prisma connected to database'))
     .catch((err: unknown) => {
       logger.error({ err }, 'Failed to connect to database -- exiting');

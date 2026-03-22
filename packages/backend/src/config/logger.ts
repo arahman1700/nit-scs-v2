@@ -1,4 +1,5 @@
 import pino from 'pino';
+import { getCorrelationId } from '../middleware/request-context.js';
 
 // ---------------------------------------------------------------------------
 // Structured Logger
@@ -16,6 +17,12 @@ export const logger = pino({
   base: {
     service: 'nit-scs-api',
     env: process.env.NODE_ENV || 'development',
+  },
+
+  // Inject correlationId from AsyncLocalStorage into every log line automatically
+  mixin() {
+    const correlationId = getCorrelationId();
+    return correlationId ? { correlationId } : {};
   },
 
   // Timestamp in ISO format for log aggregation

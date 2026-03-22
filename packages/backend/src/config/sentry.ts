@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node';
+import { getCorrelationId } from '../middleware/request-context.js';
 
 const dsn = process.env.SENTRY_DSN;
 const commitSha = process.env.RENDER_GIT_COMMIT || process.env.COMMIT_SHA || '';
@@ -9,9 +10,16 @@ if (dsn) {
     dsn,
     environment: process.env.NODE_ENV || 'development',
     release,
-    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.3 : 1.0,
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     enabled: !!dsn,
+    integrations: [Sentry.prismaIntegration()],
     beforeSend(event) {
+      // Attach correlationId from AsyncLocalStorage for cross-service tracing
+      const correlationId = getCorrelationId();
+      if (correlationId) {
+        event.tags = { ...event.tags, correlationId };
+      }
+
       // Redact PII from error events
       if (event.request?.headers) {
         delete event.request.headers['authorization'];
