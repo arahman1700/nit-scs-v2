@@ -211,6 +211,7 @@ model ApprovalStep {
   @@index([documentType, documentId], map: "idx_approval_steps_doc")
   @@index([approverId], map: "idx_approval_steps_approver")
   @@index([status], map: "idx_approval_steps_status")
+  @@index([documentType, documentId, status], map: "idx_approval_steps_doc_status")
   @@map("FND_APPROVAL_STEPS")
 }
 

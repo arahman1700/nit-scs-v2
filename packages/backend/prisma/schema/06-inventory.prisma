@@ -25,6 +25,7 @@ model InventoryLevel {
   @@unique([itemId, warehouseId], map: "uq_inventory_item_wh")
   @@index([warehouseId, itemId, qtyOnHand], map: "idx_mtl_onhand_avail_lookup")
   @@index([itemId, alertSent], map: "idx_mtl_onhand_reorder_alert")
+  @@index([itemId, lastMovementDate(sort: Desc)], map: "idx_mtl_onhand_movement_date")
   @@map("MTL_ONHAND_QUANTITIES")
 }
 

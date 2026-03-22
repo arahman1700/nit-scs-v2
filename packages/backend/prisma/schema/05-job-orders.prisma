@@ -76,6 +76,7 @@ model JobOrder {
   @@index([createdAt], map: "idx_job_orders_created")
   @@index([projectId, status], map: "idx_job_orders_project_status")
   @@index([status, createdAt], map: "idx_job_orders_status_created")
+  @@index([entityId], map: "idx_job_orders_entity")
   @@map("WMS_JOB_ORDERS")
 }
 

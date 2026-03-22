@@ -33,6 +33,7 @@ model AuditLog {
   @@index([tableName, recordId], map: "idx_audit_log_table")
   @@index([performedAt(sort: Desc)], map: "idx_audit_log_date")
   @@index([performedById], map: "idx_audit_log_user")
+  @@index([tableName, recordId, performedAt(sort: Desc)], map: "idx_audit_log_table_record_time")
   @@map("FND_AUDIT_LOG")
 }
 
@@ -54,6 +55,7 @@ model Notification {
   @@index([recipientId, isRead], map: "idx_notifications_recipient")
   @@index([createdAt(sort: Desc)], map: "idx_notifications_date")
   @@index([referenceTable, referenceId], map: "idx_notifications_reference")
+  @@index([recipientId, isRead, createdAt(sort: Desc)], map: "idx_notifications_unread_recent")
   @@map("FND_NOTIFICATIONS")
 }
 
