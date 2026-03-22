@@ -9,8 +9,8 @@ Requirements for production launch. Each maps to roadmap phases.
 
 ### Data Integrity
 
-- [ ] **DINT-01**: All stock-modifying operations (GRN, MI, MRN, MR, WT) wrap stock mutations + document updates in a single Prisma $transaction
-- [ ] **DINT-02**: Approval state machine (processApproval) wraps all DB calls in a single $transaction with notifications moved post-commit
+- [x] **DINT-01**: All stock-modifying operations (GRN, MI, MRN, MR, WT) wrap stock mutations + document updates in a single Prisma $transaction
+- [x] **DINT-02**: Approval state machine (processApproval) wraps all DB calls in a single $transaction with notifications moved post-commit
 - [x] **DINT-03**: ASN UOM assignment bug fixed -- line.uomId used instead of line.itemId
 - [x] **DINT-04**: GRN totalValue calculated from line items during create transaction, returned in initial response
 - [ ] **DINT-05**: Soft-delete Prisma extension covers findUnique, aggregate, and groupBy in addition to findMany/findFirst/count
@@ -113,8 +113,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DINT-01 | Phase 1 | Pending |
-| DINT-02 | Phase 1 | Pending |
+| DINT-01 | Phase 1 | Complete |
+| DINT-02 | Phase 1 | Complete |
 | DINT-03 | Phase 1 | Complete |
 | DINT-04 | Phase 1 | Complete |
 | DINT-05 | Phase 2 | Pending |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-21T23:16:51.244Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-22T00:01:04.296Z"
 progress:
   total_phases: 8
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -47,6 +47,7 @@ Plan: 2 of 2
 
 *Updated after each plan completion*
 | Phase 01 P01 | 9min | 2 tasks | 8 files |
+| Phase 01 P02 | 7min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Transaction safety is Phase 1 because every other phase depends on correct data -- testing, caching, and monitoring are meaningless on inconsistent data
 - [Phase 01]: checkLowStockAlert returns data instead of publishing -- post-commit event pattern for inventory safety
 - [Phase 01]: createAuditLog accepts optional TxClient param for transaction-aware audit logging
+- [Phase 01]: getDelegateTx uses tx[modelName] for transaction-bound Prisma model access (not global prisma)
+- [Phase 01]: MI approve keeps two separate transactions (processApproval + stock reservation) per research -- approval is idempotent, stock is recoverable
+- [Phase 01]: Three-phase approval pattern established: READ outside tx, MUTATE in $transaction, NOTIFY post-commit
 
 ### Pending Todos
 
@@ -72,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T23:16:51.242Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-03-22T00:01:04.294Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
